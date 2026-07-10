@@ -62,44 +62,25 @@ func Ptr[T any](v T) *T {
 }
 
 var (
-	// ErrAuthentication is returned when authentication failed.
-	ErrAuthentication = errors.New("authentication failed")
-	// ErrRateLimited is returned when rate limited.
-	ErrRateLimited = errors.New("rate limited")
-	// ErrBadRequest is returned when bad request.
-	ErrBadRequest = errors.New("bad request")
-	// ErrContextWindowExceeded is returned when context window exceeded.
+	ErrAuthentication        = errors.New("authentication failed")
+	ErrRateLimited           = errors.New("rate limited")
+	ErrBadRequest            = errors.New("bad request")
 	ErrContextWindowExceeded = errors.New("context window exceeded")
-	// ErrContentPolicy is returned when content policy violation.
-	ErrContentPolicy = errors.New("content policy violation")
-	// ErrNotFound is returned when not found.
-	ErrNotFound = errors.New("not found")
-	// ErrServerError is returned when server error.
-	ErrServerError = errors.New("server error")
-	// ErrServiceUnavailable is returned when service unavailable.
-	ErrServiceUnavailable = errors.New("service unavailable")
-	// ErrTimeout is returned when request timeout.
-	ErrTimeout = errors.New("request timeout")
-	// ErrStreaming is returned when streaming error.
-	ErrStreaming = errors.New("streaming error")
-	// ErrEndpointNotSupported is returned when provider does not support.
-	ErrEndpointNotSupported = errors.New("provider does not support")
-	// ErrInvalidHeader is returned when invalid header.
-	ErrInvalidHeader = errors.New("invalid header")
-	// ErrSerialization is returned when serialization error.
-	ErrSerialization = errors.New("serialization error")
-	// ErrBudgetExceeded is returned when budget exceeded.
-	ErrBudgetExceeded = errors.New("budget exceeded")
-	// ErrHookRejected is returned when hook rejected.
-	ErrHookRejected = errors.New("hook rejected")
-	// ErrInternalError is returned when internal error.
-	ErrInternalError = errors.New("internal error")
-	// ErrOutboundForbidden is returned when outbound request to forbidden.
-	ErrOutboundForbidden = errors.New("outbound request to forbidden")
-	// ErrIdempotencyConflict is returned when idempotency conflict: key was already used with a different request body.
-	ErrIdempotencyConflict = errors.New("idempotency conflict: key was already used with a different request body")
-	// ErrIdempotencyInFlight is returned when idempotency key is currently in-flight; retry after the first request completes.
-	ErrIdempotencyInFlight = errors.New("idempotency key is currently in-flight; retry after the first request completes")
+	ErrContentPolicy         = errors.New("content policy violation")
+	ErrNotFound              = errors.New("not found")
+	ErrServerError           = errors.New("server error")
+	ErrServiceUnavailable    = errors.New("service unavailable")
+	ErrTimeout               = errors.New("request timeout")
+	ErrStreaming             = errors.New("streaming error")
+	ErrEndpointNotSupported  = errors.New("provider does not support")
+	ErrInvalidHeader         = errors.New("invalid header")
+	ErrSerialization         = errors.New("serialization error")
+	ErrBudgetExceeded        = errors.New("budget exceeded")
+	ErrHookRejected          = errors.New("hook rejected")
+	ErrInternalError         = errors.New("internal error")
+	ErrOutboundForbidden     = errors.New("outbound request to forbidden")
+	ErrIdempotencyConflict   = errors.New("idempotency conflict: key was already used with a different request body")
+	ErrIdempotencyInFlight   = errors.New("idempotency key is currently in-flight; retry after the first request completes")
 )
 
 // Error is a structured error type.
@@ -122,8 +103,7 @@ type Message struct {
 	Assistant *AssistantMessage `json:"assistant,omitempty"`
 	Tool      *ToolMessage      `json:"tool,omitempty"`
 	Developer *DeveloperMessage `json:"developer,omitempty"`
-	// Deprecated legacy function-role message; retained for API compatibility.
-	Function *FunctionMessage `json:"function,omitempty"`
+	Function  *FunctionMessage  `json:"function,omitempty"`
 }
 
 // MarshalJSON encodes the tagged union with the discriminator tag.
@@ -208,13 +188,11 @@ func (t Message) MarshalJSON() ([]byte, error) {
 			return json.Marshal(m)
 		}
 	}
-	// Fallback: return just the tag
 	return json.Marshal(map[string]string{"role": t.Role})
 }
 
 // UnmarshalJSON decodes a tagged union by reading the tag first.
 func (t *Message) UnmarshalJSON(data []byte) error {
-	// Probe for the tag first
 	var probe struct {
 		Role string `json:"role"`
 	}
@@ -392,11 +370,8 @@ func UnmarshalContentPart(data []byte) (ContentPart, error) {
 type ImageDetail string
 
 const (
-	// ImageDetailLow ImageDetailLow low detail: scales image to 512x512, uses fewer tokens.
-	ImageDetailLow ImageDetail = "low"
-	// ImageDetailHigh ImageDetailHigh high detail: processes up to 2x2 grid of tiles, higher token cost.
+	ImageDetailLow  ImageDetail = "low"
 	ImageDetailHigh ImageDetail = "high"
-	// ImageDetailAuto ImageDetailAuto auto: model chooses low or high based on image dimensions.
 	ImageDetailAuto ImageDetail = "auto"
 )
 
@@ -438,7 +413,6 @@ func (e AssistantContent) Text() string {
 	if len(e) == 0 {
 		return ""
 	}
-	// Fast-path: plain JSON string → strip surrounding quotes.
 	if e[0] == '"' {
 		var s string
 		if err := json.Unmarshal([]byte(e), &s); err == nil {
@@ -446,7 +420,6 @@ func (e AssistantContent) Text() string {
 		}
 		return ""
 	}
-	// Array of content parts → concatenate "text" fields of type=="text" parts.
 	if e[0] == '[' {
 		var parts []struct {
 			Type string `json:"type"`
@@ -479,7 +452,6 @@ type AssistantPart interface {
 
 // AssistantPartText text segment of the response.
 type AssistantPartText struct {
-	// The text content of this part.
 	Text string `json:"text"`
 }
 
@@ -498,7 +470,6 @@ func (v AssistantPartText) MarshalJSON() ([]byte, error) {
 
 // AssistantPartRefusal refusal — the model declined to respond.
 type AssistantPartRefusal struct {
-	// The refusal reason.
 	Refusal string `json:"refusal"`
 }
 
@@ -517,7 +488,6 @@ func (v AssistantPartRefusal) MarshalJSON() ([]byte, error) {
 
 // AssistantPartOutputImage image produced by the model (e.g. `gpt-image-1`, Gemini Imagen).
 type AssistantPartOutputImage struct {
-	// Image URL or data URI referencing the generated image.
 	ImageURL ImageURL `json:"image_url"`
 }
 
@@ -536,7 +506,6 @@ func (v AssistantPartOutputImage) MarshalJSON() ([]byte, error) {
 
 // AssistantPartOutputAudio audio produced by the model (e.g. `gpt-4o-audio-preview`).
 type AssistantPartOutputAudio struct {
-	// Base64-encoded audio data and its format.
 	Audio AudioContent `json:"audio"`
 }
 
@@ -595,16 +564,13 @@ func UnmarshalAssistantPart(data []byte) (AssistantPart, error) {
 type ToolType string
 
 const (
-	// ToolTypeFunction ToolTypeFunction is the Function variant of ToolType.
 	ToolTypeFunction ToolType = "function"
 )
 
 // ToolChoice tool usage mode or a specific tool to call.
 // Variants: Mode, Specific
 type ToolChoice struct {
-	// Predefined mode: auto, required, or none.
-	Mode *ToolChoiceMode `json:"mode,omitempty"`
-	// Force a specific tool to be called.
+	Mode     *ToolChoiceMode     `json:"mode,omitempty"`
 	Specific *SpecificToolChoice `json:"specific,omitempty"`
 }
 
@@ -642,12 +608,9 @@ func (t *ToolChoice) UnmarshalJSON(data []byte) error {
 type ToolChoiceMode string
 
 const (
-	// ToolChoiceModeAuto ToolChoiceModeAuto model may or may not call tools; default behavior.
-	ToolChoiceModeAuto ToolChoiceMode = "auto"
-	// ToolChoiceModeRequired ToolChoiceModeRequired model must call at least one tool.
+	ToolChoiceModeAuto     ToolChoiceMode = "auto"
 	ToolChoiceModeRequired ToolChoiceMode = "required"
-	// ToolChoiceModeNone ToolChoiceModeNone model must not call any tools.
-	ToolChoiceModeNone ToolChoiceMode = "none"
+	ToolChoiceModeNone     ToolChoiceMode = "none"
 )
 
 // ResponseFormat wire format for the chat completions `response_format` field.
@@ -796,11 +759,8 @@ func (e *StopSequence) UnmarshalJSON(data []byte) error {
 type Modality string
 
 const (
-	// ModalityText ModalityText text output (the default for all providers).
-	ModalityText Modality = "text"
-	// ModalityAudio ModalityAudio audio / speech output.
+	ModalityText  Modality = "text"
 	ModalityAudio Modality = "audio"
-	// ModalityImage ModalityImage image output (Gemini Imagen, gpt-image-1).
 	ModalityImage Modality = "image"
 )
 
@@ -808,23 +768,13 @@ const (
 type FinishReason string
 
 const (
-	// FinishReasonStop FinishReasonStop is the Stop variant of FinishReason.
-	FinishReasonStop FinishReason = "stop"
-	// FinishReasonLength FinishReasonLength is the Length variant of FinishReason.
-	FinishReasonLength FinishReason = "length"
-	// FinishReasonToolCalls FinishReasonToolCalls is the ToolCalls variant of FinishReason.
-	FinishReasonToolCalls FinishReason = "tool_calls"
-	// FinishReasonContentFilter FinishReasonContentFilter is the ContentFilter variant of FinishReason.
+	FinishReasonStop          FinishReason = "stop"
+	FinishReasonLength        FinishReason = "length"
+	FinishReasonToolCalls     FinishReason = "tool_calls"
 	FinishReasonContentFilter FinishReason = "content_filter"
-	// FinishReasonFunctionCall FinishReasonFunctionCall deprecated legacy finish reason; retained for API compatibility.
-	FinishReasonFunctionCall FinishReason = "function_call"
-	// FinishReasonOther FinishReasonOther catch-all for unknown finish reasons returned by non-OpenAI providers.
-	//
-	// Note: this intentionally does **not** carry the original string (e.g.
+	FinishReasonFunctionCall  FinishReason = "function_call"
 	// `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and
 	// switching to `#[serde(untagged)]` would change deserialization semantics
-	// for all variants.  The original value can be recovered by inspecting the
-	// raw JSON if needed.
 	FinishReasonOther FinishReason = "other"
 )
 
@@ -832,21 +782,16 @@ const (
 type ReasoningEffort string
 
 const (
-	// ReasoningEffortLow ReasoningEffortLow is the Low variant of ReasoningEffort.
-	ReasoningEffortLow ReasoningEffort = "low"
-	// ReasoningEffortMedium ReasoningEffortMedium is the Medium variant of ReasoningEffort.
+	ReasoningEffortLow    ReasoningEffort = "low"
 	ReasoningEffortMedium ReasoningEffort = "medium"
-	// ReasoningEffortHigh ReasoningEffortHigh is the High variant of ReasoningEffort.
-	ReasoningEffortHigh ReasoningEffort = "high"
+	ReasoningEffortHigh   ReasoningEffort = "high"
 )
 
 // EmbeddingFormat is an enumeration type.
 type EmbeddingFormat string
 
 const (
-	// EmbeddingFormatFloat EmbeddingFormatFloat 32-bit floating-point numbers (default).
-	EmbeddingFormatFloat EmbeddingFormat = "float"
-	// EmbeddingFormatBase64 EmbeddingFormatBase64 base64-encoded string representation of the floats.
+	EmbeddingFormatFloat  EmbeddingFormat = "float"
 	EmbeddingFormatBase64 EmbeddingFormat = "base64"
 )
 
@@ -972,7 +917,6 @@ type OcrDocument interface {
 
 // OcrDocumentURL publicly accessible document URL.
 type OcrDocumentURL struct {
-	// The document URL (HTTP/HTTPS).
 	URL string `json:"url"`
 }
 
@@ -991,9 +935,7 @@ func (v OcrDocumentURL) MarshalJSON() ([]byte, error) {
 
 // OcrDocumentBase64 inline base64-encoded document data.
 type OcrDocumentBase64 struct {
-	// Base64-encoded document content.
-	Data string `json:"data"`
-	// MIME type (e.g. `"application/pdf"`, `"image/png"`, `"image/jpeg"`).
+	Data      string `json:"data"`
 	MediaType string `json:"media_type"`
 }
 
@@ -1042,55 +984,39 @@ func UnmarshalOcrDocument(data []byte) (OcrDocument, error) {
 type FilePurpose string
 
 const (
-	// FilePurposeAssistants FilePurposeAssistants file for use with Assistants API.
 	FilePurposeAssistants FilePurpose = "assistants"
-	// FilePurposeBatch FilePurposeBatch file for batch processing.
-	FilePurposeBatch FilePurpose = "batch"
-	// FilePurposeFineTune FilePurposeFineTune file for fine-tuning.
-	FilePurposeFineTune FilePurpose = "fine-tune"
-	// FilePurposeVision FilePurposeVision file for vision/image tasks.
-	FilePurposeVision FilePurpose = "vision"
+	FilePurposeBatch      FilePurpose = "batch"
+	FilePurposeFineTune   FilePurpose = "fine-tune"
+	FilePurposeVision     FilePurpose = "vision"
 )
 
 // BatchStatus is an enumeration type.
 type BatchStatus string
 
 const (
-	// BatchStatusValidating BatchStatusValidating validating the input file.
 	BatchStatusValidating BatchStatus = "validating"
-	// BatchStatusFailed BatchStatusFailed job failed.
-	BatchStatusFailed BatchStatus = "failed"
-	// BatchStatusInProgress BatchStatusInProgress job is running.
+	BatchStatusFailed     BatchStatus = "failed"
 	BatchStatusInProgress BatchStatus = "in_progress"
-	// BatchStatusFinalizing BatchStatusFinalizing finalizing results.
 	BatchStatusFinalizing BatchStatus = "finalizing"
-	// BatchStatusCompleted BatchStatusCompleted job completed successfully.
-	BatchStatusCompleted BatchStatus = "completed"
-	// BatchStatusExpired BatchStatusExpired job expired before completion.
-	BatchStatusExpired BatchStatus = "expired"
-	// BatchStatusCancelling BatchStatusCancelling job is being cancelled.
+	BatchStatusCompleted  BatchStatus = "completed"
+	BatchStatusExpired    BatchStatus = "expired"
 	BatchStatusCancelling BatchStatus = "cancelling"
-	// BatchStatusCancelled BatchStatusCancelled job has been cancelled.
-	BatchStatusCancelled BatchStatus = "cancelled"
+	BatchStatusCancelled  BatchStatus = "cancelled"
 )
 
 // AuthHeaderFormat how the API key is sent in the HTTP request.
 type AuthHeaderFormat string
 
 const (
-	// AuthHeaderFormatBearer bearer token: `Authorization: Bearer <key>`
 	AuthHeaderFormatBearer AuthHeaderFormat = "Bearer"
-	// AuthHeaderFormatNone no authentication required.
-	AuthHeaderFormatNone AuthHeaderFormat = "None"
+	AuthHeaderFormatNone   AuthHeaderFormat = "None"
 )
 
 // StreamFormat is an enumeration type.
 type StreamFormat string
 
 const (
-	// StreamFormatSse StreamFormatSse standard Server-Sent Events (text/event-stream).
-	StreamFormatSse StreamFormat = "sse"
-	// StreamFormatAwsEventStream StreamFormatAwsEventStream aWS EventStream binary framing (application/vnd.amazon.eventstream).
+	StreamFormatSse            StreamFormat = "sse"
 	StreamFormatAwsEventStream StreamFormat = "aws_event_stream"
 )
 
@@ -1098,13 +1024,9 @@ const (
 type AuthType string
 
 const (
-	// AuthTypeBearer AuthTypeBearer standard `Authorization: Bearer <key>` header.
-	AuthTypeBearer AuthType = "bearer"
-	// AuthTypeAPIKey AuthTypeAPIKey `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases).
-	AuthTypeAPIKey AuthType = "api-key"
-	// AuthTypeNone AuthTypeNone no authentication header required.
-	AuthTypeNone AuthType = "none"
-	// AuthTypeUnknown AuthTypeUnknown unrecognised auth scheme — falls back to bearer.
+	AuthTypeBearer  AuthType = "bearer"
+	AuthTypeAPIKey  AuthType = "api-key"
+	AuthTypeNone    AuthType = "none"
 	AuthTypeUnknown AuthType = "unknown"
 )
 
@@ -1112,11 +1034,7 @@ const (
 type Enforcement string
 
 const (
-	// EnforcementHard EnforcementHard reject requests that would exceed the budget with
-	// [`LiterLlmError::BudgetExceeded`].
 	EnforcementHard Enforcement = "Hard"
-	// EnforcementSoft EnforcementSoft allow requests through but emit a `tracing::warn!` when the budget is
-	// exceeded.
 	EnforcementSoft Enforcement = "Soft"
 )
 
@@ -1145,9 +1063,7 @@ func (v CacheBackendMemory) MarshalJSON() ([]byte, error) {
 
 // CacheBackendOpenDal openDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.).
 type CacheBackendOpenDal struct {
-	// OpenDAL scheme name (e.g. "s3", "redis", "fs", "gcs", "azblob").
-	Scheme string `json:"scheme"`
-	// Backend-specific configuration as key-value pairs passed to OpenDAL.
+	Scheme string            `json:"scheme"`
 	Config map[string]string `json:"config"`
 }
 
@@ -1196,11 +1112,8 @@ func UnmarshalCacheBackend(data []byte) (CacheBackend, error) {
 type CircuitState string
 
 const (
-	// CircuitStateClosed CircuitStateClosed requests flow through normally.
-	CircuitStateClosed CircuitState = "Closed"
-	// CircuitStateOpen CircuitStateOpen all requests are rejected; the circuit is waiting for the backoff to elapse.
-	CircuitStateOpen CircuitState = "Open"
-	// CircuitStateHalfOpen CircuitStateHalfOpen one probe request is allowed through to test service health.
+	CircuitStateClosed   CircuitState = "Closed"
+	CircuitStateOpen     CircuitState = "Open"
 	CircuitStateHalfOpen CircuitState = "HalfOpen"
 )
 
@@ -1208,87 +1121,60 @@ const (
 type HealthStatus string
 
 const (
-	// HealthStatusHealthy HealthStatusHealthy the probe succeeded; the upstream is reachable.
-	HealthStatusHealthy HealthStatus = "Healthy"
-	// HealthStatusUnhealthy HealthStatusUnhealthy the probe failed; the upstream may be down.
+	HealthStatusHealthy   HealthStatus = "Healthy"
 	HealthStatusUnhealthy HealthStatus = "Unhealthy"
 )
 
 // SystemMessage system message guiding model behavior for the entire conversation.
 type SystemMessage struct {
-	// Instructions or context that apply throughout the conversation.
-	//
-	// Accepts either a plain text string or an array of content parts,
-	// mirroring [`UserContent`] so that `Message::system_with_parts` works.
 	Content UserContent `json:"content"`
-	// Optional name for the system message source.
-	Name *string `json:"name,omitempty"`
+	Name    *string     `json:"name,omitempty"`
 }
 
 // UserMessage user message in the conversation.
 type UserMessage struct {
-	// Message content as plain text or array of content parts (text, images, documents, audio).
 	Content UserContent `json:"content"`
-	// Optional name for the user.
-	Name *string `json:"name,omitempty"`
+	Name    *string     `json:"name,omitempty"`
 }
 
 // ImageURL image URL reference with optional detail level for processing.
 type ImageURL struct {
-	// URL of the image (data URI or HTTP/HTTPS URL).
-	URL string `json:"url"`
-	// Detail level: low (512x512), high (2x2 tiles), or auto (model-selected).
+	URL    string       `json:"url"`
 	Detail *ImageDetail `json:"detail,omitempty"`
 }
 
 // DocumentContent pDF/document content part for vision-capable models.
 type DocumentContent struct {
-	// Base64-encoded document data or URL.
-	Data string `json:"data"`
-	// MIME type (e.g., "application/pdf", "text/csv").
+	Data      string `json:"data"`
 	MediaType string `json:"media_type"`
 }
 
 // AudioContent audio content part for speech-capable models.
 type AudioContent struct {
-	// Base64-encoded audio data.
-	Data string `json:"data"`
-	// Audio format (e.g., "wav", "mp3", "ogg").
+	Data   string `json:"data"`
 	Format string `json:"format"`
 }
 
 // AssistantMessage assistant's response to a user message.
 type AssistantMessage struct {
-	// The assistant's response: plain text, structured parts, or absent.
-	//
-	// `None` is valid when the model replies with tool calls only.
-	Content *AssistantContent `json:"content,omitempty"`
-	// Optional name for the assistant.
-	Name *string `json:"name,omitempty"`
-	// Tool calls the model wants to execute, if any.
-	ToolCalls []ToolCall `json:"tool_calls,omitempty"`
-	// Refusal reason, if the model declined to respond per safety policies.
-	Refusal *string `json:"refusal,omitempty"`
-	// Deprecated legacy function_call field; retained for API compatibility.
-	FunctionCall *FunctionCall `json:"function_call,omitempty"`
+	Content      *AssistantContent `json:"content,omitempty"`
+	Name         *string           `json:"name,omitempty"`
+	ToolCalls    []ToolCall        `json:"tool_calls,omitempty"`
+	Refusal      *string           `json:"refusal,omitempty"`
+	FunctionCall *FunctionCall     `json:"function_call,omitempty"`
 }
 
 // ToolMessage tool execution result returned to the model.
 type ToolMessage struct {
-	// Result of the tool execution.
-	Content string `json:"content"`
-	// ID of the tool call this result responds to.
-	ToolCallID string `json:"tool_call_id"`
-	// Optional tool/function name.
-	Name *string `json:"name,omitempty"`
+	Content    string  `json:"content"`
+	ToolCallID string  `json:"tool_call_id"`
+	Name       *string `json:"name,omitempty"`
 }
 
 // DeveloperMessage developer message (system-like message for Claude models).
 type DeveloperMessage struct {
-	// Developer-specific instructions or context.
-	Content string `json:"content"`
-	// Optional name for the developer message source.
-	Name *string `json:"name,omitempty"`
+	Content string  `json:"content"`
+	Name    *string `json:"name,omitempty"`
 }
 
 // FunctionMessage deprecated legacy function-role message body.
@@ -1299,79 +1185,55 @@ type FunctionMessage struct {
 
 // ChatCompletionTool tool the model can invoke (currently, all tools are functions).
 type ChatCompletionTool struct {
-	// Tool type (always "function" in OpenAI spec).
-	ToolType ToolType `json:"type"`
-	// Function definition with name, description, and JSON schema parameters.
+	ToolType ToolType           `json:"type"`
 	Function FunctionDefinition `json:"function"`
 }
 
 // FunctionDefinition function definition exposed to the model.
 type FunctionDefinition struct {
-	// Name of the function. Required and must be alphanumeric + underscores.
-	Name string `json:"name"`
-	// Human-readable description explaining what the function does.
-	Description *string `json:"description,omitempty"`
-	// JSON Schema defining the function's parameters.
-	Parameters *json.RawMessage `json:"parameters,omitempty"`
-	// If true, enforce strict JSON schema validation for arguments.
-	Strict *bool `json:"strict,omitempty"`
+	Name        string           `json:"name"`
+	Description *string          `json:"description,omitempty"`
+	Parameters  *json.RawMessage `json:"parameters,omitempty"`
+	Strict      *bool            `json:"strict,omitempty"`
 }
 
 // ToolCall tool call the model wants to execute.
 type ToolCall struct {
-	// Unique ID for this call, used to reference in tool result messages.
-	ID string `json:"id"`
-	// Tool type (always "function").
-	CallType ToolType `json:"type"`
-	// Function name and arguments.
+	ID       string       `json:"id"`
+	CallType ToolType     `json:"type"`
 	Function FunctionCall `json:"function"`
 }
 
 // FunctionCall function call details.
 type FunctionCall struct {
-	// Function name.
-	Name string `json:"name"`
-	// Arguments as a JSON string (parse with serde_json::from_str).
+	Name      string `json:"name"`
 	Arguments string `json:"arguments"`
 }
 
 // SpecificToolChoice directive to call a specific tool.
 type SpecificToolChoice struct {
-	// Tool type (always "function").
-	ChoiceType ToolType `json:"type,omitempty"`
-	// The specific function to invoke.
-	Function SpecificFunction `json:"function"`
+	ChoiceType ToolType         `json:"type,omitempty"`
+	Function   SpecificFunction `json:"function"`
 }
 
 // SpecificFunction name of the specific function to invoke.
 type SpecificFunction struct {
-	// Function name.
 	Name string `json:"name"`
 }
 
 // JSONSchemaFormat jSON Schema specification for constrained output.
 type JSONSchemaFormat struct {
-	// Name of the schema (must be unique in the request).
-	Name string `json:"name"`
-	// Description of what the schema represents.
-	Description *string `json:"description,omitempty"`
-	// JSON Schema object defining the output structure.
-	Schema json.RawMessage `json:"schema"`
-	// If true, enforce strict schema validation.
-	Strict *bool `json:"strict,omitempty"`
+	Name        string          `json:"name"`
+	Description *string         `json:"description,omitempty"`
+	Schema      json.RawMessage `json:"schema"`
+	Strict      *bool           `json:"strict,omitempty"`
 }
 
 // Usage token-usage accounting returned by the provider on each completion / embedding call.
 type Usage struct {
-	// Prompt tokens used. Defaults to 0 when absent (some providers omit this).
-	PromptTokens uint64 `json:"prompt_tokens"`
-	// Completion tokens used. Defaults to 0 when absent (e.g. embedding responses).
-	CompletionTokens uint64 `json:"completion_tokens"`
-	// Total tokens used. Defaults to 0 when absent (some providers omit this).
-	TotalTokens uint64 `json:"total_tokens"`
-	// Breakdown of tokens used in the prompt, including cached tokens served
-	// at the provider's discounted cache-read rate. Absent when the provider
-	// does not return prompt-token details.
+	PromptTokens        uint64               `json:"prompt_tokens"`
+	CompletionTokens    uint64               `json:"completion_tokens"`
+	TotalTokens         uint64               `json:"total_tokens"`
 	PromptTokensDetails *PromptTokensDetails `json:"prompt_tokens_details,omitempty"`
 }
 
@@ -1382,63 +1244,33 @@ type Usage struct {
 // a `cache_read_input_token_cost`, the cached portion is billed at the
 // discounted rate and the remainder at the regular input rate.
 type PromptTokensDetails struct {
-	// Cached tokens present in the prompt. Defaults to 0 when absent.
 	CachedTokens uint64 `json:"cached_tokens"`
-	// Audio input tokens present in the prompt. Defaults to 0 when absent.
-	AudioTokens uint64 `json:"audio_tokens"`
+	AudioTokens  uint64 `json:"audio_tokens"`
 }
 
 // ChatCompletionRequest chat completion request (compatible with OpenAI and similar APIs).
 type ChatCompletionRequest struct {
-	// Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`).
-	Model string `json:"model"`
-	// Conversation history from oldest to newest.
-	Messages []Message `json:"messages,omitempty"`
-	// Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0.
-	Temperature *float64 `json:"temperature,omitempty"`
-	// Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused.
-	TopP *float64 `json:"top_p,omitempty"`
-	// Number of chat completions to generate. Defaults to 1.
-	N *uint32 `json:"n,omitempty"`
-	// Whether to stream the response.
-	//
-	// Managed by the client layer — do not set directly.
-	Stream *bool `json:"stream,omitempty"`
-	// Stop sequence(s) that halt token generation.
-	Stop *StopSequence `json:"stop,omitempty"`
-	// Max output tokens. Different from max_completion_tokens in some providers.
-	MaxTokens *uint64 `json:"max_tokens,omitempty"`
-	// Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.
-	PresencePenalty *float64 `json:"presence_penalty,omitempty"`
-	// Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens.
-	FrequencyPenalty *float64 `json:"frequency_penalty,omitempty"`
-	// Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
-	// serialization order — important when hashing or signing requests.
-	LogitBias map[string]float64 `json:"logit_bias,omitempty"`
-	// User identifier for request tracking and abuse detection.
-	User *string `json:"user,omitempty"`
-	// Tools the model can invoke.
-	Tools []ChatCompletionTool `json:"tools,omitempty"`
-	// Tool usage mode (auto, required, none, or specific tool).
-	ToolChoice *ToolChoice `json:"tool_choice,omitempty"`
-	// Whether the model can call multiple tools in parallel. Defaults to true.
-	ParallelToolCalls *bool `json:"parallel_tool_calls,omitempty"`
-	// Output format constraint (text, JSON, JSON schema).
-	ResponseFormat ResponseFormat `json:"response_format,omitempty"`
-	// Streaming options (e.g., include_usage).
-	StreamOptions *StreamOptions `json:"stream_options,omitempty"`
-	// Random seed for reproducible outputs. Provider support varies.
-	Seed *int64 `json:"seed,omitempty"`
-	// Reasoning effort level (low, medium, high) for extended-thinking models.
-	ReasoningEffort *ReasoningEffort `json:"reasoning_effort,omitempty"`
-	// Output modalities to request from the model.
-	//
-	// For OpenAI audio models, pass `["text", "audio"]`. Vertex AI / Gemini
-	// translates these to `generationConfig.responseModalities` (uppercase).
-	Modalities []Modality `json:"modalities,omitempty"`
-	// Provider-specific extra parameters merged into the request body.
-	// Use for guardrails, safety settings, grounding config, etc.
-	ExtraBody *json.RawMessage `json:"extra_body,omitempty"`
+	Model             string               `json:"model"`
+	Messages          []Message            `json:"messages,omitempty"`
+	Temperature       *float64             `json:"temperature,omitempty"`
+	TopP              *float64             `json:"top_p,omitempty"`
+	N                 *uint32              `json:"n,omitempty"`
+	Stream            *bool                `json:"stream,omitempty"`
+	Stop              *StopSequence        `json:"stop,omitempty"`
+	MaxTokens         *uint64              `json:"max_tokens,omitempty"`
+	PresencePenalty   *float64             `json:"presence_penalty,omitempty"`
+	FrequencyPenalty  *float64             `json:"frequency_penalty,omitempty"`
+	LogitBias         map[string]float64   `json:"logit_bias,omitempty"`
+	User              *string              `json:"user,omitempty"`
+	Tools             []ChatCompletionTool `json:"tools,omitempty"`
+	ToolChoice        *ToolChoice          `json:"tool_choice,omitempty"`
+	ParallelToolCalls *bool                `json:"parallel_tool_calls,omitempty"`
+	ResponseFormat    ResponseFormat       `json:"response_format,omitempty"`
+	StreamOptions     *StreamOptions       `json:"stream_options,omitempty"`
+	Seed              *int64               `json:"seed,omitempty"`
+	ReasoningEffort   *ReasoningEffort     `json:"reasoning_effort,omitempty"`
+	Modalities        []Modality           `json:"modalities,omitempty"`
+	ExtraBody         *json.RawMessage     `json:"extra_body,omitempty"`
 }
 
 func (s *ChatCompletionRequest) UnmarshalJSON(data []byte) error {
@@ -1500,179 +1332,116 @@ func (s *ChatCompletionRequest) UnmarshalJSON(data []byte) error {
 
 // StreamOptions options for streaming responses.
 type StreamOptions struct {
-	// If true, include token usage in the final stream chunk.
 	IncludeUsage *bool `json:"include_usage,omitempty"`
 }
 
 // ChatCompletionResponse chat completion response from the API.
 type ChatCompletionResponse struct {
-	// Unique identifier for this response.
-	ID string `json:"id"`
-	// Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
-	// plain `String` so non-standard provider values do not break deserialization.
-	Object string `json:"object"`
-	// Unix timestamp of response creation.
-	Created uint64 `json:"created"`
-	// Model used to generate the response.
-	Model string `json:"model"`
-	// List of completion choices.
-	Choices []Choice `json:"choices,omitempty"`
-	// Token usage statistics.
-	Usage *Usage `json:"usage,omitempty"`
-	// Fingerprint of the system configuration (OpenAI-specific).
-	SystemFingerprint *string `json:"system_fingerprint,omitempty"`
-	// Service tier used (OpenAI-specific).
-	ServiceTier *string `json:"service_tier,omitempty"`
+	ID                string   `json:"id"`
+	Object            string   `json:"object"`
+	Created           uint64   `json:"created"`
+	Model             string   `json:"model"`
+	Choices           []Choice `json:"choices,omitempty"`
+	Usage             *Usage   `json:"usage,omitempty"`
+	SystemFingerprint *string  `json:"system_fingerprint,omitempty"`
+	ServiceTier       *string  `json:"service_tier,omitempty"`
 }
 
 // Choice single completion choice.
 type Choice struct {
-	// Index of this choice in the choices array.
-	Index uint32 `json:"index"`
-	// The assistant's message response.
-	Message AssistantMessage `json:"message"`
-	// Why the model stopped generating (stop, length, tool_calls, content_filter, etc.).
-	FinishReason *FinishReason `json:"finish_reason,omitempty"`
+	Index        uint32           `json:"index"`
+	Message      AssistantMessage `json:"message"`
+	FinishReason *FinishReason    `json:"finish_reason,omitempty"`
 }
 
 // ChatCompletionChunk streamed chunk of a chat completion response.
 type ChatCompletionChunk struct {
-	// Unique identifier for this stream.
-	ID string `json:"id"`
-	// Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
-	// as a plain `String` so non-standard provider values do not fail parsing.
-	Object string `json:"object"`
-	// Unix timestamp of chunk creation.
-	Created uint64 `json:"created"`
-	// Model used to generate the chunk.
-	Model string `json:"model"`
-	// Streaming choices (delta updates).
-	Choices []StreamChoice `json:"choices,omitempty"`
-	// Token usage (typically only in the final chunk).
-	Usage *Usage `json:"usage,omitempty"`
-	// Fingerprint of the system configuration (OpenAI-specific).
-	SystemFingerprint *string `json:"system_fingerprint,omitempty"`
-	// Service tier used (OpenAI-specific).
-	ServiceTier *string `json:"service_tier,omitempty"`
+	ID                string         `json:"id"`
+	Object            string         `json:"object"`
+	Created           uint64         `json:"created"`
+	Model             string         `json:"model"`
+	Choices           []StreamChoice `json:"choices,omitempty"`
+	Usage             *Usage         `json:"usage,omitempty"`
+	SystemFingerprint *string        `json:"system_fingerprint,omitempty"`
+	ServiceTier       *string        `json:"service_tier,omitempty"`
 }
 
 // StreamChoice streaming choice with incremental delta.
 type StreamChoice struct {
-	// Index of this choice in the choices array.
-	Index uint32 `json:"index"`
-	// Incremental update to the message (content, tool calls, etc.).
-	Delta StreamDelta `json:"delta"`
-	// Why the stream ended (present only in final chunk).
+	Index        uint32        `json:"index"`
+	Delta        StreamDelta   `json:"delta"`
 	FinishReason *FinishReason `json:"finish_reason,omitempty"`
 }
 
 // StreamDelta incremental delta in a stream chunk.
 type StreamDelta struct {
-	// Role (typically present only in the first chunk).
-	Role *string `json:"role,omitempty"`
-	// Partial content chunk (e.g., a few words of the response).
-	Content *string `json:"content,omitempty"`
-	// Partial tool calls being streamed.
-	ToolCalls []StreamToolCall `json:"tool_calls,omitempty"`
-	// Deprecated legacy function_call delta; retained for API compatibility.
+	Role         *string             `json:"role,omitempty"`
+	Content      *string             `json:"content,omitempty"`
+	ToolCalls    []StreamToolCall    `json:"tool_calls,omitempty"`
 	FunctionCall *StreamFunctionCall `json:"function_call,omitempty"`
-	// Partial refusal message.
-	Refusal *string `json:"refusal,omitempty"`
+	Refusal      *string             `json:"refusal,omitempty"`
 }
 
 // StreamToolCall streaming tool call being built incrementally.
 type StreamToolCall struct {
-	// Index of this tool call in the tool_calls array.
-	Index uint32 `json:"index"`
-	// Tool call ID (typically in the first chunk for this call).
-	ID *string `json:"id,omitempty"`
-	// Tool type (typically "function").
-	CallType *ToolType `json:"type,omitempty"`
-	// Partial function name and arguments.
+	Index    uint32              `json:"index"`
+	ID       *string             `json:"id,omitempty"`
+	CallType *ToolType           `json:"type,omitempty"`
 	Function *StreamFunctionCall `json:"function,omitempty"`
 }
 
 // StreamFunctionCall partial function call details in a stream.
 type StreamFunctionCall struct {
-	// Function name (typically in the first chunk).
-	Name *string `json:"name,omitempty"`
-	// Partial JSON arguments chunk.
+	Name      *string `json:"name,omitempty"`
 	Arguments *string `json:"arguments,omitempty"`
 }
 
 // EmbeddingRequest embedding request.
 type EmbeddingRequest struct {
-	// Model ID (e.g., `"text-embedding-3-small"`).
-	Model string `json:"model"`
-	// Text or texts to embed.
-	Input EmbeddingInput `json:"input"`
-	// Output format: float (native) or base64.
+	Model          string           `json:"model"`
+	Input          EmbeddingInput   `json:"input"`
 	EncodingFormat *EmbeddingFormat `json:"encoding_format,omitempty"`
-	// Requested embedding dimensions (if supported by the model).
-	Dimensions *uint32 `json:"dimensions,omitempty"`
-	// User identifier for request tracking.
-	User *string `json:"user,omitempty"`
+	Dimensions     *uint32          `json:"dimensions,omitempty"`
+	User           *string          `json:"user,omitempty"`
 }
 
 // EmbeddingResponse embedding response.
 type EmbeddingResponse struct {
-	// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
-	// `String` so non-standard provider values do not break deserialization.
-	Object string `json:"object"`
-	// List of embeddings.
-	Data []EmbeddingObject `json:"data,omitempty"`
-	// Model used to generate embeddings.
-	Model string `json:"model"`
-	// Token usage (input tokens only; embeddings have zero output tokens).
-	Usage *Usage `json:"usage,omitempty"`
+	Object string            `json:"object"`
+	Data   []EmbeddingObject `json:"data,omitempty"`
+	Model  string            `json:"model"`
+	Usage  *Usage            `json:"usage,omitempty"`
 }
 
 // EmbeddingObject single embedding vector.
 type EmbeddingObject struct {
-	// Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
-	// `String` so non-standard provider values do not break deserialization.
-	Object string `json:"object"`
-	// The embedding vector.
+	Object    string    `json:"object"`
 	Embedding []float64 `json:"embedding,omitempty"`
-	// Index in the batch (corresponds to input order).
-	Index uint32 `json:"index"`
+	Index     uint32    `json:"index"`
 }
 
 // CreateImageRequest request to create images from a text prompt.
 type CreateImageRequest struct {
-	// Text description of the image to generate.
-	Prompt string `json:"prompt"`
-	// Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset.
-	Model *string `json:"model,omitempty"`
-	// Number of images to generate. Defaults to 1.
-	N *uint32 `json:"n,omitempty"`
-	// Image size (e.g., `"1024x1024"`, `"1792x1024"`).
-	Size *string `json:"size,omitempty"`
-	// Image quality: `"standard"` or `"hd"`.
-	Quality *string `json:"quality,omitempty"`
-	// Style: `"natural"` or `"vivid"` (DALL-E 3 only).
-	Style *string `json:"style,omitempty"`
-	// Response format: `"url"` or `"b64_json"`.
+	Prompt         string  `json:"prompt"`
+	Model          *string `json:"model,omitempty"`
+	N              *uint32 `json:"n,omitempty"`
+	Size           *string `json:"size,omitempty"`
+	Quality        *string `json:"quality,omitempty"`
+	Style          *string `json:"style,omitempty"`
 	ResponseFormat *string `json:"response_format,omitempty"`
-	// User identifier for request tracking.
-	User *string `json:"user,omitempty"`
+	User           *string `json:"user,omitempty"`
 }
 
 // ImagesResponse response containing generated images.
 type ImagesResponse struct {
-	// Unix timestamp of image creation.
-	Created uint64 `json:"created"`
-	// List of generated images.
-	Data []Image `json:"data,omitempty"`
+	Created uint64  `json:"created"`
+	Data    []Image `json:"data,omitempty"`
 }
 
 // Image single generated image, returned as either a URL or base64 data.
 type Image struct {
-	// Image URL (if response_format was "url").
-	URL *string `json:"url,omitempty"`
-	// Base64-encoded image data (if response_format was "b64_json").
-	B64JSON *string `json:"b64_json,omitempty"`
-	// The final prompt used to generate the image (DALL-E 3).
+	URL           *string `json:"url,omitempty"`
+	B64JSON       *string `json:"b64_json,omitempty"`
 	RevisedPrompt *string `json:"revised_prompt,omitempty"`
 }
 
@@ -1681,18 +1450,13 @@ type Image struct {
 // Named struct (rather than a tuple) so polyglot bindings can extract
 // `decode_data_url` with a typed return rather than a sanitized scalar.
 type DecodedDataURL struct {
-	// MIME type extracted from the URL prefix (verbatim, not normalised).
 	Mime string `json:"mime"`
-	// Decoded base64 payload.
 	Data []byte `json:"data"`
 }
 
 // MarshalJSON serializes `[]byte` fields as a JSON array of integers (the format
 // Rust's serde `Vec<u8>` deserializer expects) instead of Go's default base64 string.
 func (v DecodedDataURL) MarshalJSON() ([]byte, error) {
-	// Explicit shadow struct listing every field — embedding the original
-	// would cause both base64-string and int-array entries for the same JSON
-	// key. Bytes fields rendered as `[]int`; everything else copied verbatim.
 	aux := struct {
 		Mime string `json:"mime"`
 		Data []int  `json:"data"`
@@ -1707,150 +1471,96 @@ func (v DecodedDataURL) MarshalJSON() ([]byte, error) {
 
 // CreateSpeechRequest request to generate speech audio from text.
 type CreateSpeechRequest struct {
-	// Model ID (e.g., `"tts-1"`, `"tts-1-hd"`).
-	Model string `json:"model"`
-	// Text to synthesize into speech.
-	Input string `json:"input"`
-	// Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`).
-	Voice string `json:"voice"`
-	// Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`).
-	ResponseFormat *string `json:"response_format,omitempty"`
-	// Playback speed in `[0.25, 4.0]`. Defaults to 1.0.
-	Speed *float64 `json:"speed,omitempty"`
+	Model          string   `json:"model"`
+	Input          string   `json:"input"`
+	Voice          string   `json:"voice"`
+	ResponseFormat *string  `json:"response_format,omitempty"`
+	Speed          *float64 `json:"speed,omitempty"`
 }
 
 // CreateTranscriptionRequest request to transcribe audio into text.
 type CreateTranscriptionRequest struct {
-	// Model ID (e.g., `"whisper-1"`).
-	Model string `json:"model"`
-	// Base64-encoded audio file data.
-	File string `json:"file"`
-	// Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects.
-	Language *string `json:"language,omitempty"`
-	// Optional text to guide the model (improves accuracy for domain-specific terms).
-	Prompt *string `json:"prompt,omitempty"`
-	// Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`).
-	ResponseFormat *string `json:"response_format,omitempty"`
-	// Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.
-	Temperature *float64 `json:"temperature,omitempty"`
+	Model          string   `json:"model"`
+	File           string   `json:"file"`
+	Language       *string  `json:"language,omitempty"`
+	Prompt         *string  `json:"prompt,omitempty"`
+	ResponseFormat *string  `json:"response_format,omitempty"`
+	Temperature    *float64 `json:"temperature,omitempty"`
 }
 
 // TranscriptionResponse response from a transcription request.
 type TranscriptionResponse struct {
-	// The transcribed text.
-	Text string `json:"text"`
-	// Detected language (ISO-639-1 code).
-	Language *string `json:"language,omitempty"`
-	// Total audio duration in seconds.
-	Duration *float64 `json:"duration,omitempty"`
-	// Detailed segment-level transcription (if response_format is "verbose_json").
+	Text     string                 `json:"text"`
+	Language *string                `json:"language,omitempty"`
+	Duration *float64               `json:"duration,omitempty"`
 	Segments []TranscriptionSegment `json:"segments,omitempty"`
 }
 
 // TranscriptionSegment segment of transcribed audio with timing information.
 type TranscriptionSegment struct {
-	// Segment index (0-based).
-	ID uint32 `json:"id"`
-	// Start time in seconds.
+	ID    uint32  `json:"id"`
 	Start float64 `json:"start"`
-	// End time in seconds.
-	End float64 `json:"end"`
-	// Transcribed text for this segment.
-	Text string `json:"text"`
+	End   float64 `json:"end"`
+	Text  string  `json:"text"`
 }
 
 // ModerationRequest request to classify content for policy violations.
 type ModerationRequest struct {
-	// Text or texts to check.
 	Input ModerationInput `json:"input"`
-	// Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset.
-	Model *string `json:"model,omitempty"`
+	Model *string         `json:"model,omitempty"`
 }
 
 // ModerationResponse response from the moderation endpoint.
 type ModerationResponse struct {
-	// Unique identifier for this moderation request.
-	ID string `json:"id"`
-	// Model used for classification.
-	Model string `json:"model"`
-	// Results for each input string.
+	ID      string             `json:"id"`
+	Model   string             `json:"model"`
 	Results []ModerationResult `json:"results,omitempty"`
 }
 
 // ModerationResult single moderation classification result.
 type ModerationResult struct {
-	// True if any category was flagged.
-	Flagged bool `json:"flagged"`
-	// Boolean flags for each moderation category.
-	Categories ModerationCategories `json:"categories"`
-	// Confidence scores for each category.
+	Flagged        bool                     `json:"flagged"`
+	Categories     ModerationCategories     `json:"categories"`
 	CategoryScores ModerationCategoryScores `json:"category_scores"`
 }
 
 // ModerationCategories boolean flags for each moderation category.
 type ModerationCategories struct {
-	// Sexual content.
-	Sexual bool `json:"sexual"`
-	// Hate speech.
-	Hate bool `json:"hate"`
-	// Harassment.
-	Harassment bool `json:"harassment"`
-	// Self-harm content.
-	SelfHarm bool `json:"self-harm"`
-	// Sexual content involving minors.
-	SexualMinors bool `json:"sexual/minors"`
-	// Hate speech that threatens violence.
-	HateThreatening bool `json:"hate/threatening"`
-	// Graphic violence.
-	ViolenceGraphic bool `json:"violence/graphic"`
-	// Intent to self-harm.
-	SelfHarmIntent bool `json:"self-harm/intent"`
-	// Instructions for self-harm.
-	SelfHarmInstructions bool `json:"self-harm/instructions"`
-	// Harassment that threatens violence.
+	Sexual                bool `json:"sexual"`
+	Hate                  bool `json:"hate"`
+	Harassment            bool `json:"harassment"`
+	SelfHarm              bool `json:"self-harm"`
+	SexualMinors          bool `json:"sexual/minors"`
+	HateThreatening       bool `json:"hate/threatening"`
+	ViolenceGraphic       bool `json:"violence/graphic"`
+	SelfHarmIntent        bool `json:"self-harm/intent"`
+	SelfHarmInstructions  bool `json:"self-harm/instructions"`
 	HarassmentThreatening bool `json:"harassment/threatening"`
-	// Non-graphic violence.
-	Violence bool `json:"violence"`
+	Violence              bool `json:"violence"`
 }
 
 // ModerationCategoryScores confidence scores for each moderation category.
 type ModerationCategoryScores struct {
-	// Sexual content score.
-	Sexual float64 `json:"sexual"`
-	// Hate speech score.
-	Hate float64 `json:"hate"`
-	// Harassment score.
-	Harassment float64 `json:"harassment"`
-	// Self-harm content score.
-	SelfHarm float64 `json:"self-harm"`
-	// Sexual content involving minors score.
-	SexualMinors float64 `json:"sexual/minors"`
-	// Hate speech that threatens violence score.
-	HateThreatening float64 `json:"hate/threatening"`
-	// Graphic violence score.
-	ViolenceGraphic float64 `json:"violence/graphic"`
-	// Intent to self-harm score.
-	SelfHarmIntent float64 `json:"self-harm/intent"`
-	// Instructions for self-harm score.
-	SelfHarmInstructions float64 `json:"self-harm/instructions"`
-	// Harassment that threatens violence score.
+	Sexual                float64 `json:"sexual"`
+	Hate                  float64 `json:"hate"`
+	Harassment            float64 `json:"harassment"`
+	SelfHarm              float64 `json:"self-harm"`
+	SexualMinors          float64 `json:"sexual/minors"`
+	HateThreatening       float64 `json:"hate/threatening"`
+	ViolenceGraphic       float64 `json:"violence/graphic"`
+	SelfHarmIntent        float64 `json:"self-harm/intent"`
+	SelfHarmInstructions  float64 `json:"self-harm/instructions"`
 	HarassmentThreatening float64 `json:"harassment/threatening"`
-	// Non-graphic violence score.
-	Violence float64 `json:"violence"`
+	Violence              float64 `json:"violence"`
 }
 
 // RerankRequest request to rerank documents by relevance to a query.
 type RerankRequest struct {
-	// Model ID (e.g., `"cohere/rerank-english-v3.0"`).
-	Model string `json:"model"`
-	// The search query.
-	Query string `json:"query"`
-	// Documents to rerank.
-	Documents []RerankDocument `json:"documents,omitempty"`
-	// Return only the top N results. Optional.
-	TopN *uint32 `json:"top_n,omitempty"`
-	// Include the document content in results. Defaults to false.
-	ReturnDocuments *bool `json:"return_documents,omitempty"`
+	Model           string           `json:"model"`
+	Query           string           `json:"query"`
+	Documents       []RerankDocument `json:"documents,omitempty"`
+	TopN            *uint32          `json:"top_n,omitempty"`
+	ReturnDocuments *bool            `json:"return_documents,omitempty"`
 }
 
 func (s *RerankRequest) UnmarshalJSON(data []byte) error {
@@ -1883,74 +1593,52 @@ func (s *RerankRequest) UnmarshalJSON(data []byte) error {
 
 // RerankResponse response from the rerank endpoint.
 type RerankResponse struct {
-	// Unique identifier for this rerank request.
-	ID *string `json:"id,omitempty"`
-	// Reranked documents in order of relevance.
-	Results []RerankResult `json:"results,omitempty"`
-	// Optional metadata about the reranking operation.
-	Meta *json.RawMessage `json:"meta,omitempty"`
+	ID      *string          `json:"id,omitempty"`
+	Results []RerankResult   `json:"results,omitempty"`
+	Meta    *json.RawMessage `json:"meta,omitempty"`
 }
 
 // RerankResult single reranked document with its relevance score.
 type RerankResult struct {
-	// Original document index in the input list.
-	Index uint32 `json:"index"`
-	// Relevance score in `[0, 1]`. Higher indicates more relevant.
-	RelevanceScore float64 `json:"relevance_score"`
-	// Original document content (if `return_documents` was true).
-	Document *RerankResultDocument `json:"document,omitempty"`
+	Index          uint32                `json:"index"`
+	RelevanceScore float64               `json:"relevance_score"`
+	Document       *RerankResultDocument `json:"document,omitempty"`
 }
 
 // RerankResultDocument text content of a reranked document, returned when `return_documents` is true.
 type RerankResultDocument struct {
-	// Document text.
 	Text string `json:"text"`
 }
 
 // SearchRequest search request.
 type SearchRequest struct {
-	// The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
-	Model string `json:"model"`
-	// The search query string.
-	Query string `json:"query"`
-	// Maximum number of results to return.
-	MaxResults *uint32 `json:"max_results,omitempty"`
-	// Domain filter — restrict results to specific domains.
+	Model              string   `json:"model"`
+	Query              string   `json:"query"`
+	MaxResults         *uint32  `json:"max_results,omitempty"`
 	SearchDomainFilter []string `json:"search_domain_filter,omitempty"`
-	// Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`).
-	Country *string `json:"country,omitempty"`
+	Country            *string  `json:"country,omitempty"`
 }
 
 // SearchResponse search response.
 type SearchResponse struct {
-	// List of search results.
 	Results []SearchResult `json:"results,omitempty"`
-	// Model/provider that performed the search.
-	Model string `json:"model"`
+	Model   string         `json:"model"`
 }
 
 // SearchResult individual search result.
 type SearchResult struct {
-	// Result title.
-	Title string `json:"title"`
-	// Result URL.
-	URL string `json:"url"`
-	// Text snippet or excerpt from the page.
-	Snippet string `json:"snippet"`
-	// Publication or last-updated date, if available.
-	Date *string `json:"date,omitempty"`
+	Title   string  `json:"title"`
+	URL     string  `json:"url"`
+	Snippet string  `json:"snippet"`
+	Date    *string `json:"date,omitempty"`
 }
 
 // OcrRequest oCR request.
 type OcrRequest struct {
-	// The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`).
-	Model string `json:"model"`
-	// The document to process (URL or base64).
-	Document OcrDocument `json:"document"`
-	// Specific pages to process (1-indexed). `None` means all pages.
-	Pages []uint32 `json:"pages,omitempty"`
-	// Whether to include base64-encoded images of each processed page.
-	IncludeImageBase64 *bool `json:"include_image_base64,omitempty"`
+	Model              string      `json:"model"`
+	Document           OcrDocument `json:"document"`
+	Pages              []uint32    `json:"pages,omitempty"`
+	IncludeImageBase64 *bool       `json:"include_image_base64,omitempty"`
 }
 
 func (s *OcrRequest) UnmarshalJSON(data []byte) error {
@@ -1978,260 +1666,172 @@ func (s *OcrRequest) UnmarshalJSON(data []byte) error {
 
 // OcrResponse oCR response.
 type OcrResponse struct {
-	// Extracted pages in order.
 	Pages []OcrPage `json:"pages,omitempty"`
-	// Model/provider used for OCR.
-	Model string `json:"model"`
-	// Token usage, if reported by the provider.
-	Usage *Usage `json:"usage,omitempty"`
+	Model string    `json:"model"`
+	Usage *Usage    `json:"usage,omitempty"`
 }
 
 // OcrPage single page of OCR output.
 type OcrPage struct {
-	// Page index (0-based).
-	Index uint32 `json:"index"`
-	// Extracted page content as Markdown.
-	Markdown string `json:"markdown"`
-	// Embedded images extracted from the page (if `include_image_base64` was true).
-	Images []OcrImage `json:"images,omitempty"`
-	// Page dimensions in pixels, if available.
+	Index      uint32          `json:"index"`
+	Markdown   string          `json:"markdown"`
+	Images     []OcrImage      `json:"images,omitempty"`
 	Dimensions *PageDimensions `json:"dimensions,omitempty"`
 }
 
 // OcrImage image extracted from an OCR page.
 type OcrImage struct {
-	// Unique image identifier within the document.
-	ID string `json:"id"`
-	// Base64-encoded image data (if `include_image_base64` was true).
+	ID          string  `json:"id"`
 	ImageBase64 *string `json:"image_base64,omitempty"`
 }
 
 // PageDimensions page dimensions in pixels.
 type PageDimensions struct {
-	// Width in pixels.
-	Width uint32 `json:"width"`
-	// Height in pixels.
+	Width  uint32 `json:"width"`
 	Height uint32 `json:"height"`
 }
 
 // ModelsListResponse response listing available models.
 type ModelsListResponse struct {
-	// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
-	// `String` so non-standard provider values do not break deserialization.
-	Object string `json:"object"`
-	// List of available models.
-	Data []ModelObject `json:"data,omitempty"`
+	Object string        `json:"object"`
+	Data   []ModelObject `json:"data,omitempty"`
 }
 
 // ModelObject model available from the API.
 type ModelObject struct {
-	// Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`).
-	ID string `json:"id"`
-	// Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
-	// `String` so non-standard provider values do not break deserialization.
-	Object string `json:"object"`
-	// Unix timestamp of model creation (or release date).
+	ID      string `json:"id"`
+	Object  string `json:"object"`
 	Created uint64 `json:"created"`
-	// Organization or entity that owns the model.
 	OwnedBy string `json:"owned_by"`
 }
 
 // CreateFileRequest request to upload a file.
 type CreateFileRequest struct {
-	// Base64-encoded file data.
-	File string `json:"file"`
-	// Purpose for the file.
-	Purpose FilePurpose `json:"purpose,omitempty"`
-	// Optional filename to associate with the upload.
-	Filename *string `json:"filename,omitempty"`
+	File     string      `json:"file"`
+	Purpose  FilePurpose `json:"purpose,omitempty"`
+	Filename *string     `json:"filename,omitempty"`
 }
 
 // FileObject uploaded file object.
 type FileObject struct {
-	// Unique file ID.
-	ID string `json:"id"`
-	// Object type (always `"file"`).
-	Object string `json:"object"`
-	// File size in bytes.
-	Bytes uint64 `json:"bytes"`
-	// Unix timestamp of file creation.
-	CreatedAt uint64 `json:"created_at"`
-	// Filename.
-	Filename string `json:"filename"`
-	// File purpose.
-	Purpose string `json:"purpose"`
-	// Processing status (e.g., `"uploaded"`, `"processed"`).
-	Status *string `json:"status,omitempty"`
+	ID        string  `json:"id"`
+	Object    string  `json:"object"`
+	Bytes     uint64  `json:"bytes"`
+	CreatedAt uint64  `json:"created_at"`
+	Filename  string  `json:"filename"`
+	Purpose   string  `json:"purpose"`
+	Status    *string `json:"status,omitempty"`
 }
 
 // FileListResponse response from listing files.
 type FileListResponse struct {
-	// Object type (always `"list"`).
-	Object string `json:"object"`
-	// List of file objects.
-	Data []FileObject `json:"data,omitempty"`
-	// Whether more results are available.
-	HasMore *bool `json:"has_more,omitempty"`
+	Object  string       `json:"object"`
+	Data    []FileObject `json:"data,omitempty"`
+	HasMore *bool        `json:"has_more,omitempty"`
 }
 
 // FileListQuery query parameters for listing files.
 type FileListQuery struct {
-	// Filter by file purpose (e.g., `"batch"`, `"fine-tune"`).
 	Purpose *string `json:"purpose,omitempty"`
-	// Maximum number of results to return. Defaults to 20.
-	Limit *uint32 `json:"limit,omitempty"`
-	// Pagination cursor: return results after this file ID.
-	After *string `json:"after,omitempty"`
+	Limit   *uint32 `json:"limit,omitempty"`
+	After   *string `json:"after,omitempty"`
 }
 
 // DeleteResponse response from a delete operation.
 type DeleteResponse struct {
-	// ID of the deleted resource.
-	ID string `json:"id"`
-	// Object type.
-	Object string `json:"object"`
-	// Confirmation that the resource was deleted.
-	Deleted bool `json:"deleted"`
+	ID      string `json:"id"`
+	Object  string `json:"object"`
+	Deleted bool   `json:"deleted"`
 }
 
 // CreateBatchRequest request to create a batch job.
 type CreateBatchRequest struct {
-	// ID of the uploaded input file (JSONL format).
-	InputFileID string `json:"input_file_id"`
-	// API endpoint (e.g., `"/v1/chat/completions"`).
-	Endpoint string `json:"endpoint"`
-	// Completion window (e.g., `"24h"`).
-	CompletionWindow string `json:"completion_window"`
-	// Optional metadata to attach to the batch.
-	Metadata *json.RawMessage `json:"metadata,omitempty"`
+	InputFileID      string           `json:"input_file_id"`
+	Endpoint         string           `json:"endpoint"`
+	CompletionWindow string           `json:"completion_window"`
+	Metadata         *json.RawMessage `json:"metadata,omitempty"`
 }
 
 // BatchObject batch job object.
 type BatchObject struct {
-	// Unique batch ID.
-	ID string `json:"id"`
-	// Object type (always `"batch"`).
-	Object string `json:"object"`
-	// API endpoint (e.g., `"/v1/chat/completions"`).
-	Endpoint string `json:"endpoint"`
-	// ID of the input file.
-	InputFileID string `json:"input_file_id"`
-	// Completion window (e.g., `"24h"`).
-	CompletionWindow string `json:"completion_window"`
-	// Current job status.
-	Status BatchStatus `json:"status,omitempty"`
-	// ID of the output file (present when completed).
-	OutputFileID *string `json:"output_file_id,omitempty"`
-	// ID of the error file (present if some requests failed).
-	ErrorFileID *string `json:"error_file_id,omitempty"`
-	// Unix timestamp of batch creation.
-	CreatedAt uint64 `json:"created_at"`
-	// Unix timestamp of completion (if completed).
-	CompletedAt *uint64 `json:"completed_at,omitempty"`
-	// Unix timestamp of failure (if failed).
-	FailedAt *uint64 `json:"failed_at,omitempty"`
-	// Unix timestamp of expiration (if expired).
-	ExpiredAt *uint64 `json:"expired_at,omitempty"`
-	// Request processing counts.
-	RequestCounts *BatchRequestCounts `json:"request_counts,omitempty"`
-	// Metadata attached to the batch.
-	Metadata *json.RawMessage `json:"metadata,omitempty"`
+	ID               string              `json:"id"`
+	Object           string              `json:"object"`
+	Endpoint         string              `json:"endpoint"`
+	InputFileID      string              `json:"input_file_id"`
+	CompletionWindow string              `json:"completion_window"`
+	Status           BatchStatus         `json:"status,omitempty"`
+	OutputFileID     *string             `json:"output_file_id,omitempty"`
+	ErrorFileID      *string             `json:"error_file_id,omitempty"`
+	CreatedAt        uint64              `json:"created_at"`
+	CompletedAt      *uint64             `json:"completed_at,omitempty"`
+	FailedAt         *uint64             `json:"failed_at,omitempty"`
+	ExpiredAt        *uint64             `json:"expired_at,omitempty"`
+	RequestCounts    *BatchRequestCounts `json:"request_counts,omitempty"`
+	Metadata         *json.RawMessage    `json:"metadata,omitempty"`
 }
 
 // BatchRequestCounts request processing counts for a batch.
 type BatchRequestCounts struct {
-	// Total requests in the batch.
-	Total uint64 `json:"total"`
-	// Completed requests.
+	Total     uint64 `json:"total"`
 	Completed uint64 `json:"completed"`
-	// Failed requests.
-	Failed uint64 `json:"failed"`
+	Failed    uint64 `json:"failed"`
 }
 
 // BatchListResponse response from listing batches.
 type BatchListResponse struct {
-	// Object type (always `"list"`).
-	Object string `json:"object"`
-	// List of batch objects.
-	Data []BatchObject `json:"data,omitempty"`
-	// Whether more results are available.
-	HasMore *bool `json:"has_more,omitempty"`
-	// First batch ID in the result set (for pagination).
-	FirstID *string `json:"first_id,omitempty"`
-	// Last batch ID in the result set (for pagination).
-	LastID *string `json:"last_id,omitempty"`
+	Object  string        `json:"object"`
+	Data    []BatchObject `json:"data,omitempty"`
+	HasMore *bool         `json:"has_more,omitempty"`
+	FirstID *string       `json:"first_id,omitempty"`
+	LastID  *string       `json:"last_id,omitempty"`
 }
 
 // BatchListQuery query parameters for listing batches.
 type BatchListQuery struct {
-	// Maximum number of results to return. Defaults to 20.
 	Limit *uint32 `json:"limit,omitempty"`
-	// Pagination cursor: return results after this batch ID.
 	After *string `json:"after,omitempty"`
 }
 
 // CreateResponseRequest request to create a structured response.
 type CreateResponseRequest struct {
-	// Model ID.
-	Model string `json:"model"`
-	// Input data to process (e.g., a document to extract from).
-	Input json.RawMessage `json:"input"`
-	// Instructions for processing the input.
-	Instructions *string `json:"instructions,omitempty"`
-	// Available tools the model can use.
-	Tools []ResponseTool `json:"tools,omitempty"`
-	// Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0.
-	Temperature *float64 `json:"temperature,omitempty"`
-	// Maximum output tokens.
-	MaxOutputTokens *uint64 `json:"max_output_tokens,omitempty"`
-	// Optional metadata.
-	Metadata *json.RawMessage `json:"metadata,omitempty"`
+	Model           string           `json:"model"`
+	Input           json.RawMessage  `json:"input"`
+	Instructions    *string          `json:"instructions,omitempty"`
+	Tools           []ResponseTool   `json:"tools,omitempty"`
+	Temperature     *float64         `json:"temperature,omitempty"`
+	MaxOutputTokens *uint64          `json:"max_output_tokens,omitempty"`
+	Metadata        *json.RawMessage `json:"metadata,omitempty"`
 }
 
 // ResponseTool tool available for the response request.
 type ResponseTool struct {
-	// Tool type (e.g., "extractor", "search").
-	ToolType string `json:"type"`
-	// Tool configuration (flattened into the object).
-	Config json.RawMessage `json:"config"`
+	ToolType string          `json:"type"`
+	Config   json.RawMessage `json:"config"`
 }
 
 // ResponseObject response from a structured response request.
 type ResponseObject struct {
-	// Unique response ID.
-	ID string `json:"id"`
-	// Object type (e.g., `"response"`).
-	Object string `json:"object"`
-	// Unix timestamp of response creation.
-	CreatedAt uint64 `json:"created_at"`
-	// Model used to generate the response.
-	Model string `json:"model"`
-	// Status (e.g., `"succeeded"`, `"failed"`).
-	Status string `json:"status"`
-	// Output items from the response.
-	Output []ResponseOutputItem `json:"output,omitempty"`
-	// Token usage.
-	Usage *ResponseUsage `json:"usage,omitempty"`
-	// Error details (if status is "failed").
-	Error *json.RawMessage `json:"error,omitempty"`
+	ID        string               `json:"id"`
+	Object    string               `json:"object"`
+	CreatedAt uint64               `json:"created_at"`
+	Model     string               `json:"model"`
+	Status    string               `json:"status"`
+	Output    []ResponseOutputItem `json:"output,omitempty"`
+	Usage     *ResponseUsage       `json:"usage,omitempty"`
+	Error     *json.RawMessage     `json:"error,omitempty"`
 }
 
 // ResponseOutputItem single output item from the response.
 type ResponseOutputItem struct {
-	// Output type (e.g., `"text"`, `"object"`, `"error"`).
-	ItemType string `json:"type"`
-	// Output content (flattened into the object).
-	Content json.RawMessage `json:"content"`
+	ItemType string          `json:"type"`
+	Content  json.RawMessage `json:"content"`
 }
 
 // ResponseUsage token usage for a response.
 type ResponseUsage struct {
-	// Input tokens used.
-	InputTokens uint64 `json:"input_tokens"`
-	// Output tokens used.
+	InputTokens  uint64 `json:"input_tokens"`
 	OutputTokens uint64 `json:"output_tokens"`
-	// Total tokens used.
-	TotalTokens uint64 `json:"total_tokens"`
+	TotalTokens  uint64 `json:"total_tokens"`
 }
 
 // WaitForBatchConfig configuration for polling a batch until terminal status.
@@ -2239,14 +1839,10 @@ type ResponseUsage struct {
 // All time values are in seconds as `f64` so the struct bridges across FFI
 // boundaries without requiring a `Duration` shim.
 type WaitForBatchConfig struct {
-	// Initial interval between polls, in seconds.
 	InitialIntervalSecs *float64 `json:"initial_interval_secs,omitempty"`
-	// Maximum interval between polls (backoff plateau), in seconds.
-	MaxIntervalSecs *float64 `json:"max_interval_secs,omitempty"`
-	// Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll).
-	BackoffMultiplier *float32 `json:"backoff_multiplier,omitempty"`
-	// Optional timeout in seconds — polling fails if this duration is exceeded.
-	TimeoutSecs *float64 `json:"timeout_secs,omitempty"`
+	MaxIntervalSecs     *float64 `json:"max_interval_secs,omitempty"`
+	BackoffMultiplier   *float32 `json:"backoff_multiplier,omitempty"`
+	TimeoutSecs         *float64 `json:"timeout_secs,omitempty"`
 }
 
 // DefaultClient is an opaque handle type.
@@ -2264,14 +1860,10 @@ func (h *DefaultClient) Free() {
 
 // CustomProviderConfig configuration for registering a custom LLM provider at runtime.
 type CustomProviderConfig struct {
-	// Unique name for this provider (e.g., "my-provider").
-	Name string `json:"name"`
-	// Base URL for the provider's API (e.g., `<https://api.my-provider.com/v1>`).
-	BaseURL string `json:"base_url"`
-	// Authentication header format.
-	AuthHeader AuthHeaderFormat `json:"auth_header"`
-	// Model name prefixes that route to this provider (e.g., `["my-"]`).
-	ModelPrefixes []string `json:"model_prefixes,omitempty"`
+	Name          string           `json:"name"`
+	BaseURL       string           `json:"base_url"`
+	AuthHeader    AuthHeaderFormat `json:"auth_header"`
+	ModelPrefixes []string         `json:"model_prefixes,omitempty"`
 }
 
 // ProviderCapabilities static capability flags for a provider.
@@ -2298,20 +1890,13 @@ type CustomProviderConfig struct {
 // assert!(!unknown.function_calling);
 // ```
 type ProviderCapabilities struct {
-	// The provider accepts image input in chat messages.
-	Vision bool `json:"vision"`
-	// The provider supports extended-thinking / reasoning tokens.
-	Reasoning bool `json:"reasoning"`
-	// The provider supports JSON-mode or `response_format` structured output.
+	Vision           bool `json:"vision"`
+	Reasoning        bool `json:"reasoning"`
 	StructuredOutput bool `json:"structured_output"`
-	// The provider supports tool / function calling.
-	FunctionCalling bool `json:"function_calling"`
-	// The provider accepts audio as input.
-	AudioIn bool `json:"audio_in"`
-	// The provider can generate audio / TTS output.
-	AudioOut bool `json:"audio_out"`
-	// The provider accepts video as input.
-	VideoIn bool `json:"video_in"`
+	FunctionCalling  bool `json:"function_calling"`
+	AudioIn          bool `json:"audio_in"`
+	AudioOut         bool `json:"audio_out"`
+	VideoIn          bool `json:"video_in"`
 }
 
 // ProviderConfig static configuration for a single provider entry in providers.json.
@@ -2319,54 +1904,33 @@ type ProviderCapabilities struct {
 // This struct deliberately does not include capability flags or streaming
 // format, which are accessed via the [`capabilities`] function.
 type ProviderConfig struct {
-	// Provider identifier (matches the entry key in providers.json).
-	Name string `json:"name"`
-	// Human-readable provider name shown in UIs.
-	DisplayName *string `json:"display_name,omitempty"`
-	// Base URL used as the default for this provider's HTTP client.
-	BaseURL *string `json:"base_url,omitempty"`
-	// Authentication scheme metadata (auth type + env var holding the key).
-	Auth *AuthConfig `json:"auth,omitempty"`
-	// Supported endpoint kinds (e.g. `chat`, `embeddings`).
-	Endpoints []string `json:"endpoints,omitempty"`
-	// Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).
-	ModelPrefixes []string `json:"model_prefixes,omitempty"`
-	// Parameter key renaming for this provider.
-	//
-	// Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
-	// to the name this provider expects (e.g. `"max_tokens"`).  Applied
-	// automatically by `ConfigDrivenProvider::transform_request`.
+	Name          string            `json:"name"`
+	DisplayName   *string           `json:"display_name,omitempty"`
+	BaseURL       *string           `json:"base_url,omitempty"`
+	Auth          *AuthConfig       `json:"auth,omitempty"`
+	Endpoints     []string          `json:"endpoints,omitempty"`
+	ModelPrefixes []string          `json:"model_prefixes,omitempty"`
 	ParamMappings map[string]string `json:"param_mappings,omitempty"`
 }
 
 // AuthConfig auth configuration block.
 type AuthConfig struct {
-	// Auth scheme classification.
 	AuthType AuthType `json:"type"`
-	// Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
-	// Holds the variable name, never the secret value.
-	EnvVar *string `json:"env_var,omitempty"`
+	EnvVar   *string  `json:"env_var,omitempty"`
 }
 
 // BudgetConfig configuration for budget enforcement.
 type BudgetConfig struct {
-	// Maximum total spend across all models, in USD.  `None` means unlimited.
-	GlobalLimit *float64 `json:"global_limit,omitempty"`
-	// Per-model spending limits in USD.  Models not listed here are only
-	// constrained by `global_limit`.
+	GlobalLimit *float64           `json:"global_limit,omitempty"`
 	ModelLimits map[string]float64 `json:"model_limits,omitempty"`
-	// Whether to reject requests or merely warn when a limit is exceeded.
-	Enforcement *Enforcement `json:"enforcement,omitempty"`
+	Enforcement *Enforcement       `json:"enforcement,omitempty"`
 }
 
 // CacheConfig configuration for the response cache.
 type CacheConfig struct {
-	// Maximum number of cached entries.
-	MaxEntries *uint `json:"max_entries,omitempty"`
-	// Time-to-live for each cached entry.
-	TTL *uint64 `json:"ttl,omitempty"`
-	// Storage backend to use.
-	Backend CacheBackend `json:"backend,omitempty"`
+	MaxEntries *uint        `json:"max_entries,omitempty"`
+	TTL        *uint64      `json:"ttl,omitempty"`
+	Backend    CacheBackend `json:"backend,omitempty"`
 }
 
 func (s *CacheConfig) UnmarshalJSON(data []byte) error {
@@ -2405,22 +1969,16 @@ func (h *SingleflightResult) Free() {
 
 // RateLimitConfig configuration for per-model rate limits.
 type RateLimitConfig struct {
-	// Maximum requests per window.  `None` means unlimited.
-	Rpm *uint32 `json:"rpm,omitempty"`
-	// Maximum tokens per window.  `None` means unlimited.
-	Tpm *uint64 `json:"tpm,omitempty"`
-	// Fixed window duration (defaults to 60 s).
+	Rpm    *uint32 `json:"rpm,omitempty"`
+	Tpm    *uint64 `json:"tpm,omitempty"`
 	Window *uint64 `json:"window,omitempty"`
 }
 
 // IntentPrototype intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
 type IntentPrototype struct {
-	// Human-readable name for the intent (used in logs/metrics).
-	Name string `json:"name"`
-	// Pre-computed embedding vector for this intent.
+	Name      string    `json:"name"`
 	Embedding []float64 `json:"embedding,omitempty"`
-	// Model to route to when this intent is detected.
-	Model string `json:"model"`
+	Model     string    `json:"model"`
 }
 
 // CreateClient create a new LLM client with simple scalar configuration.
@@ -2575,10 +2133,6 @@ func RegisterCustomProvider(config CustomProviderConfig) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescConfig) == "null" {
 		jsonBytescConfig = []byte("{}")
 	}
@@ -2781,10 +2335,6 @@ func CountRequestTokens(model string, req ChatCompletionRequest) (uint, error) {
 	if err != nil {
 		return 0, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -2969,10 +2519,6 @@ func (h *DefaultClient) Chat(req ChatCompletionRequest) (*ChatCompletionResponse
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3009,10 +2555,6 @@ func (h *DefaultClient) ChatStream(req ChatCompletionRequest) (<-chan ChatComple
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3038,8 +2580,6 @@ func (h *DefaultClient) ChatStream(req ChatCompletionRequest) (<-chan ChatComple
 		for {
 			chunkPtr := C.literllm_default_client_chat_stream_next(handle)
 			if chunkPtr == nil {
-				// Null = clean end-of-stream (errno 0) or stream error (errno != 0).
-				// In either case there are no more chunks; close the channel.
 				return
 			}
 			jsonPtr := C.literllm_chat_completion_chunk_to_json(chunkPtr)
@@ -3066,10 +2606,6 @@ func (h *DefaultClient) Embed(req EmbeddingRequest) (*EmbeddingResponse, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3127,10 +2663,6 @@ func (h *DefaultClient) ImageGenerate(req CreateImageRequest) (*ImagesResponse, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3167,10 +2699,6 @@ func (h *DefaultClient) Speech(req CreateSpeechRequest) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3202,10 +2730,6 @@ func (h *DefaultClient) Transcribe(req CreateTranscriptionRequest) (*Transcripti
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3242,10 +2766,6 @@ func (h *DefaultClient) Moderate(req ModerationRequest) (*ModerationResponse, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3282,10 +2802,6 @@ func (h *DefaultClient) Rerank(req RerankRequest) (*RerankResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3322,10 +2838,6 @@ func (h *DefaultClient) Search(req SearchRequest) (*SearchResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3362,10 +2874,6 @@ func (h *DefaultClient) Ocr(req OcrRequest) (*OcrResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3402,10 +2910,6 @@ func (h *DefaultClient) CreateFile(req CreateFileRequest) (*FileObject, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3490,10 +2994,6 @@ func (h *DefaultClient) ListFiles(query *FileListQuery) (*FileListResponse, erro
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescQuery) == "null" {
 		jsonBytescQuery = []byte("{}")
 	}
@@ -3549,10 +3049,6 @@ func (h *DefaultClient) CreateBatch(req CreateBatchRequest) (*BatchObject, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}
@@ -3613,10 +3109,6 @@ func (h *DefaultClient) ListBatches(query *BatchListQuery) (*BatchListResponse, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescQuery) == "null" {
 		jsonBytescQuery = []byte("{}")
 	}
@@ -3721,10 +3213,6 @@ func (h *DefaultClient) WaitForBatch(batchID string, config WaitForBatchConfig) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescConfig) == "null" {
 		jsonBytescConfig = []byte("{}")
 	}
@@ -3761,10 +3249,6 @@ func (h *DefaultClient) CreateResponse(req CreateResponseRequest) (*ResponseObje
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal: %w", err)
 	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
 	if string(jsonBytescReq) == "null" {
 		jsonBytescReq = []byte("{}")
 	}

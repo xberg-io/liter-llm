@@ -34,25 +34,19 @@ func main() {
 }
 
 func run() error {
-	// Determine download cache and library paths
 	cacheBase, libPath, bindingLibDir, err := determinePaths()
 	if err != nil {
 		return err
 	}
 
-	// Check if library already exists
 	if _, err := os.Stat(libPath); err == nil {
-		// Library already cached, nothing to do
 		return nil
 	}
 
-	// Download the FFI library tarball
 	if err := downloadAndExtractLibrary(cacheBase); err != nil {
 		return fmt.Errorf("failed to download FFI library: %w", err)
 	}
 
-	// Copy library from cache to binding package directory so that cgo LDFLAGS
-	// can find it via ${SRCDIR}/.lib/ whether in module cache or vendored.
 	if err := copyLibraryToBindingPackage(cacheBase, bindingLibDir); err != nil {
 		return fmt.Errorf("failed to copy library to binding package: %w", err)
 	}
@@ -64,15 +58,12 @@ func determinePaths() (string, string, string, error) {
 	goos := runtime.GOOS
 	goarch := runtime.GOARCH
 
-	// Map Go platform names to asset names
 	osName := goos
 	if goos == "darwin" {
 		osName = "macos"
 	}
 
 	libName := "liter_llm_ffi"
-	// go generate changes to the module directory before running directives.
-	// cwd is the module's root (binding.go is at this level).
 	moduleRoot, err := os.Getwd()
 	if err != nil {
 		return "", "", "", fmt.Errorf("cannot determine module root: %w", err)
@@ -82,7 +73,6 @@ func determinePaths() (string, string, string, error) {
 	libDir := filepath.Join(moduleRoot, ".lib", platformDir)
 	libPath := filepath.Join(libDir, libFilename(libName, goos))
 
-	// Binding package directory is the same as module root (where binding.go lives).
 	bindingLibDir := filepath.Join(moduleRoot, ".lib", platformDir)
 
 	return libDir, libPath, bindingLibDir, nil
@@ -108,32 +98,24 @@ func downloadAndExtractLibrary(cacheDir string) error {
 		osName = "macos"
 	}
 
-	// Map Go arch names to the alef platform names used in release asset filenames.
-	// The local .lib/<os>-<goarch>/ directories use Go arch names (matching cgo LDFLAGS),
-	// but alef's packager emits tarballs with its own arch names: x86_64, aarch64.
 	archName := goarch
 	switch goarch {
 	case "amd64":
 		archName = "x86_64"
 	case "arm64":
-		// macOS arm64 stays "arm64" (alef go_java_platform special-cases it);
-		// all other platforms use "aarch64".
 		if goos != "darwin" {
 			archName = "aarch64"
 		}
 	}
 
-	// Clean version for the download URL path; asset name itself is unversioned.
 	version := strings.TrimPrefix(moduleVersion, "v")
 	assetName := fmt.Sprintf("%s-go-%s-%s.tar.gz", assetPrefix, osName, archName)
 	downloadURL := fmt.Sprintf("%s/releases/download/v%s/%s", repoURL, version, assetName)
 
-	// Create cache directory
 	if err := os.MkdirAll(cacheDir, 0755); err != nil {
 		return fmt.Errorf("mkdir cache: %w", err)
 	}
 
-	// Download tarball
 	resp, err := http.Get(downloadURL)
 	if err != nil {
 		return fmt.Errorf("download %s: %w", downloadURL, err)
@@ -145,7 +127,6 @@ func downloadAndExtractLibrary(cacheDir string) error {
 		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
 	}
 
-	// Extract tarball to cache directory
 	if err := extractTarGz(resp.Body, cacheDir); err != nil {
 		return fmt.Errorf("extract tarball: %w", err)
 	}
@@ -170,8 +151,6 @@ func extractTarGz(src io.Reader, dstDir string) error {
 			return err
 		}
 
-		// Construct destination path, stripping any leading directory
-		// from the tarball (e.g., "staging/lib..." -> "lib...")
 		targetPath := filepath.Join(dstDir, filepath.Base(header.Name))
 
 		switch header.Typeflag {
@@ -197,29 +176,21 @@ func extractTarGz(src io.Reader, dstDir string) error {
 }
 
 func copyLibraryToBindingPackage(srcDir, dstDir string) error {
-	// Create destination directory
 	if err := os.MkdirAll(dstDir, 0755); err != nil {
 		return fmt.Errorf("mkdir %s: %w", dstDir, err)
 	}
 
-	// determinePaths returns the same path for cache and binding library dirs,
-	// so source and destination point at the same files. os.Create() truncates
-	// the destination first, which (when paths alias) zeroes the source mid-copy
-	// — leaving the dylib at 0 bytes and breaking cgo linking. Skip the copy
-	// when there's nothing to move.
 	absSrc, srcErr := filepath.Abs(srcDir)
 	absDst, dstErr := filepath.Abs(dstDir)
 	if srcErr == nil && dstErr == nil && absSrc == absDst {
 		return nil
 	}
 
-	// List files in source directory
 	entries, err := os.ReadDir(srcDir)
 	if err != nil {
 		return fmt.Errorf("read directory %s: %w", srcDir, err)
 	}
 
-	// Copy each library file
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -227,7 +198,6 @@ func copyLibraryToBindingPackage(srcDir, dstDir string) error {
 		srcPath := filepath.Join(srcDir, entry.Name())
 		dstPath := filepath.Join(dstDir, entry.Name())
 
-		// Copy file
 		src, err := os.Open(srcPath)
 		if err != nil {
 			return fmt.Errorf("open %s: %w", srcPath, err)

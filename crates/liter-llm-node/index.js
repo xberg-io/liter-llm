@@ -3,12 +3,8 @@
 const { platform, arch } = process;
 const isMusl = () => {
   // Prefer the report-header `glibcVersion` string when present — fastest and
-  // unambiguous on Node builds that populate it. On Node 22+, certain CI
   // environments leave `glibcVersion` undefined even on glibc systems, so the
   // `=== undefined` branch from older napi-rs templates produces a false
-  // "is musl" positive. Fall through to the filesystem heuristic instead: on
-  // glibc systems `/lib64/ld-musl-x86_64.so.1` does not exist; on musl systems
-  // it always does. statSync errors → not musl.
   if (typeof process.report === "object" && typeof process.report.getReport === "function") {
     const report = process.report.getReport();
     if (report && report.header && typeof report.header.glibcVersion === "string") {
@@ -36,9 +32,6 @@ function requireOptionalDependency(name) {
 }
 
 const tryLoadBinding = () => {
-  // Local `.node` files are named after `napi.binaryName` (binary file name on disk).
-  // Optional-dep packages are named after `napi.packageName` (npm subpackage names),
-  // which inherits any scope prefix from the parent package.
   const targets = [
     ["linux", "x64", "gnu", "./liter-llm-node.linux-x64-gnu.node", "@xberg-io/liter-llm-linux-x64-gnu"],
     ["linux", "arm64", "gnu", "./liter-llm-node.linux-arm64-gnu.node", "@xberg-io/liter-llm-linux-arm64-gnu"],
