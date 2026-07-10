@@ -22,22 +22,6 @@ exclude = [
     "test_documents/**",
     "vendor/**",
     "**/Cargo.toml",
-    "Package.swift",
-    "packages/**",
-    "e2e/**",
-    "test_apps/**",
-    "**/_generated/**",
-    "**/*_bridge_generated/**",
-    "crates/*-dart/**",
-    "crates/*-ffi/**",
-    "crates/*-jni/**",
-    "crates/*-node/**",
-    "crates/*-php/**",
-    "crates/*-py/**",
-    "crates/*-rb/**",
-    "crates/*-rs-jni/**",
-    "crates/*-ruby/**",
-    "crates/*-wasm/**",
 ]
 
 [lint.markdown.rumdl]
@@ -45,14 +29,6 @@ disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051
 
 [fmt.markdown.rumdl]
 disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
-
-[lint.uncomment]
-enabled = true
-remove_todos = true
-remove_fixme = true
-remove_docs = false
-use_default_ignores = true
-preserve_patterns = ["~keep"]
 
 [lint.python.ruff]
 select = ["ALL"]
@@ -183,8 +159,6 @@ ist = "ist"
     "EXE001",
     "A001",
     "N801",
-    "comment",
-    "doc-comment",
 ]
 "**/test_apps/**" = [
     "ANN",
@@ -226,32 +200,13 @@ ist = "ist"
     "EXE001",
     "A001",
     "N801",
-    "comment",
-    "doc-comment",
 ]
-"**/_generated/**" = ["comment", "doc-comment"]
-"**/*_bridge_generated/**" = ["comment", "doc-comment"]
-"Package.swift" = ["comment", "doc-comment"]
-"packages/**" = ["comment", "doc-comment"]
-"crates/*-dart/**" = ["comment", "doc-comment"]
-"crates/*-ffi/**" = ["comment", "doc-comment"]
-"crates/*-jni/**" = ["comment", "doc-comment"]
-"crates/*-node/**" = ["comment", "doc-comment"]
-"crates/*-php/**" = ["comment", "doc-comment"]
-"crates/*-py/**" = ["comment", "doc-comment"]
-"crates/*-rs-jni/**" = ["comment", "doc-comment"]
-"crates/*-ruby/**" = ["comment", "doc-comment"]
-"crates/*-wasm/**" = ["comment", "doc-comment"]
 "cli-proxy/**/*.py" = ["ANN", "PLR0913", "PLR2004", "S", "T201"]
-"crates/*-ffi/include/**" = ["comment", "doc-comment"]
-"packages/go/include/**" = ["comment", "doc-comment"]
-"packages/swift/Sources/RustBridge*/**" = ["comment", "doc-comment"]
 "scripts/**/*.py" = [
     "B904",
     "BLE001",
     "C901",
     "D",
-    "EXE001",
     "G004",
     "G201",
     "PERF203",

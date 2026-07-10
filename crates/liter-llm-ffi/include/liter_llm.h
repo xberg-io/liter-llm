@@ -602,7 +602,7 @@ typedef struct LITERLLMLiterllmDefaultClientChatStreamStreamHandle LITERLLMLiter
  * `chunk_json` is a JSON-encoded chunk; `user_data` is forwarded from the caller.
  */
 typedef void (*LITERLLMLiterllmStreamCallback)(const char *chunk_json,
-    void *user_data);
+                                               void *user_data);
 
 /**
  * Return the last error code (0 means no error).
@@ -636,8 +636,8 @@ void literllm_free_string(char *ptr);
  * out-params), or be null. The len and cap values must be unchanged since the call.
  */
 void literllm_free_bytes(uint8_t *ptr,
-    uintptr_t len,
-    uintptr_t cap);
+                         uintptr_t len,
+                         uintptr_t cap);
 
 /**
  * Return the library version string. The pointer is static and must NOT be freed.
@@ -659,7 +659,7 @@ const char *literllm_version(void);
  * Both pointers must remain valid until this function returns.
  */
 struct LITERLLMLiterllmDefaultClientChatStreamStreamHandle *literllm_default_client_chat_stream_start(const LITERLLMDefaultClient *client,
-    const LITERLLMChatCompletionRequest *req);
+                                                                                                      const LITERLLMChatCompletionRequest *req);
 
 /**
  * Advance the stream and return a heap-allocated chunk, or null.
@@ -2400,7 +2400,7 @@ char *literllm_decoded_data_url_mime(const LITERLLMDecodedDataUrl *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 uint8_t *literllm_decoded_data_url_data(const LITERLLMDecodedDataUrl *ptr,
-    uintptr_t *out_len);
+                                        uintptr_t *out_len);
 
 /**
  * Create a `CreateSpeechRequest` from a JSON string. Returns null on failure.
@@ -4479,23 +4479,23 @@ void literllm_default_client_free(LITERLLMDefaultClient *ptr);
  * freed with the appropriate free function.
  */
 LITERLLMChatCompletionResponse *literllm_default_client_chat(const LITERLLMDefaultClient *this_,
-    const LITERLLMChatCompletionRequest *req);
+                                                             const LITERLLMChatCompletionRequest *req);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 int32_t literllm_default_client_chat_stream(const LITERLLMDefaultClient *client,
-    const char *request_json,
-    LITERLLMLiterllmStreamCallback callback,
-    void *user_data);
+                                            const char *request_json,
+                                            LITERLLMLiterllmStreamCallback callback,
+                                            void *user_data);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMEmbeddingResponse *literllm_default_client_embed(const LITERLLMDefaultClient *this_,
-    const LITERLLMEmbeddingRequest *req);
+                                                         const LITERLLMEmbeddingRequest *req);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
@@ -4508,125 +4508,125 @@ LITERLLMModelsListResponse *literllm_default_client_list_models(const LITERLLMDe
  * freed with the appropriate free function.
  */
 LITERLLMImagesResponse *literllm_default_client_image_generate(const LITERLLMDefaultClient *this_,
-    const LITERLLMCreateImageRequest *req);
+                                                               const LITERLLMCreateImageRequest *req);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 int32_t literllm_default_client_speech(const LITERLLMDefaultClient *this_,
-    const LITERLLMCreateSpeechRequest *req,
-    uint8_t **out_ptr,
-    uintptr_t *out_len,
-    uintptr_t *out_cap);
+                                       const LITERLLMCreateSpeechRequest *req,
+                                       uint8_t **out_ptr,
+                                       uintptr_t *out_len,
+                                       uintptr_t *out_cap);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMTranscriptionResponse *literllm_default_client_transcribe(const LITERLLMDefaultClient *this_,
-    const LITERLLMCreateTranscriptionRequest *req);
+                                                                  const LITERLLMCreateTranscriptionRequest *req);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMModerationResponse *literllm_default_client_moderate(const LITERLLMDefaultClient *this_,
-    const LITERLLMModerationRequest *req);
+                                                             const LITERLLMModerationRequest *req);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMRerankResponse *literllm_default_client_rerank(const LITERLLMDefaultClient *this_,
-    const LITERLLMRerankRequest *req);
+                                                       const LITERLLMRerankRequest *req);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMSearchResponse *literllm_default_client_search(const LITERLLMDefaultClient *this_,
-    const LITERLLMSearchRequest *req);
+                                                       const LITERLLMSearchRequest *req);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMOcrResponse *literllm_default_client_ocr(const LITERLLMDefaultClient *this_,
-    const LITERLLMOcrRequest *req);
+                                                 const LITERLLMOcrRequest *req);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMFileObject *literllm_default_client_create_file(const LITERLLMDefaultClient *this_,
-    const LITERLLMCreateFileRequest *req);
+                                                        const LITERLLMCreateFileRequest *req);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMFileObject *literllm_default_client_retrieve_file(const LITERLLMDefaultClient *this_,
-    const char *file_id);
+                                                          const char *file_id);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMDeleteResponse *literllm_default_client_delete_file(const LITERLLMDefaultClient *this_,
-    const char *file_id);
+                                                            const char *file_id);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMFileListResponse *literllm_default_client_list_files(const LITERLLMDefaultClient *this_,
-    const LITERLLMFileListQuery *query);
+                                                             const LITERLLMFileListQuery *query);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 int32_t literllm_default_client_file_content(const LITERLLMDefaultClient *this_,
-    const char *file_id,
-    uint8_t **out_ptr,
-    uintptr_t *out_len,
-    uintptr_t *out_cap);
+                                             const char *file_id,
+                                             uint8_t **out_ptr,
+                                             uintptr_t *out_len,
+                                             uintptr_t *out_cap);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMBatchObject *literllm_default_client_create_batch(const LITERLLMDefaultClient *this_,
-    const LITERLLMCreateBatchRequest *req);
+                                                          const LITERLLMCreateBatchRequest *req);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMBatchObject *literllm_default_client_retrieve_batch(const LITERLLMDefaultClient *this_,
-    const char *batch_id);
+                                                            const char *batch_id);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMBatchListResponse *literllm_default_client_list_batches(const LITERLLMDefaultClient *this_,
-    const LITERLLMBatchListQuery *query);
+                                                                const LITERLLMBatchListQuery *query);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMBatchObject *literllm_default_client_cancel_batch(const LITERLLMDefaultClient *this_,
-    const char *batch_id);
+                                                          const char *batch_id);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMBatchObject *literllm_default_client_fetch_batch_for_polling(const LITERLLMDefaultClient *this_,
-    const char *batch_id);
+                                                                     const char *batch_id);
 
 /**
  * Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
@@ -4650,29 +4650,29 @@ LITERLLMBatchObject *literllm_default_client_fetch_batch_for_polling(const LITER
  * \endcode
  */
 LITERLLMBatchObject *literllm_default_client_wait_for_batch(const LITERLLMDefaultClient *this_,
-    const char *batch_id,
-    const LITERLLMWaitForBatchConfig *config);
+                                                            const char *batch_id,
+                                                            const LITERLLMWaitForBatchConfig *config);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMResponseObject *literllm_default_client_create_response(const LITERLLMDefaultClient *this_,
-    const LITERLLMCreateResponseRequest *req);
+                                                                const LITERLLMCreateResponseRequest *req);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMResponseObject *literllm_default_client_retrieve_response(const LITERLLMDefaultClient *this_,
-    const char *response_id);
+                                                                  const char *response_id);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMResponseObject *literllm_default_client_cancel_response(const LITERLLMDefaultClient *this_,
-    const char *response_id);
+                                                                const char *response_id);
 
 /**
  * Create a `CustomProviderConfig` from a JSON string. Returns null on failure.
@@ -5998,10 +5998,10 @@ char *literllm_cache_backend_to_string(const LITERLLMCacheBackend *ptr);
  * freed with the appropriate free function.
  */
 LITERLLMDefaultClient *literllm_create_client(const char *api_key,
-    const char *base_url,
-    uint64_t timeout_secs,
-    uint32_t max_retries,
-    const char *model_hint);
+                                              const char *base_url,
+                                              uint64_t timeout_secs,
+                                              uint32_t max_retries,
+                                              const char *model_hint);
 
 /**
  * Create a new LLM client from a JSON string.
@@ -6034,8 +6034,8 @@ LITERLLMDefaultClient *literllm_create_client_from_json(const char *json);
  * \endcode
  */
 char *literllm_encode_data_url(const uint8_t *bytes,
-    uintptr_t bytes_len,
-    const char *mime);
+                               uintptr_t bytes_len,
+                               const char *mime);
 
 /**
  * Return the byte length of the C string most recently returned by `literllm_encode_data_url` on this
@@ -6045,8 +6045,8 @@ char *literllm_encode_data_url(const uint8_t *bytes,
  * with `literllm_encode_data_url`.
  */
 uintptr_t literllm_encode_data_url_len(const uint8_t *_bytes,
-    uintptr_t _bytes_len,
-    const char *_mime);
+                                       uintptr_t _bytes_len,
+                                       const char *_mime);
 
 /**
  * Decode a base64 data URL into `DecodedDataUrl`.
@@ -6176,8 +6176,8 @@ uintptr_t literllm_complex_provider_names_len(void);
  * \endcode
  */
 double literllm_completion_cost(const char *model,
-    uint64_t prompt_tokens,
-    uint64_t completion_tokens);
+                                uint64_t prompt_tokens,
+                                uint64_t completion_tokens);
 
 /**
  * Calculate the estimated cost of a completion, accounting for cached
@@ -6196,9 +6196,9 @@ double literllm_completion_cost(const char *model,
  * freed with the appropriate free function.
  */
 double literllm_completion_cost_with_cache(const char *model,
-    uint64_t prompt_tokens,
-    uint64_t cached_tokens,
-    uint64_t completion_tokens);
+                                           uint64_t prompt_tokens,
+                                           uint64_t cached_tokens,
+                                           uint64_t completion_tokens);
 
 /**
  * Remove all guardrails from the global registry.
@@ -6221,7 +6221,7 @@ void literllm_clear(void);
  * freed with the appropriate free function.
  */
 uintptr_t literllm_count_tokens(const char *model,
-    const char *text);
+                                const char *text);
 
 /**
  * Count tokens for a full `ChatCompletionRequest`.
@@ -6236,7 +6236,7 @@ uintptr_t literllm_count_tokens(const char *model,
  * freed with the appropriate free function.
  */
 uintptr_t literllm_count_request_tokens(const char *model,
-    const LITERLLMChatCompletionRequest *req);
+                                        const LITERLLMChatCompletionRequest *req);
 
 /**
  * Assert that `current_len + incoming` does not exceed `limit`.
@@ -6252,9 +6252,9 @@ uintptr_t literllm_count_request_tokens(const char *model,
  * \endcode
  */
 int32_t literllm_check_bound(const char *context,
-    uintptr_t current_len,
-    uintptr_t incoming,
-    uintptr_t limit);
+                             uintptr_t current_len,
+                             uintptr_t incoming,
+                             uintptr_t limit);
 
 #if (!defined(SKIF_WINDOWS) || defined(SKIF_WINDOWS))
 /**

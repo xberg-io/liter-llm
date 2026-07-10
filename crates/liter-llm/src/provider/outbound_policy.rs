@@ -259,11 +259,104 @@ pub struct GuardedResolver;
 
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
 mod resolver_impl {
+    use std::collections::HashMap;
+    use std::net::SocketAddr;
     use std::sync::Arc;
+    use std::sync::Mutex;
+    use std::time::{Duration, Instant};
 
     use reqwest::dns::{Addrs, Name, Resolve, Resolving};
 
     use super::{GuardedResolver, OutboundPolicy, current_policy, is_forbidden};
+
+    #[derive(Clone)]
+    struct DnsCacheEntry {
+        expires_at: Instant,
+        addrs: Vec<SocketAddr>,
+    }
+
+    struct CachedGuardedResolver {
+        cache_ttl: Option<Duration>,
+        cache: Arc<Mutex<HashMap<String, DnsCacheEntry>>>,
+    }
+
+    impl CachedGuardedResolver {
+        fn new(cache_ttl: Option<Duration>) -> Self {
+            Self {
+                cache_ttl,
+                cache: Arc::new(Mutex::new(HashMap::new())),
+            }
+        }
+    }
+
+    fn cached_addrs(
+        cache: &Mutex<HashMap<String, DnsCacheEntry>>,
+        cache_ttl: Option<Duration>,
+        host: &str,
+    ) -> Option<Vec<SocketAddr>> {
+        cache_ttl?;
+
+        let now = Instant::now();
+        let mut guard = cache.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let entry = guard.get(host)?;
+        if entry.expires_at > now {
+            return Some(entry.addrs.clone());
+        }
+        guard.remove(host);
+        None
+    }
+
+    fn store_addrs(
+        cache: &Mutex<HashMap<String, DnsCacheEntry>>,
+        cache_ttl: Option<Duration>,
+        host: String,
+        addrs: Vec<SocketAddr>,
+    ) {
+        let Some(ttl) = cache_ttl else {
+            return;
+        };
+        if ttl.is_zero() {
+            return;
+        }
+
+        let expires_at = Instant::now().checked_add(ttl).unwrap_or_else(Instant::now);
+        let mut guard = cache.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        guard.insert(host, DnsCacheEntry { expires_at, addrs });
+    }
+
+    async fn resolve_system(host: &str) -> Result<Vec<SocketAddr>, Box<dyn std::error::Error + Send + Sync>> {
+        let addrs = tokio::net::lookup_host((host, 0))
+            .await
+            .map_err(|e| {
+                let err: Box<dyn std::error::Error + Send + Sync> = Box::new(e);
+                err
+            })?
+            .collect();
+        Ok(addrs)
+    }
+
+    fn validate_addrs(
+        policy: OutboundPolicy,
+        host: &str,
+        addrs: &[SocketAddr],
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        if matches!(policy, OutboundPolicy::Off) {
+            return Ok(());
+        }
+
+        for sa in addrs {
+            if is_forbidden(sa.ip()) {
+                let err: Box<dyn std::error::Error + Send + Sync> = format!(
+                    "outbound DNS resolution for '{host}' produced forbidden address {}",
+                    sa.ip()
+                )
+                .into();
+                return Err(err);
+            }
+        }
+
+        Ok(())
+    }
 
     impl Resolve for GuardedResolver {
         fn resolve(&self, name: Name) -> Resolving {
@@ -271,27 +364,32 @@ mod resolver_impl {
                 let policy = current_policy();
                 let host = name.as_str().to_string();
 
-                let addrs: Vec<_> = tokio::net::lookup_host(format!("{host}:0"))
-                    .await
-                    .map_err(|e| {
-                        let err: Box<dyn std::error::Error + Send + Sync> = Box::new(e);
-                        err
-                    })?
-                    .collect();
+                let addrs = resolve_system(&host).await?;
+                validate_addrs(policy, &host, &addrs)?;
 
-                if !matches!(policy, OutboundPolicy::Off) {
-                    for sa in &addrs {
-                        if is_forbidden(sa.ip()) {
-                            let err: Box<dyn std::error::Error + Send + Sync> = format!(
-                                "outbound DNS resolution for '{host}' produced \
-                                 forbidden address {}",
-                                sa.ip()
-                            )
-                            .into();
-                            return Err(err);
-                        }
-                    }
+                let iter: Addrs = Box::new(addrs.into_iter());
+                Ok(iter)
+            })
+        }
+    }
+
+    impl Resolve for CachedGuardedResolver {
+        fn resolve(&self, name: Name) -> Resolving {
+            let policy = current_policy();
+            let host = name.as_str().to_string();
+            let cache_ttl = self.cache_ttl;
+            let cache = Arc::clone(&self.cache);
+
+            Box::pin(async move {
+                if let Some(addrs) = cached_addrs(&cache, cache_ttl, &host) {
+                    validate_addrs(policy, &host, &addrs)?;
+                    let iter: Addrs = Box::new(addrs.into_iter());
+                    return Ok(iter);
                 }
+
+                let addrs = resolve_system(&host).await?;
+                validate_addrs(policy, &host, &addrs)?;
+                store_addrs(&cache, cache_ttl, host, addrs.clone());
 
                 let iter: Addrs = Box::new(addrs.into_iter());
                 Ok(iter)
@@ -305,10 +403,17 @@ mod resolver_impl {
     pub fn guarded_resolver() -> Arc<GuardedResolver> {
         Arc::new(GuardedResolver)
     }
+
+    /// Build a resolver that applies the active outbound policy and optionally
+    /// caches successful DNS lookups for the configured TTL.
+    #[cfg_attr(alef, alef(skip))]
+    pub fn cached_guarded_resolver(cache_ttl: Option<Duration>) -> Arc<dyn Resolve> {
+        Arc::new(CachedGuardedResolver::new(cache_ttl))
+    }
 }
 
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
-pub use resolver_impl::guarded_resolver;
+pub use resolver_impl::{cached_guarded_resolver, guarded_resolver};
 
 #[cfg(test)]
 mod tests {

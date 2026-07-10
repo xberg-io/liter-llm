@@ -57,16 +57,18 @@ USER_AGENT = "liter-llm-pricing-generator/1.0 (+https://github.com/xberg-io/lite
 
 
 def fetch_catalog(url: str) -> dict[str, Any]:
+    """Fetch the upstream model catalog from an HTTPS URL."""
     if not url.startswith("https://"):
         raise ValueError(f"Refusing to fetch non-HTTPS URL: {url}")
     logger.info("Fetching %s", url)
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
-    with urllib.request.urlopen(request, timeout=30) as response:
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})  # noqa: S310
+    with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
         data: dict[str, Any] = json.load(response)
     return data
 
 
 def transform(catalog: dict[str, Any]) -> dict[str, dict[str, float]]:
+    """Transform the upstream catalog into liter-llm pricing records."""
     models: dict[str, dict[str, float]] = {}
     skipped = 0
     for provider_id, provider in catalog.items():
@@ -91,6 +93,7 @@ def transform(catalog: dict[str, Any]) -> dict[str, dict[str, float]]:
 
 
 def apply_overrides(models: dict[str, dict[str, float]]) -> dict[str, dict[str, float]]:
+    """Apply local pricing overrides to transformed upstream model records."""
     for key, entry in OVERRIDES.items():
         models[key] = dict(entry)
     return models
@@ -105,6 +108,7 @@ def format_cost(value: float) -> str:
 
 
 def render(models: dict[str, dict[str, float]]) -> str:
+    """Render pricing records as deterministic JSON text."""
     sorted_items = sorted(models.items())
     lines = ["{", f'\t"$comment": {json.dumps(HEADER_COMMENT)},', '\t"models": {']
     for i, (key, entry) in enumerate(sorted_items):
@@ -128,6 +132,7 @@ def render(models: dict[str, dict[str, float]]) -> str:
 
 
 def main() -> int:
+    """Run the pricing generator CLI."""
     parser = argparse.ArgumentParser(description="Generate pricing.json from models.dev")
     parser.add_argument("--dry-run", action="store_true", help="Print to stdout without writing")
     parser.add_argument("--validate", action="store_true", help="CI: fail non-zero if generated output drifts")

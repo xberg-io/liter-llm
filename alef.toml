@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.33.0"
+alef_version = "0.34.5"
 languages = [
     "python",
     "node",
@@ -142,8 +142,6 @@ exclude_platforms = ["linux-x64-musl", "linux-arm64-musl"]
 
 [crates.ruby]
 gem_name = "liter_llm"
-# ~keep TODO(alef): Magnus codegen has a known limitation around `Map<K, V>` fields inside
-exclude_types = ["CacheBackend", "CacheConfig"]
 
 [crates.ruby.stubs]
 output = "packages/ruby/sig/"

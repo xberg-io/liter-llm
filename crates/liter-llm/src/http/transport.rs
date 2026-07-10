@@ -54,8 +54,8 @@ pub struct TransportConfig {
     /// DNS cache time-to-live.
     ///
     /// Default: 30 seconds. DNS lookups are cached locally for this duration
-    /// before re-resolving. Set to `None` to disable caching and always
-    /// re-resolve on each request.
+    /// before re-resolving. Set to `None` to disable the local DNS cache and
+    /// always re-resolve on each request.
     pub dns_cache_ttl: Option<Duration>,
 
     /// Enable HTTP/3 (h3-quinn) support when the feature flag is active.
@@ -128,9 +128,9 @@ impl TransportConfig {
 
     /// Apply all transport settings to a [`reqwest::ClientBuilder`].
     ///
-    /// This method is the single place that converts [`TransportConfig`] fields
-    /// into concrete reqwest builder calls.  Call it once during client
-    /// construction and chain the returned builder.
+    /// This method converts transport fields into concrete reqwest builder
+    /// calls. Call it once during client construction and chain the returned
+    /// builder.
     ///
     /// Not available on WASM targets: the browser fetch API controls transport
     /// settings and does not expose builder-level hooks.
@@ -143,17 +143,16 @@ impl TransportConfig {
     /// | `pool_idle_timeout` | `.pool_idle_timeout(t)` |
     /// | `tcp_keepalive` | `.tcp_keepalive(t)` |
     /// | `http2_prior_knowledge` | `.http2_prior_knowledge()` (when `true`) |
-    /// | `dns_cache_ttl` | deferred — reqwest has no DNS TTL hook; see note below |
+    /// | `dns_cache_ttl` | `.dns_resolver(...)` during native client construction |
     /// | `enable_http3` | `.http3_prior_knowledge()` (when `true` and `http3` feature is on) |
     ///
     /// # DNS TTL
     ///
-    /// reqwest 0.13 does not expose a DNS-cache TTL setter on `ClientBuilder`.
-    /// The `dns_cache_ttl` field is stored and validated but has no effect on
-    /// the underlying HTTP stack.  A future reqwest release or a custom
-    /// `hickory-dns` resolver integration may allow this.
-    ///
-    /// ~keep TODO: wire `dns_cache_ttl` once reqwest exposes a DNS-cache TTL hook.
+    /// reqwest 0.13 exposes DNS customization through `ClientBuilder::dns_resolver`
+    /// rather than a direct TTL setter. The native client construction path
+    /// installs a resolver that combines this TTL with outbound-policy DNS
+    /// validation, so DNS rebinding protection is preserved when both features
+    /// are active.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn apply_to_builder(&self, builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {
         let builder = builder
@@ -166,8 +165,6 @@ impl TransportConfig {
         } else {
             builder
         };
-
-        let _ = self.dns_cache_ttl;
 
         #[cfg(feature = "http3")]
         let _ = self.enable_http3;
