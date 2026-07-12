@@ -378,5 +378,5 @@ files = "packages/python/**/*.py"
 [[hooks.sources]]
 id = "ai-rulez"
 git = "https://github.com/Goldziher/ai-rulez.git"
-revision = "v4.9.1"
+revision = "v4.9.3"
 hooks = ["ai-rulez-validate"]
