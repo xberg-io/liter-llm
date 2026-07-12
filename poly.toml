@@ -375,3 +375,8 @@ commit = { stages = ["commit-msg"] }
 [hooks.pre-commit.commands.pyrefly]
 run = "pyrefly check packages/python"
 files = "packages/python/**/*.py"
+[[hooks.sources]]
+id = "ai-rulez"
+git = "https://github.com/Goldziher/ai-rulez.git"
+revision = "v4.9.1"
+hooks = ["ai-rulez-validate"]
