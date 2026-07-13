@@ -689,6 +689,71 @@ LITERLLMChatCompletionChunk *literllm_default_client_chat_stream_next(struct LIT
  */
 void literllm_default_client_chat_stream_free(struct LITERLLMLiterllmDefaultClientChatStreamStreamHandle *handle);
 
+char *literllm_default_client_chat_json(LITERLLMDefaultClient *client,
+                                        const char *req_json);
+
+char *literllm_default_client_embed_json(LITERLLMDefaultClient *client,
+                                         const char *req_json);
+
+char *literllm_default_client_list_models_json(LITERLLMDefaultClient *client);
+
+char *literllm_default_client_image_generate_json(LITERLLMDefaultClient *client,
+                                                  const char *req_json);
+
+char *literllm_default_client_transcribe_json(LITERLLMDefaultClient *client,
+                                              const char *req_json);
+
+char *literllm_default_client_moderate_json(LITERLLMDefaultClient *client,
+                                            const char *req_json);
+
+char *literllm_default_client_rerank_json(LITERLLMDefaultClient *client,
+                                          const char *req_json);
+
+char *literllm_default_client_search_json(LITERLLMDefaultClient *client,
+                                          const char *req_json);
+
+char *literllm_default_client_speech_json(LITERLLMDefaultClient *client,
+                                          const char *req_json);
+
+char *literllm_default_client_ocr_json(LITERLLMDefaultClient *client,
+                                       const char *req_json);
+
+char *literllm_default_client_create_file_json(LITERLLMDefaultClient *client,
+                                               const char *req_json);
+
+char *literllm_default_client_retrieve_file_json(LITERLLMDefaultClient *client,
+                                                 const char *file_id);
+
+char *literllm_default_client_delete_file_json(LITERLLMDefaultClient *client,
+                                               const char *file_id);
+
+char *literllm_default_client_list_files_json(LITERLLMDefaultClient *client,
+                                              const char *query_json);
+
+char *literllm_default_client_file_content_json(LITERLLMDefaultClient *client,
+                                                const char *file_id);
+
+char *literllm_default_client_create_batch_json(LITERLLMDefaultClient *client,
+                                                const char *req_json);
+
+char *literllm_default_client_retrieve_batch_json(LITERLLMDefaultClient *client,
+                                                  const char *batch_id);
+
+char *literllm_default_client_list_batches_json(LITERLLMDefaultClient *client,
+                                                const char *query_json);
+
+char *literllm_default_client_cancel_batch_json(LITERLLMDefaultClient *client,
+                                                const char *batch_id);
+
+char *literllm_default_client_create_response_json(LITERLLMDefaultClient *client,
+                                                   const char *req_json);
+
+char *literllm_default_client_retrieve_response_json(LITERLLMDefaultClient *client,
+                                                     const char *response_id);
+
+char *literllm_default_client_cancel_response_json(LITERLLMDefaultClient *client,
+                                                   const char *response_id);
+
 /**
  * Create a `SystemMessage` from a JSON string. Returns null on failure.
  * # Safety

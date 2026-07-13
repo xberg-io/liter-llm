@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.34.5"
+alef_version = "0.32.6"
 languages = [
     "python",
     "node",
@@ -16,6 +16,7 @@ languages = [
     "swift",
     "kotlin_android",
     "jni",
+    "crystal",
 ]
 extra_clippy_allows = ["single_match", "collapsible_match"]
 
@@ -198,6 +199,9 @@ project_file = "packages/csharp/LiterLlm/LiterLlm.csproj"
 [crates.zig]
 module_name = "liter_llm"
 
+[crates.crystal]
+module_name = "LiterLlm"
+
 [crates.dart]
 package_name = "liter_llm"
 
@@ -238,6 +242,7 @@ zig = "packages/zig/src/"
 dart = "packages/dart/"
 swift = "packages/swift/Sources/LiterLlm/"
 kotlin_android = "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/"
+crystal = "packages/crystal/src/"
 
 [crates.exclude]
 types = [
@@ -618,6 +623,7 @@ languages = [
     "kotlin_android",
     "rust",
     "homebrew",
+    "crystal",
 ]
 exclude_categories = ["cache", "proxy", "budget", "hooks"]
 # NOTE: only include paths that are *always* enum-typed across every result type they
@@ -759,6 +765,11 @@ client_factory = "createClient"
 [crates.e2e.call.overrides.dart]
 client_factory = "createClient"
 
+[crates.e2e.call.overrides.crystal]
+module = "LiterLlm"
+client_factory = "create_client"
+options_type = "ChatCompletionRequest"
+
 [crates.e2e.calls.chat]
 function = "chat"
 path = "/chat/completions"
@@ -821,6 +832,7 @@ module = "liter_llm"
 async = true
 streaming = true
 assertion_recipes = ["streaming", "chunks"]
+skip_languages = ["crystal"]
 
 [[crates.e2e.calls.chat_stream.args]]
 name = "request"
@@ -1762,6 +1774,9 @@ name = "liter-llm"
 name = "liter_llm"
 path = "../../packages/elixir"
 
+[crates.e2e.packages.crystal]
+path = "../../packages/crystal"
+
 [crates.e2e.packages.kotlin_android]
 module = "io.xberg.literllm.android"
 path = "../../packages/kotlin-android"
@@ -2257,6 +2272,27 @@ search = true
 ocr = true
 
 [crates.readme.languages.zig.snippets]
+basic_chat = "getting-started/basic_chat.md"
+
+[crates.readme.languages.crystal]
+template = "language_package.md"
+output_path = "packages/crystal/README.md"
+name = "Crystal"
+package_manager = ["shards"]
+package_name = "liter_llm"
+install_command = "shards install"
+description = """Crystal bindings for liter-llm. Access 143 LLM providers through a single synchronous FFI interface with Crystal's type-safe JSON serialization."""
+
+[crates.readme.languages.crystal.features]
+streaming = false
+async = false
+tool_calling = true
+provider_routing = true
+cost_tracking = true
+search = true
+ocr = true
+
+[crates.readme.languages.crystal.snippets]
 basic_chat = "getting-started/basic_chat.md"
 
 [crates.readme.languages.ffi]

@@ -22,59 +22,36 @@ exclude = [
     "test_documents/**",
     "vendor/**",
     "**/Cargo.toml",
-    "**/frb_generated.rs",
-    "crates/*-ffi/include/*.h",
-    "packages/dart/lib/src/liter_llm_bridge_generated/**",
-    "packages/go/include/*.h",
 ]
 
 [lint.markdown.rumdl]
-disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
-
-
-[lint.uncomment]
-enabled = true
-remove_todos = false
-remove_fixme = false
-remove_docs = false
-use_default_ignores = true
-preserve_patterns = [
-    "SAFETY",
-    "HACK",
-    "WORKAROUND",
-    "NOTE",
-    "Copyright",
-    "Licensed",
-    "License",
-    "SPDX",
-    "Apache",
-    "MIT",
-    "WITHOUT WARRANTIES",
-    "limitations under the License",
-    "copyright",
-    "licensed",
-    "license",
-    "apache",
-    "you may not use this file except in compliance",
-    "You may obtain a copy of the License",
-    "you may obtain a copy of the license",
-    "http://www.apache.org/licenses/LICENSE-2.0",
-    "http://www.apache.org/licenses/license-2.0",
-    "Unless required by applicable law",
-    "unless required by applicable law",
-    "distributed under the License",
-    "distributed under the license",
-    "AS IS",
-    "as is",
-    "without warranties",
-    "specific language governing permissions",
-    "limitations under the license",
+disable = [
+    "MD012",
+    "MD013",
+    "MD024",
+    "MD033",
+    "MD036",
+    "MD041",
+    "MD046",
+    "MD051",
+    "MD076",
 ]
+
 [fmt.markdown.rumdl]
-disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
+disable = [
+    "MD012",
+    "MD013",
+    "MD024",
+    "MD033",
+    "MD036",
+    "MD041",
+    "MD046",
+    "MD051",
+    "MD076",
+]
 
 [lint.python.ruff]
-select = ["ALL"]
+select = [ "ALL" ]
 ignore = [
     "ANN401",
     "ASYNC109",
@@ -107,8 +84,13 @@ pylint_max_branches = 15
 pylint_max_returns = 10
 
 [lint.php.mago]
-select = ["correctness", "security"]
-ignore = ["strict-assertions", "use-specific-assertions", "no-redundant-variable", "sensitive-parameter"]
+select = [ "correctness", "security" ]
+ignore = [
+    "strict-assertions",
+    "use-specific-assertions",
+    "no-redundant-variable",
+    "sensitive-parameter",
+]
 php_version = "8.2"
 
 [lint.typos.extend_words]
@@ -117,10 +99,10 @@ ein = "ein"
 ist = "ist"
 
 [per-file-ignores]
-"**/api.py" = ["F401", "I001", "TC006", "UP035"]
-"**/*.pyi" = ["A002", "F401", "I001", "PYI033", "TC006", "UP035"]
-"**/options.py" = ["F401", "I001", "RUF100"]
-"**/__init__.py" = ["I001"]
+"**/api.py" = [ "F401", "I001", "TC006", "UP035" ]
+"**/*.pyi" = [ "A002", "F401", "I001", "PYI033", "TC006", "UP035" ]
+"**/options.py" = [ "F401", "I001", "RUF100" ]
+"**/__init__.py" = [ "I001" ]
 "**/tests/**" = [
     "ANN",
     "D103",
@@ -202,8 +184,6 @@ ist = "ist"
     "EXE001",
     "A001",
     "N801",
-    "comment",
-    "doc-comment",
 ]
 "**/test_apps/**" = [
     "ANN",
@@ -245,10 +225,14 @@ ist = "ist"
     "EXE001",
     "A001",
     "N801",
-    "comment",
-    "doc-comment",
 ]
-"cli-proxy/**/*.py" = ["ANN", "PLR0913", "PLR2004", "S", "T201"]
+"cli-proxy/**/*.py" = [
+    "ANN",
+    "PLR0913",
+    "PLR2004",
+    "S",
+    "T201",
+]
 "scripts/**/*.py" = [
     "B904",
     "BLE001",
@@ -267,23 +251,15 @@ ist = "ist"
     "SIM105",
     "T201",
 ]
-"templates/readme/**/*.md" = ["MD057"]
-"e2e/**" = ["comment", "doc-comment"]
-"test_apps/**" = ["comment", "doc-comment"]
-"docs/assets/**" = ["comment", "doc-comment"]
-"**/generated/**" = ["comment", "doc-comment"]
-"**/*.generated.*" = ["comment", "doc-comment"]
-"**/*.g.*" = ["comment", "doc-comment"]
-"**/*.freezed.*" = ["comment", "doc-comment"]
-"crates/*-ffi/include/*.h" = ["comment", "doc-comment"]
-"packages/go/include/*.h" = ["comment", "doc-comment"]
-"Package.swift" = ["comment", "doc-comment"]
+"templates/readme/**/*.md" = [
+    "MD057",
+]
 
 [hooks]
-stages = ["pre-commit"]
+stages = [ "pre-commit" ]
 
 [hooks.builtin]
-lint = { exclude = [
+polylint = { exclude = [
     "**/*.freezed.dart",
     "**/*.g.dart",
     "**/*.jinja",
@@ -306,13 +282,8 @@ lint = { exclude = [
     "test_documents/**",
     "vendor/**",
     "**/Cargo.toml",
-    "**/frb_generated.rs",
-    "crates/*-ffi/include/*.h",
-    "crates/*-ffi/src/lib.rs",
-    "packages/dart/lib/src/liter_llm_bridge_generated/**",
-    "packages/go/include/*.h",
 ] }
-fmt = { exclude = [
+polyfmt = { exclude = [
     "**/*.freezed.dart",
     "**/*.g.dart",
     "**/*.jinja",
@@ -335,10 +306,6 @@ fmt = { exclude = [
     "test_documents/**",
     "vendor/**",
     "**/Cargo.toml",
-    "**/frb_generated.rs",
-    "crates/*-ffi/include/*.h",
-    "packages/dart/lib/src/liter_llm_bridge_generated/**",
-    "packages/go/include/*.h",
 ] }
 file_safety = { exclude = [
     "**/*.freezed.dart",
@@ -363,14 +330,9 @@ file_safety = { exclude = [
     "test_documents/**",
     "vendor/**",
     "**/Cargo.toml",
-    "**/frb_generated.rs",
-    "crates/*-ffi/include/*.h",
-    "crates/*-ffi/src/lib.rs",
-    "packages/dart/lib/src/liter_llm_bridge_generated/**",
-    "packages/go/include/*.h",
 ] }
 cargo = true
-commit = { stages = ["commit-msg"] }
+commit = { stages = [ "commit-msg" ] }
 
 [hooks.pre-commit.commands.pyrefly]
 run = "pyrefly check packages/python"

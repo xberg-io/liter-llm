@@ -52,6 +52,9 @@
   <a href="https://github.com/xberg-io/liter-llm/tree/main/crates/liter-llm-ffi">
     <img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI" />
   </a>
+  <a href="https://github.com/xberg-io/liter-llm/tree/main/packages/crystal">
+    <img src="https://img.shields.io/badge/Crystal-shards-007ec6" alt="Crystal" />
+  </a>
 
   <!-- Project Info -->
   <a href="https://github.com/xberg-io/liter-llm/blob/main/LICENSE">
@@ -79,7 +82,7 @@
 liter-llm gives you a single, consistent way to call any large language model. Reach 143 providers — OpenAI, Anthropic, Google, Bedrock, and more — through one client, and switch models by changing a name instead of your code. The same client ships to 14 languages, all built on one Rust core, so you get identical behavior everywhere. Need a gateway? Point your existing OpenAI SDK at the built-in, drop-in proxy — no rewrites, no separate service to run.
 
 - **Work with any provider without rewrites** — 143 providers behind one API; change the model name to switch, your code stays the same.
-- **Use it from your language** — Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, and WebAssembly, all built on the same Rust core, plus a C/FFI surface for everything else.
+- **Use it from your language** — Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, Crystal, and WebAssembly, all built on the same Rust core, plus a C/FFI surface for everything else.
 - **Secure by default** — API keys are wrapped, redacted from logs, and never serialized; cloud auth for Azure, AWS, and Vertex refreshes and rotates for you.
 - **One small binary** — the client, a drop-in OpenAI-compatible proxy, and an MCP server for AI agents ship in a single 35 MB binary with no interpreter and no dependency tree to compromise.
 - **Stay up when a provider fails** — route by cost, latency, or weight and fall back automatically, with built-in rate limiting, caching, and cost tracking.
@@ -93,7 +96,7 @@ We credit [litellm](https://github.com/BerriAI/litellm) for proving the category
 | Feature | Description |
 | ------- | ----------- |
 | **143 providers** | OpenAI, Anthropic, Google, AWS Bedrock, Groq, Mistral, Together, Fireworks, DeepSeek, Cohere, and 130+ more — compiled at build time |
-| **14 native bindings** | Rust, Python, Node.js, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly — plus a shared C/FFI surface |
+| **15 native bindings** | Rust, Python, Node.js, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, Crystal, WebAssembly — plus a shared C/FFI surface |
 | **First-class streaming** | SSE and AWS EventStream binary protocol with zero-copy buffers |
 | **Proxy & MCP server** | Drop-in OpenAI-compatible proxy (22 endpoints) and MCP tool server in a 35 MB Docker image |
 | **Tower middleware** | Rate limiting, caching (40+ OpenDAL backends), cost tracking, budget enforcement, health checks, and fallback — all composable |
@@ -229,6 +232,10 @@ Available on Maven Central as `io.xberg.literllm:liter-llm-android`. See [Kotlin
 <summary><strong>Zig</strong></summary>
 
 See [Zig README](packages/zig/README.md) for installation and usage.
+
+<summary><strong>Crystal</strong></summary>
+
+See [Crystal README](packages/crystal/README.md) for installation and usage.
 
 </details>
 

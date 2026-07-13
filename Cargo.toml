@@ -59,7 +59,7 @@ aws-sdk-secretsmanager = { version = "1", default-features = false, features = [
 axum = { version = "0.8", features = ["macros", "ws"] }
 axum-extra = { version = "0.12", features = ["typed-header"] }
 base64 = "0.22"
-bytes = "1"
+bytes = { version = "1", features = ["serde"] }
 chrono = { version = "0.4", default-features = false, features = ["std"] }
 
 clap = { version = "4", features = ["derive", "env"] }

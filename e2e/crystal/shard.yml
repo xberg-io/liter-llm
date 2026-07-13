@@ -1,0 +1,8 @@
+name: liter_llm_e2e
+version: 0.0.0
+
+dependencies:
+  liter_llm:
+    path: ../../packages/crystal
+
+crystal: ">= 1.0.0"
