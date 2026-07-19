@@ -17,9 +17,17 @@ pub struct ModelObject {
     pub id: String,
     /// Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
     /// `String` so non-standard provider values do not break deserialization.
+    /// Defaults to empty when a provider omits the field.
+    #[serde(default)]
     pub object: String,
     /// Unix timestamp of model creation (or release date).
+    ///
+    /// Defaults to `0` when a provider omits it — DeepSeek and some other
+    /// OpenAI-compatible providers do not return `created` from `/v1/models`.
+    #[serde(default)]
     pub created: u64,
     /// Organization or entity that owns the model.
+    /// Defaults to empty when a provider omits the field.
+    #[serde(default)]
     pub owned_by: String,
 }

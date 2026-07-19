@@ -1,0 +1,40 @@
+[package]
+name = "liter-llm-catalog-gen"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+description = "Dev tool: regenerates liter-llm's catalog.json from the models.dev catalog."
+keywords = ["llm", "codegen", "xberg"]
+publish = false
+
+[[bin]]
+name = "liter-llm-catalog-gen"
+path = "src/main.rs"
+
+[dependencies]
+chrono = { workspace = true, features = ["clock"] }
+clap = { workspace = true }
+hex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+
+# ~keep Non-Windows uses rustls + ring, matching the rest of the workspace's TLS convention.
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+reqwest = { workspace = true, features = ["rustls-no-provider"] }
+rustls = { workspace = true }
+
+# ~keep Windows uses SChannel via native-tls to avoid aws-lc-sys MSVC build failures.
+[target.'cfg(target_os = "windows")'.dependencies]
+reqwest = { workspace = true, features = ["native-tls"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

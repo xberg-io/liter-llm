@@ -1,6 +1,6 @@
 //! Universal LLM API client with provider-agnostic chat, embeddings, files,
 //! batches, responses, image generation, transcription, moderation, OCR,
-//! rerank, and web-search across 143 providers.
+//! rerank, and web-search across 163 providers.
 //!
 //! See [`LlmClient`] for the high-level streaming client, [`DefaultClient`]
 //! (native-http only) for the canonical reqwest-backed implementation, and
@@ -99,7 +99,14 @@ pub use tower::{
     GuardrailStage, NoOpEmbeddingProvider, SystemPromptAwareStrategy, TenantScopedStrategy, VectorMatch, VectorStore,
 };
 // ~keep Re-export provider helpers that are public API while the module stays pub(crate).
-pub use cost::{completion_cost, completion_cost_with_cache};
+pub use cost::{ModelInfo, ModelTier, completion_cost, completion_cost_with_cache, model_info};
+// ~keep Runtime catalog refresh surface. Always compiled so it reaches every
+// ~keep binding; refresh is a runtime toggle (off by default), and the network
+// ~keep fetch degrades to a clean error on builds without `native-http`.
+pub use cost::refresh::{
+    CatalogRefreshConfig, CatalogRefreshError, DEFAULT_CATALOG_URL, RefreshOutcome, clear_catalog_overlay,
+    install_catalog_overlay_from_str, refresh_catalog,
+};
 pub use provider::custom::{
     AuthHeaderFormat, CustomProviderConfig, register_custom_provider, unregister_custom_provider,
 };

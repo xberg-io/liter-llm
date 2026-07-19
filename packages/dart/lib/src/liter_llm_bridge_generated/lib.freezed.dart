@@ -176,7 +176,7 @@ return parts(_that.field0);case _:
 
 class AssistantContent_Text extends AssistantContent {
   const AssistantContent_Text({required this.field0}): super._();
-  
+
 
 @override final  String field0;
 
@@ -242,7 +242,7 @@ as String,
 
 class AssistantContent_Parts extends AssistantContent {
   const AssistantContent_Parts({required final  List<AssistantPart> field0}): _field0 = field0,super._();
-  
+
 
  final  List<AssistantPart> _field0;
 @override List<AssistantPart> get field0 {
@@ -486,7 +486,7 @@ return outputAudio(_that.audio);case _:
 
 class AssistantPart_Text extends AssistantPart {
   const AssistantPart_Text({required this.text}): super._();
-  
+
 
 /// The text content of this part.
  final  String text;
@@ -553,7 +553,7 @@ as String,
 
 class AssistantPart_Refusal extends AssistantPart {
   const AssistantPart_Refusal({required this.refusal}): super._();
-  
+
 
 /// The refusal reason.
  final  String refusal;
@@ -620,7 +620,7 @@ as String,
 
 class AssistantPart_OutputImage extends AssistantPart {
   const AssistantPart_OutputImage({required this.imageUrl}): super._();
-  
+
 
 /// Image URL or data URI referencing the generated image.
  final  ImageUrl imageUrl;
@@ -687,7 +687,7 @@ as ImageUrl,
 
 class AssistantPart_OutputAudio extends AssistantPart {
   const AssistantPart_OutputAudio({required this.audio}): super._();
-  
+
 
 /// Base64-encoded audio data and its format.
  final  AudioContent audio;
@@ -920,7 +920,7 @@ return none();case _:
 
 class AuthHeaderFormat_Bearer extends AuthHeaderFormat {
   const AuthHeaderFormat_Bearer(): super._();
-  
+
 
 
 
@@ -952,7 +952,7 @@ String toString() {
 
 class AuthHeaderFormat_ApiKey extends AuthHeaderFormat {
   const AuthHeaderFormat_ApiKey({required this.field0}): super._();
-  
+
 
  final  String field0;
 
@@ -1018,7 +1018,7 @@ as String,
 
 class AuthHeaderFormat_None extends AuthHeaderFormat {
   const AuthHeaderFormat_None(): super._();
-  
+
 
 
 
@@ -1210,7 +1210,7 @@ return openDal(_that.scheme,_that.config);case _:
 
 class CacheBackend_Memory extends CacheBackend {
   const CacheBackend_Memory(): super._();
-  
+
 
 
 
@@ -1242,7 +1242,7 @@ String toString() {
 
 class CacheBackend_OpenDal extends CacheBackend {
   const CacheBackend_OpenDal({required this.scheme, required final  Map<String, String> config}): _config = config,super._();
-  
+
 
 /// OpenDAL scheme name (e.g. "s3", "redis", "fs", "gcs", "azblob").
  final  String scheme;
@@ -1308,6 +1308,484 @@ class _$CacheBackend_OpenDalCopyWithImpl<$Res>
 scheme: null == scheme ? _self.scheme : scheme // ignore: cast_nullable_to_non_nullable
 as String,config: null == config ? _self._config : config // ignore: cast_nullable_to_non_nullable
 as Map<String, String>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$CatalogRefreshError {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CatalogRefreshError);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'CatalogRefreshError()';
+}
+
+
+}
+
+/// @nodoc
+class $CatalogRefreshErrorCopyWith<$Res>  {
+$CatalogRefreshErrorCopyWith(CatalogRefreshError _, $Res Function(CatalogRefreshError) __);
+}
+
+
+/// Adds pattern-matching-related methods to [CatalogRefreshError].
+extension CatalogRefreshErrorPatterns on CatalogRefreshError {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( CatalogRefreshError_Disabled value)?  disabled,TResult Function( CatalogRefreshError_InsecureUrl value)?  insecureUrl,TResult Function( CatalogRefreshError_Fetch value)?  fetch,TResult Function( CatalogRefreshError_Parse value)?  parse,TResult Function( CatalogRefreshError_Cache value)?  cache,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case CatalogRefreshError_Disabled() when disabled != null:
+return disabled(_that);case CatalogRefreshError_InsecureUrl() when insecureUrl != null:
+return insecureUrl(_that);case CatalogRefreshError_Fetch() when fetch != null:
+return fetch(_that);case CatalogRefreshError_Parse() when parse != null:
+return parse(_that);case CatalogRefreshError_Cache() when cache != null:
+return cache(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( CatalogRefreshError_Disabled value)  disabled,required TResult Function( CatalogRefreshError_InsecureUrl value)  insecureUrl,required TResult Function( CatalogRefreshError_Fetch value)  fetch,required TResult Function( CatalogRefreshError_Parse value)  parse,required TResult Function( CatalogRefreshError_Cache value)  cache,}){
+final _that = this;
+switch (_that) {
+case CatalogRefreshError_Disabled():
+return disabled(_that);case CatalogRefreshError_InsecureUrl():
+return insecureUrl(_that);case CatalogRefreshError_Fetch():
+return fetch(_that);case CatalogRefreshError_Parse():
+return parse(_that);case CatalogRefreshError_Cache():
+return cache(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( CatalogRefreshError_Disabled value)?  disabled,TResult? Function( CatalogRefreshError_InsecureUrl value)?  insecureUrl,TResult? Function( CatalogRefreshError_Fetch value)?  fetch,TResult? Function( CatalogRefreshError_Parse value)?  parse,TResult? Function( CatalogRefreshError_Cache value)?  cache,}){
+final _that = this;
+switch (_that) {
+case CatalogRefreshError_Disabled() when disabled != null:
+return disabled(_that);case CatalogRefreshError_InsecureUrl() when insecureUrl != null:
+return insecureUrl(_that);case CatalogRefreshError_Fetch() when fetch != null:
+return fetch(_that);case CatalogRefreshError_Parse() when parse != null:
+return parse(_that);case CatalogRefreshError_Cache() when cache != null:
+return cache(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  disabled,TResult Function( String url)?  insecureUrl,TResult Function( String url,  String message)?  fetch,TResult Function( String message)?  parse,TResult Function( String path,  String message)?  cache,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case CatalogRefreshError_Disabled() when disabled != null:
+return disabled();case CatalogRefreshError_InsecureUrl() when insecureUrl != null:
+return insecureUrl(_that.url);case CatalogRefreshError_Fetch() when fetch != null:
+return fetch(_that.url,_that.message);case CatalogRefreshError_Parse() when parse != null:
+return parse(_that.message);case CatalogRefreshError_Cache() when cache != null:
+return cache(_that.path,_that.message);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  disabled,required TResult Function( String url)  insecureUrl,required TResult Function( String url,  String message)  fetch,required TResult Function( String message)  parse,required TResult Function( String path,  String message)  cache,}) {final _that = this;
+switch (_that) {
+case CatalogRefreshError_Disabled():
+return disabled();case CatalogRefreshError_InsecureUrl():
+return insecureUrl(_that.url);case CatalogRefreshError_Fetch():
+return fetch(_that.url,_that.message);case CatalogRefreshError_Parse():
+return parse(_that.message);case CatalogRefreshError_Cache():
+return cache(_that.path,_that.message);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  disabled,TResult? Function( String url)?  insecureUrl,TResult? Function( String url,  String message)?  fetch,TResult? Function( String message)?  parse,TResult? Function( String path,  String message)?  cache,}) {final _that = this;
+switch (_that) {
+case CatalogRefreshError_Disabled() when disabled != null:
+return disabled();case CatalogRefreshError_InsecureUrl() when insecureUrl != null:
+return insecureUrl(_that.url);case CatalogRefreshError_Fetch() when fetch != null:
+return fetch(_that.url,_that.message);case CatalogRefreshError_Parse() when parse != null:
+return parse(_that.message);case CatalogRefreshError_Cache() when cache != null:
+return cache(_that.path,_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class CatalogRefreshError_Disabled extends CatalogRefreshError {
+  const CatalogRefreshError_Disabled(): super._();
+
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CatalogRefreshError_Disabled);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'CatalogRefreshError.disabled()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class CatalogRefreshError_InsecureUrl extends CatalogRefreshError {
+  const CatalogRefreshError_InsecureUrl({required this.url}): super._();
+
+
+ final  String url;
+
+/// Create a copy of CatalogRefreshError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CatalogRefreshError_InsecureUrlCopyWith<CatalogRefreshError_InsecureUrl> get copyWith => _$CatalogRefreshError_InsecureUrlCopyWithImpl<CatalogRefreshError_InsecureUrl>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CatalogRefreshError_InsecureUrl&&(identical(other.url, url) || other.url == url));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,url);
+
+@override
+String toString() {
+  return 'CatalogRefreshError.insecureUrl(url: $url)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CatalogRefreshError_InsecureUrlCopyWith<$Res> implements $CatalogRefreshErrorCopyWith<$Res> {
+  factory $CatalogRefreshError_InsecureUrlCopyWith(CatalogRefreshError_InsecureUrl value, $Res Function(CatalogRefreshError_InsecureUrl) _then) = _$CatalogRefreshError_InsecureUrlCopyWithImpl;
+@useResult
+$Res call({
+ String url
+});
+
+
+
+
+}
+/// @nodoc
+class _$CatalogRefreshError_InsecureUrlCopyWithImpl<$Res>
+    implements $CatalogRefreshError_InsecureUrlCopyWith<$Res> {
+  _$CatalogRefreshError_InsecureUrlCopyWithImpl(this._self, this._then);
+
+  final CatalogRefreshError_InsecureUrl _self;
+  final $Res Function(CatalogRefreshError_InsecureUrl) _then;
+
+/// Create a copy of CatalogRefreshError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? url = null,}) {
+  return _then(CatalogRefreshError_InsecureUrl(
+url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class CatalogRefreshError_Fetch extends CatalogRefreshError {
+  const CatalogRefreshError_Fetch({required this.url, required this.message}): super._();
+
+
+ final  String url;
+ final  String message;
+
+/// Create a copy of CatalogRefreshError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CatalogRefreshError_FetchCopyWith<CatalogRefreshError_Fetch> get copyWith => _$CatalogRefreshError_FetchCopyWithImpl<CatalogRefreshError_Fetch>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CatalogRefreshError_Fetch&&(identical(other.url, url) || other.url == url)&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,url,message);
+
+@override
+String toString() {
+  return 'CatalogRefreshError.fetch(url: $url, message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CatalogRefreshError_FetchCopyWith<$Res> implements $CatalogRefreshErrorCopyWith<$Res> {
+  factory $CatalogRefreshError_FetchCopyWith(CatalogRefreshError_Fetch value, $Res Function(CatalogRefreshError_Fetch) _then) = _$CatalogRefreshError_FetchCopyWithImpl;
+@useResult
+$Res call({
+ String url, String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$CatalogRefreshError_FetchCopyWithImpl<$Res>
+    implements $CatalogRefreshError_FetchCopyWith<$Res> {
+  _$CatalogRefreshError_FetchCopyWithImpl(this._self, this._then);
+
+  final CatalogRefreshError_Fetch _self;
+  final $Res Function(CatalogRefreshError_Fetch) _then;
+
+/// Create a copy of CatalogRefreshError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? url = null,Object? message = null,}) {
+  return _then(CatalogRefreshError_Fetch(
+url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
+as String,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class CatalogRefreshError_Parse extends CatalogRefreshError {
+  const CatalogRefreshError_Parse({required this.message}): super._();
+
+
+ final  String message;
+
+/// Create a copy of CatalogRefreshError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CatalogRefreshError_ParseCopyWith<CatalogRefreshError_Parse> get copyWith => _$CatalogRefreshError_ParseCopyWithImpl<CatalogRefreshError_Parse>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CatalogRefreshError_Parse&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message);
+
+@override
+String toString() {
+  return 'CatalogRefreshError.parse(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CatalogRefreshError_ParseCopyWith<$Res> implements $CatalogRefreshErrorCopyWith<$Res> {
+  factory $CatalogRefreshError_ParseCopyWith(CatalogRefreshError_Parse value, $Res Function(CatalogRefreshError_Parse) _then) = _$CatalogRefreshError_ParseCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$CatalogRefreshError_ParseCopyWithImpl<$Res>
+    implements $CatalogRefreshError_ParseCopyWith<$Res> {
+  _$CatalogRefreshError_ParseCopyWithImpl(this._self, this._then);
+
+  final CatalogRefreshError_Parse _self;
+  final $Res Function(CatalogRefreshError_Parse) _then;
+
+/// Create a copy of CatalogRefreshError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(CatalogRefreshError_Parse(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class CatalogRefreshError_Cache extends CatalogRefreshError {
+  const CatalogRefreshError_Cache({required this.path, required this.message}): super._();
+
+
+ final  String path;
+ final  String message;
+
+/// Create a copy of CatalogRefreshError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CatalogRefreshError_CacheCopyWith<CatalogRefreshError_Cache> get copyWith => _$CatalogRefreshError_CacheCopyWithImpl<CatalogRefreshError_Cache>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CatalogRefreshError_Cache&&(identical(other.path, path) || other.path == path)&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,path,message);
+
+@override
+String toString() {
+  return 'CatalogRefreshError.cache(path: $path, message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CatalogRefreshError_CacheCopyWith<$Res> implements $CatalogRefreshErrorCopyWith<$Res> {
+  factory $CatalogRefreshError_CacheCopyWith(CatalogRefreshError_Cache value, $Res Function(CatalogRefreshError_Cache) _then) = _$CatalogRefreshError_CacheCopyWithImpl;
+@useResult
+$Res call({
+ String path, String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$CatalogRefreshError_CacheCopyWithImpl<$Res>
+    implements $CatalogRefreshError_CacheCopyWith<$Res> {
+  _$CatalogRefreshError_CacheCopyWithImpl(this._self, this._then);
+
+  final CatalogRefreshError_Cache _self;
+  final $Res Function(CatalogRefreshError_Cache) _then;
+
+/// Create a copy of CatalogRefreshError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? path = null,Object? message = null,}) {
+  return _then(CatalogRefreshError_Cache(
+path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
+as String,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -1491,7 +1969,7 @@ return inputAudio(_that.inputAudio);case _:
 
 class ContentPart_Text extends ContentPart {
   const ContentPart_Text({required this.text}): super._();
-  
+
 
  final  String text;
 
@@ -1557,7 +2035,7 @@ as String,
 
 class ContentPart_ImageUrl extends ContentPart {
   const ContentPart_ImageUrl({required this.imageUrl}): super._();
-  
+
 
  final  ImageUrl imageUrl;
 
@@ -1623,7 +2101,7 @@ as ImageUrl,
 
 class ContentPart_Document extends ContentPart {
   const ContentPart_Document({required this.document}): super._();
-  
+
 
  final  DocumentContent document;
 
@@ -1689,7 +2167,7 @@ as DocumentContent,
 
 class ContentPart_InputAudio extends ContentPart {
   const ContentPart_InputAudio({required this.inputAudio}): super._();
-  
+
 
  final  AudioContent inputAudio;
 
@@ -1915,7 +2393,7 @@ return multiple(_that.field0);case _:
 
 class EmbeddingInput_Single extends EmbeddingInput {
   const EmbeddingInput_Single({required this.field0}): super._();
-  
+
 
 @override final  String field0;
 
@@ -1981,7 +2459,7 @@ as String,
 
 class EmbeddingInput_Multiple extends EmbeddingInput {
   const EmbeddingInput_Multiple({required final  List<String> field0}): _field0 = field0,super._();
-  
+
 
  final  List<String> _field0;
 @override List<String> get field0 {
@@ -2315,7 +2793,7 @@ return idempotencyInFlight(_that.key);case _:
 
 class LiterLlmError_Authentication extends LiterLlmError {
   const LiterLlmError_Authentication({required this.message, required this.status}): super._();
-  
+
 
  final  String message;
  final  PlatformInt64 status;
@@ -2383,7 +2861,7 @@ as PlatformInt64,
 
 class LiterLlmError_RateLimited extends LiterLlmError {
   const LiterLlmError_RateLimited({required this.message, required this.retryAfter}): super._();
-  
+
 
  final  String message;
  final  PlatformInt64 retryAfter;
@@ -2451,7 +2929,7 @@ as PlatformInt64,
 
 class LiterLlmError_BadRequest extends LiterLlmError {
   const LiterLlmError_BadRequest({required this.message, required this.status}): super._();
-  
+
 
  final  String message;
  final  PlatformInt64 status;
@@ -2519,7 +2997,7 @@ as PlatformInt64,
 
 class LiterLlmError_ContextWindowExceeded extends LiterLlmError {
   const LiterLlmError_ContextWindowExceeded({required this.message}): super._();
-  
+
 
  final  String message;
 
@@ -2585,7 +3063,7 @@ as String,
 
 class LiterLlmError_ContentPolicy extends LiterLlmError {
   const LiterLlmError_ContentPolicy({required this.message}): super._();
-  
+
 
  final  String message;
 
@@ -2651,7 +3129,7 @@ as String,
 
 class LiterLlmError_NotFound extends LiterLlmError {
   const LiterLlmError_NotFound({required this.message}): super._();
-  
+
 
  final  String message;
 
@@ -2717,7 +3195,7 @@ as String,
 
 class LiterLlmError_ServerError extends LiterLlmError {
   const LiterLlmError_ServerError({required this.message, required this.status}): super._();
-  
+
 
  final  String message;
  final  PlatformInt64 status;
@@ -2785,7 +3263,7 @@ as PlatformInt64,
 
 class LiterLlmError_ServiceUnavailable extends LiterLlmError {
   const LiterLlmError_ServiceUnavailable({required this.message, required this.status}): super._();
-  
+
 
  final  String message;
  final  PlatformInt64 status;
@@ -2853,7 +3331,7 @@ as PlatformInt64,
 
 class LiterLlmError_Timeout extends LiterLlmError {
   const LiterLlmError_Timeout(): super._();
-  
+
 
 
 
@@ -2885,7 +3363,7 @@ String toString() {
 
 class LiterLlmError_Streaming extends LiterLlmError {
   const LiterLlmError_Streaming({required this.message}): super._();
-  
+
 
  final  String message;
 
@@ -2951,7 +3429,7 @@ as String,
 
 class LiterLlmError_EndpointNotSupported extends LiterLlmError {
   const LiterLlmError_EndpointNotSupported({required this.endpoint, required this.provider}): super._();
-  
+
 
  final  String endpoint;
  final  String provider;
@@ -3019,7 +3497,7 @@ as String,
 
 class LiterLlmError_InvalidHeader extends LiterLlmError {
   const LiterLlmError_InvalidHeader({required this.name, required this.reason}): super._();
-  
+
 
  final  String name;
  final  String reason;
@@ -3087,7 +3565,7 @@ as String,
 
 class LiterLlmError_Serialization extends LiterLlmError {
   const LiterLlmError_Serialization({required this.field0}): super._();
-  
+
 
  final  String field0;
 
@@ -3153,7 +3631,7 @@ as String,
 
 class LiterLlmError_BudgetExceeded extends LiterLlmError {
   const LiterLlmError_BudgetExceeded({required this.message, required this.model}): super._();
-  
+
 
  final  String message;
  final  String model;
@@ -3221,7 +3699,7 @@ as String,
 
 class LiterLlmError_HookRejected extends LiterLlmError {
   const LiterLlmError_HookRejected({required this.message}): super._();
-  
+
 
  final  String message;
 
@@ -3287,7 +3765,7 @@ as String,
 
 class LiterLlmError_InternalError extends LiterLlmError {
   const LiterLlmError_InternalError({required this.message}): super._();
-  
+
 
  final  String message;
 
@@ -3353,7 +3831,7 @@ as String,
 
 class LiterLlmError_OutboundForbidden extends LiterLlmError {
   const LiterLlmError_OutboundForbidden({required this.url, required this.reason}): super._();
-  
+
 
  final  String url;
  final  String reason;
@@ -3421,7 +3899,7 @@ as String,
 
 class LiterLlmError_IdempotencyConflict extends LiterLlmError {
   const LiterLlmError_IdempotencyConflict({required this.key}): super._();
-  
+
 
  final  String key;
 
@@ -3487,7 +3965,7 @@ as String,
 
 class LiterLlmError_IdempotencyInFlight extends LiterLlmError {
   const LiterLlmError_IdempotencyInFlight({required this.key}): super._();
-  
+
 
  final  String key;
 
@@ -3737,7 +4215,7 @@ return function(_that.field0);case _:
 
 class Message_System extends Message {
   const Message_System({required this.field0}): super._();
-  
+
 
 @override final  SystemMessage field0;
 
@@ -3803,7 +4281,7 @@ as SystemMessage,
 
 class Message_User extends Message {
   const Message_User({required this.field0}): super._();
-  
+
 
 @override final  UserMessage field0;
 
@@ -3869,7 +4347,7 @@ as UserMessage,
 
 class Message_Assistant extends Message {
   const Message_Assistant({required this.field0}): super._();
-  
+
 
 @override final  AssistantMessage field0;
 
@@ -3935,7 +4413,7 @@ as AssistantMessage,
 
 class Message_Tool extends Message {
   const Message_Tool({required this.field0}): super._();
-  
+
 
 @override final  ToolMessage field0;
 
@@ -4001,7 +4479,7 @@ as ToolMessage,
 
 class Message_Developer extends Message {
   const Message_Developer({required this.field0}): super._();
-  
+
 
 @override final  DeveloperMessage field0;
 
@@ -4067,7 +4545,7 @@ as DeveloperMessage,
 
 class Message_Function extends Message {
   const Message_Function({required this.field0}): super._();
-  
+
 
 @override final  FunctionMessage field0;
 
@@ -4293,7 +4771,7 @@ return multiple(_that.field0);case _:
 
 class ModerationInput_Single extends ModerationInput {
   const ModerationInput_Single({required this.field0}): super._();
-  
+
 
 @override final  String field0;
 
@@ -4359,7 +4837,7 @@ as String,
 
 class ModerationInput_Multiple extends ModerationInput {
   const ModerationInput_Multiple({required final  List<String> field0}): _field0 = field0,super._();
-  
+
 
  final  List<String> _field0;
 @override List<String> get field0 {
@@ -4591,7 +5069,7 @@ return base64(_that.data,_that.mediaType);case _:
 
 class OcrDocument_Url extends OcrDocument {
   const OcrDocument_Url({required this.url}): super._();
-  
+
 
 /// The document URL (HTTP/HTTPS).
  final  String url;
@@ -4658,7 +5136,7 @@ as String,
 
 class OcrDocument_Base64 extends OcrDocument {
   const OcrDocument_Base64({required this.data, required this.mediaType}): super._();
-  
+
 
 /// Base64-encoded document content.
  final  String data;
@@ -4888,7 +5366,7 @@ return object(_that.text);case _:
 
 class RerankDocument_Text extends RerankDocument {
   const RerankDocument_Text({required this.field0}): super._();
-  
+
 
  final  String field0;
 
@@ -4954,7 +5432,7 @@ as String,
 
 class RerankDocument_Object extends RerankDocument {
   const RerankDocument_Object({required this.text}): super._();
-  
+
 
  final  String text;
 
@@ -5186,7 +5664,7 @@ return jsonSchema(_that.jsonSchema);case _:
 
 class ResponseFormat_Text extends ResponseFormat {
   const ResponseFormat_Text(): super._();
-  
+
 
 
 
@@ -5218,7 +5696,7 @@ String toString() {
 
 class ResponseFormat_JsonObject extends ResponseFormat {
   const ResponseFormat_JsonObject(): super._();
-  
+
 
 
 
@@ -5250,7 +5728,7 @@ String toString() {
 
 class ResponseFormat_JsonSchema extends ResponseFormat {
   const ResponseFormat_JsonSchema({required this.jsonSchema}): super._();
-  
+
 
  final  JsonSchemaFormat jsonSchema;
 
@@ -5476,7 +5954,7 @@ return multiple(_that.field0);case _:
 
 class StopSequence_Single extends StopSequence {
   const StopSequence_Single({required this.field0}): super._();
-  
+
 
 @override final  String field0;
 
@@ -5542,7 +6020,7 @@ as String,
 
 class StopSequence_Multiple extends StopSequence {
   const StopSequence_Multiple({required final  List<String> field0}): _field0 = field0,super._();
-  
+
 
  final  List<String> _field0;
 @override List<String> get field0 {
@@ -5774,7 +6252,7 @@ return specific(_that.field0);case _:
 
 class ToolChoice_Mode extends ToolChoice {
   const ToolChoice_Mode({required this.field0}): super._();
-  
+
 
 @override final  ToolChoiceMode field0;
 
@@ -5840,7 +6318,7 @@ as ToolChoiceMode,
 
 class ToolChoice_Specific extends ToolChoice {
   const ToolChoice_Specific({required this.field0}): super._();
-  
+
 
 @override final  SpecificToolChoice field0;
 
@@ -6066,7 +6544,7 @@ return parts(_that.field0);case _:
 
 class UserContent_Text extends UserContent {
   const UserContent_Text({required this.field0}): super._();
-  
+
 
 @override final  String field0;
 
@@ -6132,7 +6610,7 @@ as String,
 
 class UserContent_Parts extends UserContent {
   const UserContent_Parts({required final  List<ContentPart> field0}): _field0 = field0,super._();
-  
+
 
  final  List<ContentPart> _field0;
 @override List<ContentPart> get field0 {

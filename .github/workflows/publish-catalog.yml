@@ -1,0 +1,47 @@
+name: Publish Model Catalog
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - schemas/catalog.json
+  workflow_dispatch:
+
+concurrency:
+  group: publish-catalog
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish catalog.json to the model-catalog release
+    if: github.repository == 'xberg-io/liter-llm'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Inject release provenance
+        run: |
+          jq \
+            --arg commit "$GITHUB_SHA" \
+            --arg tag "model-catalog" \
+            '.["$provenance"].generated_by_commit = $commit | .["$provenance"].release_tag = $tag' \
+            schemas/catalog.json > /tmp/catalog.json
+        shell: bash
+
+      - name: Publish to model-catalog release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view model-catalog >/dev/null 2>&1; then
+            gh release upload model-catalog /tmp/catalog.json --clobber
+          else
+            gh release create model-catalog /tmp/catalog.json \
+              --title "Model Catalog (rolling)" \
+              --notes "Rolling release publishing the latest \`catalog.json\` from models.dev. Always points at the current commit on \`main\`. Download: https://github.com/${{ github.repository }}/releases/download/model-catalog/catalog.json" \
+              --prerelease
+          fi
+        shell: bash

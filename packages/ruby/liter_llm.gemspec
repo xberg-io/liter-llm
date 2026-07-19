@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name = "liter_llm"
-  spec.version = "1.9.3"
+  spec.version = "1.10.0"
   spec.authors       = ["Na'aman Hirschfeld"]
   spec.summary       = "Universal LLM API client with Rust-powered polyglot bindings."
   spec.description   = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.license       = "MIT"
 
-  spec.required_ruby_version = [">= 3.2.0", "< 4.0"]
+  spec.required_ruby_version = ">= 3.2.0"
   spec.metadata["keywords"] = %w[anthropic api-client llm openai].join(",")
   spec.metadata["rubygems_mfa_required"] = "true"
 

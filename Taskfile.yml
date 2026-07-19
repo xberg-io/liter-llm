@@ -177,7 +177,7 @@ tasks:
       - echo "Updating dependencies (within-major)..."
       - alef update
       - gau --update .
-      - task: generate:pricing
+      - task: generate:catalog
       - echo "All dependencies updated"
 
   upgrade:
@@ -186,7 +186,7 @@ tasks:
       - echo "Upgrading dependencies (latest)..."
       - alef update --latest
       - gau --update .
-      - task: generate:pricing
+      - task: generate:catalog
       - echo "All dependencies upgraded"
 
   clean:
@@ -260,15 +260,15 @@ tasks:
     cmds:
       - uv run --no-sync python scripts/generate_providers_doc.py --validate
 
-  generate:pricing:
-    desc: Refresh schemas/pricing.json from models.dev (also runs as part of `task update`/`upgrade`)
+  generate:catalog:
+    desc: Refresh schemas/catalog.json from models.dev (also runs as part of `task update`/`upgrade`)
     cmds:
-      - uv run --no-sync python scripts/generate_pricing.py
+      - cargo run -p liter-llm-catalog-gen --release --
 
-  generate:pricing:check:
-    desc: Validate pricing.json is up-to-date with models.dev (CI)
+  generate:catalog:check:
+    desc: Validate catalog.json is up-to-date with models.dev (CI)
     cmds:
-      - uv run --no-sync python scripts/generate_pricing.py --validate
+      - cargo run -p liter-llm-catalog-gen --release -- --validate
 
   test:e2e:
     desc: Generate and run e2e tests across all bindings (alias for e2e:verify:all)

@@ -88,6 +88,7 @@ default = ["native-http"]
 
 [dependencies]
 ahash = { workspace = true }
+arc-swap = { workspace = true }
 async-trait = { workspace = true }
 aws-credential-types = { version = "1", optional = true }
 aws-sigv4 = { version = "1", features = ["sign-http", "http1"], optional = true }

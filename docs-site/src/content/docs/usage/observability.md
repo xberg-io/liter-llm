@@ -96,7 +96,7 @@ Any OTEL-compatible backend accepts these spans: Jaeger, Tempo, Honeycomb, Datad
 
 ## Cost tracking
 
-`CostTrackingLayer` records estimated USD cost as `gen_ai.usage.cost` on the active tracing span after each successful response. It looks up pricing from the embedded pricing registry (`crates/liter-llm/schemas/pricing.json`). Models not in the registry produce no attribute.
+`CostTrackingLayer` records estimated USD cost as `gen_ai.usage.cost` on the active tracing span after each successful response. It looks up pricing from the embedded pricing registry (`crates/liter-llm/schemas/catalog.json`). Models not in the registry produce no attribute.
 
 Enable cost tracking independently of tracing by composing the layer manually in Rust, or by setting `cost_tracking = true` in the proxy `[general]` section:
 
@@ -119,7 +119,7 @@ if let Some(cost_usd) = resp.estimated_cost() {
 }
 ```
 
-The pricing registry lives at `crates/liter-llm/schemas/pricing.json`. Models not in the registry produce no `gen_ai.usage.cost` attribute.
+The pricing registry lives at `crates/liter-llm/schemas/catalog.json`. Models not in the registry produce no `gen_ai.usage.cost` attribute.
 
 ## Proxy trace context forwarding
 

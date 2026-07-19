@@ -114,6 +114,21 @@ jobs:
           dry-run: ${{ steps.meta.outputs.dry_run }}
           token: ${{ steps.app-token.outputs.token }}
 
+      - name: Attach model catalog snapshot to release
+        if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.dry_run != 'true' }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          TARGET_SHA: ${{ steps.meta.outputs.target_sha }}
+        run: |
+          jq \
+            --arg commit "$TARGET_SHA" \
+            --arg tag "$TAG" \
+            '.["$provenance"].generated_by_commit = $commit | .["$provenance"].release_tag = $tag' \
+            schemas/catalog.json > /tmp/catalog.json
+          gh release upload "$TAG" /tmp/catalog.json --clobber
+        shell: bash
+
   validate-versions:
     name: Validate versions
     needs: prepare

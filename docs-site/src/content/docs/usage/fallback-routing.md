@@ -91,7 +91,7 @@ The first sample for a deployment seeds the EMA directly. The deployment with th
 let router = Router::new(deployments, RoutingStrategy::CostBased)?;
 ```
 
-Attempts deployments in order. On a successful response, logs the estimated USD cost at `TRACE` level. Advances on transient errors. Pricing data comes from the embedded registry at `crates/liter-llm/schemas/pricing.json`.
+Attempts deployments in order. On a successful response, logs the estimated USD cost at `TRACE` level. Advances on transient errors. Pricing data comes from the embedded registry at `crates/liter-llm/schemas/catalog.json`.
 
 ### WeightedRandom
 

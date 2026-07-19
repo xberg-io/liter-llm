@@ -1,6 +1,6 @@
 {
   "name": "@xberg-io/liter-llm",
-  "version": "1.9.3",
+  "version": "1.10.0",
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
   "repository": {
@@ -18,12 +18,12 @@
   },
   "files": ["index.js", "index.d.ts", "*.node"],
   "optionalDependencies": {
-    "@xberg-io/liter-llm-linux-x64-gnu": "1.9.3",
-    "@xberg-io/liter-llm-linux-arm64-gnu": "1.9.3",
-    "@xberg-io/liter-llm-darwin-x64": "1.9.3",
-    "@xberg-io/liter-llm-darwin-arm64": "1.9.3",
-    "@xberg-io/liter-llm-win32-x64-msvc": "1.9.3",
-    "@xberg-io/liter-llm-win32-arm64-msvc": "1.9.3"
+    "@xberg-io/liter-llm-linux-x64-gnu": "1.10.0",
+    "@xberg-io/liter-llm-linux-arm64-gnu": "1.10.0",
+    "@xberg-io/liter-llm-darwin-x64": "1.10.0",
+    "@xberg-io/liter-llm-darwin-arm64": "1.10.0",
+    "@xberg-io/liter-llm-win32-x64-msvc": "1.10.0",
+    "@xberg-io/liter-llm-win32-arm64-msvc": "1.10.0"
   },
   "napi": {
     "packageName": "@xberg-io/liter-llm",
@@ -38,11 +38,11 @@
     ]
   },
   "scripts": {
-    "build": "npx --yes -p @napi-rs/cli@^3.6.2 napi build --platform --release",
-    "artifacts": "npx --yes -p @napi-rs/cli@^3.6.2 napi artifacts",
-    "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.6.2 napi prepublish -t npm --skip-optional-publish"
+    "build": "npx --yes -p @napi-rs/cli@^3.7.3 napi build --platform --release",
+    "artifacts": "npx --yes -p @napi-rs/cli@^3.7.3 napi artifacts",
+    "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.7.3 napi prepublish -t npm --skip-optional-publish"
   },
   "engines": { "node": ">= 22" },
   "publishConfig": { "access": "public" },
-  "devDependencies": { "@napi-rs/cli": "^3.6.2" }
+  "devDependencies": { "@napi-rs/cli": "^3.7.3" }
 }

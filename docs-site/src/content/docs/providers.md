@@ -1,9 +1,9 @@
 ---
-description: "Complete list of 143 supported LLM providers"
+description: "Complete list of 163 supported LLM providers"
 title: "Supported Providers"
 ---
 
-Liter-llm supports **143 providers** out of the box. Route requests to any provider using the `provider/model` prefix convention -- for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` routes to Anthropic. No extra configuration is needed beyond setting the provider's API key.
+Liter-llm supports **163 providers** out of the box. Route requests to any provider using the `provider/model` prefix convention -- for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` routes to Anthropic. No extra configuration is needed beyond setting the provider's API key.
 
 | Provider | Prefix | Chat | Embeddings | Image | Audio | Moderation |
 | --- | --- | :---: | :---: | :---: | :---: | :---: |
@@ -12,6 +12,7 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | AI/ML API | `aiml/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- | -- |
 | AI21 | `ai21/` | :white_check_mark: | -- | -- | -- | -- |
 | AI21 Chat | `ai21_chat/` | :white_check_mark: | -- | -- | -- | -- |
+| AIHubMix | `aihubmix/` | :white_check_mark: | -- | -- | -- | -- |
 | Amazon Nova | `amazon_nova/` | :white_check_mark: | -- | -- | -- | -- |
 | Anthropic | `anthropic/` | :white_check_mark: | -- | -- | -- | -- |
 | Anthropic Text | `anthropic_text/` | :white_check_mark: | -- | -- | -- | -- |
@@ -19,6 +20,7 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | AssemblyAI | `assemblyai/` | :white_check_mark: | -- | -- | :white_check_mark: | -- |
 | Auto Router | `auto_router/` | :white_check_mark: | -- | -- | -- | -- |
 | AWS - Bedrock | `bedrock/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
+| AWS - Bedrock Mantle | `bedrock_mantle/` | :white_check_mark: | -- | -- | -- | -- |
 | AWS - Polly | `aws_polly/` | -- | -- | -- | :white_check_mark: | -- |
 | AWS - Sagemaker | `sagemaker/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | AWS S3 Vectors | `s3_vectors/` | -- | -- | -- | -- | -- |
@@ -28,9 +30,11 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | Azure AI Foundry Agents | `azure_ai/agents/` | :white_check_mark: | -- | -- | -- | -- |
 | Azure Text | `azure_text/` | :white_check_mark: | -- | -- | :white_check_mark: | :white_check_mark: |
 | Baseten | `baseten/` | :white_check_mark: | -- | -- | -- | -- |
+| Black Forest Labs | `black_forest_labs/` | -- | -- | :white_check_mark: | -- | -- |
 | Brave Search | `brave/` | -- | -- | -- | -- | -- |
 | Bytez | `bytez/` | :white_check_mark: | -- | -- | -- | -- |
 | Cerebras | `cerebras/` | :white_check_mark: | -- | -- | -- | -- |
+| Charity Engine | `charity_engine/` | :white_check_mark: | -- | -- | -- | -- |
 | ChatGPT Subscription | `chatgpt/` | :white_check_mark: | -- | -- | -- | -- |
 | Chutes | `chutes/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Clarifai | `clarifai/` | :white_check_mark: | -- | -- | -- | -- |
@@ -40,9 +44,11 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | Cohere Chat | `cohere_chat/` | :white_check_mark: | -- | -- | -- | -- |
 | CometAPI | `cometapi/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | CompactifAI | `compactifai/` | :white_check_mark: | -- | -- | -- | -- |
+| Crusoe | `crusoe/` | :white_check_mark: | -- | -- | -- | -- |
 | Cursor BYOK | `cursor/` | :white_check_mark: | -- | -- | -- | -- |
 | Custom | `custom/` | :white_check_mark: | -- | -- | -- | -- |
 | Custom OpenAI | `custom_openai/` | :white_check_mark: | -- | -- | :white_check_mark: | :white_check_mark: |
+| Darkbloom | `darkbloom/` | :white_check_mark: | -- | -- | -- | -- |
 | Dashscope | `dashscope/` | :white_check_mark: | -- | -- | -- | -- |
 | Databricks | `databricks/` | :white_check_mark: | -- | -- | -- | -- |
 | DataForSEO | `dataforseo/` | -- | -- | -- | -- | -- |
@@ -53,6 +59,7 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | Docker Model Runner | `docker_model_runner/` | :white_check_mark: | -- | -- | -- | -- |
 | DuckDuckGo | `duckduckgo/` | -- | -- | -- | -- | -- |
 | ElevenLabs | `elevenlabs/` | :white_check_mark: | -- | -- | :white_check_mark: | -- |
+| Empiriolabs | `empiriolabs/` | :white_check_mark: | -- | -- | -- | -- |
 | Empower | `empower/` | :white_check_mark: | -- | -- | -- | -- |
 | Exa AI | `exa_ai/` | -- | -- | -- | -- | -- |
 | Fal AI | `fal_ai/` | :white_check_mark: | -- | :white_check_mark: | -- | -- |
@@ -65,6 +72,7 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | GitHub Copilot | `github_copilot/` | :white_check_mark: | -- | -- | -- | -- |
 | GitHub Models | `github/` | :white_check_mark: | -- | -- | -- | -- |
 | GMI Cloud | `gmi/` | :white_check_mark: | -- | -- | -- | -- |
+| Google - Distributed Cloud (Gemini) | `gdc/` | :white_check_mark: | -- | -- | -- | -- |
 | Google - Vertex AI | `vertex_ai/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- |
 | Google AI Studio - Gemini | `gemini/` | :white_check_mark: | -- | -- | -- | -- |
 | Google PSE | `google_pse/` | -- | -- | -- | -- | -- |
@@ -76,11 +84,13 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | Huggingface | `huggingface/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Hyperbolic | `hyperbolic/` | :white_check_mark: | -- | -- | -- | -- |
 | IBM - Watsonx.ai | `watsonx/` | :white_check_mark: | :white_check_mark: | -- | :white_check_mark: | -- |
+| Inception Labs | `inception/` | :white_check_mark: | -- | -- | -- | -- |
 | Infinity | `infinity/` | -- | :white_check_mark: | -- | -- | -- |
 | Jina AI | `jina_ai/` | -- | :white_check_mark: | -- | -- | -- |
 | Lambda AI | `lambda_ai/` | :white_check_mark: | -- | -- | -- | -- |
 | LangGraph | `langgraph/` | :white_check_mark: | -- | -- | -- | -- |
 | Lemonade | `lemonade/` | :white_check_mark: | -- | -- | -- | -- |
+| LibertAI | `libertai/` | :white_check_mark: | -- | -- | -- | -- |
 | Linkup | `linkup/` | -- | -- | -- | -- | -- |
 | LiteLLM Proxy | `litellm_proxy/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- | -- |
 | llama.cpp | `llamacpp/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
@@ -91,17 +101,21 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | Manus | `manus/` | :white_check_mark: | -- | -- | -- | -- |
 | Maritalk | `maritalk/` | :white_check_mark: | -- | -- | -- | -- |
 | Meta - Llama API | `meta_llama/` | :white_check_mark: | -- | -- | -- | -- |
+| Meta - Model API | `meta/` | :white_check_mark: | -- | -- | -- | -- |
 | Milvus | `milvus/` | -- | -- | -- | -- | -- |
 | Minimax | `minimax/` | :white_check_mark: | -- | -- | -- | -- |
 | Mistral AI API | `mistral/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
+| ModelScope | `modelscope/` | :white_check_mark: | -- | :white_check_mark: | -- | -- |
 | Moonshot | `moonshot/` | :white_check_mark: | -- | -- | -- | -- |
 | Morph | `morph/` | :white_check_mark: | -- | -- | -- | -- |
 | NanoGPT | `nanogpt/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Nebius AI Studio | `nebius/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
+| Neosantara | `neosantara/` | :white_check_mark: | -- | -- | -- | -- |
 | NLP Cloud | `nlp_cloud/` | :white_check_mark: | -- | -- | -- | -- |
 | Novita AI | `novita/` | :white_check_mark: | -- | -- | -- | -- |
 | Nscale | `nscale/` | :white_check_mark: | -- | -- | -- | -- |
 | Nvidia NIM | `nvidia_nim/` | :white_check_mark: | -- | -- | -- | -- |
+| Nvidia Riva | `nvidia_riva/` | -- | -- | -- | :white_check_mark: | -- |
 | OCI | `oci/` | :white_check_mark: | -- | -- | -- | -- |
 | Ollama | `ollama/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Oobabooga | `oobabooga/` | :white_check_mark: | -- | -- | :white_check_mark: | :white_check_mark: |
@@ -110,15 +124,18 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | OpenRouter | `openrouter/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | OVHCloud AI Endpoints | `ovhcloud/` | :white_check_mark: | -- | -- | :white_check_mark: | -- |
 | Parallel AI | `parallel_ai/` | -- | -- | -- | -- | -- |
+| Parasail | `parasail/` | :white_check_mark: | -- | -- | -- | -- |
 | Perplexity AI | `perplexity/` | :white_check_mark: | -- | -- | -- | -- |
 | Petals | `petals/` | :white_check_mark: | -- | -- | -- | -- |
 | PG Vector | `pg_vector/` | -- | -- | -- | -- | -- |
+| Pinstripes | `pinstripes/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Poe | `poe/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Predibase | `predibase/` | :white_check_mark: | -- | -- | -- | -- |
 | PublicAI | `publicai/` | :white_check_mark: | -- | -- | -- | -- |
 | Pydantic AI Agents | `pydantic_ai_agents/` | -- | -- | -- | -- | -- |
 | RAGFlow | `ragflow/` | :white_check_mark: | -- | -- | -- | -- |
 | Recraft | `recraft/` | -- | -- | :white_check_mark: | -- | -- |
+| Reducto | `reducto/` | -- | -- | -- | -- | -- |
 | Replicate | `replicate/` | :white_check_mark: | -- | -- | -- | -- |
 | RunwayML | `runwayml/` | -- | -- | :white_check_mark: | :white_check_mark: | -- |
 | Sagemaker Chat | `sagemaker_chat/` | :white_check_mark: | -- | -- | -- | -- |
@@ -129,9 +146,12 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | SearXNG | `searxng/` | -- | -- | -- | -- | -- |
 | Serper | `serper/` | -- | -- | -- | -- | -- |
 | Snowflake | `snowflake/` | :white_check_mark: | -- | -- | -- | -- |
+| Soniox | `soniox/` | -- | -- | -- | :white_check_mark: | -- |
 | Stability AI | `stability/` | -- | -- | :white_check_mark: | -- | -- |
 | Synthetic | `synthetic/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Tavily | `tavily/` | -- | -- | -- | -- | -- |
+| Tencent | `tencent/` | :white_check_mark: | -- | -- | -- | -- |
+| Tensormesh | `tensormesh/` | :white_check_mark: | -- | -- | -- | -- |
 | Text Completion Codestral | `text-completion-codestral/` | :white_check_mark: | -- | -- | -- | -- |
 | Text Completion OpenAI | `text-completion-openai/` | :white_check_mark: | -- | -- | :white_check_mark: | :white_check_mark: |
 | Together AI | `together_ai/` | :white_check_mark: | -- | -- | -- | -- |
@@ -151,7 +171,7 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | Xinference | `xinference/` | -- | :white_check_mark: | -- | -- | -- |
 | Z.AI | `zai/` | :white_check_mark: | -- | -- | -- | -- |
 
-*143 providers total.*
+*163 providers total.*
 
 ## Usage
 

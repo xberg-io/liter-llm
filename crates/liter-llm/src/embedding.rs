@@ -44,7 +44,7 @@ pub trait EmbeddingProvider: Send + Sync + 'static {
 /// Embedding provider that calls back into the liter-llm [`LlmClient::embed`]
 /// API.
 ///
-/// This lets callers use any of the 143 providers already configured in their
+/// This lets callers use any of the 163 providers already configured in their
 /// `LlmClient` instance as the embedding backend without any additional setup.
 ///
 /// # Example

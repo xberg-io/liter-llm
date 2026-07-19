@@ -3,7 +3,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata below."
 title: liter-llm
-abstract: "Universal LLM API client with native bindings for 14 languages and 143 providers."
+abstract: "Universal LLM API client with native bindings for 14 languages and 163 providers."
 authors:
   - family-names: Hirschfeld
     given-names: "Na'aman"
@@ -12,5 +12,5 @@ authors:
 repository-code: "https://github.com/xberg-io/liter-llm"
 url: "https://xberg.io"
 license: MIT
-version: 1.9.3
+version: 1.10.0
 date-released: 2026-05-17

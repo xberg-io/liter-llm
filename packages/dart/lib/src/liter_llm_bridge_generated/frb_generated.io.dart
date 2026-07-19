@@ -117,6 +117,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_box_autoadd_bool(dynamic raw);
 
   @protected
+  CatalogRefreshConfig dco_decode_box_autoadd_catalog_refresh_config(
+    dynamic raw,
+  );
+
+  @protected
   ChatCompletionRequest dco_decode_box_autoadd_chat_completion_request(
     dynamic raw,
   );
@@ -193,6 +198,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LiterLlmError dco_decode_box_autoadd_liter_llm_error(dynamic raw);
 
   @protected
+  ModelInfo dco_decode_box_autoadd_model_info(dynamic raw);
+
+  @protected
   ModerationRequest dco_decode_box_autoadd_moderation_request(dynamic raw);
 
   @protected
@@ -265,6 +273,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CacheConfig dco_decode_cache_config(dynamic raw);
+
+  @protected
+  CatalogRefreshConfig dco_decode_catalog_refresh_config(dynamic raw);
+
+  @protected
+  CatalogRefreshError dco_decode_catalog_refresh_error(dynamic raw);
 
   @protected
   ChatCompletionChunk dco_decode_chat_completion_chunk(dynamic raw);
@@ -428,6 +442,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ModelObject> dco_decode_list_model_object(dynamic raw);
 
   @protected
+  List<ModelTier> dco_decode_list_model_tier(dynamic raw);
+
+  @protected
   List<ModerationResult> dco_decode_list_moderation_result(dynamic raw);
 
   @protected
@@ -494,7 +511,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Modality dco_decode_modality(dynamic raw);
 
   @protected
+  ModelInfo dco_decode_model_info(dynamic raw);
+
+  @protected
   ModelObject dco_decode_model_object(dynamic raw);
+
+  @protected
+  ModelTier dco_decode_model_tier(dynamic raw);
 
   @protected
   ModelsListResponse dco_decode_models_list_response(dynamic raw);
@@ -581,6 +604,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ImageDetail? dco_decode_opt_box_autoadd_image_detail(dynamic raw);
+
+  @protected
+  ModelInfo? dco_decode_opt_box_autoadd_model_info(dynamic raw);
 
   @protected
   PageDimensions? dco_decode_opt_box_autoadd_page_dimensions(dynamic raw);
@@ -678,6 +704,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   (String, String) dco_decode_record_string_string(dynamic raw);
+
+  @protected
+  RefreshOutcome dco_decode_refresh_outcome(dynamic raw);
 
   @protected
   RerankDocument dco_decode_rerank_document(dynamic raw);
@@ -903,6 +932,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
+  CatalogRefreshConfig sse_decode_box_autoadd_catalog_refresh_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ChatCompletionRequest sse_decode_box_autoadd_chat_completion_request(
     SseDeserializer deserializer,
   );
@@ -1011,6 +1045,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ModelInfo sse_decode_box_autoadd_model_info(SseDeserializer deserializer);
+
+  @protected
   ModerationRequest sse_decode_box_autoadd_moderation_request(
     SseDeserializer deserializer,
   );
@@ -1111,6 +1148,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CacheConfig sse_decode_cache_config(SseDeserializer deserializer);
+
+  @protected
+  CatalogRefreshConfig sse_decode_catalog_refresh_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CatalogRefreshError sse_decode_catalog_refresh_error(
+    SseDeserializer deserializer,
+  );
 
   @protected
   ChatCompletionChunk sse_decode_chat_completion_chunk(
@@ -1302,6 +1349,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ModelObject> sse_decode_list_model_object(SseDeserializer deserializer);
 
   @protected
+  List<ModelTier> sse_decode_list_model_tier(SseDeserializer deserializer);
+
+  @protected
   List<ModerationResult> sse_decode_list_moderation_result(
     SseDeserializer deserializer,
   );
@@ -1392,7 +1442,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Modality sse_decode_modality(SseDeserializer deserializer);
 
   @protected
+  ModelInfo sse_decode_model_info(SseDeserializer deserializer);
+
+  @protected
   ModelObject sse_decode_model_object(SseDeserializer deserializer);
+
+  @protected
+  ModelTier sse_decode_model_tier(SseDeserializer deserializer);
 
   @protected
   ModelsListResponse sse_decode_models_list_response(
@@ -1507,6 +1563,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ImageDetail? sse_decode_opt_box_autoadd_image_detail(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ModelInfo? sse_decode_opt_box_autoadd_model_info(
     SseDeserializer deserializer,
   );
 
@@ -1630,6 +1691,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   (String, String) sse_decode_record_string_string(
     SseDeserializer deserializer,
   );
+
+  @protected
+  RefreshOutcome sse_decode_refresh_outcome(SseDeserializer deserializer);
 
   @protected
   RerankDocument sse_decode_rerank_document(SseDeserializer deserializer);
@@ -1901,6 +1965,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_catalog_refresh_config(
+    CatalogRefreshConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_chat_completion_request(
     ChatCompletionRequest self,
     SseSerializer serializer,
@@ -2036,6 +2106,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_model_info(
+    ModelInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_moderation_request(
     ModerationRequest self,
     SseSerializer serializer,
@@ -2166,6 +2242,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_cache_config(CacheConfig self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_catalog_refresh_config(
+    CatalogRefreshConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_catalog_refresh_error(
+    CatalogRefreshError self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_chat_completion_chunk(
@@ -2423,6 +2511,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_model_tier(
+    List<ModelTier> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_moderation_result(
     List<ModerationResult> self,
     SseSerializer serializer,
@@ -2534,7 +2628,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_modality(Modality self, SseSerializer serializer);
 
   @protected
+  void sse_encode_model_info(ModelInfo self, SseSerializer serializer);
+
+  @protected
   void sse_encode_model_object(ModelObject self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_model_tier(ModelTier self, SseSerializer serializer);
 
   @protected
   void sse_encode_models_list_response(
@@ -2677,6 +2777,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_image_detail(
     ImageDetail? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_model_info(
+    ModelInfo? self,
     SseSerializer serializer,
   );
 
@@ -2845,6 +2951,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_record_string_string(
     (String, String) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_refresh_outcome(
+    RefreshOutcome self,
     SseSerializer serializer,
   );
 

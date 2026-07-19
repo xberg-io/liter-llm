@@ -80,6 +80,27 @@
       "streaming_format": "sse"
     },
     {
+      "name": "aihubmix",
+      "display_name": "AIHubMix",
+      "base_url": "https://aihubmix.com/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "AIHUBMIX_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["aihubmix/"],
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "aiml",
       "display_name": "AI/ML API",
       "base_url": "https://api.aimlapi.com/v1",
@@ -433,6 +454,41 @@
       "streaming_format": "aws_event_stream"
     },
     {
+      "name": "bedrock_mantle",
+      "display_name": "AWS - Bedrock Mantle",
+      "endpoints": ["chat"],
+      "model_prefixes": ["bedrock_mantle/"],
+      "model_count": 13,
+      "capabilities": {
+        "vision": true,
+        "reasoning": true,
+        "structured_output": true,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "aws_event_stream"
+    },
+    {
+      "name": "black_forest_labs",
+      "display_name": "Black Forest Labs",
+      "base_url": "https://api.bfl.ai",
+      "endpoints": ["image"],
+      "model_prefixes": ["black_forest_labs/"],
+      "model_count": 8,
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "brave",
       "display_name": "Brave Search",
       "base_url": "https://api.search.brave.com/res/v1",
@@ -488,6 +544,30 @@
         "reasoning": false,
         "structured_output": true,
         "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "charity_engine",
+      "display_name": "Charity Engine",
+      "base_url": "https://api.charityengine.services/remotejobs/v2/inference",
+      "auth": {
+        "type": "bearer",
+        "env_var": "CHARITY_ENGINE_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["charity_engine/"],
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      },
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
         "audio_in": false,
         "audio_out": false,
         "video_in": false
@@ -645,7 +725,7 @@
         "type": "bearer",
         "env_var": "COMETAPI_API_KEY"
       },
-      "endpoints": ["chat", "embedding"],
+      "endpoints": ["chat", "embedding", "image"],
       "capabilities": {
         "vision": true,
         "reasoning": false,
@@ -670,6 +750,31 @@
         "vision": false,
         "reasoning": false,
         "structured_output": true,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "crusoe",
+      "display_name": "Crusoe",
+      "base_url": "https://managed-inference-api-proxy.crusoecloud.com/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "CRUSOE_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["crusoe/"],
+      "model_count": 7,
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      },
+      "capabilities": {
+        "vision": true,
+        "reasoning": true,
+        "structured_output": false,
         "function_calling": true,
         "audio_in": false,
         "audio_out": false,
@@ -723,6 +828,31 @@
       "streaming_format": "sse"
     },
     {
+      "name": "darkbloom",
+      "display_name": "Darkbloom",
+      "base_url": "https://api.darkbloom.dev/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "DARKBLOOM_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["darkbloom/"],
+      "model_count": 2,
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      },
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "dashscope",
       "display_name": "Dashscope",
       "base_url": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
@@ -730,7 +860,7 @@
         "type": "bearer",
         "env_var": "DASHSCOPE_API_KEY"
       },
-      "endpoints": ["chat"],
+      "endpoints": ["chat", "embedding", "image", "rerank"],
       "model_prefixes": ["dashscope/", "dashscope/qwen-", "dashscope/qwen3-"],
       "model_count": 32,
       "capabilities": {
@@ -832,7 +962,7 @@
         "type": "bearer",
         "env_var": "DEEPINFRA_API_KEY"
       },
-      "endpoints": ["chat"],
+      "endpoints": ["chat", "rerank"],
       "model_prefixes": [
         "deepinfra/",
         "deepinfra/NousResearch/Hermes-",
@@ -858,7 +988,10 @@
         "audio_out": false,
         "video_in": false
       },
-      "streaming_format": "sse"
+      "streaming_format": "sse",
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      }
     },
     {
       "name": "deepseek",
@@ -939,6 +1072,30 @@
         "function_calling": false,
         "audio_in": true,
         "audio_out": true,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "empiriolabs",
+      "display_name": "Empiriolabs",
+      "base_url": "https://api.empiriolabs.ai/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "EMPIRIOLABS_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["empiriolabs/"],
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      },
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
         "video_in": false
       },
       "streaming_format": "sse"
@@ -1057,7 +1214,7 @@
         "type": "bearer",
         "env_var": "FIREWORKS_AI_API_KEY"
       },
-      "endpoints": ["chat", "rerank"],
+      "endpoints": ["chat", "embedding", "rerank"],
       "model_prefixes": [
         "fireworks-",
         "fireworks_ai/",
@@ -1108,7 +1265,10 @@
         "audio_out": false,
         "video_in": false
       },
-      "streaming_format": "sse"
+      "streaming_format": "sse",
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      }
     },
     {
       "name": "friendliai",
@@ -1146,6 +1306,22 @@
         "reasoning": false,
         "structured_output": true,
         "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "gdc",
+      "display_name": "Google - Distributed Cloud (Gemini)",
+      "endpoints": ["chat"],
+      "model_prefixes": ["gdc/"],
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
         "audio_in": false,
         "audio_out": false,
         "video_in": false
@@ -1285,10 +1461,10 @@
     {
       "name": "gradient_ai",
       "display_name": "GradientAI",
-      "base_url": "https://api.gradient.ai/api",
+      "base_url": "https://inference.do-ai.run",
       "auth": {
         "type": "bearer",
-        "env_var": "GRADIENT_ACCESS_TOKEN"
+        "env_var": "GRADIENT_AI_API_KEY"
       },
       "endpoints": ["chat"],
       "model_prefixes": ["gradient_ai/", "gradient_ai/anthropic-", "gradient_ai/openai-"],
@@ -1312,7 +1488,7 @@
         "type": "bearer",
         "env_var": "GROQ_API_KEY"
       },
-      "endpoints": ["chat"],
+      "endpoints": ["audio", "chat"],
       "model_prefixes": ["groq/", "groq/llama-", "groq/meta-", "groq/openai/gpt-", "groq/whisper-"],
       "model_count": 14,
       "capabilities": {
@@ -1386,7 +1562,7 @@
     {
       "name": "huggingface",
       "display_name": "Huggingface",
-      "base_url": "https://api-inference.huggingface.co/v1",
+      "base_url": "https://router.huggingface.co/v1",
       "auth": {
         "type": "bearer",
         "env_var": "HUGGINGFACE_API_KEY"
@@ -1426,6 +1602,28 @@
       "streaming_format": "sse"
     },
     {
+      "name": "inception",
+      "display_name": "Inception Labs",
+      "base_url": "https://api.inceptionlabs.ai/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "INCEPTION_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["inception/"],
+      "model_count": 1,
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": true,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "infinity",
       "display_name": "Infinity",
       "base_url": "http://localhost:7997",
@@ -1452,7 +1650,7 @@
         "type": "bearer",
         "env_var": "JINA_API_KEY"
       },
-      "endpoints": ["embedding"],
+      "endpoints": ["embedding", "rerank"],
       "model_count": 1,
       "capabilities": {
         "vision": true,
@@ -1468,7 +1666,7 @@
     {
       "name": "lambda_ai",
       "display_name": "Lambda AI",
-      "base_url": "https://api.lambdalabs.com/v1",
+      "base_url": "https://api.lambda.ai/v1",
       "auth": {
         "type": "bearer",
         "env_var": "LAMBDA_API_KEY"
@@ -1530,6 +1728,31 @@
         "reasoning": false,
         "structured_output": false,
         "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "libertai",
+      "display_name": "LibertAI",
+      "base_url": "https://api.libertai.io/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "LIBERTAI_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["libertai/"],
+      "model_count": 12,
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      },
+      "capabilities": {
+        "vision": true,
+        "reasoning": true,
+        "structured_output": false,
+        "function_calling": true,
         "audio_in": false,
         "audio_out": false,
         "video_in": false
@@ -1713,6 +1936,28 @@
       "streaming_format": "sse"
     },
     {
+      "name": "meta",
+      "display_name": "Meta - Model API",
+      "base_url": "https://api.meta.ai/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "META_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["meta/"],
+      "model_count": 1,
+      "capabilities": {
+        "vision": true,
+        "reasoning": true,
+        "structured_output": true,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "meta_llama",
       "display_name": "Meta - Llama API",
       "base_url": "https://api.llama.com/compat/v1",
@@ -1751,7 +1996,7 @@
     {
       "name": "minimax",
       "display_name": "Minimax",
-      "base_url": "https://api.minimax.chat/v1",
+      "base_url": "https://api.minimax.io/v1",
       "auth": {
         "type": "bearer",
         "env_var": "MINIMAX_API_KEY"
@@ -1802,9 +2047,31 @@
       "streaming_format": "sse"
     },
     {
+      "name": "modelscope",
+      "display_name": "ModelScope",
+      "base_url": "https://api-inference.modelscope.cn/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "MODELSCOPE_API_KEY"
+      },
+      "endpoints": ["chat", "image"],
+      "model_prefixes": ["modelscope/"],
+      "model_count": 35,
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "moonshot",
       "display_name": "Moonshot",
-      "base_url": "https://api.moonshot.cn/v1",
+      "base_url": "https://api.moonshot.ai/v1",
       "auth": {
         "type": "bearer",
         "env_var": "MOONSHOT_API_KEY"
@@ -1821,12 +2088,15 @@
         "audio_out": false,
         "video_in": false
       },
-      "streaming_format": "sse"
+      "streaming_format": "sse",
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      }
     },
     {
       "name": "morph",
       "display_name": "Morph",
-      "base_url": "https://api.morph.so/v1",
+      "base_url": "https://api.morphllm.com/v1",
       "auth": {
         "type": "bearer",
         "env_var": "MORPH_API_KEY"
@@ -1890,6 +2160,33 @@
         "reasoning": false,
         "structured_output": true,
         "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse",
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      }
+    },
+    {
+      "name": "neosantara",
+      "display_name": "Neosantara",
+      "base_url": "https://api.neosantara.xyz/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "NEOSANTARA_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["neosantara/"],
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      },
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
         "audio_in": false,
         "audio_out": false,
         "video_in": false
@@ -1984,7 +2281,7 @@
         "type": "bearer",
         "env_var": "NVIDIA_NIM_API_KEY"
       },
-      "endpoints": ["chat"],
+      "endpoints": ["chat", "rerank"],
       "model_prefixes": ["nvidia_nim/"],
       "model_count": 3,
       "capabilities": {
@@ -1992,6 +2289,25 @@
         "reasoning": false,
         "structured_output": true,
         "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse",
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      }
+    },
+    {
+      "name": "nvidia_riva",
+      "display_name": "Nvidia Riva",
+      "endpoints": ["audio"],
+      "model_prefixes": ["nvidia_riva/"],
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
         "audio_in": false,
         "audio_out": false,
         "video_in": false
@@ -2176,7 +2492,7 @@
         "type": "bearer",
         "env_var": "OVH_API_KEY"
       },
-      "endpoints": ["audio", "chat"],
+      "endpoints": ["audio", "chat", "embedding"],
       "model_prefixes": ["ovhcloud/", "ovhcloud/Meta-", "ovhcloud/Mistral-", "ovhcloud/Qwen2.5-", "ovhcloud/gpt-"],
       "model_count": 15,
       "capabilities": {
@@ -2201,6 +2517,27 @@
       "endpoints": ["search"],
       "model_prefixes": ["parallel_ai/"],
       "model_count": 2,
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "parasail",
+      "display_name": "Parasail",
+      "base_url": "https://api.parasail.io/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "PARASAIL_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["parasail/"],
       "capabilities": {
         "vision": false,
         "reasoning": false,
@@ -2266,6 +2603,31 @@
         "reasoning": false,
         "structured_output": false,
         "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "pinstripes",
+      "display_name": "Pinstripes",
+      "base_url": "https://pinstripes.io/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "PINSTRIPES_API_KEY"
+      },
+      "endpoints": ["chat", "embedding"],
+      "model_prefixes": ["pinstripes/"],
+      "model_count": 6,
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      },
+      "capabilities": {
+        "vision": false,
+        "reasoning": true,
+        "structured_output": false,
+        "function_calling": true,
         "audio_in": false,
         "audio_out": false,
         "video_in": false
@@ -2392,6 +2754,28 @@
       "streaming_format": "sse"
     },
     {
+      "name": "reducto",
+      "display_name": "Reducto",
+      "base_url": "https://platform.reducto.ai",
+      "auth": {
+        "type": "bearer",
+        "env_var": "REDUCTO_API_KEY"
+      },
+      "endpoints": ["ocr"],
+      "model_prefixes": ["reducto/"],
+      "model_count": 2,
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "replicate",
       "display_name": "Replicate",
       "base_url": "https://api.replicate.com/v1",
@@ -2497,7 +2881,7 @@
         "type": "bearer",
         "env_var": "SAMBANOVA_API_KEY"
       },
-      "endpoints": ["chat"],
+      "endpoints": ["chat", "embedding"],
       "model_prefixes": ["sambanova/", "sambanova/DeepSeek-", "sambanova/Llama-", "sambanova/Meta-"],
       "model_count": 16,
       "capabilities": {
@@ -2634,6 +3018,28 @@
       "streaming_format": "sse"
     },
     {
+      "name": "soniox",
+      "display_name": "Soniox",
+      "base_url": "https://api.soniox.com",
+      "auth": {
+        "type": "bearer",
+        "env_var": "SONIOX_API_KEY"
+      },
+      "endpoints": ["audio"],
+      "model_prefixes": ["soniox/"],
+      "model_count": 2,
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "stability",
       "display_name": "Stability AI",
       "base_url": "https://api.stability.ai/v2beta",
@@ -2694,6 +3100,53 @@
         "reasoning": false,
         "structured_output": false,
         "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "tencent",
+      "display_name": "Tencent",
+      "base_url": "https://tokenhub-intl.tencentcloudmaas.com/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "TENCENT_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["tencent/"],
+      "model_count": 2,
+      "capabilities": {
+        "vision": false,
+        "reasoning": true,
+        "structured_output": true,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "tensormesh",
+      "display_name": "Tensormesh",
+      "base_url": "https://serverless.tensormesh.ai/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "TENSORMESH_INFERENCE_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["tensormesh/"],
+      "model_count": 10,
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      },
+      "capabilities": {
+        "vision": false,
+        "reasoning": true,
+        "structured_output": true,
+        "function_calling": true,
         "audio_in": false,
         "audio_out": false,
         "video_in": false
@@ -2856,7 +3309,7 @@
     {
       "name": "vercel_ai_gateway",
       "display_name": "Vercel AI Gateway",
-      "endpoints": ["chat"],
+      "endpoints": ["chat", "embedding"],
       "model_prefixes": [
         "vercel_ai_gateway/",
         "vercel_ai_gateway/alibaba/qwen-",
@@ -2955,7 +3408,7 @@
         "type": "bearer",
         "env_var": "VOLCENGINE_API_KEY"
       },
-      "endpoints": ["chat"],
+      "endpoints": ["chat", "embedding"],
       "model_prefixes": ["doubao-", "volcengine/", "volcengine/doubao-"],
       "model_count": 12,
       "capabilities": {
@@ -2967,7 +3420,10 @@
         "audio_out": false,
         "video_in": false
       },
-      "streaming_format": "sse"
+      "streaming_format": "sse",
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      }
     },
     {
       "name": "voyage",
@@ -3065,7 +3521,10 @@
         "audio_out": false,
         "video_in": false
       },
-      "streaming_format": "sse"
+      "streaming_format": "sse",
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      }
     },
     {
       "name": "xiaomi_mimo",
@@ -3146,6 +3605,8 @@
     "azure_text",
     "baseten",
     "bedrock",
+    "bedrock_mantle",
+    "black_forest_labs",
     "chatgpt",
     "cloudflare",
     "cursor",
@@ -3154,6 +3615,7 @@
     "databricks",
     "dataforseo",
     "datarobot",
+    "gdc",
     "gigachat",
     "github_copilot",
     "heroku",
@@ -3162,18 +3624,21 @@
     "litellm_proxy",
     "manus",
     "milvus",
+    "nvidia_riva",
     "oci",
     "openai_like",
     "petals",
     "pg_vector",
     "pydantic_ai_agents",
     "ragflow",
+    "reducto",
     "s3_vectors",
     "sagemaker",
     "sagemaker_chat",
     "sap",
     "searxng",
     "snowflake",
+    "soniox",
     "triton",
     "vertex_ai",
     "vertex_ai/agent_engine",

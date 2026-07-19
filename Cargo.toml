@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/liter-llm",
+    "crates/liter-llm-catalog-gen",
     "crates/liter-llm-cli",
     "crates/liter-llm-ffi",
     "crates/liter-llm-jni",
@@ -12,11 +13,7 @@ members = [
     "packages/dart/rust",
     "packages/swift/rust",
 ]
-exclude = [
-    "e2e/rust",
-    "packages/elixir/native/liter_llm_nif",
-    "packages/ruby/ext/liter_llm_rb/native",
-]
+exclude = ["e2e/rust", "packages/elixir/native/liter_llm_nif", "packages/ruby/ext/liter_llm_rb/native"]
 resolver = "2"
 
 [workspace.lints.clippy]
@@ -38,13 +35,13 @@ missing-panics-doc = "allow"
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)'] }
 
 [workspace.package]
-version = "1.9.3"
+version = "1.10.0"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/xberg-io/liter-llm"
 homepage = "https://xberg.io"
 authors = ["Na'aman Hirschfeld <naaman@xberg.io>"]
-description = "Universal LLM API client — 143 providers, streaming, tool calling. Rust-powered with polyglot bindings."
+description = "Universal LLM API client — 163 providers, streaming, tool calling. Rust-powered with polyglot bindings."
 keywords = ["llm", "openai", "api-client", "ai", "xberg"]
 
 [workspace.dependencies]
@@ -70,7 +67,7 @@ futures-util = "0.3"
 gcp_auth = { version = "0.12", default-features = false, features = ["ring"] }
 hex = "0.4"
 http = "1"
-jsonschema = "0.46"
+jsonschema = "0.48"
 jsonwebtoken = { version = "10", default-features = false, features = ["use_pem"] }
 
 magnus = "0.8"
@@ -94,7 +91,7 @@ rayon = "1"
 rb-sys = "0.9"
 # ~keep Async / HTTP: TLS-agnostic base only; each crate adds TLS features target-conditionally.
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "multipart", "form"] }
-rmcp = { version = "2.1", features = [
+rmcp = { version = "2.2", features = [
     "server",
     "macros",
     "transport-io",
@@ -122,7 +119,7 @@ tokio = { version = "1", features = ["full"] }
 # ~keep Use `rustls-tls-native-roots` so tokio-tungstenite does not pull
 # ~keep native-tls -> openssl-sys, which breaks Linux brew bottles without
 # ~keep `openssl-dev` and would force OpenSSL on downstream liter-llm-proxy users.
-tokio-tungstenite = { version = "0.29", default-features = false, features = [
+tokio-tungstenite = { version = "0.30", default-features = false, features = [
     "connect",
     "handshake",
     "rustls-tls-native-roots",

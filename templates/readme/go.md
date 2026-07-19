@@ -4,7 +4,7 @@
 {% include 'partials/banner.html' %}
 {% include 'partials/discord.html' %}
 
-Universal LLM API client for Go. Access 143 LLM providers through a single interface backed by the Rust core.
+Universal LLM API client for Go. Access 163 LLM providers through a single interface backed by the Rust core.
 
 > **Version {{ version }}**
 > Report issues at [github.com/xberg-io/liter-llm](https://github.com/xberg-io/liter-llm/issues).
@@ -213,7 +213,7 @@ for _, model := range []string{
 - [Xberg Enterprise](https://github.com/xberg-io/xberg-enterprise) — managed extraction API with SDKs, dashboards, and observability.
 - [crawlberg](https://github.com/xberg-io/crawlberg) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/xberg-io/html-to-markdown) — fast, lossless HTML→Markdown engine.
-- [liter-llm](https://github.com/xberg-io/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
+- [liter-llm](https://github.com/xberg-io/liter-llm) — universal LLM API client with native bindings for 14 languages and 163 providers.
 - [tree-sitter-language-pack](https://github.com/xberg-io/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
 - [alef](https://github.com/xberg-io/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
 - [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.

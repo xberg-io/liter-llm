@@ -1,0 +1,144 @@
+{
+  "anthropic": {
+    "id": "anthropic",
+    "env": ["ANTHROPIC_API_KEY"],
+    "npm": "@ai-sdk/anthropic",
+    "name": "Anthropic",
+    "doc": "https://docs.anthropic.com/en/docs/about-claude/models",
+    "models": {
+      "claude-reasoning": {
+        "id": "claude-reasoning",
+        "name": "Claude Reasoning",
+        "description": "A model with a reasoning-token cost and reasoning options.",
+        "attachment": false,
+        "reasoning": true,
+        "reasoning_options": [{ "type": "effort", "values": ["low", "high"] }],
+        "tool_call": true,
+        "release_date": "2025-03-01",
+        "last_updated": "2025-03-01",
+        "modalities": { "input": ["text"], "output": ["text"] },
+        "open_weights": false,
+        "limit": { "context": 200000, "output": 64000 },
+        "cost": { "input": 5.0, "output": 20.0, "reasoning": 20.0 }
+      },
+      "claude-tiered": {
+        "id": "claude-tiered",
+        "name": "Claude Tiered",
+        "description": "A model with context-tiered pricing above 200k tokens.",
+        "attachment": true,
+        "reasoning": false,
+        "tool_call": true,
+        "structured_output": true,
+        "release_date": "2025-01-01",
+        "last_updated": "2025-02-01",
+        "modalities": { "input": ["text", "image"], "output": ["text"] },
+        "open_weights": false,
+        "limit": { "context": 400000, "input": 272000, "output": 128000 },
+        "cost": {
+          "input": 3.0,
+          "output": 15.0,
+          "cache_read": 0.3,
+          "cache_write": 3.75,
+          "context_over_200k": { "input": 6.0, "output": 22.5 },
+          "tiers": [
+            {
+              "input": 6.0,
+              "output": 22.5,
+              "cache_read": 0.6,
+              "cache_write": 7.5,
+              "tier": { "type": "context", "size": 200000 }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "google": {
+    "id": "google",
+    "env": ["GOOGLE_GENERATIVE_AI_API_KEY"],
+    "npm": "@ai-sdk/google",
+    "name": "Google",
+    "doc": "https://ai.google.dev/gemini-api/docs/models",
+    "models": {
+      "gemini-audio": {
+        "id": "gemini-audio",
+        "name": "Gemini Audio",
+        "description": "A model with audio input and output token costs.",
+        "attachment": true,
+        "reasoning": false,
+        "tool_call": true,
+        "release_date": "2025-05-01",
+        "last_updated": "2025-05-01",
+        "modalities": { "input": ["text", "audio"], "output": ["text", "audio"] },
+        "open_weights": false,
+        "limit": { "context": 1000000, "input": 1000000, "output": 8000 },
+        "cost": { "input": 1.25, "output": 5.0, "input_audio": 2.5, "output_audio": 10.0 }
+      }
+    }
+  },
+  "openai": {
+    "id": "openai",
+    "env": ["OPENAI_API_KEY"],
+    "npm": "@ai-sdk/openai",
+    "api": "https://api.openai.com/v1",
+    "name": "OpenAI",
+    "doc": "https://platform.openai.com/docs/models",
+    "models": {
+      "gpt-cost-only": {
+        "id": "gpt-cost-only",
+        "name": "GPT Cost Only",
+        "description": "A model whose only pricing data is the two base costs.",
+        "family": "gpt-4",
+        "knowledge": "2023-04",
+        "attachment": false,
+        "reasoning": false,
+        "tool_call": false,
+        "release_date": "2023-06-01",
+        "last_updated": "2023-06-01",
+        "modalities": { "input": ["text"], "output": [] },
+        "open_weights": false,
+        "limit": { "context": 4096, "output": 4096 },
+        "provider": { "shape": "responses" },
+        "cost": { "input": 1.0, "output": 2.0 }
+      },
+      "gpt-plain": {
+        "id": "gpt-plain",
+        "name": "GPT Plain",
+        "description": "A plain chat model with no tiers, caching, or audio pricing.",
+        "attachment": false,
+        "reasoning": false,
+        "tool_call": true,
+        "structured_output": true,
+        "temperature": true,
+        "release_date": "2024-01-01",
+        "last_updated": "2024-01-01",
+        "modalities": { "input": ["text"], "output": ["text"] },
+        "open_weights": false,
+        "limit": { "context": 128000, "input": 120000, "output": 8000 },
+        "cost": { "input": 2.5, "output": 10.0 }
+      }
+    }
+  },
+  "unlisted-provider": {
+    "id": "unlisted-provider",
+    "env": ["UNLISTED_API_KEY"],
+    "npm": "unlisted-npm-package",
+    "name": "Unlisted",
+    "doc": "https://example.com/unlisted/docs",
+    "models": {
+      "free-model": {
+        "id": "free-model",
+        "name": "Free Model",
+        "description": "A model with no cost object at all — must be skipped by the transform.",
+        "attachment": false,
+        "reasoning": false,
+        "tool_call": false,
+        "release_date": "2024-01-01",
+        "last_updated": "2024-01-01",
+        "modalities": { "input": ["text"], "output": ["text"] },
+        "open_weights": true,
+        "limit": { "context": 8192, "output": 8192 }
+      }
+    }
+  }
+}

@@ -1153,6 +1153,27 @@ mod provider_tests {
         assert_eq!(body["max_tokens"], 256);
         assert!(body.get("max_completion_tokens").is_none());
     }
+
+    #[test]
+    fn detect_inception_resolves_base_url() {
+        let p = detect_provider("inception/mercury-2").expect("provider should be detected");
+        assert_eq!(p.base_url(), "https://api.inceptionlabs.ai/v1");
+        assert_eq!(p.env_var(), Some("INCEPTION_API_KEY"));
+    }
+
+    #[test]
+    fn detect_modelscope_resolves_base_url() {
+        let p = detect_provider("modelscope/Qwen/Qwen3-235B-A22B").expect("provider should be detected");
+        assert_eq!(p.base_url(), "https://api-inference.modelscope.cn/v1");
+        assert_eq!(p.env_var(), Some("MODELSCOPE_API_KEY"));
+    }
+
+    #[test]
+    fn detect_tencent_resolves_base_url() {
+        let p = detect_provider("tencent/deepseek-v4-pro").expect("provider should be detected");
+        assert_eq!(p.base_url(), "https://tokenhub-intl.tencentcloudmaas.com/v1");
+        assert_eq!(p.env_var(), Some("TENCENT_API_KEY"));
+    }
 }
 
 #[cfg(test)]
@@ -1459,14 +1480,14 @@ mod capability_tests {
         assert!(!providers.is_empty(), "registry should have at least one provider");
     }
 
-    /// The total number of providers in the embedded registry must equal 143.
+    /// The total number of providers in the embedded registry must equal 163.
     #[test]
-    fn schema_provider_count_is_143() {
+    fn schema_provider_count_is_163() {
         let providers = all_providers().expect("registry should load");
         assert_eq!(
             providers.len(),
-            143,
-            "expected 143 providers in providers.json, found {}",
+            163,
+            "expected 163 providers in providers.json, found {}",
             providers.len()
         );
     }

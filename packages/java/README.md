@@ -79,7 +79,7 @@
   </a>
 </div>
 
-Universal LLM API client for Java. Access 143 LLM providers through a single type-safe interface with Foreign Function & Memory API integration, async support, and native performance.
+Universal LLM API client for Java. Access 163 LLM providers through a single type-safe interface with Foreign Function & Memory API integration, async support, and native performance.
 
 ## What This Package Provides
 
@@ -101,14 +101,14 @@ Install via one of the supported package managers:
 <dependency>
     <groupId>io.xberg.literllm</groupId>
     <artifactId>liter-llm</artifactId>
-    <version>1.9.3</version>
+    <version>1.10.0</version>
 </dependency>
 ```
 
 **Gradle:**
 
 ```gradle
-implementation 'io.xberg.literllm:liter-llm:1.9.3'
+implementation 'io.xberg.literllm:liter-llm:1.10.0'
 ```
 
 ### System Requirements
@@ -181,7 +181,7 @@ public class Main {
 
 ## Features
 
-### Supported Providers (143)
+### Supported Providers (163)
 
 Route to any provider using the `provider/model` prefix convention:
 
@@ -201,7 +201,7 @@ Route to any provider using the `provider/model` prefix convention:
 
 ### Key Capabilities
 
-- **Provider Routing** -- Single client for 143 LLM providers via `provider/model` prefix
+- **Provider Routing** -- Single client for 163 LLM providers via `provider/model` prefix
 - **Local LLMs** — Connect to locally-hosted models via Ollama, LM Studio, vLLM, llama.cpp, and other local inference servers
 - **Unified API** -- Consistent `chat`, `chat_stream`, `embeddings`, `list_models` interface
 - **Streaming** -- Real-time token streaming via `chat_stream`
@@ -222,7 +222,7 @@ Built on a compiled Rust core for speed and safety:
 
 ## Provider Routing
 
-Route to 143 providers using the `provider/model` prefix convention:
+Route to 163 providers using the `provider/model` prefix convention:
 
 ```text
 openai/gpt-4o
@@ -257,7 +257,7 @@ To use the MCP server inside a coding agent, install the **liter-llm plugin** fr
 
 - **[Documentation](https://docs.liter-llm.xberg.io)** -- Full docs and API reference
 - **[GitHub Repository](https://github.com/xberg-io/liter-llm)** -- Source, issues, and discussions
-- **[Provider Registry](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
+- **[Provider Registry](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)** -- 163 supported providers
 
 ## Part of Xberg.io
 
@@ -265,7 +265,7 @@ To use the MCP server inside a coding agent, install the **liter-llm plugin** fr
 - [Xberg Enterprise](https://github.com/xberg-io/xberg-enterprise) — managed extraction API with SDKs, dashboards, and observability.
 - [crawlberg](https://github.com/xberg-io/crawlberg) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/xberg-io/html-to-markdown) — fast, lossless HTML→Markdown engine.
-- [liter-llm](https://github.com/xberg-io/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
+- [liter-llm](https://github.com/xberg-io/liter-llm) — universal LLM API client with native bindings for 14 languages and 163 providers.
 - [tree-sitter-language-pack](https://github.com/xberg-io/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
 - [alef](https://github.com/xberg-io/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
 - [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.

@@ -1,0 +1,87 @@
+name: Sync Model Catalog
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-catalog
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Refresh catalog.json from models.dev
+    if: github.repository == 'xberg-io/liter-llm'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # ~keep A GitHub App token (not the default GITHUB_TOKEN) is required so
+      # ~keep the sync PR triggers `catalog-verify` and any required status
+      # ~keep checks — PRs opened with GITHUB_TOKEN do not trigger further
+      # ~keep workflow runs, which would leave auto-merge blocked forever.
+      # ~keep Same pattern as publish.yaml and ../sdks spec-sync.yml.
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          owner: xberg-io
+
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: true
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          cache-key-prefix: sync-catalog
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Refresh catalog
+        run: task generate:catalog
+        shell: bash
+
+      - name: Detect drift
+        id: diff
+        run: |
+          if git diff --quiet -- schemas/catalog.json crates/liter-llm/schemas/catalog.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+
+      - name: Open PR
+        id: cpr
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          commit-message: "chore: sync model catalog from models.dev"
+          title: "chore: sync model catalog from models.dev"
+          body: |
+            Automated refresh of `schemas/catalog.json` and
+            `crates/liter-llm/schemas/catalog.json` from
+            [models.dev](https://models.dev), produced by `task generate:catalog`.
+
+            Merges automatically once required checks pass.
+          branch: catalog-sync
+          delete-branch: true
+          add-paths: |
+            schemas/catalog.json
+            crates/liter-llm/schemas/catalog.json
+
+      - name: Enable auto-merge
+        if: steps.diff.outputs.changed == 'true' && steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: gh pr merge "${{ steps.cpr.outputs.pull-request-number }}" --auto --squash
+        shell: bash

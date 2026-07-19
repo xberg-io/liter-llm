@@ -1,6 +1,6 @@
 {
   "name": "@xberg-io/liter-llm-wasm",
-  "version": "1.9.3",
+  "version": "1.10.0",
   "private": false,
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
@@ -13,7 +13,12 @@
     "access": "public"
   },
   "type": "module",
-  "files": ["pkg", "*.wasm", "*.d.ts", "README.md"],
+  "files": [
+    "pkg",
+    "*.wasm",
+    "*.d.ts",
+    "README.md"
+  ],
   "main": "pkg/nodejs/liter_llm_wasm.js",
   "module": "pkg/web/liter_llm_wasm.js",
   "types": "pkg/nodejs/liter_llm_wasm.d.ts",

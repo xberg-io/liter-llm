@@ -79,6 +79,13 @@ typedef struct LITERLLMCacheBackend LITERLLMCacheBackend;
  */
 typedef struct LITERLLMCacheConfig LITERLLMCacheConfig;
 /**
+ * Plain-data configuration for `refresh_catalog`.
+ *
+ * Deliberately FFI/binding-friendly: no `Duration` or `PathBuf`, just
+ * primitives that translate directly across language boundaries.
+ */
+typedef struct LITERLLMCatalogRefreshConfig LITERLLMCatalogRefreshConfig;
+/**
  * A streamed chunk of a chat completion response.
  */
 typedef struct LITERLLMChatCompletionChunk LITERLLMChatCompletionChunk;
@@ -155,7 +162,7 @@ typedef struct LITERLLMDecodedDataUrl LITERLLMDecodedDataUrl;
 /**
  * Default client implementation backed by `reqwest`.
  *
- * Sends requests to 143 LLM providers with automatic provider detection
+ * Sends requests to 163 LLM providers with automatic provider detection
  * and per-request routing. The provider is resolved at construction time
  * from `model_hint` (or defaults to OpenAI), but individual requests can
  * override the provider via model name prefix (e.g. `"anthropic/claude-3-5-sonnet"`
@@ -298,9 +305,23 @@ typedef struct LITERLLMMessage LITERLLMMessage;
  */
 typedef struct LITERLLMModality LITERLLMModality;
 /**
+ * Public, FFI-friendly snapshot of a model's pricing and capability
+ * metadata, projected from `ModelPricing`.
+ *
+ * Unlike `ModelPricing` (which is excluded from binding generation),
+ * `ModelInfo` is an owned plain-data DTO safe to hand across the FFI
+ * boundary â see `model_info`.
+ */
+typedef struct LITERLLMModelInfo LITERLLMModelInfo;
+/**
  * A model available from the API.
  */
 typedef struct LITERLLMModelObject LITERLLMModelObject;
+/**
+ * Public, FFI-friendly snapshot of a single context-window pricing tier,
+ * projected from `PricingTier`.
+ */
+typedef struct LITERLLMModelTier LITERLLMModelTier;
 /**
  * Response listing available models.
  */
@@ -403,6 +424,10 @@ typedef struct LITERLLMRateLimitConfig LITERLLMRateLimitConfig;
  * Controls how much reasoning effort the model should use.
  */
 typedef struct LITERLLMReasoningEffort LITERLLMReasoningEffort;
+/**
+ * Result of a `refresh_catalog` call.
+ */
+typedef struct LITERLLMRefreshOutcome LITERLLMRefreshOutcome;
 /**
  * A document to be reranked â either a plain string or an object with a text field.
  */
@@ -4907,6 +4932,241 @@ LITERLLMAuthType *literllm_auth_config_auth_type(const LITERLLMAuthConfig *ptr);
 char *literllm_auth_config_env_var(const LITERLLMAuthConfig *ptr);
 
 /**
+ * Create a `ModelInfo` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_model_info_free`.
+ */
+LITERLLMModelInfo *literllm_model_info_from_json(const char *json);
+
+/**
+ * Serialize a `ModelInfo` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_model_info_to_json(const LITERLLMModelInfo *ptr);
+
+/**
+ * Free a `ModelInfo` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_model_info_free(LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `input_cost_per_token` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_info_input_cost_per_token(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `output_cost_per_token` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_info_output_cost_per_token(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `cache_read_input_token_cost` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_info_cache_read_input_token_cost(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `cache_creation_input_token_cost` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_info_cache_creation_input_token_cost(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `input_cost_per_audio_token` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_info_input_cost_per_audio_token(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `output_cost_per_audio_token` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_info_output_cost_per_audio_token(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `output_cost_per_reasoning_token` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_info_output_cost_per_reasoning_token(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `max_tokens` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_model_info_max_tokens(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `max_input_tokens` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_model_info_max_input_tokens(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `max_output_tokens` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_model_info_max_output_tokens(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `mode` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_model_info_mode(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `supports_vision` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_model_info_supports_vision(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `supports_function_calling` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_model_info_supports_function_calling(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `supports_reasoning` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_model_info_supports_reasoning(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `supports_structured_output` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_model_info_supports_structured_output(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `supports_audio_input` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_model_info_supports_audio_input(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `supports_audio_output` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_model_info_supports_audio_output(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `supports_prompt_caching` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_model_info_supports_prompt_caching(const LITERLLMModelInfo *ptr);
+
+/**
+ * Get the `tiers` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_model_info_tiers(const LITERLLMModelInfo *ptr);
+
+/**
+ * Create a `ModelTier` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_model_tier_free`.
+ */
+LITERLLMModelTier *literllm_model_tier_from_json(const char *json);
+
+/**
+ * Serialize a `ModelTier` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_model_tier_to_json(const LITERLLMModelTier *ptr);
+
+/**
+ * Free a `ModelTier` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_model_tier_free(LITERLLMModelTier *ptr);
+
+/**
+ * Get the `min_context_tokens` field from a `ModelTier`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_model_tier_min_context_tokens(const LITERLLMModelTier *ptr);
+
+/**
+ * Get the `input_cost_per_token` field from a `ModelTier`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_tier_input_cost_per_token(const LITERLLMModelTier *ptr);
+
+/**
+ * Get the `output_cost_per_token` field from a `ModelTier`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_tier_output_cost_per_token(const LITERLLMModelTier *ptr);
+
+/**
+ * Get the `cache_read_input_token_cost` field from a `ModelTier`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_tier_cache_read_input_token_cost(const LITERLLMModelTier *ptr);
+
+/**
+ * Get the `cache_creation_input_token_cost` field from a `ModelTier`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_tier_cache_creation_input_token_cost(const LITERLLMModelTier *ptr);
+
+/**
+ * Get the `input_cost_per_audio_token` field from a `ModelTier`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_tier_input_cost_per_audio_token(const LITERLLMModelTier *ptr);
+
+/**
+ * Get the `output_cost_per_audio_token` field from a `ModelTier`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_tier_output_cost_per_audio_token(const LITERLLMModelTier *ptr);
+
+/**
+ * Get the `output_cost_per_reasoning_token` field from a `ModelTier`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_model_tier_output_cost_per_reasoning_token(const LITERLLMModelTier *ptr);
+
+/**
  * Create a `BudgetConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -5090,6 +5350,63 @@ char *literllm_intent_prototype_embedding(const LITERLLMIntentPrototype *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_intent_prototype_model(const LITERLLMIntentPrototype *ptr);
+
+/**
+ * Create a `CatalogRefreshConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_catalog_refresh_config_free`.
+ */
+LITERLLMCatalogRefreshConfig *literllm_catalog_refresh_config_from_json(const char *json);
+
+/**
+ * Serialize a `CatalogRefreshConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_catalog_refresh_config_to_json(const LITERLLMCatalogRefreshConfig *ptr);
+
+/**
+ * Free a `CatalogRefreshConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_catalog_refresh_config_free(LITERLLMCatalogRefreshConfig *ptr);
+
+/**
+ * Get the `enabled` field from a `CatalogRefreshConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_catalog_refresh_config_enabled(const LITERLLMCatalogRefreshConfig *ptr);
+
+/**
+ * Get the `source_url` field from a `CatalogRefreshConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_catalog_refresh_config_source_url(const LITERLLMCatalogRefreshConfig *ptr);
+
+/**
+ * Get the `ttl_seconds` field from a `CatalogRefreshConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_catalog_refresh_config_ttl_seconds(const LITERLLMCatalogRefreshConfig *ptr);
+
+/**
+ * Get the `cache_path` field from a `CatalogRefreshConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_catalog_refresh_config_cache_path(const LITERLLMCatalogRefreshConfig *ptr);
+
+/**
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMCatalogRefreshConfig *literllm_catalog_refresh_config_default(void);
 
 /**
  * Convert an integer to a `Message` variant. Returns -1 on invalid input.
@@ -5510,6 +5827,21 @@ int32_t literllm_health_status_from_i32(int32_t value);
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
 int32_t literllm_health_status_from_str(const char *name);
+
+/**
+ * Convert an integer to a `RefreshOutcome` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t literllm_refresh_outcome_from_i32(int32_t value);
+
+/**
+ * Convert a `RefreshOutcome` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t literllm_refresh_outcome_from_str(const char *name);
 
 /**
  * Free a heap-allocated `UserContent` returned by a pointer-returning FFI function.
@@ -5987,6 +6319,31 @@ char *literllm_cache_backend_to_json(const LITERLLMCacheBackend *ptr);
 char *literllm_cache_backend_to_string(const LITERLLMCacheBackend *ptr);
 
 /**
+ * Free a heap-allocated `RefreshOutcome` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_refresh_outcome_free(LITERLLMRefreshOutcome *ptr);
+
+/**
+ * Serialize a heap-allocated `RefreshOutcome` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_refresh_outcome_to_json(const LITERLLMRefreshOutcome *ptr);
+
+/**
+ * Render a heap-allocated `RefreshOutcome` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_refresh_outcome_to_string(const LITERLLMRefreshOutcome *ptr);
+
+/**
  * Create a new LLM client with simple scalar configuration.
  *
  * This is the primary binding entry-point. All parameters except `api_key`
@@ -6103,7 +6460,7 @@ int32_t literllm_unregister_custom_provider(const char *name);
 /**
  * Return the capability flags for a named provider.
  *
- * Performs an O(n) linear scan over the embedded registry (143 entries).
+ * Performs an O(n) linear scan over the embedded registry (163 entries).
  * Returns an owned value so bindings can pass capability data without
  * borrowing registry internals.
  *
@@ -6192,6 +6549,12 @@ double literllm_completion_cost(const char *model,
  *
  * Returns `None` if the model is not present in the embedded pricing
  * registry, mirroring `completion_cost`.
+ *
+ * When the model has `ModelPricing.tiers`, the tier whose
+ * `min_context_tokens` is the highest value `<= prompt_tokens` supplies the
+ * input/output/cache rates for the whole call; models without tiers (or
+ * when `prompt_tokens` is below every tier threshold) use the base rates
+ * unchanged, matching the original flat-rate behaviour.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
@@ -6199,6 +6562,22 @@ double literllm_completion_cost_with_cache(const char *model,
                                            uint64_t prompt_tokens,
                                            uint64_t cached_tokens,
                                            uint64_t completion_tokens);
+
+/**
+ * Look up FFI-friendly pricing and capability metadata for a model.
+ *
+ * Returns `None` if the model is not present in the active pricing
+ * registry. Uses the same exact-match-then-prefix-fallback resolution as
+ * `model_pricing`; unlike `model_pricing`, the result is an owned
+ * `ModelInfo` value safe to hand across the FFI boundary.
+ *
+ * When a runtime catalog refresh has succeeded, this reflects the refreshed
+ * (overlay) catalog; otherwise it reflects the embedded catalog. See
+ * `model_pricing` for the embedded-only alternative.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMModelInfo *literllm_model_info(const char *model);
 
 /**
  * Remove all guardrails from the global registry.
@@ -6279,6 +6658,64 @@ int32_t literllm_check_bound(const char *context,
  */
 void literllm_ensure_crypto_provider(void);
 #endif
+
+/**
+ * Install the overlay registry from a raw catalog JSON string, bypassing
+ * the network and disk cache entirely.
+ *
+ * Parses and flattens `catalog_json` with the same
+ * `registry_from_catalog_str` logic used for the embedded catalog and the
+ * network refresh path, then atomically swaps it in as the active overlay.
+ * A parse failure returns `CatalogRefreshError.Parse` and leaves any
+ * existing overlay untouched.
+ *
+ * This is primarily a testable seam: it lets tests exercise overlay
+ * installation and the embedded/overlay fallback behavior in
+ * `completion_cost` / `model_info` without a real network
+ * call.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+int32_t literllm_install_catalog_overlay_from_str(const char *catalog_json);
+
+/**
+ * Clear the overlay registry, reverting `completion_cost`,
+ * `completion_cost_with_cache`, and `model_info` to the
+ * embedded catalog.
+ *
+ * Primarily a test seam (see `install_catalog_overlay_from_str`); also
+ * usable by long-running processes that want to abandon a runtime refresh.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+void literllm_clear_catalog_overlay(void);
+
+/**
+ * Refresh the runtime catalog overlay per `config`.
+ *
+ * - `config.enabled == false`: returns `Ok(``RefreshOutcome.Disabled``)`
+ *   immediately. No network, filesystem, or overlay activity.
+ * - A fresh on-disk cache (age < `config.ttl_seconds`) exists at the
+ *   resolved cache path (`config.cache_path`, or a default under
+ *   `std::env::temp_dir()`): read + flatten it and install the overlay,
+ *   returning `Ok(``RefreshOutcome.FromCache``)`. No network request is
+ *   made.
+ * - Otherwise: validate `config.source_url` uses `https`
+ *   (`CatalogRefreshError.InsecureUrl` otherwise), fetch it, flatten it,
+ *   install the overlay, best-effort write the raw JSON to the cache path
+ *   (a cache write failure does not fail the refresh), and return
+ *   `Ok(``RefreshOutcome.Fetched``)`.
+ *
+ * On any error return, the overlay is left untouched: the previously
+ * active registry (a prior successful overlay, or the embedded catalog if
+ * none was ever installed) remains in effect. This is what makes the
+ * feature air-gap-safe â an unreachable or invalid `source_url` never
+ * degrades `completion_cost` / `model_info` below embedded-catalog
+ * availability.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMRefreshOutcome *literllm_refresh_catalog(const LITERLLMCatalogRefreshConfig *config);
 
 /**
  * Return the HTTP status code for the error pointed to by `err`.

@@ -76,9 +76,9 @@
 
 ## What and Why?
 
-liter-llm gives you a single, consistent way to call any large language model. Reach 143 providers — OpenAI, Anthropic, Google, Bedrock, and more — through one client, and switch models by changing a name instead of your code. The same client ships to 14 languages, all built on one Rust core, so you get identical behavior everywhere. Need a gateway? Point your existing OpenAI SDK at the built-in, drop-in proxy — no rewrites, no separate service to run.
+liter-llm gives you a single, consistent way to call any large language model. Reach 163 providers — OpenAI, Anthropic, Google, Bedrock, and more — through one client, and switch models by changing a name instead of your code. The same client ships to 14 languages, all built on one Rust core, so you get identical behavior everywhere. Need a gateway? Point your existing OpenAI SDK at the built-in, drop-in proxy — no rewrites, no separate service to run.
 
-- **Work with any provider without rewrites** — 143 providers behind one API; change the model name to switch, your code stays the same.
+- **Work with any provider without rewrites** — 163 providers behind one API; change the model name to switch, your code stays the same.
 - **Use it from your language** — Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, and WebAssembly, all built on the same Rust core, plus a C/FFI surface for everything else.
 - **Secure by default** — API keys are wrapped, redacted from logs, and never serialized; cloud auth for Azure, AWS, and Vertex refreshes and rotates for you.
 - **One small binary** — the client, a drop-in OpenAI-compatible proxy, and an MCP server for AI agents ship in a single 35 MB binary with no interpreter and no dependency tree to compromise.
@@ -92,7 +92,7 @@ We credit [litellm](https://github.com/BerriAI/litellm) for proving the category
 
 | Feature | Description |
 | ------- | ----------- |
-| **143 providers** | OpenAI, Anthropic, Google, AWS Bedrock, Groq, Mistral, Together, Fireworks, DeepSeek, Cohere, and 130+ more — compiled at build time |
+| **163 providers** | OpenAI, Anthropic, Google, AWS Bedrock, Groq, Mistral, Together, Fireworks, DeepSeek, Cohere, and 130+ more — compiled at build time |
 | **14 native bindings** | Rust, Python, Node.js, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly — plus a shared C/FFI surface |
 | **First-class streaming** | SSE and AWS EventStream binary protocol with zero-copy buffers |
 | **Proxy & MCP server** | Drop-in OpenAI-compatible proxy (22 endpoints) and MCP tool server in a 35 MB Docker image |
@@ -276,7 +276,7 @@ See the [MCP server guide](https://docs.liter-llm.xberg.io/server/mcp-server/) a
 
 ### AI Coding Assistants
 
-Install the liter-llm plugin from the [`xberg-io/plugins`](https://github.com/xberg-io/plugins) marketplace. It ships the liter-llm agent skills (chat, streaming, tools, embeddings across 143 providers) and works with every major coding agent — expand your harness below.
+Install the liter-llm plugin from the [`xberg-io/plugins`](https://github.com/xberg-io/plugins) marketplace. It ships the liter-llm agent skills (chat, streaming, tools, embeddings across 163 providers) and works with every major coding agent — expand your harness below.
 
 <details open>
 <summary><strong>Claude Code</strong></summary>
@@ -358,7 +358,7 @@ Join our [Discord community](https://discord.gg/xt9WY3GnKR) for questions and di
 - [Xberg Enterprise](https://github.com/xberg-io/xberg-enterprise) — managed extraction API with SDKs, dashboards, and observability.
 - [crawlberg](https://github.com/xberg-io/crawlberg) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/xberg-io/html-to-markdown) — fast, lossless HTML→Markdown engine.
-- [liter-llm](https://github.com/xberg-io/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
+- [liter-llm](https://github.com/xberg-io/liter-llm) — universal LLM API client with native bindings for 14 languages and 163 providers.
 - [tree-sitter-language-pack](https://github.com/xberg-io/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
 - [alef](https://github.com/xberg-io/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
 

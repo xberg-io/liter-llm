@@ -47,7 +47,7 @@ kotlin {
 
 dependencies {
     // Published Android AAR from Maven Central (verifies artifact resolution)
-    implementation("io.xberg.literllm:liter-llm-android:1.9.3")
+    implementation("io.xberg.literllm:liter-llm-android:1.10.0")
     // Jackson for JSON assertion helpers
     testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.19.0")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
@@ -80,7 +80,7 @@ dependencies {
 tasks.register("verifyAarPublished") {
     description = "Verify the published Android AAR contains jni and classes.jar"
     doLast {
-        val aarCoord = "io.xberg.literllm:liter-llm-android:1.9.3"
+        val aarCoord = "io.xberg.literllm:liter-llm-android:1.10.0"
         val (groupId, artifactId, version) = run {
             val parts = aarCoord.split(':')
             Triple(parts[0], parts[1], parts[2])
@@ -120,10 +120,10 @@ tasks.register("verifyAarPublished") {
             }
 
             val abiDirs = entries
-            .filter { it.name.startsWith("jni/") }
-            .map { it.name.substringAfter("jni/").substringBefore("/") }
-            .filter { it.isNotEmpty() }
-            .distinct()
+                .filter { it.name.startsWith("jni/") }
+                .map { it.name.substringAfter("jni/").substringBefore("/") }
+                .filter { it.isNotEmpty() }
+                .distinct()
 
             println("  + jni: YES")
             println("  + classes.jar: YES")

@@ -271,6 +271,56 @@ fn model_object_matches_schema() {
     assert_valid(&validator, &json, "Model");
 }
 
+/// Regression for #139: DeepSeek's `/v1/models` omits `created`, so a
+/// `ModelObject` must deserialize with the field missing and default it to `0`.
+#[test]
+fn model_object_deserializes_when_created_is_missing() {
+    use liter_llm::ModelObject;
+
+    let body = r#"{"id":"deepseek-chat","object":"model","owned_by":"deepseek"}"#;
+    let obj: ModelObject = serde_json::from_str(body).expect("must deserialize without `created`");
+
+    assert_eq!(obj.id, "deepseek-chat");
+    assert_eq!(obj.object, "model");
+    assert_eq!(obj.owned_by, "deepseek");
+    assert_eq!(obj.created, 0, "missing `created` must default to 0");
+}
+
+/// A model object where every non-`id` field is absent must still deserialize —
+/// `object`, `created`, and `owned_by` are all defaulted.
+#[test]
+fn model_object_deserializes_with_only_id() {
+    use liter_llm::ModelObject;
+
+    let obj: ModelObject = serde_json::from_str(r#"{"id":"some-model"}"#).expect("id-only must deserialize");
+
+    assert_eq!(obj.id, "some-model");
+    assert_eq!(obj.object, "");
+    assert_eq!(obj.created, 0);
+    assert_eq!(obj.owned_by, "");
+}
+
+/// Regression for #139 at the list level: a DeepSeek-shaped `/v1/models`
+/// response (elements missing `created`) must deserialize into
+/// `ModelsListResponse` — this is the exact payload `list_models` parses.
+#[test]
+fn models_list_response_deserializes_deepseek_shape() {
+    use liter_llm::ModelsListResponse;
+
+    let body = r#"{
+        "object": "list",
+        "data": [
+            {"id": "deepseek-chat", "object": "model", "owned_by": "deepseek"},
+            {"id": "deepseek-reasoner", "object": "model", "owned_by": "deepseek"}
+        ]
+    }"#;
+    let parsed: ModelsListResponse = serde_json::from_str(body).expect("DeepSeek list response must deserialize");
+
+    assert_eq!(parsed.data.len(), 2);
+    assert_eq!(parsed.data[0].id, "deepseek-chat");
+    assert_eq!(parsed.data[0].created, 0);
+}
+
 /// Validate the `ErrorResponse` wrapper and the inner `Error` object.
 #[test]
 fn error_response_matches_schema() {

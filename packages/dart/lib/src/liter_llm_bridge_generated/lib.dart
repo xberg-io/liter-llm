@@ -9,7 +9,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `IntentPrototype`, `SingleflightResult`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -90,7 +90,7 @@ Future<bool> unregisterCustomProvider({required String name}) =>
 
 /// Return the capability flags for a named provider.
 ///
-/// Performs an O(n) linear scan over the embedded registry (143 entries).
+/// Performs an O(n) linear scan over the embedded registry (163 entries).
 /// Returns an owned value so bindings can pass capability data without
 /// borrowing registry internals.
 ///
@@ -147,6 +147,12 @@ Future<double?> completionCost({
 ///
 /// Returns `null` if the model is not present in the embedded pricing
 /// registry, mirroring `completion_cost`.
+///
+/// When the model has `ModelPricing.tiers`, the tier whose
+/// `min_context_tokens` is the highest value `<= prompt_tokens` supplies the
+/// input/output/cache rates for the whole call; models without tiers (or
+/// when `prompt_tokens` is below every tier threshold) use the base rates
+/// unchanged, matching the original flat-rate behaviour.
 Future<double?> completionCostWithCache({
   required String model,
   required PlatformInt64 promptTokens,
@@ -158,6 +164,19 @@ Future<double?> completionCostWithCache({
   cachedTokens: cachedTokens,
   completionTokens: completionTokens,
 );
+
+/// Look up FFI-friendly pricing and capability metadata for a model.
+///
+/// Returns `null` if the model is not present in the active pricing
+/// registry. Uses the same exact-match-then-prefix-fallback resolution as
+/// `model_pricing`; unlike `model_pricing`, the result is an owned
+/// `ModelInfo` value safe to hand across the FFI boundary.
+///
+/// When a runtime catalog refresh has succeeded, this reflects the refreshed
+/// (overlay) catalog; otherwise it reflects the embedded catalog. See
+/// `model_pricing` for the embedded-only alternative.
+Future<ModelInfo?> modelInfo({required String model}) =>
+    RustLib.instance.api.crateModelInfo(model: model);
 
 /// Remove all guardrails from the global registry.
 ///
@@ -234,6 +253,59 @@ Future<void> checkBound({
 /// present and no crypto provider installation is needed.
 Future<void> ensureCryptoProvider() =>
     RustLib.instance.api.crateEnsureCryptoProvider();
+
+/// Install the overlay registry from a raw catalog JSON string, bypassing
+/// the network and disk cache entirely.
+///
+/// Parses and flattens `catalog_json` with the same
+/// `registry_from_catalog_str` logic used for the embedded catalog and the
+/// network refresh path, then atomically swaps it in as the active overlay.
+/// A parse failure returns `CatalogRefreshError.Parse` and leaves any
+/// existing overlay untouched.
+///
+/// This is primarily a testable seam: it lets tests exercise overlay
+/// installation and the embedded/overlay fallback behavior in
+/// `completion_cost` / `model_info` without a real network
+/// call.
+Future<void> installCatalogOverlayFromStr({required String catalogJson}) =>
+    RustLib.instance.api.crateInstallCatalogOverlayFromStr(
+      catalogJson: catalogJson,
+    );
+
+/// Clear the overlay registry, reverting `completion_cost`,
+/// `completion_cost_with_cache`, and `model_info` to the
+/// embedded catalog.
+///
+/// Primarily a test seam (see `install_catalog_overlay_from_str`); also
+/// usable by long-running processes that want to abandon a runtime refresh.
+Future<void> clearCatalogOverlay() =>
+    RustLib.instance.api.crateClearCatalogOverlay();
+
+/// Refresh the runtime catalog overlay per `config`.
+///
+/// - `config.enabled == false`: returns `Ok(RefreshOutcome.Disabled)`
+///   immediately. No network, filesystem, or overlay activity.
+///
+/// - A fresh on-disk cache (age < `config.ttl_seconds`) exists at the
+///   resolved cache path (`config.cache_path`, or a default under
+///   `std.env.temp_dir()`): read + flatten it and install the overlay,
+///   returning `Ok(RefreshOutcome.FromCache)`. No network request is
+///   made.
+///
+/// - Otherwise: validate `config.source_url` uses `https`
+///   (`CatalogRefreshError.InsecureUrl` otherwise), fetch it, flatten it,
+///   install the overlay, best-effort write the raw JSON to the cache path
+///   (a cache write failure does not fail the refresh), and return
+///   `Ok(RefreshOutcome.Fetched)`.
+///
+/// On any error return, the overlay is left untouched: the previously
+/// active registry (a prior successful overlay, or the embedded catalog if
+/// none was ever installed) remains in effect. This is what makes the
+/// feature air-gap-safe — an unreachable or invalid `source_url` never
+/// degrades `completion_cost` / `model_info` below embedded-catalog
+/// availability.
+Future<RefreshOutcome> refreshCatalog({required CatalogRefreshConfig config}) =>
+    RustLib.instance.api.crateRefreshCatalog(config: config);
 
 Future<SystemMessage> createSystemMessageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateSystemMessageFromJson(json: json);
@@ -507,6 +579,12 @@ Future<ProviderConfig> createProviderConfigFromJson({required String json}) =>
 Future<AuthConfig> createAuthConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateAuthConfigFromJson(json: json);
 
+Future<ModelInfo> createModelInfoFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateModelInfoFromJson(json: json);
+
+Future<ModelTier> createModelTierFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateModelTierFromJson(json: json);
+
 Future<BudgetConfig> createBudgetConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateBudgetConfigFromJson(json: json);
 
@@ -515,6 +593,10 @@ Future<CacheConfig> createCacheConfigFromJson({required String json}) =>
 
 Future<RateLimitConfig> createRateLimitConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
+
+Future<CatalogRefreshConfig> createCatalogRefreshConfigFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateCatalogRefreshConfigFromJson(json: json);
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>
 abstract class DefaultClient implements RustOpaqueInterface {
@@ -1038,6 +1120,90 @@ class CacheConfig {
           maxEntries == other.maxEntries &&
           ttl == other.ttl &&
           backend == other.backend;
+}
+
+/// Plain-data configuration for [`refresh_catalog`].
+///
+/// Deliberately FFI/binding-friendly: no `Duration` or `PathBuf`, just
+/// primitives that translate directly across language boundaries.
+class CatalogRefreshConfig {
+  /// Runtime catalog refresh is entirely opt-in: when `false`,
+  /// [`refresh_catalog`] is a no-op that returns
+  /// `Ok(`[`RefreshOutcome::Disabled`]`)` without touching the network,
+  /// the filesystem, or the overlay registry.
+  final bool enabled;
+
+  /// Source URL to fetch `catalog.json` from. Must be `https`. Defaults to
+  /// [`DEFAULT_CATALOG_URL`]; configurable so self-hosted mirrors work.
+  final String sourceUrl;
+
+  /// How long a cached `catalog.json` remains valid before a network
+  /// refetch is attempted, in seconds.
+  final PlatformInt64 ttlSeconds;
+
+  /// Filesystem path for the on-disk cache. `None` uses a default path
+  /// under `std::env::temp_dir()`.
+  final String? cachePath;
+
+  const CatalogRefreshConfig({
+    required this.enabled,
+    required this.sourceUrl,
+    required this.ttlSeconds,
+    this.cachePath,
+  });
+
+  @override
+  int get hashCode =>
+      enabled.hashCode ^
+      sourceUrl.hashCode ^
+      ttlSeconds.hashCode ^
+      cachePath.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CatalogRefreshConfig &&
+          runtimeType == other.runtimeType &&
+          enabled == other.enabled &&
+          sourceUrl == other.sourceUrl &&
+          ttlSeconds == other.ttlSeconds &&
+          cachePath == other.cachePath;
+}
+
+@freezed
+sealed class CatalogRefreshError with _$CatalogRefreshError {
+  const CatalogRefreshError._();
+
+  /// Runtime catalog refresh was not enabled. [`refresh_catalog`] itself
+  /// never returns this — it returns `Ok(`[`RefreshOutcome::Disabled`]`)`
+  /// instead — but the variant is part of the public error surface for
+  /// callers that want to treat "disabled" as a hard error.
+  const factory CatalogRefreshError.disabled() = CatalogRefreshError_Disabled;
+
+  /// `source_url` did not use the `https` scheme, or failed to parse as a
+  /// URL at all. There is no host allowlist: the URL is user-configurable
+  /// for self-hosted catalog mirrors, so only the scheme is enforced.
+  const factory CatalogRefreshError.insecureUrl({required String url}) =
+      CatalogRefreshError_InsecureUrl;
+
+  /// The network fetch failed, timed out, or returned a non-success
+  /// status.
+  const factory CatalogRefreshError.fetch({
+    required String url,
+    required String message,
+  }) = CatalogRefreshError_Fetch;
+
+  /// The fetched or cached catalog JSON failed to parse.
+  const factory CatalogRefreshError.parse({required String message}) =
+      CatalogRefreshError_Parse;
+
+  /// A cache file **read** failed on an otherwise-fresh cache file. Cache
+  /// **write** failures are best-effort and never surface as this error
+  /// (see [`refresh_catalog`]).
+  const factory CatalogRefreshError.cache({
+    required String path,
+    required String message,
+  }) = CatalogRefreshError_Cache;
 }
 
 /// A streamed chunk of a chat completion response.
@@ -2493,6 +2659,141 @@ enum Modality {
   image,
 }
 
+/// Public, FFI-friendly snapshot of a model's pricing and capability
+/// metadata, projected from [`ModelPricing`].
+///
+/// Unlike [`ModelPricing`] (which is excluded from binding generation),
+/// `ModelInfo` is an owned plain-data DTO safe to hand across the FFI
+/// boundary — see [`model_info`].
+class ModelInfo {
+  /// Cost in USD per input (prompt) token.
+  final double inputCostPerToken;
+
+  /// Cost in USD per output (completion) token.
+  final double outputCostPerToken;
+
+  /// Cost in USD per cached input token (cache hit / read).
+  final double? cacheReadInputTokenCost;
+
+  /// Cost in USD per token written to the prompt cache.
+  final double? cacheCreationInputTokenCost;
+
+  /// Cost in USD per input audio token.
+  final double? inputCostPerAudioToken;
+
+  /// Cost in USD per output audio token.
+  final double? outputCostPerAudioToken;
+
+  /// Cost in USD per reasoning (extended-thinking) output token.
+  final double? outputCostPerReasoningToken;
+
+  /// Total context window size in tokens (input + output).
+  final PlatformInt64? maxTokens;
+
+  /// Maximum input (prompt) tokens accepted.
+  final PlatformInt64? maxInputTokens;
+
+  /// Maximum output (completion) tokens the model can generate.
+  final PlatformInt64? maxOutputTokens;
+
+  /// Best-effort operating mode, e.g. `"chat"`, `"embedding"`.
+  final String? mode;
+
+  /// The model accepts image input.
+  final bool? supportsVision;
+
+  /// The model supports tool / function calling.
+  final bool? supportsFunctionCalling;
+
+  /// The model supports extended-thinking / reasoning tokens.
+  final bool? supportsReasoning;
+
+  /// The model supports JSON-mode or `response_format` structured output.
+  final bool? supportsStructuredOutput;
+
+  /// The model accepts audio input.
+  final bool? supportsAudioInput;
+
+  /// The model can generate audio output.
+  final bool? supportsAudioOutput;
+
+  /// The model supports prompt caching.
+  final bool? supportsPromptCaching;
+
+  /// Context-tiered pricing overrides, sorted by ascending
+  /// `min_context_tokens`. Empty when the model has flat pricing.
+  final List<ModelTier> tiers;
+
+  const ModelInfo({
+    required this.inputCostPerToken,
+    required this.outputCostPerToken,
+    this.cacheReadInputTokenCost,
+    this.cacheCreationInputTokenCost,
+    this.inputCostPerAudioToken,
+    this.outputCostPerAudioToken,
+    this.outputCostPerReasoningToken,
+    this.maxTokens,
+    this.maxInputTokens,
+    this.maxOutputTokens,
+    this.mode,
+    this.supportsVision,
+    this.supportsFunctionCalling,
+    this.supportsReasoning,
+    this.supportsStructuredOutput,
+    this.supportsAudioInput,
+    this.supportsAudioOutput,
+    this.supportsPromptCaching,
+    required this.tiers,
+  });
+
+  @override
+  int get hashCode =>
+      inputCostPerToken.hashCode ^
+      outputCostPerToken.hashCode ^
+      cacheReadInputTokenCost.hashCode ^
+      cacheCreationInputTokenCost.hashCode ^
+      inputCostPerAudioToken.hashCode ^
+      outputCostPerAudioToken.hashCode ^
+      outputCostPerReasoningToken.hashCode ^
+      maxTokens.hashCode ^
+      maxInputTokens.hashCode ^
+      maxOutputTokens.hashCode ^
+      mode.hashCode ^
+      supportsVision.hashCode ^
+      supportsFunctionCalling.hashCode ^
+      supportsReasoning.hashCode ^
+      supportsStructuredOutput.hashCode ^
+      supportsAudioInput.hashCode ^
+      supportsAudioOutput.hashCode ^
+      supportsPromptCaching.hashCode ^
+      tiers.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModelInfo &&
+          runtimeType == other.runtimeType &&
+          inputCostPerToken == other.inputCostPerToken &&
+          outputCostPerToken == other.outputCostPerToken &&
+          cacheReadInputTokenCost == other.cacheReadInputTokenCost &&
+          cacheCreationInputTokenCost == other.cacheCreationInputTokenCost &&
+          inputCostPerAudioToken == other.inputCostPerAudioToken &&
+          outputCostPerAudioToken == other.outputCostPerAudioToken &&
+          outputCostPerReasoningToken == other.outputCostPerReasoningToken &&
+          maxTokens == other.maxTokens &&
+          maxInputTokens == other.maxInputTokens &&
+          maxOutputTokens == other.maxOutputTokens &&
+          mode == other.mode &&
+          supportsVision == other.supportsVision &&
+          supportsFunctionCalling == other.supportsFunctionCalling &&
+          supportsReasoning == other.supportsReasoning &&
+          supportsStructuredOutput == other.supportsStructuredOutput &&
+          supportsAudioInput == other.supportsAudioInput &&
+          supportsAudioOutput == other.supportsAudioOutput &&
+          supportsPromptCaching == other.supportsPromptCaching &&
+          tiers == other.tiers;
+}
+
 /// A model available from the API.
 class ModelObject {
   /// Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`).
@@ -2500,12 +2801,17 @@ class ModelObject {
 
   /// Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
   /// `String` so non-standard provider values do not break deserialization.
+  /// Defaults to empty when a provider omits the field.
   final String object;
 
   /// Unix timestamp of model creation (or release date).
+  ///
+  /// Defaults to `0` when a provider omits it — DeepSeek and some other
+  /// OpenAI-compatible providers do not return `created` from `/v1/models`.
   final PlatformInt64 created;
 
   /// Organization or entity that owns the model.
+  /// Defaults to empty when a provider omits the field.
   final String ownedBy;
 
   const ModelObject({
@@ -2528,6 +2834,71 @@ class ModelObject {
           object == other.object &&
           created == other.created &&
           ownedBy == other.ownedBy;
+}
+
+/// Public, FFI-friendly snapshot of a single context-window pricing tier,
+/// projected from [`PricingTier`].
+class ModelTier {
+  /// The tier applies when the prompt/context token count is at least
+  /// this value.
+  final PlatformInt64 minContextTokens;
+
+  /// Cost in USD per input (prompt) token within this tier.
+  final double inputCostPerToken;
+
+  /// Cost in USD per output (completion) token within this tier.
+  final double outputCostPerToken;
+
+  /// Cost in USD per cached input token within this tier.
+  final double? cacheReadInputTokenCost;
+
+  /// Cost in USD per cache-write token within this tier.
+  final double? cacheCreationInputTokenCost;
+
+  /// Cost in USD per input audio token within this tier.
+  final double? inputCostPerAudioToken;
+
+  /// Cost in USD per output audio token within this tier.
+  final double? outputCostPerAudioToken;
+
+  /// Cost in USD per reasoning output token within this tier.
+  final double? outputCostPerReasoningToken;
+
+  const ModelTier({
+    required this.minContextTokens,
+    required this.inputCostPerToken,
+    required this.outputCostPerToken,
+    this.cacheReadInputTokenCost,
+    this.cacheCreationInputTokenCost,
+    this.inputCostPerAudioToken,
+    this.outputCostPerAudioToken,
+    this.outputCostPerReasoningToken,
+  });
+
+  @override
+  int get hashCode =>
+      minContextTokens.hashCode ^
+      inputCostPerToken.hashCode ^
+      outputCostPerToken.hashCode ^
+      cacheReadInputTokenCost.hashCode ^
+      cacheCreationInputTokenCost.hashCode ^
+      inputCostPerAudioToken.hashCode ^
+      outputCostPerAudioToken.hashCode ^
+      outputCostPerReasoningToken.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModelTier &&
+          runtimeType == other.runtimeType &&
+          minContextTokens == other.minContextTokens &&
+          inputCostPerToken == other.inputCostPerToken &&
+          outputCostPerToken == other.outputCostPerToken &&
+          cacheReadInputTokenCost == other.cacheReadInputTokenCost &&
+          cacheCreationInputTokenCost == other.cacheCreationInputTokenCost &&
+          inputCostPerAudioToken == other.inputCostPerAudioToken &&
+          outputCostPerAudioToken == other.outputCostPerAudioToken &&
+          outputCostPerReasoningToken == other.outputCostPerReasoningToken;
 }
 
 /// Response listing available models.
@@ -3180,6 +3551,22 @@ class RateLimitConfig {
 
 /// Controls how much reasoning effort the model should use.
 enum ReasoningEffort { low, medium, high }
+
+/// Result of a [`refresh_catalog`] call.
+enum RefreshOutcome {
+  /// `config.enabled` was `false`; no network, filesystem, or overlay
+  /// activity occurred.
+  disabled,
+
+  /// The on-disk cache was fresh (age < `ttl_seconds`); the overlay was
+  /// installed from the cached file without a network request.
+  fromCache,
+
+  /// The catalog was fetched over the network, the cache file was
+  /// (best-effort) refreshed, and the overlay was installed from the
+  /// fetched catalog.
+  fetched,
+}
 
 @freezed
 sealed class RerankDocument with _$RerankDocument {

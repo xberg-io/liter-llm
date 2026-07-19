@@ -332,15 +332,15 @@ Version is managed in `Cargo.toml` workspace and synced across all manifests:
 task version:sync
 ```
 
-### Pricing Refresh
+### Catalog Refresh
 
-Cost-tracking data lives in `schemas/pricing.json` (mirrored at `crates/liter-llm/schemas/pricing.json`) and is generated from [models.dev](https://models.dev). It refreshes automatically as part of `task update` and `task upgrade`; you can also run it standalone:
+Model catalog data (identifiers, pricing, limits, modalities, and capabilities) lives in `schemas/catalog.json` (mirrored at `crates/liter-llm/schemas/catalog.json`) and is generated from [models.dev](https://models.dev) by the `liter-llm-catalog-gen` dev-tool crate (`crates/liter-llm-catalog-gen`). It refreshes automatically as part of `task update` and `task upgrade`; you can also run it standalone:
 
 ```bash
-task generate:pricing
+task generate:catalog
 ```
 
-If models.dev is missing a model liter-llm needs to price, add the entry to `OVERRIDES` at the top of `scripts/generate_pricing.py` and re-run.
+`task generate:catalog:check` runs the same generator in `--validate` mode for CI drift checks. If models.dev is missing a model liter-llm needs, it cannot currently be added manually — the catalog is derived entirely from the upstream catalog.
 
 ## Questions?
 

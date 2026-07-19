@@ -1,0 +1,48 @@
+name: Catalog Verify
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - schemas/catalog.json
+      - crates/liter-llm/schemas/catalog.json
+      - crates/liter-llm-catalog-gen/**
+      - Taskfile.yml
+      - .github/workflows/catalog-verify.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - schemas/catalog.json
+      - crates/liter-llm/schemas/catalog.json
+      - crates/liter-llm-catalog-gen/**
+      - Taskfile.yml
+      - .github/workflows/catalog-verify.yml
+  workflow_dispatch:
+
+concurrency:
+  group: catalog-verify-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify catalog freshness
+    if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          cache-key-prefix: catalog-verify
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Check catalog is up-to-date with models.dev
+        run: task generate:catalog:check
+        shell: bash
