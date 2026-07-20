@@ -13,10 +13,10 @@
 //! would reject the crate.  Cargo feature resolution does not prevent this
 //! automatically, so callers must not enable both.
 
-// Enabling both allocator features at once is rejected at compile time with a
-// clear message instead of the raw duplicate-`#[global_allocator]` errors.
-// `compile_error!` is a macro, so it must be a standalone item gated by `cfg`
-// — it cannot be used as a `cfg_attr` attribute.
+// ~keep Enabling both allocator features at once is rejected at compile time with a
+// ~keep clear message instead of the raw duplicate-`#[global_allocator]` errors.
+// ~keep `compile_error!` is a macro, so it must be a standalone item gated by `cfg`
+// ~keep — it cannot be used as a `cfg_attr` attribute.
 #[cfg(all(feature = "mimalloc", feature = "jemalloc"))]
 compile_error!(
     "Features `mimalloc` and `jemalloc` are mutually exclusive. \
