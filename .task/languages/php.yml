@@ -52,9 +52,7 @@ tasks:
     cmds:
       - echo "Updating root composer.json dependencies..."
       - composer update --with-all-dependencies || true
-      - echo "Updating packages/php dependencies to latest versions..."
-      - cd packages/php && composer update --with-all-dependencies
-      - cd packages/php && echo "Checking remaining outdated dependencies..." && composer outdated --direct || true
+      - echo "Checking remaining outdated dependencies..." && composer outdated --direct || true
       - echo "Updating e2e/php dependencies to latest versions..."
       - cd e2e/php && composer update --with-all-dependencies || true
       - cd e2e/php && echo "Checking remaining outdated dependencies..." && composer outdated --direct || true

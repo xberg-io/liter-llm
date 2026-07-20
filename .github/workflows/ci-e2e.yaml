@@ -160,7 +160,7 @@ jobs:
             test-cmd: "task csharp:install && task csharp:e2e:test"
           - lang: php
             php-version: "8.4"
-            test-cmd: "cd packages/php && composer install --no-progress --prefer-dist && cd ../.. && task php:build && task php:e2e:test"
+            test-cmd: "composer install --no-progress --prefer-dist && task php:build && task php:e2e:test"
           - lang: elixir
             elixir-version: "1.19"
             otp-version: "28"

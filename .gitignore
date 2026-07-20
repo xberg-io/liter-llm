@@ -101,6 +101,8 @@ packages/ruby/tmp/
 
 # PHP
 vendor/
+# Orphaned lockfile — the canonical composer.json/lock live at the repo root.
+packages/php/composer.lock
 
 # Java
 .mvn/
@@ -235,6 +237,8 @@ vendor/bundle/
 *.h.bak
 *.test
 bin/
+# cli-proxy ships a hand-written launcher under bin/ — keep it tracked despite the broad bin/ rule.
+!cli-proxy/npm/bin/
 obj/
 *.nupkg
 pkg/
