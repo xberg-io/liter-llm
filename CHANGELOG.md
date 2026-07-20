@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-07-20
+
+### Fixed
+
+- **Swift**: tool-call responses now decode correctly — the `type` field on
+  tool calls honors its wire name instead of throwing `keyNotFound`.
+- **Swift**: transcription `segments`, `tool_calls`, and other optional list
+  fields on response DTOs now decode instead of throwing
+  `DecodingError.typeMismatch`.
+- **Elixir**: streaming entry points now call `chat_stream/2` (a non-existent
+  `chat_stream_async/2` was generated previously), fixing
+  `UndefinedFunctionError`.
+- Regenerated all language bindings with alef 0.38.4.
+
 ## [1.10.0] - 2026-07-19
 
 ### Added
