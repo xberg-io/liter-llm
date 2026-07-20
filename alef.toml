@@ -88,6 +88,7 @@ exclude = [
     "crates/*-ffi/include/*.h",
     "packages/go/include/*.h",
     "**/catalog.json",
+    ".cargo/config.toml",
 ]
 
 [workspace.poly.uncomment]

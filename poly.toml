@@ -21,7 +21,6 @@ exclude = [
     "templates/readme/**",
     "test_documents/**",
     "vendor/**",
-    ".cargo/config.toml",
     "**/Cargo.toml",
     "**/_generated/**",
     "Package.swift",
@@ -41,6 +40,7 @@ exclude = [
     "crates/*-ffi/include/*.h",
     "packages/go/include/*.h",
     "**/catalog.json",
+    ".cargo/config.toml",
 ]
 
 [lint.markdown.rumdl]
@@ -307,7 +307,6 @@ lint = { exclude = [
     "templates/readme/**",
     "test_documents/**",
     "vendor/**",
-    ".cargo/config.toml",
     "**/Cargo.toml",
     "**/_generated/**",
     "Package.swift",
@@ -327,6 +326,7 @@ lint = { exclude = [
     "crates/*-ffi/include/*.h",
     "packages/go/include/*.h",
     "**/catalog.json",
+    ".cargo/config.toml",
 ] }
 fmt = { exclude = [
     "**/*.freezed.dart",
@@ -350,7 +350,6 @@ fmt = { exclude = [
     "templates/readme/**",
     "test_documents/**",
     "vendor/**",
-    ".cargo/config.toml",
     "**/Cargo.toml",
     "**/_generated/**",
     "Package.swift",
@@ -370,6 +369,7 @@ fmt = { exclude = [
     "crates/*-ffi/include/*.h",
     "packages/go/include/*.h",
     "**/catalog.json",
+    ".cargo/config.toml",
 ] }
 file_safety = { exclude = [
     "**/*.freezed.dart",
@@ -393,7 +393,6 @@ file_safety = { exclude = [
     "templates/readme/**",
     "test_documents/**",
     "vendor/**",
-    ".cargo/config.toml",
     "**/Cargo.toml",
     "**/_generated/**",
     "Package.swift",
@@ -413,6 +412,7 @@ file_safety = { exclude = [
     "crates/*-ffi/include/*.h",
     "packages/go/include/*.h",
     "**/catalog.json",
+    ".cargo/config.toml",
 ] }
 cargo = true
 commit = { stages = ["commit-msg"] }
