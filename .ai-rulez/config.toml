@@ -5,33 +5,34 @@ gitignore = true
 
 presets = ["claude", "codex"]
 
+compact = true
 [header]
 style = "minimal"
 
 builtins = [
-    "rust",
-    "python",
-    "typescript",
-    "ruby",
-    "php",
-    "elixir",
-    "go",
-    "java",
-    "csharp",
-    "pyo3",
-    "napi-rs",
-    "default-commands",
+  "rust",
+  "python",
+  "typescript",
+  "ruby",
+  "php",
+  "elixir",
+  "go",
+  "java",
+  "csharp",
+  "pyo3",
+  "napi-rs",
+  "default-commands",
 ]
 
 [[includes]]
 name = "xberg-core"
-source = "https://github.com/xberg-io/ai-rulez"
+source = 'https://github.com/xberg-io/agent-conventions.git'
 path = "modules/core"
 merge_strategy = "local-override"
 
 [[includes]]
 name = "xberg-cicd"
-source = "https://github.com/xberg-io/ai-rulez"
+source = 'https://github.com/xberg-io/agent-conventions.git'
 path = "modules/cicd"
 merge_strategy = "local-override"
 
