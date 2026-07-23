@@ -2,8 +2,9 @@
 """
 Providers documentation generator for Liter-LLM.
 
-Reads schemas/providers.json and generates docs/providers.md with a
-searchable table of all supported LLM providers and their capabilities.
+Reads schemas/providers.json and generates the tracked Astro docs page at
+docs-site/src/content/docs/providers.md with a searchable table of all
+supported LLM providers and their capabilities.
 
 Supports --validate mode for CI (exits non-zero if docs are stale)
 and --dry-run mode for preview.
@@ -21,7 +22,8 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_PATH = PROJECT_ROOT / "schemas" / "providers.json"
-OUTPUT_PATH = PROJECT_ROOT / "docs" / "providers.md"
+OUTPUT_PATH = PROJECT_ROOT / "docs-site" / "src" / "content" / "docs" / "providers.md"
+OUTPUT_REL = OUTPUT_PATH.relative_to(PROJECT_ROOT)
 
 ENDPOINT_COLUMNS = ["chat", "embedding", "image", "audio", "moderation"]
 
@@ -57,11 +59,10 @@ def generate_markdown(providers: list[dict[str, Any]]) -> str:
 
     lines.append("---")
     lines.append(f'description: "Complete list of {count} supported LLM providers"')
+    lines.append('title: "Supported Providers"')
     lines.append("---")
     lines.append("")
 
-    lines.append("# Supported Providers")
-    lines.append("")
     lines.append(
         f"Liter-llm supports **{count} providers** out of the box. "
         "Route requests to any provider using the `provider/model` prefix convention "
@@ -146,7 +147,7 @@ def main() -> int:
     parser.add_argument(
         "--validate",
         action="store_true",
-        help="Check if docs/providers.md matches generated output (for CI)",
+        help=f"Check if {OUTPUT_REL} matches generated output (for CI)",
     )
     parser.add_argument(
         "--dry-run",
@@ -174,9 +175,9 @@ def main() -> int:
             return 1
         existing = OUTPUT_PATH.read_text()
         if existing == content:
-            logger.info("docs/providers.md is up-to-date")
+            logger.info("%s is up-to-date", OUTPUT_REL)
             return 0
-        logger.error("docs/providers.md is out of date. Run 'task generate:providers-doc' to regenerate.")
+        logger.error("%s is out of date. Run 'task generate:providers-doc' to regenerate.", OUTPUT_REL)
         return 1
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
