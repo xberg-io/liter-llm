@@ -783,6 +783,7 @@ pub(crate) fn parse_gemini_stream_event(event_data: &str) -> Result<Option<ChatC
                 tool_calls: stream_tool_calls,
                 function_call: None,
                 refusal: None,
+                reasoning_content: None,
             },
             finish_reason,
         }],

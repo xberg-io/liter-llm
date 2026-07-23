@@ -275,6 +275,9 @@ pub struct StreamDelta {
     /// Partial refusal message.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub refusal: Option<String>,
+    /// Partial reasoning/thinking tokens (OpenAI-compatible extension used by DeepSeek R1, Qwen, etc.).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reasoning_content: Option<String>,
 }
 
 /// A streaming tool call being built incrementally.
@@ -413,5 +416,29 @@ mod tests {
         assert_eq!(usage.prompt_tokens_details.as_ref().map(|d| d.cached_tokens), Some(30));
         let reser = serde_json::to_string(&usage).expect("serialization should not fail");
         assert!(reser.contains("\"cached_tokens\":30"));
+    }
+
+    #[test]
+    fn stream_delta_reasoning_content_omitted_when_none() {
+        let delta = StreamDelta {
+            content: Some("hi".into()),
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&delta).expect("serialization should not fail");
+        assert!(
+            !json.contains("reasoning_content"),
+            "reasoning_content key must be absent when None, got: {json}"
+        );
+    }
+
+    #[test]
+    fn stream_delta_reasoning_content_populated_from_deserialized_chunk() {
+        let json = r#"{
+            "role": "assistant",
+            "content": null,
+            "reasoning_content": "thinking..."
+        }"#;
+        let delta: StreamDelta = serde_json::from_str(json).expect("valid delta shape");
+        assert_eq!(delta.reasoning_content.as_deref(), Some("thinking..."));
     }
 }

@@ -333,7 +333,8 @@ impl Provider for AnthropicProvider {
 
         let content_blocks = body.get("content").and_then(|v| v.as_array()).cloned();
 
-        // ~keep Exclude Anthropic thinking blocks from user-facing content.
+        // ~keep Exclude Anthropic thinking blocks from user-facing content; they are surfaced
+        // ~keep separately via `reasoning_content` below.
         // ~keep Citation text is already present in adjacent text blocks.
         let text_content: Option<String> = content_blocks.as_ref().map(|blocks| {
             blocks
@@ -342,6 +343,19 @@ impl Provider for AnthropicProvider {
                 .filter_map(|b| b.get("text").and_then(|t| t.as_str()))
                 .collect::<Vec<_>>()
                 .join("")
+        });
+
+        // ~keep Fold `thinking` blocks' text into `reasoning_content`, mirroring the
+        // ~keep OpenAI-compatible `reasoning_content` extension (DeepSeek R1, Qwen).
+        // ~keep `redacted_thinking` blocks carry no visible text and are skipped.
+        let reasoning_content: Option<String> = content_blocks.as_ref().and_then(|blocks| {
+            let joined = blocks
+                .iter()
+                .filter(|b| b.get("type").and_then(|t| t.as_str()) == Some("thinking"))
+                .filter_map(|b| b.get("thinking").and_then(|t| t.as_str()))
+                .collect::<Vec<_>>()
+                .join("");
+            if joined.is_empty() { None } else { Some(joined) }
         });
 
         let tool_calls: Option<Vec<Value>> = content_blocks.as_ref().map(|blocks| {
@@ -402,6 +416,10 @@ impl Provider for AnthropicProvider {
 
         if let (Some(tc), true) = (tool_calls, has_tool_calls) {
             message["tool_calls"] = json!(tc);
+        }
+
+        if let Some(reasoning) = reasoning_content {
+            message["reasoning_content"] = json!(reasoning);
         }
 
         *body = json!({
@@ -490,6 +508,7 @@ impl Provider for AnthropicProvider {
                             tool_calls: None,
                             function_call: None,
                             refusal: None,
+                            reasoning_content: None,
                         },
                         finish_reason: None,
                     }],
@@ -531,7 +550,14 @@ impl Provider for AnthropicProvider {
                         Ok(Some(make_text_chunk("", "", text)))
                     }
                     "thinking_delta" => {
-                        // ~keep Skip Anthropic thinking blocks in streaming for parity with non-streaming.
+                        // ~keep Route extended-thinking text into `reasoning_content`, mirroring
+                        // ~keep the OpenAI-compatible `reasoning_content` extension (DeepSeek R1, Qwen).
+                        let thinking = delta.get("thinking").and_then(|t| t.as_str()).unwrap_or("");
+                        Ok(Some(make_reasoning_chunk("", "", thinking)))
+                    }
+                    "signature_delta" => {
+                        // ~keep The thinking-block signature is an opaque verification token, not
+                        // ~keep visible text; it is never surfaced in `content` or `reasoning_content`.
                         Ok(None)
                     }
                     "input_json_delta" => {
@@ -574,6 +600,7 @@ impl Provider for AnthropicProvider {
                             tool_calls: None,
                             function_call: None,
                             refusal: None,
+                            reasoning_content: None,
                         },
                         finish_reason: finish,
                     }],
@@ -997,6 +1024,32 @@ fn make_text_chunk(id: &str, model: &str, text: &str) -> ChatCompletionChunk {
                 tool_calls: None,
                 function_call: None,
                 refusal: None,
+                reasoning_content: None,
+            },
+            finish_reason: None,
+        }],
+        usage: None,
+        system_fingerprint: None,
+        service_tier: None,
+    }
+}
+
+/// Build a `ChatCompletionChunk` with a reasoning/thinking content delta.
+fn make_reasoning_chunk(id: &str, model: &str, text: &str) -> ChatCompletionChunk {
+    ChatCompletionChunk {
+        id: id.to_owned(),
+        object: "chat.completion.chunk".to_owned(),
+        created: super::unix_timestamp_secs(),
+        model: model.to_owned(),
+        choices: vec![StreamChoice {
+            index: 0,
+            delta: StreamDelta {
+                role: None,
+                content: None,
+                tool_calls: None,
+                function_call: None,
+                refusal: None,
+                reasoning_content: Some(text.to_owned()),
             },
             finish_reason: None,
         }],
@@ -1029,6 +1082,7 @@ fn make_empty_chunk_with_tool_start(tool_index: u32, tool_id: String, tool_name:
                 }]),
                 function_call: None,
                 refusal: None,
+                reasoning_content: None,
             },
             finish_reason: None,
         }],
@@ -1061,6 +1115,7 @@ fn make_tool_arguments_delta(tool_index: u32, partial_json: &str) -> ChatComplet
                 }]),
                 function_call: None,
                 refusal: None,
+                reasoning_content: None,
             },
             finish_reason: None,
         }],
@@ -1766,6 +1821,7 @@ mod tests {
             "thinking blocks should be filtered out"
         );
         assert_eq!(content, "The answer is 42.");
+        assert_eq!(body["choices"][0]["message"]["reasoning_content"], "Let me reason...");
     }
 
     #[test]
@@ -1847,12 +1903,84 @@ mod tests {
     }
 
     #[test]
-    fn parse_stream_event_thinking_delta_returns_none() {
+    fn parse_stream_event_thinking_delta_routes_to_reasoning_content() {
         let event = r#"{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"I am thinking..."}}"#;
         let result = provider()
             .parse_stream_event(event)
+            .expect("parse_stream_event should not fail")
+            .expect("thinking_delta should produce a chunk");
+        let delta = &result.choices[0].delta;
+        assert_eq!(delta.reasoning_content.as_deref(), Some("I am thinking..."));
+        assert_eq!(delta.content, None, "thinking text must not leak into `content`");
+    }
+
+    #[test]
+    fn parse_stream_event_signature_delta_returns_none() {
+        let event =
+            r#"{"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"abc123"}}"#;
+        let result = provider()
+            .parse_stream_event(event)
             .expect("parse_stream_event should not fail");
-        assert!(result.is_none(), "thinking_delta should be filtered (return None)");
+        assert!(
+            result.is_none(),
+            "signature_delta carries no visible text and should be ignored"
+        );
+    }
+
+    #[test]
+    fn parse_stream_event_full_thinking_block_sequence_routes_text_to_reasoning_content() {
+        let provider = provider();
+
+        let start = r#"{"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}"#;
+        let start_result = provider
+            .parse_stream_event(start)
+            .expect("parse_stream_event should not fail");
+        assert!(
+            start_result.is_none(),
+            "thinking content_block_start should emit no chunk"
+        );
+
+        let delta_one =
+            r#"{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"Let me "}}"#;
+        let chunk_one = provider
+            .parse_stream_event(delta_one)
+            .expect("parse_stream_event should not fail")
+            .expect("thinking_delta should produce a chunk");
+        assert_eq!(chunk_one.choices[0].delta.reasoning_content.as_deref(), Some("Let me "));
+        assert_eq!(chunk_one.choices[0].delta.content, None);
+
+        let delta_two =
+            r#"{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"reason."}}"#;
+        let chunk_two = provider
+            .parse_stream_event(delta_two)
+            .expect("parse_stream_event should not fail")
+            .expect("thinking_delta should produce a chunk");
+        assert_eq!(chunk_two.choices[0].delta.reasoning_content.as_deref(), Some("reason."));
+        assert_eq!(chunk_two.choices[0].delta.content, None);
+
+        let signature =
+            r#"{"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig"}}"#;
+        assert!(
+            provider
+                .parse_stream_event(signature)
+                .expect("parse_stream_event should not fail")
+                .is_none()
+        );
+
+        let stop = r#"{"type":"content_block_stop","index":0}"#;
+        assert!(
+            provider
+                .parse_stream_event(stop)
+                .expect("parse_stream_event should not fail")
+                .is_none()
+        );
+
+        let concatenated = format!(
+            "{}{}",
+            chunk_one.choices[0].delta.reasoning_content.as_deref().unwrap_or(""),
+            chunk_two.choices[0].delta.reasoning_content.as_deref().unwrap_or("")
+        );
+        assert_eq!(concatenated, "Let me reason.");
     }
 
     #[test]

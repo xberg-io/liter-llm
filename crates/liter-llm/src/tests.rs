@@ -100,6 +100,7 @@ mod serde_tests {
             }]),
             refusal: None,
             function_call: None,
+            reasoning_content: None,
         });
 
         let json = serde_json::to_string(&msg).expect("serialization should not fail");
@@ -215,6 +216,7 @@ mod serde_tests {
             tool_calls: None,
             refusal: Some("I cannot help with that.".into()),
             function_call: None,
+            reasoning_content: None,
         });
         let json = serde_json::to_string(&msg).expect("serialization should not fail");
         assert!(json.contains("refusal"));
@@ -496,6 +498,7 @@ mod serde_tests {
             tool_calls: None,
             refusal: None,
             function_call: None,
+            reasoning_content: None,
         });
         let json = serde_json::to_string(&msg).expect("serialization should not fail");
         let parsed: Message = serde_json::from_str(&json).expect("deserialization should not fail");

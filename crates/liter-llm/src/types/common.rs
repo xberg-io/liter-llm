@@ -288,6 +288,10 @@ pub struct AssistantMessage {
     /// Deprecated legacy function_call field; retained for API compatibility.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub function_call: Option<FunctionCall>,
+    /// Reasoning/thinking tokens returned by the provider, if any (e.g. DeepSeek R1, Qwen
+    /// `reasoning_content`, or Anthropic extended thinking).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reasoning_content: Option<String>,
 }
 
 impl AssistantMessage {
@@ -327,6 +331,11 @@ impl AssistantMessage {
             }
         }
         None
+    }
+
+    /// Return the model's reasoning/thinking tokens, if the provider returned any.
+    pub fn reasoning_text(&self) -> Option<&str> {
+        self.reasoning_content.as_deref()
     }
 
     /// Return all [`AssistantPart::OutputImage`] parts in the response.
@@ -449,6 +458,7 @@ impl Message {
             tool_calls: None,
             refusal: None,
             function_call: None,
+            reasoning_content: None,
         })
     }
 }
@@ -865,6 +875,27 @@ mod tests {
             panic!("expected system")
         };
         assert_eq!(s.content, UserContent::Text("You are a helpful assistant.".into()));
+    }
+
+    #[test]
+    fn assistant_message_reasoning_content_omitted_when_none() {
+        let a = AssistantMessage {
+            content: Some(AssistantContent::Text("answer".into())),
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&a).expect("serialization should not fail");
+        assert!(
+            !json.contains("reasoning_content"),
+            "reasoning_content key must be absent when None, got: {json}"
+        );
+    }
+
+    #[test]
+    fn assistant_message_reasoning_content_deserializes_and_is_exposed_via_helper() {
+        let json = r#"{"content":"answer","reasoning_content":"because..."}"#;
+        let a: AssistantMessage = serde_json::from_str(json).expect("valid assistant message shape");
+        assert_eq!(a.reasoning_content.as_deref(), Some("because..."));
+        assert_eq!(a.reasoning_text(), Some("because..."));
     }
 }
 

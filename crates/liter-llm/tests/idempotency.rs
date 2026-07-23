@@ -44,6 +44,7 @@ fn make_chat_response(model: &str) -> LlmResponse {
                 tool_calls: None,
                 refusal: None,
                 function_call: None,
+                reasoning_content: None,
             },
             finish_reason: Some(FinishReason::Stop),
         }],

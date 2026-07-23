@@ -42,6 +42,7 @@ impl liter_llm::client::LlmClient for ConcurrencyMockClient {
                     tool_calls: None,
                     refusal: None,
                     function_call: None,
+                    reasoning_content: None,
                 },
                 finish_reason: Some(liter_llm::types::FinishReason::Stop),
             }],
