@@ -167,7 +167,7 @@ fn str_pair(pair: &(String, String)) -> (&str, &str) {
 
 /// Core LLM client trait.
 ///
-/// Provides unified access to LLM and multimodal APIs across 163 providers.
+/// Provides unified access to LLM and multimodal APIs across 165 providers.
 /// Requests are routed to the correct provider based on the model name prefix
 /// (e.g. `anthropic/claude-3-5-sonnet` routes to Anthropic) or via explicit
 /// `base_url` override.
@@ -496,7 +496,7 @@ pub trait ResponseClient {
 
 /// Default client implementation backed by `reqwest`.
 ///
-/// Sends requests to 163 LLM providers with automatic provider detection
+/// Sends requests to 165 LLM providers with automatic provider detection
 /// and per-request routing. The provider is resolved at construction time
 /// from `model_hint` (or defaults to OpenAI), but individual requests can
 /// override the provider via model name prefix (e.g. `"anthropic/claude-3-5-sonnet"`

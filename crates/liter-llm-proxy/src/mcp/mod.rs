@@ -312,7 +312,7 @@ impl ServerHandler for LiterLlmMcp {
         InitializeResult::new(capabilities)
             .with_server_info(Implementation::new("liter-llm", env!("CARGO_PKG_VERSION")))
             .with_instructions(
-                "LiterLLM proxy — universal LLM API gateway with 163 providers. \
+                "LiterLLM proxy — universal LLM API gateway with 165 providers. \
                  Use the chat tool to send completion requests, embed for embeddings, \
                  and the file/batch/response tools for management operations. \
                  Reusable prompt templates (summarize, translate, extract) and \

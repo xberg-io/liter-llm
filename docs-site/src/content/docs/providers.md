@@ -1,9 +1,9 @@
 ---
-description: "Complete list of 163 supported LLM providers"
+description: "Complete list of 165 supported LLM providers"
 title: "Supported Providers"
 ---
 
-Liter-llm supports **163 providers** out of the box. Route requests to any provider using the `provider/model` prefix convention -- for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` routes to Anthropic. No extra configuration is needed beyond setting the provider's API key.
+Liter-llm supports **165 providers** out of the box. Route requests to any provider using the `provider/model` prefix convention -- for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` routes to Anthropic. No extra configuration is needed beyond setting the provider's API key.
 
 | Provider | Prefix | Chat | Embeddings | Image | Audio | Moderation |
 | --- | --- | :---: | :---: | :---: | :---: | :---: |
@@ -42,14 +42,14 @@ Liter-llm supports **163 providers** out of the box. Route requests to any provi
 | Codestral | `codestral/` | :white_check_mark: | -- | -- | -- | -- |
 | Cohere | `cohere/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Cohere Chat | `cohere_chat/` | :white_check_mark: | -- | -- | -- | -- |
-| CometAPI | `cometapi/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
+| CometAPI | `cometapi/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- | -- |
 | CompactifAI | `compactifai/` | :white_check_mark: | -- | -- | -- | -- |
 | Crusoe | `crusoe/` | :white_check_mark: | -- | -- | -- | -- |
 | Cursor BYOK | `cursor/` | :white_check_mark: | -- | -- | -- | -- |
 | Custom | `custom/` | :white_check_mark: | -- | -- | -- | -- |
 | Custom OpenAI | `custom_openai/` | :white_check_mark: | -- | -- | :white_check_mark: | :white_check_mark: |
 | Darkbloom | `darkbloom/` | :white_check_mark: | -- | -- | -- | -- |
-| Dashscope | `dashscope/` | :white_check_mark: | -- | -- | -- | -- |
+| Dashscope | `dashscope/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- | -- |
 | Databricks | `databricks/` | :white_check_mark: | -- | -- | -- | -- |
 | DataForSEO | `dataforseo/` | -- | -- | -- | -- | -- |
 | DataRobot | `datarobot/` | :white_check_mark: | -- | -- | -- | -- |
@@ -65,7 +65,7 @@ Liter-llm supports **163 providers** out of the box. Route requests to any provi
 | Fal AI | `fal_ai/` | :white_check_mark: | -- | :white_check_mark: | -- | -- |
 | Featherless AI | `featherless_ai/` | :white_check_mark: | -- | -- | -- | -- |
 | Firecrawl | `firecrawl/` | -- | -- | -- | -- | -- |
-| Fireworks AI | `fireworks_ai/` | :white_check_mark: | -- | -- | -- | -- |
+| Fireworks AI | `fireworks_ai/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | FriendliAI | `friendliai/` | :white_check_mark: | -- | -- | -- | -- |
 | Galadriel | `galadriel/` | :white_check_mark: | -- | -- | -- | -- |
 | GigaChat | `gigachat/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
@@ -77,7 +77,7 @@ Liter-llm supports **163 providers** out of the box. Route requests to any provi
 | Google AI Studio - Gemini | `gemini/` | :white_check_mark: | -- | -- | -- | -- |
 | Google PSE | `google_pse/` | -- | -- | -- | -- | -- |
 | GradientAI | `gradient_ai/` | :white_check_mark: | -- | -- | -- | -- |
-| Groq AI | `groq/` | :white_check_mark: | -- | -- | -- | -- |
+| Groq AI | `groq/` | :white_check_mark: | -- | -- | :white_check_mark: | -- |
 | Helicone | `helicone/` | :white_check_mark: | -- | -- | -- | -- |
 | Heroku | `heroku/` | :white_check_mark: | -- | -- | -- | -- |
 | Hosted VLLM | `hosted_vllm/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
@@ -121,8 +121,10 @@ Liter-llm supports **163 providers** out of the box. Route requests to any provi
 | Oobabooga | `oobabooga/` | :white_check_mark: | -- | -- | :white_check_mark: | :white_check_mark: |
 | OpenAI | `openai/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | OpenAI-like | `openai_like/` | -- | :white_check_mark: | -- | -- | -- |
+| OpenCode Go | `opencode-go/` | :white_check_mark: | -- | -- | -- | -- |
+| OpenCode Zen | `opencode/` | :white_check_mark: | -- | -- | -- | -- |
 | OpenRouter | `openrouter/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
-| OVHCloud AI Endpoints | `ovhcloud/` | :white_check_mark: | -- | -- | :white_check_mark: | -- |
+| OVHCloud AI Endpoints | `ovhcloud/` | :white_check_mark: | :white_check_mark: | -- | :white_check_mark: | -- |
 | Parallel AI | `parallel_ai/` | -- | -- | -- | -- | -- |
 | Parasail | `parasail/` | :white_check_mark: | -- | -- | -- | -- |
 | Perplexity AI | `perplexity/` | :white_check_mark: | -- | -- | -- | -- |
@@ -139,7 +141,7 @@ Liter-llm supports **163 providers** out of the box. Route requests to any provi
 | Replicate | `replicate/` | :white_check_mark: | -- | -- | -- | -- |
 | RunwayML | `runwayml/` | -- | -- | :white_check_mark: | :white_check_mark: | -- |
 | Sagemaker Chat | `sagemaker_chat/` | :white_check_mark: | -- | -- | -- | -- |
-| Sambanova | `sambanova/` | :white_check_mark: | -- | -- | -- | -- |
+| Sambanova | `sambanova/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | SAP Generative AI Hub | `sap/` | :white_check_mark: | -- | -- | -- | -- |
 | Sarvam | `sarvam/` | :white_check_mark: | -- | -- | -- | -- |
 | Scaleway | `scaleway/` | :white_check_mark: | -- | -- | -- | -- |
@@ -159,10 +161,10 @@ Liter-llm supports **163 providers** out of the box. Route requests to any provi
 | Triton | `triton/` | :white_check_mark: | -- | -- | -- | -- |
 | V0 | `v0/` | :white_check_mark: | -- | -- | -- | -- |
 | Venice.ai | `venice/` | :white_check_mark: | -- | -- | -- | -- |
-| Vercel AI Gateway | `vercel_ai_gateway/` | :white_check_mark: | -- | -- | -- | -- |
+| Vercel AI Gateway | `vercel_ai_gateway/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Vertex AI Agent Engine | `vertex_ai/agent_engine/` | :white_check_mark: | -- | -- | -- | -- |
 | VLLM | `vllm/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
-| Volcengine | `volcengine/` | :white_check_mark: | -- | -- | -- | -- |
+| Volcengine | `volcengine/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Voyage AI | `voyage/` | -- | :white_check_mark: | -- | -- | -- |
 | WandB Inference | `wandb/` | :white_check_mark: | -- | -- | -- | -- |
 | Watsonx Text | `watsonx_text/` | :white_check_mark: | -- | -- | -- | -- |
@@ -171,7 +173,7 @@ Liter-llm supports **163 providers** out of the box. Route requests to any provi
 | Xinference | `xinference/` | -- | :white_check_mark: | -- | -- | -- |
 | Z.AI | `zai/` | :white_check_mark: | -- | -- | -- | -- |
 
-*163 providers total.*
+*165 providers total.*
 
 ## Usage
 

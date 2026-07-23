@@ -30,7 +30,7 @@ export default defineConfig({
         title: "liter-llm",
         description:
           "Universal LLM API client with a Rust core and native bindings for 14 languages and " +
-          "163 providers, an OpenAI-compatible proxy server, and a built-in MCP server.",
+          "165 providers, an OpenAI-compatible proxy server, and a built-in MCP server.",
         githubUrl: "https://github.com/xberg-io/liter-llm",
         editBaseUrl: "https://github.com/xberg-io/liter-llm/edit/main/docs-site/",
         plugins: [

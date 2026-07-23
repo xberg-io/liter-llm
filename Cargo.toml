@@ -41,7 +41,7 @@ license = "MIT"
 repository = "https://github.com/xberg-io/liter-llm"
 homepage = "https://xberg.io"
 authors = ["Na'aman Hirschfeld <naaman@xberg.io>"]
-description = "Universal LLM API client — 163 providers, streaming, tool calling. Rust-powered with polyglot bindings."
+description = "Universal LLM API client — 165 providers, streaming, tool calling. Rust-powered with polyglot bindings."
 keywords = ["llm", "openai", "api-client", "ai", "xberg"]
 
 [workspace.dependencies]

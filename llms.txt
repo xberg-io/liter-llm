@@ -1,10 +1,10 @@
 # liter-llm
 
-> Universal LLM API client for 163 providers with native bindings for 14 languages.
+> Universal LLM API client for 165 providers with native bindings for 14 languages.
 
 ## About
 
-liter-llm provides unified access to 163 LLM providers through a single API.
+liter-llm provides unified access to 165 LLM providers through a single API.
 Built in Rust with native bindings for Python, TypeScript, Go, Java, Ruby, PHP,
 C#, Elixir, WebAssembly, and C/FFI. Provider routing is automatic based on
 model name prefixes (e.g. "openai/gpt-4o" routes to OpenAI).
@@ -135,7 +135,7 @@ Docker quickstart (35MB Chainguard image):
 CLI:
   liter-llm api --config liter-llm-proxy.toml
 
-Features: model routing (163 providers), virtual API keys, rate limiting (RPM/TPM), cost tracking, budget enforcement, response caching, SSE streaming, OpenAPI 3.1 at /openapi.json.
+Features: model routing (165 providers), virtual API keys, rate limiting (RPM/TPM), cost tracking, budget enforcement, response caching, SSE streaming, OpenAPI 3.1 at /openapi.json.
 
 Config format: TOML with ${ENV_VAR} interpolation. Auto-discovers liter-llm-proxy.toml.
 
@@ -167,7 +167,7 @@ CLI:
 
 Tools: chat completions, streaming, embeddings, image generation, speech, transcription, moderation, search, OCR, reranking, file operations, batch operations, responses, model listing.
 
-## Supported Providers (163)
+## Supported Providers (165)
 
 OpenAI, Anthropic, Google Gemini, Google Vertex AI, AWS Bedrock, Azure OpenAI,
 Groq, Mistral, Cohere, Together AI, Fireworks AI, Perplexity, DeepSeek,

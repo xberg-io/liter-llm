@@ -3,7 +3,7 @@ description: "Install the liter-llm plugin into Claude Code, Codex, Cursor, Gemi
 title: "AI Coding Assistants"
 ---
 
-Give your coding assistant a working knowledge of liter-llm. The plugin teaches your agent how to call any of the 163 providers, stream responses, use tools, and generate embeddings — so it writes correct liter-llm code the first time instead of guessing at the API.
+Give your coding assistant a working knowledge of liter-llm. The plugin teaches your agent how to call any of the 165 providers, stream responses, use tools, and generate embeddings — so it writes correct liter-llm code the first time instead of guessing at the API.
 
 ## What this plugin does
 

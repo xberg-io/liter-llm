@@ -1,4 +1,4 @@
-### Supported Providers (163)
+### Supported Providers (165)
 
 Route to any provider using the `provider/model` prefix convention:
 
@@ -18,7 +18,7 @@ Route to any provider using the `provider/model` prefix convention:
 
 ### Key Capabilities
 
-- **Provider Routing** -- Single client for 163 LLM providers via `provider/model` prefix
+- **Provider Routing** -- Single client for 165 LLM providers via `provider/model` prefix
 - **Local LLMs** — Connect to locally-hosted models via Ollama, LM Studio, vLLM, llama.cpp, and other local inference servers
 - **Unified API** -- Consistent `chat`, `chat_stream`, `embeddings`, `list_models` interface
   {% if features.streaming %}

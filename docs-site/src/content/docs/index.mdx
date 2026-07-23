@@ -1,12 +1,12 @@
 ---
 title: liter-llm
 description: >-
-  Universal LLM API client with a Rust core and native bindings for 14 languages and 163 providers,
+  Universal LLM API client with a Rust core and native bindings for 14 languages and 165 providers,
   an OpenAI-compatible proxy server, and a built-in MCP server.
 template: splash
 hero:
   tagline: >-
-    One API for every LLM. Call 163 providers from your own language, switch models without
+    One API for every LLM. Call 165 providers from your own language, switch models without
     rewriting code, and run a drop-in OpenAI-compatible proxy — all from a single binary.
   image:
     dark: ../../assets/hero-logo.svg
@@ -31,30 +31,30 @@ import { Card, CardGrid, LinkCard, Tabs, TabItem } from "@astrojs/starlight/comp
 ## Why liter-llm
 
 <CardGrid>
-	<Card title="Work with any LLM provider without rewrites" icon="random">
-		Reach 163 providers — OpenAI, Anthropic, Google, Bedrock, Azure, Mistral, and more — through one
-		client. Change the model name to switch providers; your code stays the same.
-	</Card>
-	<Card title="Your language, identical results" icon="translate">
-		The same client ships to 14 languages — Python, TypeScript, Go, Java, Ruby, PHP, and more — all
-		built on one Rust core, so behavior matches everywhere.
-	</Card>
-	<Card title="Chat, embeddings, images, speech — one API" icon="document">
-		Chat and streaming, tool calling, embeddings and rerank, images, speech and transcription,
-		moderation, search, and OCR. One consistent surface for every task.
-	</Card>
-	<Card title="Drop-in OpenAI-compatible proxy" icon="setting">
-		Point your existing OpenAI SDK at the built-in proxy to add virtual keys, budgets, and
-		fallbacks. The same binary also serves your AI agents.
-	</Card>
-	<Card title="Secure by default" icon="laptop">
-		API keys are wrapped, redacted from logs, and never serialized. Cloud auth for Azure, AWS, and
-		Vertex is handled for you — tokens refresh and rotate automatically.
-	</Card>
-	<Card title="Stay up when a provider goes down" icon="magnifier">
-		Route by cost, latency, or weight, and fall back to another provider on failure — so one
-		outage doesn't take your app down. Set it per request or once in the proxy.
-	</Card>
+    <Card title="Work with any LLM provider without rewrites" icon="random">
+        Reach 165 providers — OpenAI, Anthropic, Google, Bedrock, Azure, Mistral, and more — through one
+        client. Change the model name to switch providers; your code stays the same.
+    </Card>
+    <Card title="Your language, identical results" icon="translate">
+        The same client ships to 14 languages — Python, TypeScript, Go, Java, Ruby, PHP, and more — all
+        built on one Rust core, so behavior matches everywhere.
+    </Card>
+    <Card title="Chat, embeddings, images, speech — one API" icon="document">
+        Chat and streaming, tool calling, embeddings and rerank, images, speech and transcription,
+        moderation, search, and OCR. One consistent surface for every task.
+    </Card>
+    <Card title="Drop-in OpenAI-compatible proxy" icon="setting">
+        Point your existing OpenAI SDK at the built-in proxy to add virtual keys, budgets, and
+        fallbacks. The same binary also serves your AI agents.
+    </Card>
+    <Card title="Secure by default" icon="laptop">
+        API keys are wrapped, redacted from logs, and never serialized. Cloud auth for Azure, AWS, and
+        Vertex is handled for you — tokens refresh and rotate automatically.
+    </Card>
+    <Card title="Stay up when a provider goes down" icon="magnifier">
+        Route by cost, latency, or weight, and fall back to another provider on failure — so one
+        outage doesn't take your app down. Set it per request or once in the proxy.
+    </Card>
 </CardGrid>
 
 ## Language support
@@ -143,24 +143,24 @@ console.log(response.choices[0].message.content);
 ## Part of Xberg.io
 
 <CardGrid>
-	<LinkCard title="Xberg" href="https://github.com/xberg-io/xberg" description="Document intelligence: text, tables, metadata from 91+ formats with optional OCR." />
-	<LinkCard title="Xberg Enterprise" href="https://github.com/xberg-io/xberg-enterprise" description="Managed extraction API with SDKs, dashboards, and observability." />
-	<LinkCard title="crawlberg" href="https://github.com/xberg-io/crawlberg" description="Web crawling and scraping with HTML→Markdown and headless-Chrome fallback." />
-	<LinkCard title="html-to-markdown" href="https://github.com/xberg-io/html-to-markdown" description="Fast, lossless HTML→Markdown engine." />
-	<LinkCard title="liter-llm" href="https://github.com/xberg-io/liter-llm" description="Universal LLM API client with native bindings for 14 languages and 163 providers." />
-	<LinkCard title="tree-sitter-language-pack" href="https://github.com/xberg-io/tree-sitter-language-pack" description="Tree-sitter grammars and code-intelligence primitives." />
-	<LinkCard title="alef" href="https://github.com/xberg-io/alef" description="The polyglot binding generator that produces every per-language binding across the 5 polyglot repos." />
+    <LinkCard title="Xberg" href="https://github.com/xberg-io/xberg" description="Document intelligence: text, tables, metadata from 91+ formats with optional OCR." />
+    <LinkCard title="Xberg Enterprise" href="https://github.com/xberg-io/xberg-enterprise" description="Managed extraction API with SDKs, dashboards, and observability." />
+    <LinkCard title="crawlberg" href="https://github.com/xberg-io/crawlberg" description="Web crawling and scraping with HTML→Markdown and headless-Chrome fallback." />
+    <LinkCard title="html-to-markdown" href="https://github.com/xberg-io/html-to-markdown" description="Fast, lossless HTML→Markdown engine." />
+    <LinkCard title="liter-llm" href="https://github.com/xberg-io/liter-llm" description="Universal LLM API client with native bindings for 14 languages and 165 providers." />
+    <LinkCard title="tree-sitter-language-pack" href="https://github.com/xberg-io/tree-sitter-language-pack" description="Tree-sitter grammars and code-intelligence primitives." />
+    <LinkCard title="alef" href="https://github.com/xberg-io/alef" description="The polyglot binding generator that produces every per-language binding across the 5 polyglot repos." />
 </CardGrid>
 
 ## Explore the docs
 
 <CardGrid>
-	<LinkCard title="Get Started" href="/getting-started/installation/" description="Install liter-llm for your language, set an API key, and make your first call." />
-	<LinkCard title="Guides" href="/usage/chat/" description="Chat, embeddings, media, search, fallback routing, authentication, and the proxy/MCP servers." />
-	<LinkCard title="Concepts" href="/concepts/architecture/" description="Architecture, feature flags, the tokenizer model, and the cost-estimation pipeline." />
-	<LinkCard title="Reference" href="/reference/api-rust/" description="Per-language API docs, the configuration schema, type catalogue, and error matrix." />
-	<LinkCard title="Providers" href="/providers/" description="All 163 runtime providers, model prefixes, auth modes, and endpoint coverage." />
-	<LinkCard title="Proxy & MCP" href="/server/proxy-server/" description="Run the OpenAI-compatible proxy and the Model Context Protocol server from one binary." />
+    <LinkCard title="Get Started" href="/getting-started/installation/" description="Install liter-llm for your language, set an API key, and make your first call." />
+    <LinkCard title="Guides" href="/usage/chat/" description="Chat, embeddings, media, search, fallback routing, authentication, and the proxy/MCP servers." />
+    <LinkCard title="Concepts" href="/concepts/architecture/" description="Architecture, feature flags, the tokenizer model, and the cost-estimation pipeline." />
+    <LinkCard title="Reference" href="/reference/api-rust/" description="Per-language API docs, the configuration schema, type catalogue, and error matrix." />
+    <LinkCard title="Providers" href="/providers/" description="All 165 runtime providers, model prefixes, auth modes, and endpoint coverage." />
+    <LinkCard title="Proxy & MCP" href="/server/proxy-server/" description="Run the OpenAI-compatible proxy and the Model Context Protocol server from one binary." />
 </CardGrid>
 
 ## Getting help

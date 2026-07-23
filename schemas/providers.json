@@ -2449,6 +2449,48 @@
       "streaming_format": "sse"
     },
     {
+      "name": "opencode",
+      "display_name": "OpenCode Zen",
+      "base_url": "https://opencode.ai/zen/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "OPENCODE_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["opencode/"],
+      "capabilities": {
+        "vision": true,
+        "reasoning": true,
+        "structured_output": true,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "opencode-go",
+      "display_name": "OpenCode Go",
+      "base_url": "https://opencode.ai/zen/go/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "OPENCODE_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["opencode-go/"],
+      "capabilities": {
+        "vision": true,
+        "reasoning": true,
+        "structured_output": true,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "openrouter",
       "display_name": "OpenRouter",
       "base_url": "https://openrouter.ai/api/v1",
