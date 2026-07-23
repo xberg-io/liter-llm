@@ -3,7 +3,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata below."
 title: liter-llm
-abstract: "Universal LLM API client with native bindings for 14 languages and 163 providers."
+abstract: "Universal LLM API client with native bindings for 14 languages and 165 providers."
 authors:
   - family-names: Hirschfeld
     given-names: "Na'aman"

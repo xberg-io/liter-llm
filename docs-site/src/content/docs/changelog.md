@@ -10,6 +10,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **OpenCode Zen and OpenCode Go providers** — now 165 total (up from 163).
+  OpenCode Zen routes via the `opencode/` model prefix
+  (`https://opencode.ai/zen/v1`); OpenCode Go routes via the `opencode-go/`
+  model prefix (`https://opencode.ai/zen/go/v1`). Both are OpenAI-compatible,
+  bearer-authenticated (`OPENCODE_API_KEY`), and support chat completions.
+- **`reasoning_content` support** — `StreamDelta` and `AssistantMessage` now
+  carry an optional `reasoning_content` field, so reasoning/thinking tokens
+  from OpenAI-compatible providers (DeepSeek R1, Qwen, etc.) are preserved in
+  both streaming and non-streaming responses instead of being dropped. Anthropic
+  extended-thinking blocks are mapped into the same field. `AssistantMessage`
+  gains a `reasoning_text()` accessor.
+
+### Changed
+
+- **BREAKING: base64 embedding responses.** `EmbeddingObject.embedding` is now
+  `Vec<f32>` (previously `Vec<f64>`) and accepts either a JSON float array or a
+  base64 string of little-endian `f32` bytes (the OpenAI-compatible
+  `encoding_format: "base64"` response). This decodes base64 vectors that
+  previously failed to deserialize, roughly halves response payload size, and
+  removes a redundant `f64`→`f32` re-allocation. Callers that read
+  `embedding` as `f64` must adjust; base64 decoding is via a zero-copy
+  `Visitor` (~15× faster than the float-array path in benchmarks).
+
 ## [1.10.0] - 2026-07-19
 
 ### Added

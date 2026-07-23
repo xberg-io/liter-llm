@@ -8,18 +8,18 @@ license = "MIT"
 authors = [{ name = "Na'aman Hirschfeld", email = "naaman@xberg.io" }]
 requires-python = ">=3.10"
 classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "Natural Language :: English",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Typing :: Typed",
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Natural Language :: English",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Typing :: Typed",
 ]
 urls.documentation = "https://github.com/xberg-io/liter-llm#readme"
 urls.homepage = "https://github.com/xberg-io/liter-llm"
@@ -28,14 +28,14 @@ urls.repository = "https://github.com/xberg-io/liter-llm"
 
 [dependency-groups]
 dev = [
-    "anyio>=4.13.0",
-    "jinja2>=3.1.6",
-    "jsonschema>=4",
-    "pyrefly>=1.1.1",
-    "pytest>=9.0.3",
-    "pyyaml>=6.0.3",
-    "typing-extensions>=4.15.0",
-    "uv-bump",
+  "anyio>=4.13.0",
+  "jinja2>=3.1.6",
+  "jsonschema>=4",
+  "pyrefly>=1.1.1",
+  "pytest>=9.0.3",
+  "pyyaml>=6.0.3",
+  "typing-extensions>=4.15.0",
+  "uv-bump",
 ]
 
 [tool.uv]

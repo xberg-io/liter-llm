@@ -90,7 +90,7 @@ Future<bool> unregisterCustomProvider({required String name}) =>
 
 /// Return the capability flags for a named provider.
 ///
-/// Performs an O(n) linear scan over the embedded registry (163 entries).
+/// Performs an O(n) linear scan over the embedded registry (165 entries).
 /// Returns an owned value so bindings can pass capability data without
 /// borrowing registry internals.
 ///
@@ -688,12 +688,17 @@ class AssistantMessage {
   /// Deprecated legacy function_call field; retained for API compatibility.
   final FunctionCall? functionCall;
 
+  /// Reasoning/thinking tokens returned by the provider, if any (e.g. DeepSeek R1, Qwen
+  /// `reasoning_content`, or Anthropic extended thinking).
+  final String? reasoningContent;
+
   const AssistantMessage({
     this.content,
     this.name,
     this.toolCalls,
     this.refusal,
     this.functionCall,
+    this.reasoningContent,
   });
 
   @override
@@ -702,7 +707,8 @@ class AssistantMessage {
       name.hashCode ^
       toolCalls.hashCode ^
       refusal.hashCode ^
-      functionCall.hashCode;
+      functionCall.hashCode ^
+      reasoningContent.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -713,7 +719,8 @@ class AssistantMessage {
           name == other.name &&
           toolCalls == other.toolCalls &&
           refusal == other.refusal &&
-          functionCall == other.functionCall;
+          functionCall == other.functionCall &&
+          reasoningContent == other.reasoningContent;
 }
 
 @freezed
@@ -2014,6 +2021,11 @@ class EmbeddingObject {
   final String object;
 
   /// The embedding vector.
+  ///
+  /// Providers may return this as a JSON float array or, when
+  /// `encoding_format: "base64"` was requested, as a base64 string of
+  /// little-endian `f32` bytes. Base64 responses are decoded on read; this
+  /// field always serializes back out as a JSON float array.
   final Float64List embedding;
 
   /// Index in the batch (corresponds to input order).
@@ -4058,12 +4070,16 @@ class StreamDelta {
   /// Partial refusal message.
   final String? refusal;
 
+  /// Partial reasoning/thinking tokens (OpenAI-compatible extension used by DeepSeek R1, Qwen, etc.).
+  final String? reasoningContent;
+
   const StreamDelta({
     this.role,
     this.content,
     this.toolCalls,
     this.functionCall,
     this.refusal,
+    this.reasoningContent,
   });
 
   @override
@@ -4072,7 +4088,8 @@ class StreamDelta {
       content.hashCode ^
       toolCalls.hashCode ^
       functionCall.hashCode ^
-      refusal.hashCode;
+      refusal.hashCode ^
+      reasoningContent.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -4083,7 +4100,8 @@ class StreamDelta {
           content == other.content &&
           toolCalls == other.toolCalls &&
           functionCall == other.functionCall &&
-          refusal == other.refusal;
+          refusal == other.refusal &&
+          reasoningContent == other.reasoningContent;
 }
 
 /// The streaming wire format a provider uses for its response stream.

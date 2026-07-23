@@ -7,6 +7,9 @@ public func assistantMessageTextFromJson<GenericIntoRustString: IntoRustString>(
 public func assistantMessageRefusalTextFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
     try { let val = __swift_bridge__$assistant_message_refusal_text_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
+public func assistantMessageReasoningTextFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$assistant_message_reasoning_text_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
 public func assistantMessageOutputImagesFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
     try { let val = __swift_bridge__$assistant_message_output_images_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
@@ -1283,8 +1286,8 @@ public class AssistantMessage: AssistantMessageRefMut {
     }
 }
 extension AssistantMessage {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ content: Optional<AssistantContent>, _ name: Optional<GenericIntoRustString>, _ tool_calls: Optional<RustVec<ToolCall>>, _ refusal: Optional<GenericIntoRustString>, _ function_call: Optional<FunctionCall>) {
-        self.init(ptr: __swift_bridge__$AssistantMessage$new({ if let val = content { val.isOwned = false; return val.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(name) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let val = tool_calls { val.isOwned = false; return val.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(refusal) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let val = function_call { val.isOwned = false; return val.ptr } else { return nil } }()))
+    public convenience init<GenericIntoRustString: IntoRustString>(_ content: Optional<AssistantContent>, _ name: Optional<GenericIntoRustString>, _ tool_calls: Optional<RustVec<ToolCall>>, _ refusal: Optional<GenericIntoRustString>, _ function_call: Optional<FunctionCall>, _ reasoning_content: Optional<GenericIntoRustString>) {
+        self.init(ptr: __swift_bridge__$AssistantMessage$new({ if let val = content { val.isOwned = false; return val.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(name) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let val = tool_calls { val.isOwned = false; return val.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(refusal) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let val = function_call { val.isOwned = false; return val.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(reasoning_content) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
     }
 }
 public class AssistantMessageRefMut: AssistantMessageRef {
@@ -1318,6 +1321,10 @@ extension AssistantMessageRef {
 
     public func functionCall() -> Optional<FunctionCall> {
         { let val = __swift_bridge__$AssistantMessage$function_call(ptr); if val != nil { return FunctionCall(ptr: val!) } else { return nil } }()
+    }
+
+    public func reasoningContent() -> Optional<RustString> {
+        { let val = __swift_bridge__$AssistantMessage$reasoning_content(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
 extension AssistantMessage: Vectorizable {
@@ -3122,8 +3129,8 @@ public class StreamDelta: StreamDeltaRefMut {
     }
 }
 extension StreamDelta {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ role: Optional<GenericIntoRustString>, _ content: Optional<GenericIntoRustString>, _ tool_calls: Optional<RustVec<StreamToolCall>>, _ function_call: Optional<StreamFunctionCall>, _ refusal: Optional<GenericIntoRustString>) {
-        self.init(ptr: __swift_bridge__$StreamDelta$new({ if let rustString = optionalStringIntoRustString(role) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(content) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let val = tool_calls { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = function_call { val.isOwned = false; return val.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(refusal) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
+    public convenience init<GenericIntoRustString: IntoRustString>(_ role: Optional<GenericIntoRustString>, _ content: Optional<GenericIntoRustString>, _ tool_calls: Optional<RustVec<StreamToolCall>>, _ function_call: Optional<StreamFunctionCall>, _ refusal: Optional<GenericIntoRustString>, _ reasoning_content: Optional<GenericIntoRustString>) {
+        self.init(ptr: __swift_bridge__$StreamDelta$new({ if let rustString = optionalStringIntoRustString(role) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(content) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let val = tool_calls { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = function_call { val.isOwned = false; return val.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(refusal) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(reasoning_content) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
     }
 }
 public class StreamDeltaRefMut: StreamDeltaRef {
@@ -3157,6 +3164,10 @@ extension StreamDeltaRef {
 
     public func refusal() -> Optional<RustString> {
         { let val = __swift_bridge__$StreamDelta$refusal(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func reasoningContent() -> Optional<RustString> {
+        { let val = __swift_bridge__$StreamDelta$reasoning_content(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
 extension StreamDelta: Vectorizable {
@@ -3618,7 +3629,7 @@ extension EmbeddingObjectRef {
         RustString(ptr: __swift_bridge__$EmbeddingObject$object(ptr))
     }
 
-    public func embedding() -> RustVec<Double> {
+    public func embedding() -> RustVec<Float> {
         RustVec(ptr: __swift_bridge__$EmbeddingObject$embedding(ptr))
     }
 

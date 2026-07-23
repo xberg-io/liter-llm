@@ -4226,6 +4226,7 @@ const _: fn() = || {
         let _: Option<Vec<crate::ToolCall>> = AssistantMessage.tool_calls;
         let _: Option<String> = AssistantMessage.refusal;
         let _: Option<crate::FunctionCall> = AssistantMessage.function_call;
+        let _: Option<String> = AssistantMessage.reasoning_content;
     }
     match None::<crate::AssistantPart>.unwrap() {
         crate::AssistantPart::Text { text } => {
@@ -4948,6 +4949,7 @@ const _: fn() = || {
         let _: Option<Vec<crate::StreamToolCall>> = StreamDelta.tool_calls;
         let _: Option<crate::StreamFunctionCall> = StreamDelta.function_call;
         let _: Option<String> = StreamDelta.refusal;
+        let _: Option<String> = StreamDelta.reasoning_content;
     }
     {
         let StreamFunctionCall = None::<crate::StreamFunctionCall>.unwrap();
@@ -5128,12 +5130,14 @@ impl SseDecode for crate::AssistantMessage {
         let mut var_toolCalls = <Option<Vec<crate::ToolCall>>>::sse_decode(deserializer);
         let mut var_refusal = <Option<String>>::sse_decode(deserializer);
         let mut var_functionCall = <Option<crate::FunctionCall>>::sse_decode(deserializer);
+        let mut var_reasoningContent = <Option<String>>::sse_decode(deserializer);
         return crate::AssistantMessage {
             content: var_content,
             name: var_name,
             tool_calls: var_toolCalls,
             refusal: var_refusal,
             function_call: var_functionCall,
+            reasoning_content: var_reasoningContent,
         };
     }
 }
@@ -7756,12 +7760,14 @@ impl SseDecode for crate::StreamDelta {
         let mut var_toolCalls = <Option<Vec<crate::StreamToolCall>>>::sse_decode(deserializer);
         let mut var_functionCall = <Option<crate::StreamFunctionCall>>::sse_decode(deserializer);
         let mut var_refusal = <Option<String>>::sse_decode(deserializer);
+        let mut var_reasoningContent = <Option<String>>::sse_decode(deserializer);
         return crate::StreamDelta {
             role: var_role,
             content: var_content,
             tool_calls: var_toolCalls,
             function_call: var_functionCall,
             refusal: var_refusal,
+            reasoning_content: var_reasoningContent,
         };
     }
 }
@@ -8218,6 +8224,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::AssistantMessage> {
             self.0.tool_calls.into_into_dart().into_dart(),
             self.0.refusal.into_into_dart().into_dart(),
             self.0.function_call.into_into_dart().into_dart(),
+            self.0.reasoning_content.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -10114,6 +10121,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::StreamDelta> {
             self.0.tool_calls.into_into_dart().into_dart(),
             self.0.function_call.into_into_dart().into_dart(),
             self.0.refusal.into_into_dart().into_dart(),
+            self.0.reasoning_content.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -10474,6 +10482,7 @@ impl SseEncode for crate::AssistantMessage {
         <Option<Vec<crate::ToolCall>>>::sse_encode(self.tool_calls, serializer);
         <Option<String>>::sse_encode(self.refusal, serializer);
         <Option<crate::FunctionCall>>::sse_encode(self.function_call, serializer);
+        <Option<String>>::sse_encode(self.reasoning_content, serializer);
     }
 }
 
@@ -12534,6 +12543,7 @@ impl SseEncode for crate::StreamDelta {
         <Option<Vec<crate::StreamToolCall>>>::sse_encode(self.tool_calls, serializer);
         <Option<crate::StreamFunctionCall>>::sse_encode(self.function_call, serializer);
         <Option<String>>::sse_encode(self.refusal, serializer);
+        <Option<String>>::sse_encode(self.reasoning_content, serializer);
     }
 }
 

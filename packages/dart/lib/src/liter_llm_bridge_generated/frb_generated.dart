@@ -5091,14 +5091,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AssistantMessage dco_decode_assistant_message(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return AssistantMessage(
       content: dco_decode_opt_box_autoadd_assistant_content(arr[0]),
       name: dco_decode_opt_String(arr[1]),
       toolCalls: dco_decode_opt_list_tool_call(arr[2]),
       refusal: dco_decode_opt_String(arr[3]),
       functionCall: dco_decode_opt_box_autoadd_function_call(arr[4]),
+      reasoningContent: dco_decode_opt_String(arr[5]),
     );
   }
 
@@ -7306,14 +7307,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   StreamDelta dco_decode_stream_delta(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return StreamDelta(
       role: dco_decode_opt_String(arr[0]),
       content: dco_decode_opt_String(arr[1]),
       toolCalls: dco_decode_opt_list_stream_tool_call(arr[2]),
       functionCall: dco_decode_opt_box_autoadd_stream_function_call(arr[3]),
       refusal: dco_decode_opt_String(arr[4]),
+      reasoningContent: dco_decode_opt_String(arr[5]),
     );
   }
 
@@ -7630,12 +7632,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_functionCall = sse_decode_opt_box_autoadd_function_call(
       deserializer,
     );
+    var var_reasoningContent = sse_decode_opt_String(deserializer);
     return AssistantMessage(
       content: var_content,
       name: var_name,
       toolCalls: var_toolCalls,
       refusal: var_refusal,
       functionCall: var_functionCall,
+      reasoningContent: var_reasoningContent,
     );
   }
 
@@ -10531,12 +10535,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       deserializer,
     );
     var var_refusal = sse_decode_opt_String(deserializer);
+    var var_reasoningContent = sse_decode_opt_String(deserializer);
     return StreamDelta(
       role: var_role,
       content: var_content,
       toolCalls: var_toolCalls,
       functionCall: var_functionCall,
       refusal: var_refusal,
+      reasoningContent: var_reasoningContent,
     );
   }
 
@@ -10875,6 +10881,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_list_tool_call(self.toolCalls, serializer);
     sse_encode_opt_String(self.refusal, serializer);
     sse_encode_opt_box_autoadd_function_call(self.functionCall, serializer);
+    sse_encode_opt_String(self.reasoningContent, serializer);
   }
 
   @protected
@@ -13456,6 +13463,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       serializer,
     );
     sse_encode_opt_String(self.refusal, serializer);
+    sse_encode_opt_String(self.reasoningContent, serializer);
   }
 
   @protected

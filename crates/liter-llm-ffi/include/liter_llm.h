@@ -162,7 +162,7 @@ typedef struct LITERLLMDecodedDataUrl LITERLLMDecodedDataUrl;
 /**
  * Default client implementation backed by `reqwest`.
  *
- * Sends requests to 163 LLM providers with automatic provider detection
+ * Sends requests to 165 LLM providers with automatic provider detection
  * and per-request routing. The provider is resolved at construction time
  * from `model_hint` (or defaults to OpenAI), but individual requests can
  * override the provider via model name prefix (e.g. `"anthropic/claude-3-5-sonnet"`
@@ -958,6 +958,13 @@ char *literllm_assistant_message_refusal(const LITERLLMAssistantMessage *ptr);
 LITERLLMFunctionCall *literllm_assistant_message_function_call(const LITERLLMAssistantMessage *ptr);
 
 /**
+ * Get the `reasoning_content` field from a `AssistantMessage`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_assistant_message_reasoning_content(const LITERLLMAssistantMessage *ptr);
+
+/**
  * Return the assistant's textual response, concatenating all `Text` parts
  * if the content is structured.
  *
@@ -976,6 +983,13 @@ char *literllm_assistant_message_text(const LITERLLMAssistantMessage *this_);
  * freed with the appropriate free function.
  */
 char *literllm_assistant_message_refusal_text(const LITERLLMAssistantMessage *this_);
+
+/**
+ * Return the model's reasoning/thinking tokens, if the provider returned any.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_assistant_message_reasoning_text(const LITERLLMAssistantMessage *this_);
 
 /**
  * Return all `AssistantPart.OutputImage` parts in the response.
@@ -1987,6 +2001,13 @@ LITERLLMStreamFunctionCall *literllm_stream_delta_function_call(const LITERLLMSt
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_stream_delta_refusal(const LITERLLMStreamDelta *ptr);
+
+/**
+ * Get the `reasoning_content` field from a `StreamDelta`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_stream_delta_reasoning_content(const LITERLLMStreamDelta *ptr);
 
 /**
  * Create a `StreamToolCall` from a JSON string. Returns null on failure.
@@ -6460,7 +6481,7 @@ int32_t literllm_unregister_custom_provider(const char *name);
 /**
  * Return the capability flags for a named provider.
  *
- * Performs an O(n) linear scan over the embedded registry (163 entries).
+ * Performs an O(n) linear scan over the embedded registry (165 entries).
  * Returns an owned value so bindings can pass capability data without
  * borrowing registry internals.
  *

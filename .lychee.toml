@@ -1,39 +1,39 @@
 
 
 exclude = [
-    "localhost",
-    "127\\.0\\.0\\.1",
-    "0\\.0\\.0\\.0",
+  "localhost",
+  "127\\.0\\.0\\.1",
+  "0\\.0\\.0\\.0",
 
-    "example\\.com",
-    "example\\.org",
+  "example\\.com",
+  "example\\.org",
 
-    "\\$\\{",
-    "\\{\\{",
+  "\\$\\{",
+  "\\{\\{",
 
-    "github\\.com/.*/edit/",
+  "github\\.com/.*/edit/",
 
-    "github\\.com/.*/raw/",
+  "github\\.com/.*/raw/",
 
-    "docs\\.liter-llm\\.xberg\\.dev",
+  "docs\\.liter-llm\\.xberg\\.dev",
 
-    "favicon\\.svg",
+  "favicon\\.svg",
 
-    "reference/types/configuration\\.md",
+  "reference/types/configuration\\.md",
 
-    "api\\.my-provider\\.com",
+  "api\\.my-provider\\.com",
 
-    "pypi\\.org/project/",
+  "pypi\\.org/project/",
 
-    "crates\\.io/crates/",
+  "crates\\.io/crates/",
 
-    "npmjs\\.com/package/",
+  "npmjs\\.com/package/",
 
-    "discord\\.gg/",
+  "discord\\.gg/",
 
-    "opendal\\.apache\\.org/docs/category/services",
+  "opendal\\.apache\\.org/docs/category/services",
 
-    "taskfile\\.dev/installation",
+  "taskfile\\.dev/installation",
 ]
 
 accept = [200, 204, 301, 302, 429]
