@@ -1,0 +1,46 @@
+{
+  "id": "embed_base64",
+  "description": "Embedding request with encoding_format base64 decodes to a float array embedding",
+  "category": "embed",
+  "tags": ["embed"],
+  "call": "embed",
+  "input": {
+    "model": "text-embedding-3-small",
+    "input": "Test input",
+    "encoding_format": "base64"
+  },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "object": "list",
+      "model": "text-embedding-3-small",
+      "data": [
+        {
+          "object": "embedding",
+          "index": 0,
+          "embedding": "AAAAPwAAoL8AAABAAADIQg=="
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 2,
+        "completion_tokens": 0,
+        "total_tokens": 2
+      }
+    }
+  },
+  "assertions": [
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "count_equals",
+      "field": "data",
+      "value": 1
+    },
+    {
+      "type": "count_equals",
+      "field": "data[0].embedding",
+      "value": 4
+    }
+  ]
+}

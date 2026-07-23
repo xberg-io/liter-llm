@@ -280,8 +280,10 @@ impl RouteClassifier for EmbeddingSimilarityClassifier {
                 }
             };
 
-            let prompt_vec = match resp.data.into_iter().next() {
-                Some(obj) => obj.embedding,
+            // ~keep Embedding responses arrive as 32-bit floats; widen them to 64-bit
+            // ~keep for the cosine comparison against the higher-precision prototypes.
+            let prompt_vec: Vec<f64> = match resp.data.into_iter().next() {
+                Some(obj) => obj.embedding.into_iter().map(f64::from).collect(),
                 None => {
                     tracing::warn!("embedding classifier: empty embedding response; deferring");
                     return None;
@@ -637,7 +639,7 @@ mod tests {
     #[derive(Clone)]
     struct MockLlmClient {
         chat_response: Option<String>,
-        embed_vec: Option<Vec<f64>>,
+        embed_vec: Option<Vec<f32>>,
         chat_call_count: Arc<AtomicUsize>,
         embed_call_count: Arc<AtomicUsize>,
     }
@@ -652,7 +654,7 @@ mod tests {
             }
         }
 
-        fn with_embed_vec(vec: Vec<f64>) -> Self {
+        fn with_embed_vec(vec: Vec<f32>) -> Self {
             Self {
                 chat_response: None,
                 embed_vec: Some(vec),

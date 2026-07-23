@@ -44,7 +44,7 @@ pub trait EmbeddingProvider: Send + Sync + 'static {
 /// Embedding provider that calls back into the liter-llm [`LlmClient::embed`]
 /// API.
 ///
-/// This lets callers use any of the 163 providers already configured in their
+/// This lets callers use any of the 165 providers already configured in their
 /// `LlmClient` instance as the embedding backend without any additional setup.
 ///
 /// # Example
@@ -100,7 +100,7 @@ impl EmbeddingProvider for SelfHostedEmbeddingProvider {
                 .data
                 .into_iter()
                 .next()
-                .map(|obj| obj.embedding.into_iter().map(|x| x as f32).collect())
+                .map(|obj| obj.embedding)
                 .unwrap_or_default();
             Ok(vec)
         })
@@ -204,7 +204,7 @@ mod tests {
         }
 
         fn embed(&self, req: EmbeddingRequest) -> BoxFuture<'_, crate::error::Result<EmbeddingResponse>> {
-            let embedding: Vec<f64> = self.embedding.iter().map(|&v| f64::from(v)).collect();
+            let embedding: Vec<f32> = self.embedding.clone();
             Box::pin(async move {
                 Ok(EmbeddingResponse {
                     object: "list".into(),
