@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-07-23
+
 ### Added
 
 - **OpenCode Zen and OpenCode Go providers** — now 165 total (up from 163).
@@ -23,14 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **BREAKING: base64 embedding responses.** `EmbeddingObject.embedding` is now
-  `Vec<f32>` (previously `Vec<f64>`) and accepts either a JSON float array or a
-  base64 string of little-endian `f32` bytes (the OpenAI-compatible
-  `encoding_format: "base64"` response). This decodes base64 vectors that
-  previously failed to deserialize, roughly halves response payload size, and
-  removes a redundant `f64`→`f32` re-allocation. Callers that read
-  `embedding` as `f64` must adjust; base64 decoding is via a zero-copy
-  `Visitor` (~15× faster than the float-array path in benchmarks).
+- **base64 embedding responses.** `EmbeddingObject.embedding` now accepts either
+  a JSON float array or a base64 string of little-endian `f32` bytes (the
+  OpenAI-compatible `encoding_format: "base64"` response), decoding base64
+  vectors that previously failed to deserialize. Payloads are ~2.3× smaller on
+  the wire and decode ~15× faster via a zero-copy `Visitor`. The element type
+  narrows from `Vec<f64>` to `Vec<f32>` (float32 is what providers send on the
+  wire); the high-level `embed()` API was already `f32`, so only code reading
+  the raw `EmbeddingObject.embedding` field as `f64` needs a one-line
+  adjustment.
 
 ## [1.10.1] - 2026-07-20
 
