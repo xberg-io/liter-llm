@@ -403,10 +403,11 @@ impl Provider for AnthropicProvider {
         let prompt_tokens = input_tokens + cache_creation_tokens + cache_read_tokens;
 
         let has_tool_calls = tool_calls.as_ref().is_some_and(|tc| !tc.is_empty());
-        let message_content = if has_tool_calls && text_content.as_deref().unwrap_or("").is_empty() {
-            Value::Null
-        } else {
-            json!(text_content)
+        // ~keep Absent visible text maps to null (OpenAI convention), whether the turn
+        // ~keep carried only tool calls, only reasoning/thinking, or nothing at all.
+        let message_content = match text_content.as_deref() {
+            Some(text) if !text.is_empty() => json!(text),
+            _ => Value::Null,
         };
 
         let mut message = json!({
@@ -1822,6 +1823,57 @@ mod tests {
         );
         assert_eq!(content, "The answer is 42.");
         assert_eq!(body["choices"][0]["message"]["reasoning_content"], "Let me reason...");
+    }
+
+    #[test]
+    fn transform_response_multiple_thinking_blocks_are_concatenated_in_order() {
+        let mut body = json!({
+            "id": "msg_think_multi",
+            "type": "message",
+            "role": "assistant",
+            "content": [
+                {"type": "thinking", "thinking": "First, "},
+                {"type": "text", "text": "Answer."},
+                {"type": "thinking", "thinking": "then more."}
+            ],
+            "model": "claude-3-5-sonnet-20241022",
+            "stop_reason": "end_turn",
+            "usage": {"input_tokens": 10, "output_tokens": 20}
+        });
+        provider()
+            .transform_response(&mut body)
+            .expect("transform_response should not fail");
+        let message = &body["choices"][0]["message"];
+        assert_eq!(message["content"], "Answer.", "text blocks stay in content, in order");
+        assert_eq!(
+            message["reasoning_content"], "First, then more.",
+            "thinking blocks are concatenated in document order"
+        );
+    }
+
+    #[test]
+    fn transform_response_thinking_only_yields_null_content() {
+        let mut body = json!({
+            "id": "msg_think_only",
+            "type": "message",
+            "role": "assistant",
+            "content": [
+                {"type": "thinking", "thinking": "Still working on it..."}
+            ],
+            "model": "claude-3-5-sonnet-20241022",
+            "stop_reason": "max_tokens",
+            "usage": {"input_tokens": 10, "output_tokens": 20}
+        });
+        provider()
+            .transform_response(&mut body)
+            .expect("transform_response should not fail");
+        let message = &body["choices"][0]["message"];
+        assert!(
+            message["content"].is_null(),
+            "a thinking-only response must expose null content, not an empty string, got: {}",
+            message["content"]
+        );
+        assert_eq!(message["reasoning_content"], "Still working on it...");
     }
 
     #[test]
