@@ -1,5 +1,11 @@
 version: 2
 
+# Dependabot only manages the hand-authored root manifests. Alef-generated trees
+# (packages/**, e2e/**, crates/*-{node,wasm,...}; see .gitattributes) are overwritten
+# by `alef build`, so their dependency versions are maintained upstream in the alef
+# repo (src/core/template_versions.rs + Renovate), not here. Pointing Dependabot at
+# them only produced bump PRs that the next codegen run reverts.
+
 multi-ecosystem-groups:
   dependencies:
     schedule:
@@ -15,7 +21,6 @@ updates:
   - package-ecosystem: "pip"
     directories:
       - "/"
-      - "/packages/python"
     patterns: ["*"]
     multi-ecosystem-group: "dependencies"
 
@@ -25,39 +30,8 @@ updates:
     patterns: ["*"]
     multi-ecosystem-group: "dependencies"
 
-  - package-ecosystem: "gomod"
-    directories:
-      - "/packages/go"
-    patterns: ["*"]
-    multi-ecosystem-group: "dependencies"
-
-  - package-ecosystem: "bundler"
-    directories:
-      - "/packages/ruby"
-    patterns: ["*"]
-    multi-ecosystem-group: "dependencies"
-
   - package-ecosystem: "composer"
     directories:
       - "/"
-      - "/packages/php"
-    patterns: ["*"]
-    multi-ecosystem-group: "dependencies"
-
-  - package-ecosystem: "maven"
-    directories:
-      - "/packages/java"
-    patterns: ["*"]
-    multi-ecosystem-group: "dependencies"
-
-  - package-ecosystem: "nuget"
-    directories:
-      - "/packages/csharp"
-    patterns: ["*"]
-    multi-ecosystem-group: "dependencies"
-
-  - package-ecosystem: "mix"
-    directories:
-      - "/packages/elixir"
     patterns: ["*"]
     multi-ecosystem-group: "dependencies"
