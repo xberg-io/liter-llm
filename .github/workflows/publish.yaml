@@ -1009,6 +1009,11 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
+      - name: Render runtime.json from template
+        uses: xberg-io/actions/render-runtime-json@v1
+        with:
+          template-path: packages/csharp/LiterLlm/runtime.json.template
+          version: ${{ needs.prepare.outputs.version }}
       - name: Pack NuGet package
         run: dotnet pack packages/csharp/LiterLlm/LiterLlm.csproj -c Release -o nuget-output
         shell: bash
