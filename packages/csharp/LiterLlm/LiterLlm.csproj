@@ -4,8 +4,8 @@
     <RootNamespace>LiterLlm</RootNamespace>
     <PackageId>XbergIo.LiterLlm</PackageId>
     <Version>1.11.2</Version>
-    <AssemblyVersion>1.11.1.0</AssemblyVersion>
-    <FileVersion>1.11.1.0</FileVersion>
+    <AssemblyVersion>1.11.2.0</AssemblyVersion>
+    <FileVersion>1.11.2.0</FileVersion>
     <InformationalVersion>1.11.2</InformationalVersion>
     <Description>Universal LLM API client with Rust-powered polyglot bindings.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
