@@ -387,4 +387,4 @@ __all__ = [
     "unregister_custom_provider",
 ]
 
-__version__ = "1.11.2"
+__version__ = "1.11.3"

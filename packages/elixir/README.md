@@ -98,7 +98,7 @@ Add to your `mix.exs` dependencies:
 ```elixir
 def deps do
   [
-    {:liter_llm, "~> 1.11.2"}
+    {:liter_llm, "~> 1.11.3"}
   ]
 end
 ```

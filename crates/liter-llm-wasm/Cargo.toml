@@ -5,7 +5,7 @@
 
 [package]
 name = "liter-llm-wasm"
-version = "1.11.2"
+version = "1.11.3"
 edition = "2024"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
