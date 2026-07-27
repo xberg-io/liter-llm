@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.3] - 2026-07-27
+
+### Changed
+
+- Refresh the model catalog from models.dev.
+- Regenerate all language bindings on alef 0.48.4, which lowers the Maven
+  enforcer floor (fixes Java/Maven publishing) and generates the C#
+  `runtime.json` template (fixes C#/NuGet publishing).
+- Upgrade dependencies to their latest incompatible versions (base64
+  0.22 → 0.23).
+
 ## [1.11.2] - 2026-07-26
 
 ### Changed
