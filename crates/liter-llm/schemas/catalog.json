@@ -1,8 +1,8 @@
 {
   "$provenance": {
     "source": "models.dev/api.json",
-    "source_sha256": "dd7de082dccf96d915ed11841e868238b208896fc8fdbe0c303fa3e0f11e6b0a",
-    "fetched": "2026-09-07",
+    "source_sha256": "1463f29040b934738b6891448251a4e7d2067c6096db2cb5f5d482446f5c6068",
+    "fetched": "2026-09-08",
     "library_version": "1.19.2"
   },
   "$schema_version": 1,
@@ -6891,7 +6891,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -9208,7 +9208,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -31220,7 +31220,7 @@
             "audio_output": false,
             "prompt_caching": false,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -31417,7 +31417,7 @@
             "audio_output": false,
             "prompt_caching": false,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -37173,9 +37173,9 @@
           "id": "glm-5.3",
           "name": "GLM-5.3",
           "pricing": {
-            "input_cost_per_token": 0.0000014,
-            "output_cost_per_token": 0.000004399,
-            "cache_read_input_token_cost": 0.00000026
+            "input_cost_per_token": 0.000001114,
+            "output_cost_per_token": 0.000003899,
+            "cache_read_input_token_cost": 0.000000279
           },
           "limit": {
             "context": 1048576,
@@ -37227,7 +37227,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -39808,7 +39808,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -42437,7 +42437,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -46269,7 +46269,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -47775,7 +47775,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -52374,6 +52374,38 @@
           "release_date": "2025-08-05",
           "last_updated": "2025-08-05"
         },
+        "flexai/DeepSeek-V4-Flash-0731": {
+          "id": "flexai/DeepSeek-V4-Flash-0731",
+          "name": "DeepSeek V4 Flash 0731 (FlexAI)",
+          "pricing": {
+            "input_cost_per_token": 0.00000003,
+            "output_cost_per_token": 0.0000001
+          },
+          "limit": {
+            "context": 786432,
+            "output": 384000
+          },
+          "modalities": {
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": false,
+            "function_calling": false,
+            "reasoning": true,
+            "structured_output": false,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": false,
+            "attachment": false,
+            "open_weights": true
+          },
+          "family": "deepseek-flash",
+          "knowledge": "2025-05",
+          "release_date": "2026-07-31",
+          "last_updated": "2026-07-31"
+        },
         "flexai/Muse-Glimmer-30B": {
           "id": "flexai/Muse-Glimmer-30B",
           "name": "Muse Glimmer 30B (FlexAI)",
@@ -52467,38 +52499,6 @@
           "knowledge": "2026-03-01",
           "release_date": "2026-05-29",
           "last_updated": "2026-05-29"
-        },
-        "flexai/deepseek-v4-flash-0731": {
-          "id": "flexai/deepseek-v4-flash-0731",
-          "name": "DeepSeek V4 Flash 0731 (FlexAI)",
-          "pricing": {
-            "input_cost_per_token": 0.00000003,
-            "output_cost_per_token": 0.0000001
-          },
-          "limit": {
-            "context": 786432,
-            "output": 384000
-          },
-          "modalities": {
-            "input": ["text"],
-            "output": ["text"]
-          },
-          "mode": "chat",
-          "capabilities": {
-            "vision": false,
-            "function_calling": false,
-            "reasoning": true,
-            "structured_output": false,
-            "audio_input": false,
-            "audio_output": false,
-            "prompt_caching": false,
-            "attachment": false,
-            "open_weights": true
-          },
-          "family": "deepseek-flash",
-          "knowledge": "2025-05",
-          "release_date": "2026-07-31",
-          "last_updated": "2026-07-31"
         },
         "flexai/gpt-oss-120b": {
           "id": "flexai/gpt-oss-120b",
@@ -53608,8 +53608,9 @@
           "id": "mistral/magistral-medium-latest",
           "name": "Magistral Medium (latest)",
           "pricing": {
-            "input_cost_per_token": 0.000002,
-            "output_cost_per_token": 0.000005
+            "input_cost_per_token": 0.0000015,
+            "output_cost_per_token": 0.0000075,
+            "cache_read_input_token_cost": 0.00000015
           },
           "limit": {
             "context": 262144,
@@ -53627,7 +53628,7 @@
             "structured_output": true,
             "audio_input": false,
             "audio_output": false,
-            "prompt_caching": false,
+            "prompt_caching": true,
             "attachment": true,
             "open_weights": false
           },
@@ -58412,7 +58413,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -58960,7 +58961,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -62617,8 +62618,8 @@
             "cache_read_input_token_cost": 0.00000026
           },
           "limit": {
-            "context": 1000000,
-            "output": 131072
+            "context": 1048573,
+            "output": 262144
           },
           "modalities": {
             "input": ["text"],
@@ -62638,7 +62639,7 @@
           },
           "family": "glm",
           "release_date": "2026-08-14",
-          "last_updated": "2026-09-04"
+          "last_updated": "2026-09-07"
         },
         "accounts/fireworks/models/glm-5p3-flash": {
           "id": "accounts/fireworks/models/glm-5p3-flash",
@@ -62649,7 +62650,7 @@
             "cache_read_input_token_cost": 0.00000003
           },
           "limit": {
-            "context": 1000000,
+            "context": 1048573,
             "output": 131072
           },
           "modalities": {
@@ -62666,11 +62667,11 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
-          "last_updated": "2026-09-04"
+          "last_updated": "2026-09-07"
         },
         "accounts/fireworks/models/gpt-oss-120b": {
           "id": "accounts/fireworks/models/gpt-oss-120b",
@@ -63088,6 +63089,38 @@
           "family": "glm",
           "release_date": "2026-06-26",
           "last_updated": "2026-06-26"
+        },
+        "accounts/fireworks/routers/glm-5p3-fast": {
+          "id": "accounts/fireworks/routers/glm-5p3-fast",
+          "name": "GLM 5.3 Fast",
+          "pricing": {
+            "input_cost_per_token": 0.0000021,
+            "output_cost_per_token": 0.0000066,
+            "cache_read_input_token_cost": 0.00000039
+          },
+          "limit": {
+            "context": 1048572,
+            "output": 262144
+          },
+          "modalities": {
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": false,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": false,
+            "open_weights": true
+          },
+          "family": "glm",
+          "release_date": "2026-08-28",
+          "last_updated": "2026-09-07"
         },
         "accounts/fireworks/routers/kimi-k3-fast": {
           "id": "accounts/fireworks/routers/kimi-k3-fast",
@@ -66080,6 +66113,41 @@
           "knowledge": "2024-05-30",
           "release_date": "2026-01-22",
           "last_updated": "2026-01-22"
+        },
+        "duo-chat-gpt-6-astra": {
+          "id": "duo-chat-gpt-6-astra",
+          "name": "Agentic Chat (GPT-6 Astra)",
+          "pricing": {
+            "input_cost_per_token": 0.0,
+            "output_cost_per_token": 0.0,
+            "cache_read_input_token_cost": 0.0,
+            "cache_creation_input_token_cost": 0.0
+          },
+          "limit": {
+            "context": 1050000,
+            "input": 922000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "gpt-astra",
+          "knowledge": "2026-04-30",
+          "release_date": "2026-09-04",
+          "last_updated": "2026-09-04"
         },
         "duo-chat-haiku-4-5": {
           "id": "duo-chat-haiku-4-5",
@@ -77750,9 +77818,9 @@
           "id": "gemma-4-26b-a4b-it",
           "name": "Gemma 4 26B A4B IT",
           "pricing": {
-            "input_cost_per_token": 0.000000106,
-            "output_cost_per_token": 0.000000368,
-            "cache_creation_input_token_cost": 0.000000053
+            "input_cost_per_token": 0.00000011,
+            "output_cost_per_token": 0.000000408,
+            "cache_creation_input_token_cost": 0.000000055
           },
           "limit": {
             "context": 256000,
@@ -77814,9 +77882,9 @@
           "id": "glm-5.1",
           "name": "GLM-5.1",
           "pricing": {
-            "input_cost_per_token": 0.000001262,
-            "output_cost_per_token": 0.000004132,
-            "cache_creation_input_token_cost": 0.000000631
+            "input_cost_per_token": 0.000001332,
+            "output_cost_per_token": 0.000004312,
+            "cache_creation_input_token_cost": 0.000000666
           },
           "limit": {
             "context": 202750,
@@ -77932,7 +78000,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -78039,9 +78107,9 @@
           "id": "kimi-k2.5",
           "name": "Kimi K2.5",
           "pricing": {
-            "input_cost_per_token": 0.0000005144,
-            "output_cost_per_token": 0.000002755,
-            "cache_creation_input_token_cost": 0.0000002572
+            "input_cost_per_token": 0.0000005584,
+            "output_cost_per_token": 0.000002935,
+            "cache_creation_input_token_cost": 0.0000002792
           },
           "limit": {
             "context": 262144,
@@ -78236,9 +78304,9 @@
           "id": "minimax-m2.7",
           "name": "MiniMax-M2.7",
           "pricing": {
-            "input_cost_per_token": 0.000000484,
-            "output_cost_per_token": 0.000001852,
-            "cache_creation_input_token_cost": 0.000000242
+            "input_cost_per_token": 0.00000047,
+            "output_cost_per_token": 0.00000176,
+            "cache_creation_input_token_cost": 0.000000235
           },
           "limit": {
             "context": 262100,
@@ -86829,7 +86897,7 @@
             "audio_output": false,
             "prompt_caching": false,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -89303,8 +89371,9 @@
           "id": "deepseek/deepseek-chat-v3-0324",
           "name": "DeepSeek: DeepSeek V3 0324",
           "pricing": {
-            "input_cost_per_token": 0.00000025,
-            "output_cost_per_token": 0.000001
+            "input_cost_per_token": 0.00000029,
+            "output_cost_per_token": 0.00000114,
+            "cache_read_input_token_cost": 0.00000011
           },
           "limit": {
             "context": 163840,
@@ -89322,7 +89391,7 @@
             "structured_output": true,
             "audio_input": false,
             "audio_output": false,
-            "prompt_caching": false,
+            "prompt_caching": true,
             "attachment": false,
             "open_weights": false
           },
@@ -89339,8 +89408,8 @@
             "cache_read_input_token_cost": 0.000000135
           },
           "limit": {
-            "context": 161000,
-            "output": 144900
+            "context": 163840,
+            "output": 32768
           },
           "modalities": {
             "input": ["text"],
@@ -89596,7 +89665,7 @@
           },
           "limit": {
             "context": 1048576,
-            "output": 131072
+            "output": 943718
           },
           "modalities": {
             "input": ["text"],
@@ -89690,7 +89759,7 @@
           "pricing": {
             "input_cost_per_token": 0.00000132,
             "output_cost_per_token": 0.00000396,
-            "cache_read_input_token_cost": 0.000000132
+            "cache_read_input_token_cost": 0.000000044
           },
           "limit": {
             "context": 1024000,
@@ -92052,37 +92121,6 @@
           "release_date": "2026-03-18",
           "last_updated": "2026-03-18"
         },
-        "minimax/minimax-m2.7:free": {
-          "id": "minimax/minimax-m2.7:free",
-          "name": "MiniMax: MiniMax M2.7 (free)",
-          "pricing": {
-            "input_cost_per_token": 0.0,
-            "output_cost_per_token": 0.0
-          },
-          "limit": {
-            "context": 196608,
-            "output": 176947
-          },
-          "modalities": {
-            "input": ["text"],
-            "output": ["text"]
-          },
-          "mode": "chat",
-          "capabilities": {
-            "vision": false,
-            "function_calling": true,
-            "reasoning": true,
-            "structured_output": false,
-            "audio_input": false,
-            "audio_output": false,
-            "prompt_caching": false,
-            "attachment": false,
-            "open_weights": true
-          },
-          "family": "minimax",
-          "release_date": "2026-03-18",
-          "last_updated": "2026-03-18"
-        },
         "minimax/minimax-m3": {
           "id": "minimax/minimax-m3",
           "name": "MiniMax-M3",
@@ -92108,37 +92146,6 @@
             "audio_input": false,
             "audio_output": false,
             "prompt_caching": true,
-            "attachment": true,
-            "open_weights": true
-          },
-          "family": "minimax",
-          "release_date": "2026-06-01",
-          "last_updated": "2026-06-01"
-        },
-        "minimax/minimax-m3:free": {
-          "id": "minimax/minimax-m3:free",
-          "name": "MiniMax: MiniMax M3 (free)",
-          "pricing": {
-            "input_cost_per_token": 0.0,
-            "output_cost_per_token": 0.0
-          },
-          "limit": {
-            "context": 1048576,
-            "output": 943718
-          },
-          "modalities": {
-            "input": ["text", "image", "video"],
-            "output": ["text"]
-          },
-          "mode": "chat",
-          "capabilities": {
-            "vision": true,
-            "function_calling": true,
-            "reasoning": true,
-            "structured_output": false,
-            "audio_input": false,
-            "audio_output": false,
-            "prompt_caching": false,
             "attachment": true,
             "open_weights": true
           },
@@ -92825,7 +92832,7 @@
           },
           "limit": {
             "context": 262144,
-            "output": 100352
+            "output": 235929
           },
           "modalities": {
             "input": ["text"],
@@ -94902,10 +94909,10 @@
           "id": "openai/gpt-5.6-sol-discounted",
           "name": "OpenAI: GPT-5.6 Sol (50% off)",
           "pricing": {
-            "input_cost_per_token": 0.0000025,
-            "output_cost_per_token": 0.000015,
-            "cache_read_input_token_cost": 0.00000025,
-            "cache_creation_input_token_cost": 0.000003125,
+            "input_cost_per_token": 0.000002,
+            "output_cost_per_token": 0.00001,
+            "cache_read_input_token_cost": 0.0000002,
+            "cache_creation_input_token_cost": 0.0000025,
             "output_cost_per_reasoning_token": 0.0
           },
           "limit": {
@@ -96184,8 +96191,8 @@
             "output_cost_per_token": 0.00000091
           },
           "limit": {
-            "context": 40960,
-            "output": 16384
+            "context": 131072,
+            "output": 8192
           },
           "modalities": {
             "input": ["text"],
@@ -96321,7 +96328,7 @@
             "vision": false,
             "function_calling": true,
             "reasoning": true,
-            "structured_output": false,
+            "structured_output": true,
             "audio_input": false,
             "audio_output": false,
             "prompt_caching": false,
@@ -99099,13 +99106,13 @@
           "id": "z-ai/glm-4.6",
           "name": "GLM-4.6",
           "pricing": {
-            "input_cost_per_token": 0.00000043,
-            "output_cost_per_token": 0.00000175,
-            "cache_read_input_token_cost": 0.00000008
+            "input_cost_per_token": 0.00000055,
+            "output_cost_per_token": 0.0000022,
+            "cache_read_input_token_cost": 0.00000011
           },
           "limit": {
-            "context": 198000,
-            "output": 16384
+            "context": 204800,
+            "output": 131072
           },
           "modalities": {
             "input": ["text"],
@@ -99198,13 +99205,12 @@
           "id": "z-ai/glm-4.7-flash",
           "name": "GLM-4.7-Flash",
           "pricing": {
-            "input_cost_per_token": 0.00000006,
-            "output_cost_per_token": 0.0000004,
-            "cache_read_input_token_cost": 0.00000001
+            "input_cost_per_token": 0.0000000605,
+            "output_cost_per_token": 0.0000004
           },
           "limit": {
-            "context": 202752,
-            "output": 16384
+            "context": 131072,
+            "output": 117964
           },
           "modalities": {
             "input": ["text"],
@@ -99218,7 +99224,7 @@
             "structured_output": true,
             "audio_input": false,
             "audio_output": false,
-            "prompt_caching": true,
+            "prompt_caching": false,
             "attachment": false,
             "open_weights": true
           },
@@ -99413,7 +99419,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -99688,9 +99694,9 @@
           "id": "~moonshotai/kimi-latest",
           "name": "MoonshotAI Kimi Latest",
           "pricing": {
-            "input_cost_per_token": 0.00000255,
-            "output_cost_per_token": 0.00001275,
-            "cache_read_input_token_cost": 0.000000256
+            "input_cost_per_token": 0.0000025,
+            "output_cost_per_token": 0.000014,
+            "cache_read_input_token_cost": 0.00000029
           },
           "limit": {
             "context": 1048576,
@@ -102472,7 +102478,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -111021,19 +111027,19 @@
             "output": 32768
           },
           "modalities": {
-            "input": ["text"],
+            "input": ["text", "image"],
             "output": ["text"]
           },
           "mode": "chat",
           "capabilities": {
-            "vision": false,
+            "vision": true,
             "function_calling": true,
             "reasoning": true,
             "structured_output": false,
             "audio_input": false,
             "audio_output": false,
             "prompt_caching": true,
-            "attachment": false,
+            "attachment": true,
             "open_weights": false
           },
           "release_date": "2026-09-02",
@@ -111085,20 +111091,20 @@
             "output": 131072
           },
           "modalities": {
-            "input": ["text"],
+            "input": ["text", "image", "video", "pdf"],
             "output": ["text"]
           },
           "mode": "chat",
           "capabilities": {
-            "vision": false,
+            "vision": true,
             "function_calling": true,
             "reasoning": true,
             "structured_output": false,
             "audio_input": false,
             "audio_output": false,
             "prompt_caching": true,
-            "attachment": false,
-            "open_weights": false
+            "attachment": true,
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -114421,7 +114427,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -116898,7 +116904,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -117155,7 +117161,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -119126,7 +119132,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -127076,7 +127082,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -129669,7 +129675,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -131145,7 +131151,7 @@
             "audio_output": false,
             "prompt_caching": false,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -132911,8 +132917,8 @@
           "name": "GLM 5.2 TEE",
           "pricing": {
             "input_cost_per_token": 0.0000014,
-            "output_cost_per_token": 0.0000046,
-            "cache_read_input_token_cost": 0.0000005
+            "output_cost_per_token": 0.0000044,
+            "cache_read_input_token_cost": 0.0000007
           },
           "limit": {
             "context": 1048576,
@@ -132944,8 +132950,8 @@
           "name": "GLM 5.2 Thinking TEE",
           "pricing": {
             "input_cost_per_token": 0.0000014,
-            "output_cost_per_token": 0.0000046,
-            "cache_read_input_token_cost": 0.0000005
+            "output_cost_per_token": 0.0000044,
+            "cache_read_input_token_cost": 0.0000007
           },
           "limit": {
             "context": 1048576,
@@ -133032,7 +133038,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -137759,9 +137765,9 @@
           "id": "deepseek/deepseek-v4-flash-vision-exp",
           "name": "DeepSeek V4 Flash Vision Exp",
           "pricing": {
-            "input_cost_per_token": 0.00000022,
-            "output_cost_per_token": 0.00000066,
-            "cache_read_input_token_cost": 0.000000007
+            "input_cost_per_token": 0.00000044,
+            "output_cost_per_token": 0.00000132,
+            "cache_read_input_token_cost": 0.000000014
           },
           "limit": {
             "context": 1048576,
@@ -137988,6 +137994,39 @@
           "knowledge": "2025-05",
           "release_date": "2026-04-24",
           "last_updated": "2026-04-24"
+        },
+        "deepseek/deepseek-v4.1-flash": {
+          "id": "deepseek/deepseek-v4.1-flash",
+          "name": "DeepSeek V4.1 Flash",
+          "pricing": {
+            "input_cost_per_token": 0.0000001562,
+            "output_cost_per_token": 0.0000003124,
+            "cache_read_input_token_cost": 0.00000003124
+          },
+          "limit": {
+            "context": 1000000,
+            "input": 1000000,
+            "output": 384000
+          },
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "deepseek",
+          "release_date": "2026-09-08",
+          "last_updated": "2026-09-08"
         },
         "doubao-1.5-pro-256k": {
           "id": "doubao-1.5-pro-256k",
@@ -149640,72 +149679,6 @@
           "release_date": "2026-04-22",
           "last_updated": "2026-04-22"
         },
-        "yi-large": {
-          "id": "yi-large",
-          "name": "Yi Large",
-          "pricing": {
-            "input_cost_per_token": 0.000003196,
-            "output_cost_per_token": 0.000003196,
-            "cache_read_input_token_cost": 0.000001598
-          },
-          "limit": {
-            "context": 32000,
-            "input": 32000,
-            "output": 4096
-          },
-          "modalities": {
-            "input": ["text"],
-            "output": ["text"]
-          },
-          "mode": "chat",
-          "capabilities": {
-            "vision": false,
-            "function_calling": false,
-            "reasoning": false,
-            "structured_output": false,
-            "audio_input": false,
-            "audio_output": false,
-            "prompt_caching": true,
-            "attachment": false,
-            "open_weights": false
-          },
-          "family": "yi",
-          "release_date": "2024-01-01",
-          "last_updated": "2024-05-13"
-        },
-        "yi-medium-200k": {
-          "id": "yi-medium-200k",
-          "name": "Yi Medium 200k",
-          "pricing": {
-            "input_cost_per_token": 0.000002499,
-            "output_cost_per_token": 0.000002499,
-            "cache_read_input_token_cost": 0.0000012495
-          },
-          "limit": {
-            "context": 200000,
-            "input": 200000,
-            "output": 4096
-          },
-          "modalities": {
-            "input": ["text"],
-            "output": ["text"]
-          },
-          "mode": "chat",
-          "capabilities": {
-            "vision": false,
-            "function_calling": false,
-            "reasoning": false,
-            "structured_output": false,
-            "audio_input": false,
-            "audio_output": false,
-            "prompt_caching": true,
-            "attachment": false,
-            "open_weights": false
-          },
-          "family": "yi",
-          "release_date": "2024-01-01",
-          "last_updated": "2024-03-01"
-        },
         "z-ai/GLM-4.5-Air": {
           "id": "z-ai/GLM-4.5-Air",
           "name": "GLM 4.5 Air",
@@ -150736,7 +150709,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -150746,9 +150719,9 @@
           "id": "z-ai/glm-5.3-flash-uncensored",
           "name": "GLM 5.3 Flash Uncensored",
           "pricing": {
-            "input_cost_per_token": 0.00000035,
-            "output_cost_per_token": 0.0000014,
-            "cache_read_input_token_cost": 0.000000175
+            "input_cost_per_token": 0.00000025,
+            "output_cost_per_token": 0.000001,
+            "cache_read_input_token_cost": 0.000000125
           },
           "limit": {
             "context": 1048576,
@@ -152753,7 +152726,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": false,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -153476,7 +153449,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -165627,7 +165600,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -169176,7 +169149,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -171696,7 +171669,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -174173,8 +174146,9 @@
           "id": "deepseek/deepseek-chat-v3-0324",
           "name": "DeepSeek V3 0324",
           "pricing": {
-            "input_cost_per_token": 0.00000025,
-            "output_cost_per_token": 0.000001
+            "input_cost_per_token": 0.00000029,
+            "output_cost_per_token": 0.00000114,
+            "cache_read_input_token_cost": 0.00000011
           },
           "limit": {
             "context": 163840,
@@ -174192,7 +174166,7 @@
             "structured_output": true,
             "audio_input": false,
             "audio_output": false,
-            "prompt_caching": false,
+            "prompt_caching": true,
             "attachment": false,
             "open_weights": true
           },
@@ -174205,13 +174179,13 @@
           "id": "deepseek/deepseek-chat-v3.1",
           "name": "DeepSeek V3.1",
           "pricing": {
-            "input_cost_per_token": 0.00000055,
-            "output_cost_per_token": 0.00000165,
-            "cache_read_input_token_cost": 0.00000055
+            "input_cost_per_token": 0.00000025,
+            "output_cost_per_token": 0.00000095,
+            "cache_read_input_token_cost": 0.00000013
           },
           "limit": {
             "context": 163840,
-            "output": 144900
+            "output": 32768
           },
           "modalities": {
             "input": ["text"],
@@ -174466,13 +174440,13 @@
           "id": "deepseek/deepseek-v4-flash-0731",
           "name": "DeepSeek V4 Flash 0731",
           "pricing": {
-            "input_cost_per_token": 0.00000014,
-            "output_cost_per_token": 0.00000028,
-            "cache_read_input_token_cost": 0.000000028
+            "input_cost_per_token": 0.000000065,
+            "output_cost_per_token": 0.00000018,
+            "cache_read_input_token_cost": 0.000000016
           },
           "limit": {
             "context": 1310720,
-            "output": 131072
+            "output": 943718
           },
           "modalities": {
             "input": ["text"],
@@ -174499,9 +174473,9 @@
           "id": "deepseek/deepseek-v4-flash-vision-exp",
           "name": "DeepSeek V4 Flash Vision Exp",
           "pricing": {
-            "input_cost_per_token": 0.00000022,
-            "output_cost_per_token": 0.00000066,
-            "cache_read_input_token_cost": 0.000000007
+            "input_cost_per_token": 0.00000044,
+            "output_cost_per_token": 0.00000132,
+            "cache_read_input_token_cost": 0.000000014
           },
           "limit": {
             "context": 1048576,
@@ -176694,7 +176668,7 @@
           "id": "minimax/minimax-m1",
           "name": "MiniMax M1",
           "pricing": {
-            "input_cost_per_token": 0.00000055,
+            "input_cost_per_token": 0.0000004,
             "output_cost_per_token": 0.0000022
           },
           "limit": {
@@ -176881,37 +176855,6 @@
           "release_date": "2026-03-18",
           "last_updated": "2026-03-18"
         },
-        "minimax/minimax-m2.7:free": {
-          "id": "minimax/minimax-m2.7:free",
-          "name": "MiniMax M2.7 (free)",
-          "pricing": {
-            "input_cost_per_token": 0.0,
-            "output_cost_per_token": 0.0
-          },
-          "limit": {
-            "context": 196608,
-            "output": 176947
-          },
-          "modalities": {
-            "input": ["text"],
-            "output": ["text"]
-          },
-          "mode": "chat",
-          "capabilities": {
-            "vision": false,
-            "function_calling": true,
-            "reasoning": true,
-            "structured_output": false,
-            "audio_input": false,
-            "audio_output": false,
-            "prompt_caching": false,
-            "attachment": false,
-            "open_weights": true
-          },
-          "family": "minimax",
-          "release_date": "2026-03-18",
-          "last_updated": "2026-03-18"
-        },
         "minimax/minimax-m3": {
           "id": "minimax/minimax-m3",
           "name": "MiniMax-M3",
@@ -176937,37 +176880,6 @@
             "audio_input": false,
             "audio_output": false,
             "prompt_caching": true,
-            "attachment": true,
-            "open_weights": true
-          },
-          "family": "minimax",
-          "release_date": "2026-06-01",
-          "last_updated": "2026-06-01"
-        },
-        "minimax/minimax-m3:free": {
-          "id": "minimax/minimax-m3:free",
-          "name": "MiniMax M3 (free)",
-          "pricing": {
-            "input_cost_per_token": 0.0,
-            "output_cost_per_token": 0.0
-          },
-          "limit": {
-            "context": 1048576,
-            "output": 943718
-          },
-          "modalities": {
-            "input": ["text", "image", "video"],
-            "output": ["text"]
-          },
-          "mode": "chat",
-          "capabilities": {
-            "vision": true,
-            "function_calling": true,
-            "reasoning": true,
-            "structured_output": false,
-            "audio_input": false,
-            "audio_output": false,
-            "prompt_caching": false,
             "attachment": true,
             "open_weights": true
           },
@@ -177661,12 +177573,11 @@
           "name": "Kimi K2 Thinking",
           "pricing": {
             "input_cost_per_token": 0.0000006,
-            "output_cost_per_token": 0.0000025,
-            "cache_read_input_token_cost": 0.00000015
+            "output_cost_per_token": 0.0000025
           },
           "limit": {
             "context": 262144,
-            "output": 100352
+            "output": 235929
           },
           "modalities": {
             "input": ["text"],
@@ -177680,7 +177591,7 @@
             "structured_output": true,
             "audio_input": false,
             "audio_output": false,
-            "prompt_caching": true,
+            "prompt_caching": false,
             "attachment": false,
             "open_weights": true
           },
@@ -177759,9 +177670,9 @@
           "id": "moonshotai/kimi-k2.7-code",
           "name": "Kimi K2.7 Code",
           "pricing": {
-            "input_cost_per_token": 0.00000066,
-            "output_cost_per_token": 0.0000034,
-            "cache_read_input_token_cost": 0.00000018
+            "input_cost_per_token": 0.00000071,
+            "output_cost_per_token": 0.0000035,
+            "cache_read_input_token_cost": 0.00000015
           },
           "limit": {
             "context": 262144,
@@ -181139,12 +181050,12 @@
           "id": "qwen/qwen3-14b",
           "name": "Qwen3 14B",
           "pricing": {
-            "input_cost_per_token": 0.00000012,
-            "output_cost_per_token": 0.00000024
+            "input_cost_per_token": 0.0000002275,
+            "output_cost_per_token": 0.00000091
           },
           "limit": {
             "context": 131072,
-            "output": 16384
+            "output": 8192
           },
           "modalities": {
             "input": ["text"],
@@ -181283,7 +181194,7 @@
             "vision": false,
             "function_calling": true,
             "reasoning": true,
-            "structured_output": false,
+            "structured_output": true,
             "audio_input": false,
             "audio_output": false,
             "prompt_caching": false,
@@ -184044,13 +183955,13 @@
           "id": "z-ai/glm-4.6",
           "name": "GLM-4.6",
           "pricing": {
-            "input_cost_per_token": 0.00000043,
-            "output_cost_per_token": 0.00000175,
-            "cache_read_input_token_cost": 0.00000008
+            "input_cost_per_token": 0.00000055,
+            "output_cost_per_token": 0.0000022,
+            "cache_read_input_token_cost": 0.00000011
           },
           "limit": {
             "context": 204800,
-            "output": 16384
+            "output": 131072
           },
           "modalities": {
             "input": ["text"],
@@ -184143,13 +184054,12 @@
           "id": "z-ai/glm-4.7-flash",
           "name": "GLM-4.7-Flash",
           "pricing": {
-            "input_cost_per_token": 0.00000006,
-            "output_cost_per_token": 0.0000004,
-            "cache_read_input_token_cost": 0.00000001
+            "input_cost_per_token": 0.0000000605,
+            "output_cost_per_token": 0.0000004
           },
           "limit": {
             "context": 202752,
-            "output": 16384
+            "output": 117964
           },
           "modalities": {
             "input": ["text"],
@@ -184163,7 +184073,7 @@
             "structured_output": true,
             "audio_input": false,
             "audio_output": false,
-            "prompt_caching": true,
+            "prompt_caching": false,
             "attachment": false,
             "open_weights": true
           },
@@ -184358,7 +184268,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -184643,9 +184553,9 @@
           "id": "~moonshotai/kimi-latest",
           "name": "MoonshotAI Kimi Latest",
           "pricing": {
-            "input_cost_per_token": 0.00000255,
-            "output_cost_per_token": 0.00001275,
-            "cache_read_input_token_cost": 0.000000256
+            "input_cost_per_token": 0.0000025,
+            "output_cost_per_token": 0.000014,
+            "cache_read_input_token_cost": 0.00000029
           },
           "limit": {
             "context": 1048576,
@@ -190210,7 +190120,7 @@
             "audio_output": false,
             "prompt_caching": false,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -199499,6 +199409,70 @@
           "release_date": "2026-01-27",
           "last_updated": "2026-01-27"
         },
+        "glm-5.3": {
+          "id": "glm-5.3",
+          "name": "GLM-5.3",
+          "pricing": {
+            "input_cost_per_token": 0.000001791,
+            "output_cost_per_token": 0.0000089436,
+            "cache_read_input_token_cost": 0.0000001733
+          },
+          "limit": {
+            "context": 256000,
+            "output": 131072
+          },
+          "modalities": {
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": false,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": false,
+            "open_weights": true
+          },
+          "family": "glm",
+          "release_date": "2026-08-14",
+          "last_updated": "2026-08-14"
+        },
+        "glm-latest": {
+          "id": "glm-latest",
+          "name": "GLM (latest)",
+          "pricing": {
+            "input_cost_per_token": 0.000001791,
+            "output_cost_per_token": 0.0000089436,
+            "cache_read_input_token_cost": 0.0000001733
+          },
+          "limit": {
+            "context": 256000,
+            "output": 131072
+          },
+          "modalities": {
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": false,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": false,
+            "open_weights": true
+          },
+          "family": "glm",
+          "release_date": "2026-08-14",
+          "last_updated": "2026-08-14"
+        },
         "gpt-oss-120b": {
           "id": "gpt-oss-120b",
           "name": "gpt-oss-120b",
@@ -204100,8 +204074,8 @@
           "id": "deepseek-v4-flash",
           "name": "DeepSeek V4 Flash",
           "pricing": {
-            "input_cost_per_token": 0.00000014,
-            "output_cost_per_token": 0.00000028,
+            "input_cost_per_token": 0.00000028,
+            "output_cost_per_token": 0.00000056,
             "cache_read_input_token_cost": 0.00000007
           },
           "limit": {
@@ -204133,8 +204107,8 @@
           "id": "deepseek-v4-flash-0731",
           "name": "DeepSeek V4 Flash 0731",
           "pricing": {
-            "input_cost_per_token": 0.00000014,
-            "output_cost_per_token": 0.00000028,
+            "input_cost_per_token": 0.00000028,
+            "output_cost_per_token": 0.00000056,
             "cache_read_input_token_cost": 0.00000007
           },
           "limit": {
@@ -204166,8 +204140,8 @@
           "id": "deepseek-v4-flash-0731@eu",
           "name": "DeepSeek V4 Flash 0731 (EU)",
           "pricing": {
-            "input_cost_per_token": 0.00000014,
-            "output_cost_per_token": 0.00000028,
+            "input_cost_per_token": 0.00000028,
+            "output_cost_per_token": 0.00000056,
             "cache_read_input_token_cost": 0.00000007
           },
           "limit": {
@@ -205274,7 +205248,7 @@
           "name": "GLM-5.3-Flash",
           "pricing": {
             "input_cost_per_token": 0.0000002,
-            "output_cost_per_token": 0.0000005,
+            "output_cost_per_token": 0.0000006,
             "cache_read_input_token_cost": 0.00000007
           },
           "limit": {
@@ -205295,7 +205269,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -205306,7 +205280,7 @@
           "name": "GLM-5.3-Flash (EU)",
           "pricing": {
             "input_cost_per_token": 0.0000002,
-            "output_cost_per_token": 0.0000005,
+            "output_cost_per_token": 0.0000006,
             "cache_read_input_token_cost": 0.00000007
           },
           "limit": {
@@ -205327,7 +205301,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -206645,9 +206619,9 @@
           "id": "kimi-k3",
           "name": "Kimi K3",
           "pricing": {
-            "input_cost_per_token": 0.00000225,
-            "output_cost_per_token": 0.00001125,
-            "cache_read_input_token_cost": 0.000000225
+            "input_cost_per_token": 0.000003,
+            "output_cost_per_token": 0.000015,
+            "cache_read_input_token_cost": 0.00000045
           },
           "limit": {
             "context": 1048576,
@@ -206677,9 +206651,9 @@
           "id": "kimi-k3@eu",
           "name": "Kimi K3 (EU)",
           "pricing": {
-            "input_cost_per_token": 0.00000225,
-            "output_cost_per_token": 0.00001125,
-            "cache_read_input_token_cost": 0.000000225
+            "input_cost_per_token": 0.000003,
+            "output_cost_per_token": 0.000015,
+            "cache_read_input_token_cost": 0.00000045
           },
           "limit": {
             "context": 1048576,
@@ -208305,8 +208279,8 @@
           "name": "thinkingcap-qwen3.6-27b",
           "pricing": {
             "input_cost_per_token": 0.0000004,
-            "output_cost_per_token": 0.000003,
-            "cache_read_input_token_cost": 0.00000026
+            "output_cost_per_token": 0.0000026,
+            "cache_read_input_token_cost": 0.00000005
           },
           "limit": {
             "context": 262144,
@@ -208337,8 +208311,8 @@
           "name": "thinkingcap-qwen3.6-27b@eu",
           "pricing": {
             "input_cost_per_token": 0.0000004,
-            "output_cost_per_token": 0.000003,
-            "cache_read_input_token_cost": 0.00000026
+            "output_cost_per_token": 0.0000026,
+            "cache_read_input_token_cost": 0.00000005
           },
           "limit": {
             "context": 262144,
@@ -209080,7 +209054,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -211754,7 +211728,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -217808,7 +217782,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -219538,7 +219512,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -220913,7 +220887,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -221341,7 +221315,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -223269,7 +223243,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -238387,7 +238361,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -238466,6 +238440,74 @@
       "api": "https://api.vivgrid.com/v1",
       "npm": "@ai-sdk/openai",
       "models": {
+        "claude-fable-5": {
+          "id": "claude-fable-5",
+          "name": "Claude Fable 5",
+          "pricing": {
+            "input_cost_per_token": 0.00001,
+            "output_cost_per_token": 0.00005,
+            "cache_read_input_token_cost": 0.00000125,
+            "cache_creation_input_token_cost": 0.0000125
+          },
+          "limit": {
+            "context": 1000000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "claude-fable",
+          "knowledge": "2026-01-31",
+          "release_date": "2026-06-09",
+          "last_updated": "2026-06-09"
+        },
+        "claude-fable-5-1": {
+          "id": "claude-fable-5-1",
+          "name": "Claude Fable 5.1",
+          "pricing": {
+            "input_cost_per_token": 0.00001,
+            "output_cost_per_token": 0.00005,
+            "cache_read_input_token_cost": 0.0000005,
+            "cache_creation_input_token_cost": 0.0000125
+          },
+          "limit": {
+            "context": 1000000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "claude-fable",
+          "knowledge": "2026-06",
+          "release_date": "2026-09-01",
+          "last_updated": "2026-09-01"
+        },
         "deepseek-v3.2": {
           "id": "deepseek-v3.2",
           "name": "DeepSeek-V3.2",
@@ -238564,6 +238606,39 @@
           "knowledge": "2025-05",
           "release_date": "2026-04-24",
           "last_updated": "2026-04-24"
+        },
+        "deepseek-v4-pro-0813": {
+          "id": "deepseek-v4-pro-0813",
+          "name": "DeepSeek V4 Pro 0813",
+          "pricing": {
+            "input_cost_per_token": 0.00000135,
+            "output_cost_per_token": 0.000003,
+            "cache_read_input_token_cost": 0.00000005,
+            "output_cost_per_reasoning_token": 0.000003
+          },
+          "limit": {
+            "context": 1000000,
+            "output": 384000
+          },
+          "modalities": {
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": false,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": false,
+            "open_weights": true
+          },
+          "family": "deepseek-thinking",
+          "release_date": "2026-08-12",
+          "last_updated": "2026-08-22"
         },
         "gemini-3.1-flash-lite-preview": {
           "id": "gemini-3.1-flash-lite-preview",
@@ -238673,6 +238748,38 @@
           "release_date": "2026-08-13",
           "last_updated": "2026-08-13"
         },
+        "gemini-3.8-flash": {
+          "id": "gemini-3.8-flash",
+          "name": "Gemini 3.8 Flash",
+          "pricing": {
+            "input_cost_per_token": 0.00000075,
+            "output_cost_per_token": 0.00000375,
+            "cache_read_input_token_cost": 0.00000015
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 128000
+          },
+          "modalities": {
+            "input": ["text", "image", "video", "audio", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "audio_transcription",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": true,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "gemini-flash",
+          "release_date": "2026-09-02",
+          "last_updated": "2026-09-02"
+        },
         "glm-5.2": {
           "id": "glm-5.2",
           "name": "GLM-5.2",
@@ -238763,7 +238870,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -243970,7 +244077,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -244211,7 +244318,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -244286,9 +244393,8 @@
             "attachment": true,
             "open_weights": false
           },
-          "knowledge": "2025-01",
-          "release_date": "2026-04-15",
-          "last_updated": "2026-04-15"
+          "release_date": "2026-08-26",
+          "last_updated": "2026-08-26"
         }
       }
     },
@@ -248780,7 +248886,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
@@ -249086,7 +249192,7 @@
             "audio_output": false,
             "prompt_caching": true,
             "attachment": true,
-            "open_weights": false
+            "open_weights": true
           },
           "family": "glm",
           "release_date": "2026-08-26",
