@@ -39,7 +39,11 @@ pub enum OutboundPolicy {
     DenyPrivate,
 
     /// Only allow URLs whose origin (scheme + host + port) matches one of the
-    /// provided entries.
+    /// provided entries. Allowlisted hostnames may resolve to any address,
+    /// including private, loopback, and link-local addresses. Only allowlist
+    /// hostnames whose DNS is trusted: this mode does not prevent an allowed
+    /// hostname from rebinding into a private network. Literal forbidden IP
+    /// addresses remain rejected by URL validation.
     Allowlist(Vec<Url>),
 }
 
@@ -407,7 +411,10 @@ mod resolver_impl {
         host: &str,
         addrs: &[SocketAddr],
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        if matches!(policy, OutboundPolicy::Off) {
+        // Every request and redirect is checked against the exact scheme/host/port
+        // allowlist before connecting. Explicitly allowed service hostnames may
+        // resolve to private addresses; DenyPrivate must still reject them here.
+        if !matches!(policy, OutboundPolicy::DenyPrivate) {
             return Ok(());
         }
 
@@ -475,6 +482,50 @@ mod resolver_impl {
     #[cfg_attr(alef, alef(skip))]
     pub fn cached_guarded_resolver(cache_ttl: Option<Duration>) -> Arc<dyn Resolve> {
         Arc::new(CachedGuardedResolver::new(cache_ttl))
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::provider::outbound_policy::set_outbound_policy;
+        use serial_test::serial;
+        use url::Url;
+
+        #[tokio::test]
+        #[serial(outbound_policy)]
+        async fn cached_private_addresses_follow_current_policy() {
+            let resolver = CachedGuardedResolver::new(Some(Duration::from_secs(60)));
+            let addresses = vec![
+                "172.18.0.2:0".parse().expect("private IPv4"),
+                "[fd00::2]:0".parse().expect("private IPv6"),
+            ];
+            store_addrs(
+                &resolver.cache,
+                resolver.cache_ttl,
+                "internal-llm.invalid".into(),
+                addresses.clone(),
+            );
+            set_outbound_policy(OutboundPolicy::Allowlist(vec![
+                Url::parse("http://internal-llm.invalid:8000").expect("allowlisted origin"),
+            ]));
+            let allowed = resolver
+                .resolve("internal-llm.invalid".parse().expect("DNS name"))
+                .await;
+            set_outbound_policy(OutboundPolicy::DenyPrivate);
+            let denied = resolver
+                .resolve("internal-llm.invalid".parse().expect("DNS name"))
+                .await;
+            set_outbound_policy(OutboundPolicy::Off);
+            assert_eq!(
+                allowed.expect("allowlisted cached addresses").collect::<Vec<_>>(),
+                addresses
+            );
+            let error = denied.err().expect("DenyPrivate must recheck cached addresses");
+            assert!(matches!(
+                error.downcast_ref::<LiterLlmError>(),
+                Some(LiterLlmError::OutboundForbidden { .. })
+            ));
+        }
     }
 }
 
@@ -825,6 +876,116 @@ mod tests {
                 "catalog redirects must never downgrade transport security"
             );
         });
+    }
+
+    #[test]
+    #[serial(outbound_policy)]
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    fn resolver_allowlist_accepts_private_address_after_origin_check() {
+        let origin = Url::parse("http://internal-llm:8000").expect("valid origin");
+        let policy = OutboundPolicy::Allowlist(vec![origin]);
+        with_policy(policy.clone(), || {
+            assert!(validate_outbound_url_sync("http://internal-llm:8000/v1/embeddings").is_ok());
+            for denied in [
+                "http://other-service:8000/v1/embeddings",
+                "http://internal-llm:8001/v1/embeddings",
+                "https://internal-llm:8000/v1/embeddings",
+            ] {
+                assert!(matches!(
+                    validate_outbound_url_sync(denied),
+                    Err(LiterLlmError::OutboundForbidden { .. })
+                ));
+            }
+            let addrs = [
+                "172.18.0.2:8000".parse().expect("private IPv4"),
+                "[fd00::2]:8000".parse().expect("private IPv6"),
+                "[::1]:8000".parse().expect("loopback IPv6"),
+                "[fe80::2]:8000".parse().expect("link-local IPv6"),
+            ];
+            assert!(resolver_impl::validate_addrs(policy, "internal-llm", &addrs).is_ok());
+        });
+    }
+
+    #[test]
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    fn resolver_deny_private_still_rejects_private_address() {
+        let addrs = [
+            "172.18.0.2:8000".parse().expect("private IPv4"),
+            "[fd00::2]:8000".parse().expect("private IPv6"),
+            "[::1]:8000".parse().expect("loopback IPv6"),
+            "[fe80::2]:8000".parse().expect("link-local IPv6"),
+        ];
+        for address in addrs {
+            let error = resolver_impl::validate_addrs(OutboundPolicy::DenyPrivate, "private-service", &[address])
+                .expect_err("DenyPrivate must reject private DNS results");
+            assert!(matches!(
+                error.downcast_ref::<LiterLlmError>(),
+                Some(LiterLlmError::OutboundForbidden { .. })
+            ));
+        }
+    }
+
+    #[tokio::test]
+    #[serial(outbound_policy)]
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    async fn configured_builder_allows_allowlisted_private_hostname() {
+        let target = OneShotServer::start(
+            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 2\r\n\r\n{}".to_string(),
+        );
+        let target_url = format!("http://localhost:{}/v1/models", target.address.port());
+        set_outbound_policy(OutboundPolicy::Allowlist(vec![
+            Url::parse(&target_url).expect("allowlisted origin"),
+        ]));
+        let client = configure_outbound_client_builder(reqwest::Client::builder(), None)
+            .build()
+            .expect("guarded client");
+        let result = crate::http::request::get_json_raw(&client, &target_url, None, &[], 0).await;
+        set_outbound_policy(OutboundPolicy::Off);
+        assert_eq!(
+            result.expect("allowlisted private hostname must be reachable"),
+            serde_json::json!({})
+        );
+        assert!(target.finish(), "allowlisted target must receive a request");
+    }
+
+    #[tokio::test]
+    #[serial(outbound_policy)]
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    async fn allowlisted_private_origin_still_rejects_cross_origin_redirect() {
+        let target = OneShotServer::start("HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n{}".to_string());
+        let target_url = format!("http://localhost:{}/done", target.address.port());
+        let source = OneShotServer::start(format!(
+            "HTTP/1.1 302 Found\r\nLocation: {target_url}\r\nContent-Length: 0\r\n\r\n"
+        ));
+        let source_url = format!("http://localhost:{}/start", source.address.port());
+        set_outbound_policy(OutboundPolicy::Allowlist(vec![
+            Url::parse(&source_url).expect("source origin"),
+            Url::parse(&target_url).expect("target origin"),
+        ]));
+        let client = configure_outbound_client_builder(reqwest::Client::builder(), None)
+            .build()
+            .expect("guarded client");
+        let result = crate::http::request::get_json_raw(&client, &source_url, None, &[], 0).await;
+        set_outbound_policy(OutboundPolicy::Off);
+        assert!(matches!(result, Err(LiterLlmError::OutboundForbidden { .. })));
+        assert!(source.finish(), "allowed private source must receive the request");
+        assert!(!target.finish(), "different-origin target must not receive the request");
+    }
+
+    #[test]
+    #[serial(outbound_policy)]
+    fn allowlist_still_rejects_literal_private_addresses() {
+        for url in ["http://127.0.0.1:8000", "http://[::1]:8000", "http://169.254.169.254"] {
+            with_policy(
+                OutboundPolicy::Allowlist(vec![Url::parse(url).expect("origin")]),
+                || {
+                    assert!(matches!(
+                        validate_outbound_url_sync(url),
+                        Err(LiterLlmError::OutboundForbidden { .. })
+                    ));
+                },
+            );
+        }
     }
 
     #[test]
