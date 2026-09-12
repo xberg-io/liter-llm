@@ -44,7 +44,7 @@ dbg_macro = "deny"
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)'] }
 
 [workspace.package]
-version = "2.0.0"
+version = "2.0.1"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/xberg-io/liter-llm"
@@ -76,7 +76,7 @@ futures-util = "0.3"
 gcp_auth = { version = "0.12", default-features = false, features = ["ring"] }
 hex = "0.4"
 http = "1"
-jsonschema = "0.55"
+jsonschema = "0.56"
 jsonwebtoken = { version = "11", default-features = false, features = ["use_pem"] }
 
 magnus = "0.8"
@@ -104,7 +104,7 @@ rb-sys = "0.9"
 regex = "1"
 # ~keep Async / HTTP: TLS-agnostic base only; each crate adds TLS features target-conditionally.
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "multipart", "form"] }
-rmcp = { version = "3.2", features = [
+rmcp = { version = "3.3", features = [
     "server",
     "macros",
     "transport-io",

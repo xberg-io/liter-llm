@@ -7,12 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-09-12
+
+### Changed
+
+- Refresh the model catalog from models.dev ([#211](https://github.com/xberg-io/liter-llm/pull/211)).
+- Upgrade jsonschema to 0.56 and rmcp to 3.3, and regenerate bindings with Alef 0.85.19.
+
 ### Fixed
 
 - Allow explicitly allowlisted hostnames to resolve to internal addresses while preserving
   `DenyPrivate` DNS filtering, exact-origin checks, and redirect restrictions. Allowlisting a
   hostname now trusts its DNS results, including private, loopback, and link-local addresses;
   literal private IP URLs remain blocked.
+
+- Deserialize generated Python DTOs through their Rust types so serde annotations remain effective ([Alef #375](https://github.com/xberg-io/alef/pull/375)).
 
 ## [2.0.0] - 2026-09-09
 

@@ -1,6 +1,6 @@
 {
   "name": "@xberg-io/liter-llm",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "keywords": ["anthropic", "api-client", "llm", "openai"],
   "license": "MIT",

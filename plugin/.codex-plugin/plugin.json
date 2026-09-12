@@ -1,6 +1,6 @@
 {
   "name": "liter-llm",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Universal LLM API client for 165 providers — chat, streaming, tools, embeddings, search, OCR, plus an OpenAI-compatible proxy and an MCP server.",
   "author": {
     "name": "Kreuzberg, Inc.",
