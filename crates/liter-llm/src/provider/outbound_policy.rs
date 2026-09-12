@@ -411,11 +411,15 @@ mod resolver_impl {
         host: &str,
         addrs: &[SocketAddr],
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        // Every request and redirect is checked against the exact scheme/host/port
-        // allowlist before connecting. Explicitly allowed service hostnames may
-        // resolve to private addresses; DenyPrivate must still reject them here.
-        if !matches!(policy, OutboundPolicy::DenyPrivate) {
-            return Ok(());
+        // DNS only exposes the hostname, so callers must validate the initial
+        // URL's full origin separately. Trust private DNS answers only for an
+        // explicitly listed hostname, including when rechecking cached answers.
+        match policy {
+            OutboundPolicy::Off => return Ok(()),
+            OutboundPolicy::Allowlist(allowed) if allowed.iter().any(|url| url.host_str() == Some(host)) => {
+                return Ok(());
+            }
+            _ => {}
         }
 
         for sa in addrs {
@@ -511,6 +515,12 @@ mod resolver_impl {
             let allowed = resolver
                 .resolve("internal-llm.invalid".parse().expect("DNS name"))
                 .await;
+            set_outbound_policy(OutboundPolicy::Allowlist(vec![
+                Url::parse("http://other-service.invalid:8000").expect("different origin"),
+            ]));
+            let unlisted = resolver
+                .resolve("internal-llm.invalid".parse().expect("DNS name"))
+                .await;
             set_outbound_policy(OutboundPolicy::DenyPrivate);
             let denied = resolver
                 .resolve("internal-llm.invalid".parse().expect("DNS name"))
@@ -520,6 +530,13 @@ mod resolver_impl {
                 allowed.expect("allowlisted cached addresses").collect::<Vec<_>>(),
                 addresses
             );
+            let error = unlisted
+                .err()
+                .expect("Allowlist must recheck cached hostname membership");
+            assert!(matches!(
+                error.downcast_ref::<LiterLlmError>(),
+                Some(LiterLlmError::OutboundForbidden { .. })
+            ));
             let error = denied.err().expect("DenyPrivate must recheck cached addresses");
             assert!(matches!(
                 error.downcast_ref::<LiterLlmError>(),
@@ -539,6 +556,11 @@ pub use resolver_impl::{cached_guarded_resolver, guarded_resolver};
 /// Cross-origin redirects are rejected so credentials in custom headers cannot
 /// be forwarded to a different origin. Active policies also disable proxies;
 /// otherwise the proxy could resolve the target outside the guarded resolver.
+///
+/// Callers must validate each initial request URL with [`validate_outbound_url_sync`]
+/// or [`validate_outbound_url`] before sending it. The DNS resolver sees only the
+/// hostname, not the scheme or port, and literal IP URLs bypass DNS entirely.
+/// These hooks therefore do not enforce the complete initial-origin policy.
 #[cfg_attr(alef, alef(skip))]
 pub fn configure_outbound_client_builder(
     mut builder: reqwest::ClientBuilder,
@@ -908,6 +930,22 @@ mod tests {
 
     #[test]
     #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    fn resolver_allowlist_rejects_unlisted_private_addresses() {
+        let policy = OutboundPolicy::Allowlist(vec![Url::parse("http://internal-llm:8000").expect("origin")]);
+        for host in ["other-service", "internal-llm.attacker.invalid", "internal-llm."] {
+            for address in ["172.18.0.2:0", "[fd00::2]:0", "[::1]:0", "169.254.169.254:0"] {
+                let error = resolver_impl::validate_addrs(policy.clone(), host, &[address.parse().expect("address")])
+                    .expect_err("unlisted hostname must not bypass private-address filtering");
+                assert!(matches!(
+                    error.downcast_ref::<LiterLlmError>(),
+                    Some(LiterLlmError::OutboundForbidden { .. })
+                ));
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
     fn resolver_deny_private_still_rejects_private_address() {
         let addrs = [
             "172.18.0.2:8000".parse().expect("private IPv4"),
@@ -946,6 +984,39 @@ mod tests {
             serde_json::json!({})
         );
         assert!(target.finish(), "allowlisted target must receive a request");
+    }
+
+    #[tokio::test]
+    #[serial(outbound_policy)]
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    async fn configured_builder_direct_request_checks_private_hostname_membership() {
+        for allow_target in [false, true] {
+            let target = OneShotServer::start("HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n{}".to_string());
+            let target_url = format!("http://localhost:{}/", target.address.port());
+            let allowed_url = if allow_target {
+                target_url.as_str()
+            } else {
+                "http://allowed.invalid:8000"
+            };
+            set_outbound_policy(OutboundPolicy::Allowlist(vec![
+                Url::parse(allowed_url).expect("allowlisted origin"),
+            ]));
+            let client = configure_outbound_client_builder(reqwest::Client::builder(), None)
+                .build()
+                .expect("guarded client");
+            // Exercise the exported builder without the URL-validating request wrapper.
+            let result = client.get(&target_url).send().await;
+            set_outbound_policy(OutboundPolicy::Off);
+            let received = target.finish();
+            if allow_target {
+                assert_eq!(result.expect("allowlisted hostname must be reachable").status(), 200);
+                assert!(received, "allowlisted target must receive a request");
+            } else {
+                let error = LiterLlmError::from(result.expect_err("unlisted localhost must be blocked"));
+                assert!(matches!(error, LiterLlmError::OutboundForbidden { .. }));
+                assert!(!received, "unlisted target must not receive a request");
+            }
+        }
     }
 
     #[tokio::test]
