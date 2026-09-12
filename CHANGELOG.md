@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Allow explicitly allowlisted hostnames to resolve to internal addresses while preserving
+  `DenyPrivate` DNS filtering, exact-origin checks, and redirect restrictions. Allowlisting a
+  hostname now trusts its DNS results, including private, loopback, and link-local addresses;
+  literal private IP URLs remain blocked.
+
 ## [2.0.0] - 2026-09-09
 
 ### Breaking changes

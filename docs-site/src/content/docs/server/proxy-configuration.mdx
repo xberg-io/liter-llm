@@ -74,6 +74,16 @@ Outbound policy for custom provider and model endpoint URLs. The proxy default i
 | `outbound_policy`    | string       | `"deny_private"` | One of `deny_private`, `allowlist`, or `off`. Use `off` only when every configured endpoint is trusted. |
 | `outbound_allowlist` | `list<string>` | `[]`             | Allowed origins when `outbound_policy = "allowlist"`. Scheme, host, and port define the origin; paths are ignored. |
 
+With `allowlist`, explicitly listed hostnames can resolve to private, loopback, or link-local
+addresses, allowing internal model servers without disabling origin checks. Only list hostnames
+whose DNS you trust: this mode does not block an allowed hostname from resolving or rebinding to
+an internal address. `deny_private` retains its connection-time IP restrictions.
+
+This exception applies to DNS results. Literal private IP URLs remain blocked even when listed.
+Use a trusted service hostname for internal endpoints. Authenticated clients still reject
+cross-origin redirects, including redirects between two allowlisted origins; HTTPS-to-HTTP
+redirects remain blocked.
+
 <Snip_toml_server_security />
 
 ## `[[models]]`
