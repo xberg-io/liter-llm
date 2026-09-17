@@ -870,7 +870,7 @@ e2e = [
 precondition = "command -v pnpm >/dev/null 2>&1"
 e2e = [
   "pnpm -r --filter=\"./crates/liter-llm-node\" run build",
-  "cd e2e/node && pnpm install --no-frozen-lockfile && pnpm dlx vitest run",
+  "cd e2e/node && pnpm install --no-frozen-lockfile && pnpm exec vitest run",
 ]
 
 [crates.test.go]
