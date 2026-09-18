@@ -38,6 +38,12 @@ pub enum OutboundPolicy {
     /// cannot be inspected by this policy.
     DenyPrivate,
 
+    /// Apply [`OutboundPolicy::DenyPrivate`] except to explicitly trusted
+    /// exact hosts or domain suffixes. A suffix starts with `.` and matches
+    /// both the bare domain and its subdomains. Trusted hosts may resolve to
+    /// private addresses; other public hosts remain available.
+    DenyPrivateExceptHosts(Vec<String>),
+
     /// Only allow URLs whose origin (scheme + host + port) matches one of the
     /// provided entries. Allowlisted hostnames may resolve to any address,
     /// including private, loopback, and link-local addresses. Only allowlist
@@ -100,7 +106,7 @@ pub async fn validate_outbound_url(raw_url: &str) -> Result<(), LiterLlmError> {
     }
 
     let url = Url::parse(raw_url).map_err(|e| LiterLlmError::OutboundForbidden {
-        url: raw_url.to_string(),
+        url: "<invalid URL>".to_owned(),
         reason: format!("invalid URL: {e}"),
     })?;
 
@@ -108,18 +114,30 @@ pub async fn validate_outbound_url(raw_url: &str) -> Result<(), LiterLlmError> {
         "http" | "https" => {}
         other => {
             return Err(LiterLlmError::OutboundForbidden {
-                url: raw_url.to_string(),
+                url: endpoint_label(&url),
                 reason: format!("scheme '{other}' is not allowed; only http/https"),
             });
         }
     }
 
-    validate_literal_host(&url, raw_url)?;
-
     match policy {
         OutboundPolicy::Off => Ok(()),
-        OutboundPolicy::DenyPrivate => check_deny_private(&url, raw_url).await,
-        OutboundPolicy::Allowlist(allowed) => check_allowlist(&url, raw_url, &allowed),
+        OutboundPolicy::DenyPrivate => {
+            validate_literal_host(&url, raw_url)?;
+            check_deny_private(&url, raw_url).await
+        }
+        OutboundPolicy::DenyPrivateExceptHosts(allowed) => {
+            if host_is_allowed(&url, &allowed) {
+                Ok(())
+            } else {
+                validate_literal_host(&url, raw_url)?;
+                check_deny_private(&url, raw_url).await
+            }
+        }
+        OutboundPolicy::Allowlist(allowed) => {
+            validate_literal_host(&url, raw_url)?;
+            check_allowlist(&url, raw_url, &allowed)
+        }
     }
 }
 
@@ -145,7 +163,7 @@ pub fn validate_outbound_url_sync(raw_url: &str) -> Result<(), LiterLlmError> {
     }
 
     let url = Url::parse(raw_url).map_err(|e| LiterLlmError::OutboundForbidden {
-        url: raw_url.to_string(),
+        url: "<invalid URL>".to_owned(),
         reason: format!("invalid URL: {e}"),
     })?;
 
@@ -153,32 +171,59 @@ pub fn validate_outbound_url_sync(raw_url: &str) -> Result<(), LiterLlmError> {
         "http" | "https" => {}
         other => {
             return Err(LiterLlmError::OutboundForbidden {
-                url: raw_url.to_string(),
+                url: endpoint_label(&url),
                 reason: format!("scheme '{other}' is not allowed; only http/https"),
             });
         }
     }
 
-    validate_literal_host(&url, raw_url)?;
-
-    if let OutboundPolicy::Allowlist(allowed) = policy {
-        return check_allowlist(&url, raw_url, &allowed);
+    match policy {
+        OutboundPolicy::DenyPrivateExceptHosts(allowed) if host_is_allowed(&url, &allowed) => Ok(()),
+        OutboundPolicy::Allowlist(allowed) => {
+            validate_literal_host(&url, raw_url)?;
+            check_allowlist(&url, raw_url, &allowed)
+        }
+        _ => validate_literal_host(&url, raw_url),
     }
-
-    Ok(())
 }
 
-fn validate_literal_host(url: &Url, raw_url: &str) -> Result<(), LiterLlmError> {
+fn host_is_allowed(url: &Url, allowed: &[String]) -> bool {
+    url.host_str()
+        .is_some_and(|host| allowed.iter().any(|entry| host_matches(host, entry)))
+}
+
+fn host_matches(host: &str, entry: &str) -> bool {
+    let host = host.trim_end_matches('.').to_ascii_lowercase();
+    let bare = entry.trim_start_matches('.').trim_end_matches('.').to_ascii_lowercase();
+    !bare.is_empty()
+        && (host == bare
+            || (entry.starts_with('.') && host.strip_suffix(&bare).is_some_and(|prefix| prefix.ends_with('.'))))
+}
+
+fn endpoint_label(url: &Url) -> String {
+    let host = match url.host() {
+        Some(url::Host::Domain(host)) => host.to_owned(),
+        Some(url::Host::Ipv4(address)) => address.to_string(),
+        Some(url::Host::Ipv6(address)) => format!("[{address}]"),
+        None => return "<missing host>".to_owned(),
+    };
+    match url.port_or_known_default() {
+        Some(port) => format!("{host}:{port}"),
+        None => host,
+    }
+}
+
+fn validate_literal_host(url: &Url, _raw_url: &str) -> Result<(), LiterLlmError> {
     match url.host() {
         Some(url::Host::Ipv4(v4)) if is_forbidden(IpAddr::V4(v4)) => {
             return Err(LiterLlmError::OutboundForbidden {
-                url: raw_url.to_owned(),
+                url: endpoint_label(url),
                 reason: format!("host is a forbidden address {v4}"),
             });
         }
         Some(url::Host::Ipv6(v6)) if is_forbidden(IpAddr::V6(v6)) => {
             return Err(LiterLlmError::OutboundForbidden {
-                url: raw_url.to_owned(),
+                url: endpoint_label(url),
                 reason: format!("host is a forbidden address {v6}"),
             });
         }
@@ -205,7 +250,7 @@ fn validate_redirect(previous: Option<&Url>, next: &Url, allow_cross_origin: boo
         && next.scheme() == "http"
     {
         return Err(LiterLlmError::OutboundForbidden {
-            url: next.as_str().to_owned(),
+            url: endpoint_label(next),
             reason: "HTTPS-to-HTTP redirects are forbidden".into(),
         });
     }
@@ -219,7 +264,7 @@ fn validate_redirect(previous: Option<&Url>, next: &Url, allow_cross_origin: boo
         && !same_origin(previous, next)
     {
         return Err(LiterLlmError::OutboundForbidden {
-            url: next.as_str().to_owned(),
+            url: endpoint_label(next),
             reason: "cross-origin redirects are forbidden while an outbound policy is active".into(),
         });
     }
@@ -234,9 +279,9 @@ fn same_origin(left: &Url, right: &Url) -> bool {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-async fn check_deny_private(url: &Url, raw: &str) -> Result<(), LiterLlmError> {
+async fn check_deny_private(url: &Url, _raw: &str) -> Result<(), LiterLlmError> {
     let host = url.host_str().ok_or_else(|| LiterLlmError::OutboundForbidden {
-        url: raw.to_string(),
+        url: endpoint_label(url),
         reason: "URL has no host".into(),
     })?;
 
@@ -246,14 +291,14 @@ async fn check_deny_private(url: &Url, raw: &str) -> Result<(), LiterLlmError> {
         tokio::net::lookup_host(format!("{host}:{port}"))
             .await
             .map_err(|e| LiterLlmError::OutboundForbidden {
-                url: raw.to_string(),
+                url: endpoint_label(url),
                 reason: format!("DNS resolution failed: {e}"),
             })?;
 
     for sa in addrs {
         if is_forbidden(sa.ip()) {
             return Err(LiterLlmError::OutboundForbidden {
-                url: raw.to_string(),
+                url: endpoint_label(url),
                 reason: format!("host resolves to forbidden address {}", sa.ip()),
             });
         }
@@ -261,13 +306,13 @@ async fn check_deny_private(url: &Url, raw: &str) -> Result<(), LiterLlmError> {
     Ok(())
 }
 
-fn check_allowlist(url: &Url, raw: &str, allowed: &[Url]) -> Result<(), LiterLlmError> {
+fn check_allowlist(url: &Url, _raw: &str, allowed: &[Url]) -> Result<(), LiterLlmError> {
     let origin_match = allowed.iter().any(|allowed_url| same_origin(allowed_url, url));
     if origin_match {
         Ok(())
     } else {
         Err(LiterLlmError::OutboundForbidden {
-            url: raw.to_string(),
+            url: endpoint_label(url),
             reason: "URL not in outbound allowlist".into(),
         })
     }
@@ -282,40 +327,44 @@ fn check_allowlist(url: &Url, raw: &str, allowed: &[Url]) -> Result<(), LiterLlm
 #[cfg_attr(alef, alef(skip))]
 pub fn is_forbidden(ip: IpAddr) -> bool {
     match ip {
-        IpAddr::V4(v4) => {
-            v4.is_loopback()
-                || v4.is_unspecified()
-                || v4.is_private()
-                || v4.is_link_local()
-                || v4.is_multicast()
-                || v4.is_broadcast()
-                || is_cgnat(v4)
-        }
-        IpAddr::V6(v6) => {
-            v6.is_loopback()
-                || v6.is_unspecified()
-                || v6.is_multicast()
-                || is_unique_local_v6(v6)
-                || is_link_local_v6(v6)
-                || v6
-                    .to_ipv4_mapped()
-                    .map(|m| is_forbidden(IpAddr::V4(m)))
-                    .unwrap_or(false)
-        }
+        IpAddr::V4(v4) => is_forbidden_v4(v4),
+        IpAddr::V6(v6) => v6.to_ipv4_mapped().map_or_else(|| is_forbidden_v6(v6), is_forbidden_v4),
     }
 }
 
-fn is_cgnat(ip: std::net::Ipv4Addr) -> bool {
-    let [a, b, _, _] = ip.octets();
-    a == 100 && (64..=127).contains(&b)
+fn is_forbidden_v4(ip: std::net::Ipv4Addr) -> bool {
+    let [a, b, c, _] = ip.octets();
+    a == 0
+        || a == 10
+        || (a == 100 && (64..=127).contains(&b))
+        || a == 127
+        || (a == 169 && b == 254)
+        || (a == 172 && (16..=31).contains(&b))
+        || (a == 192 && b == 0 && (c == 0 || c == 2))
+        || (a == 192 && b == 168)
+        || (a == 198 && (b == 18 || b == 19 || (b == 51 && c == 100)))
+        || (a == 203 && b == 0 && c == 113)
+        || a >= 224
 }
 
-fn is_unique_local_v6(ip: std::net::Ipv6Addr) -> bool {
-    (ip.segments()[0] & 0xfe00) == 0xfc00
-}
-
-fn is_link_local_v6(ip: std::net::Ipv6Addr) -> bool {
-    (ip.segments()[0] & 0xffc0) == 0xfe80
+fn is_forbidden_v6(ip: std::net::Ipv6Addr) -> bool {
+    let segments = ip.segments();
+    (segments[0] == 0
+        && segments[1] == 0
+        && segments[2] == 0
+        && segments[3] == 0
+        && segments[4] == 0
+        && segments[5] == 0)
+        || (segments[0] == 0x0064
+            && segments[1] == 0xff9b
+            && segments[2] == 0
+            && segments[3] == 0
+            && segments[4] == 0
+            && segments[5] == 0)
+        || segments[0] == 0x2002
+        || (segments[0] & 0xfe00) == 0xfc00
+        || (segments[0] & 0xffc0) == 0xfe80
+        || (segments[0] & 0xff00) == 0xff00
 }
 
 /// A `reqwest` DNS resolver that filters resolved addresses through the
@@ -416,6 +465,11 @@ mod resolver_impl {
         // explicitly listed hostname, including when rechecking cached answers.
         match policy {
             OutboundPolicy::Off => return Ok(()),
+            OutboundPolicy::DenyPrivateExceptHosts(allowed)
+                if allowed.iter().any(|entry| super::host_matches(host, entry)) =>
+            {
+                return Ok(());
+            }
             OutboundPolicy::Allowlist(allowed) if allowed.iter().any(|url| url.host_str() == Some(host)) => {
                 return Ok(());
             }
@@ -502,6 +556,8 @@ mod resolver_impl {
             let addresses = vec![
                 "172.18.0.2:0".parse().expect("private IPv4"),
                 "[fd00::2]:0".parse().expect("private IPv6"),
+                "192.0.2.1:0".parse().expect("reserved IPv4"),
+                "[64:ff9b::a9fe:a9fe]:0".parse().expect("NAT64 metadata"),
             ];
             store_addrs(
                 &resolver.cache,
@@ -769,6 +825,20 @@ mod tests {
 
     #[test]
     #[serial(outbound_policy)]
+    fn outbound_rejection_reports_only_host_and_port() {
+        with_policy(OutboundPolicy::DenyPrivate, || {
+            let error = validate_outbound_url_sync("http://user:password@127.0.0.1:11434/private/path?token=secret")
+                .expect_err("loopback should be rejected")
+                .to_string();
+            assert!(error.contains("127.0.0.1:11434"), "authority missing: {error}");
+            for secret in ["user", "password", "private/path", "token", "secret"] {
+                assert!(!error.contains(secret), "rejection leaked {secret}: {error}");
+            }
+        });
+    }
+
+    #[test]
+    #[serial(outbound_policy)]
     fn validate_sync_deny_private_rejects_metadata_ip() {
         with_policy(OutboundPolicy::DenyPrivate, || {
             let result = validate_outbound_url_sync("http://169.254.169.254/");
@@ -839,6 +909,38 @@ mod tests {
                 assert!(
                     validate_outbound_url_sync(rejected).is_err(),
                     "allowlist must reject a different origin: {rejected}"
+                );
+            }
+        });
+    }
+
+    #[test]
+    #[serial(outbound_policy)]
+    fn validate_sync_private_host_exceptions_preserve_public_hosts() {
+        let allowed = vec![
+            "llm.internal".into(),
+            ".models.internal".into(),
+            "169.254.169.254".into(),
+        ];
+        with_policy(OutboundPolicy::DenyPrivateExceptHosts(allowed), || {
+            for accepted in [
+                "http://llm.internal:11434/v1",
+                "https://gpu.models.internal:8443/v1",
+                "http://169.254.169.254/latest/meta-data/",
+            ] {
+                assert!(
+                    validate_outbound_url_sync(accepted).is_ok(),
+                    "allowlisted host rejected: {accepted}"
+                );
+            }
+            assert!(
+                validate_outbound_url_sync("https://public.example.com/v1").is_ok(),
+                "public hosts must remain available when private-host exceptions are configured"
+            );
+            for rejected in ["http://169.254.169.253/latest/meta-data/", "http://127.0.0.1:11434/v1"] {
+                assert!(
+                    validate_outbound_url_sync(rejected).is_err(),
+                    "unlisted private host accepted: {rejected}"
                 );
             }
         });
@@ -946,12 +1048,29 @@ mod tests {
 
     #[test]
     #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    fn resolver_host_allowlist_rechecks_suffix_before_private_address() {
+        let policy = OutboundPolicy::DenyPrivateExceptHosts(vec![".models.internal".into()]);
+        let private = [
+            "172.18.0.2:0".parse().expect("private address"),
+            "192.0.2.1:0".parse().expect("reserved address"),
+            "[64:ff9b::a9fe:a9fe]:0".parse().expect("NAT64 metadata"),
+        ];
+        assert!(resolver_impl::validate_addrs(policy.clone(), "gpu.models.internal", &private).is_ok());
+        assert!(resolver_impl::validate_addrs(policy, "models.internal.attacker.invalid", &private).is_err());
+    }
+
+    #[test]
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
     fn resolver_deny_private_still_rejects_private_address() {
         let addrs = [
             "172.18.0.2:8000".parse().expect("private IPv4"),
             "[fd00::2]:8000".parse().expect("private IPv6"),
             "[::1]:8000".parse().expect("loopback IPv6"),
             "[fe80::2]:8000".parse().expect("link-local IPv6"),
+            "0.1.2.3:8000".parse().expect("this-network IPv4"),
+            "192.0.2.1:8000".parse().expect("reserved IPv4"),
+            "[64:ff9b::a9fe:a9fe]:8000".parse().expect("NAT64 metadata"),
+            "[2002:a9fe:a9fe::1]:8000".parse().expect("6to4 metadata"),
         ];
         for address in addrs {
             let error = resolver_impl::validate_addrs(OutboundPolicy::DenyPrivate, "private-service", &[address])
