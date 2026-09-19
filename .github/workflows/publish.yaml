@@ -3046,7 +3046,7 @@ jobs:
       (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+      - uses: actions/create-github-app-token@v3
         id: bucket-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
@@ -3054,18 +3054,18 @@ jobs:
           owner: xberg-io
           repositories: scoop-bucket
 
-      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+      - uses: actions/create-github-app-token@v3
         id: source-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           owner: xberg-io
 
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@v7
         with:
           repository: xberg-io/scoop-bucket
           token: ${{ steps.bucket-token.outputs.token }}
@@ -3561,7 +3561,7 @@ jobs:
       # the step below fails the job either way. ~keep
       - name: Hold release as draft
         if: ${{ needs.prepare.outputs.dry_run != 'true' && needs.prepare.outputs.is_tag == 'true' && (contains(needs.*.result, 'failure') || steps.verify.outputs.ok != 'true') }}
-        uses: xberg-io/actions/retract-incomplete-release@0650bf373f2d1ec58b69fd3c5d9098b40ada69ed # v1.11.7
+        uses: xberg-io/actions/retract-incomplete-release@v1
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           consumer-results: |
@@ -3788,7 +3788,7 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           python-version: "3.13"
       # ~keep Same rendered-bundle gap as the npm job, but silent: this job had no guard at

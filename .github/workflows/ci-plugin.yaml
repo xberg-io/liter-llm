@@ -47,7 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v10.1.0
       # Plugin version must track the core crate version (task version:sync keeps it pinned).
       - name: Verify plugin version tracks core
         run: python3 scripts/sync_plugin_version.py --check
