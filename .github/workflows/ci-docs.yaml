@@ -35,7 +35,7 @@ concurrency:
 jobs:
   docs:
     # ~keep Reviewed standalone prose support: https://github.com/xberg-io/actions/pull/63
-    uses: xberg-io/actions/.github/workflows/reusable-docs-deploy.yml@34590ef123cfe8aec4bbb0f5718996db64c70fea
+    uses: xberg-io/actions/.github/workflows/reusable-docs-deploy.yml@v1
     with:
       prose-dependency-directory: docs-site
       deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
