@@ -152,6 +152,7 @@ tasks:
         scripts/ci/test_swift_task_environment.py
         scripts/ci/test_homebrew_consumer_version.py
         scripts/ci/test_node_public_outputs.py
+        scripts/ci/test_go_smoke_test_filter.py
 
   test:all:
     desc: Run ALL test suites across all languages

@@ -37,8 +37,13 @@ tasks:
   smoke:rust:
     desc: Run Rust test_app smoke test
     dir: test_apps/rust
+    preconditions:
+      # The only binary is the generated mock-server, so `cargo run` never exercised the
+      # published crate; run the smoke integration test and refuse an empty suite. ~keep
+      - sh: grep -q '^#\[test\]' tests/smoke_test.rs
+        msg: "test_apps/rust/tests/smoke_test.rs declares no tests; the smoke task would execute nothing"
     cmds:
-      - cargo run
+      - cargo test --test smoke_test
 
   smoke:python:
     desc: Run Python test_app smoke test
@@ -74,8 +79,12 @@ tasks:
     env:
       GOWORK: "off"
     cmds:
-      - go mod download
-      - go test -v -run "Test_Smoke"
+      # `alef sync-versions` rewrites go.mod but not go.sum, so `go mod download` alone leaves
+      # the published module without a checksum; tidy first, as `alef test-apps run` does. ~keep
+      - go mod tidy
+      # Go selects tests by name, not file; derive the filter from the generated smoke_test.go
+      # so regeneration cannot leave a hard-coded prefix matching a subset or nothing. ~keep
+      - go test -v -run "$(python3 {{.ROOT_DIR}}/scripts/ci/go_smoke_test_filter.py smoke_test.go)"
 
   smoke:java:
     desc: Run Java test_app smoke test
