@@ -196,37 +196,47 @@ impl Provider for AzureProvider {
     ///
     /// For blocked responses where the choice has no `message` content but
     /// does have `content_filter_results`, we ensure the response still has
-    /// a valid structure.
+    /// a valid structure. `content_filter_results` itself is never removed,
+    /// so the raw JSON keeps Azure's filter metadata for inspection. ~keep
     fn transform_response(&self, body: &mut serde_json::Value) -> Result<()> {
-        if let Some(choices) = body.pointer("/choices").and_then(|c| c.as_array()) {
-            for choice in choices {
-                if let Some(filter_results) = choice.get("content_filter_results") {
-                    let is_filtered = choice.get("finish_reason").and_then(|fr| fr.as_str()) == Some("content_filter");
+        if !has_filtered_choice_without_message(body) {
+            return Ok(());
+        }
 
-                    if is_filtered && choice.get("message").is_none() {
-                        // ~keep Azure filtered responses can omit `message`; inject one for deserialization.
-                        if let Some(choices_arr) = body.get_mut("choices").and_then(|c| c.as_array_mut())
-                            && let Some(choice_obj) = choices_arr.first_mut().and_then(|c| c.as_object_mut())
-                        {
-                            choice_obj.insert(
-                                "message".to_owned(),
-                                serde_json::json!({
-                                    "role": "assistant",
-                                    "content": null,
-                                    "refusal": "Content filtered by Azure content safety."
-                                }),
-                            );
-                        }
-                        break;
-                    }
-
-                    // ~keep Preserve Azure filter_results metadata for raw JSON inspection.
-                    let _ = filter_results;
-                }
-            }
+        // ~keep Azure filtered responses can omit `message`; inject one for deserialization.
+        if let Some(choice_obj) = body
+            .get_mut("choices")
+            .and_then(|c| c.as_array_mut())
+            .and_then(|choices| choices.first_mut())
+            .and_then(|c| c.as_object_mut())
+        {
+            choice_obj.insert(
+                "message".to_owned(),
+                serde_json::json!({
+                    "role": "assistant",
+                    "content": null,
+                    "refusal": "Content filtered by Azure content safety."
+                }),
+            );
         }
         Ok(())
     }
+}
+
+/// Return `true` when a choice was blocked by Azure content filtering and carries no `message`.
+///
+/// Only the presence of such a choice matters: the stub is always
+/// written to the first choice, so which one triggered it makes no
+/// difference. ~keep
+fn has_filtered_choice_without_message(body: &serde_json::Value) -> bool {
+    let Some(choices) = body.pointer("/choices").and_then(|c| c.as_array()) else {
+        return false;
+    };
+    choices.iter().any(|choice| {
+        choice.get("content_filter_results").is_some()
+            && choice.get("finish_reason").and_then(|fr| fr.as_str()) == Some("content_filter")
+            && choice.get("message").is_none()
+    })
 }
 
 /// Return `true` when the model name looks like an O-series reasoning model.
@@ -563,6 +573,42 @@ mod tests {
                 .expect("refusal should be a string")
                 .contains("Content filtered")
         );
+    }
+
+    #[test]
+    fn transform_response_content_filter_later_choice_stubs_first() {
+        // ~keep Pins a quirk: the stub always lands on choices[0], even when the filtered choice
+        // is a later one, so an existing message on choices[0] is replaced.
+        let provider = make_provider("https://myresource.openai.azure.com", "2024-10-21");
+        let mut body = json!({
+            "id": "chatcmpl-123",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": "replaced"},
+                    "finish_reason": "stop"
+                },
+                {
+                    "index": 1,
+                    "finish_reason": "content_filter",
+                    "content_filter_results": {
+                        "hate": {"filtered": true, "severity": "high"}
+                    }
+                }
+            ]
+        });
+        provider
+            .transform_response(&mut body)
+            .expect("transform should succeed");
+        assert_eq!(
+            body["choices"][0]["message"]["refusal"],
+            "Content filtered by Azure content safety."
+        );
+        assert!(
+            body["choices"][0]["message"]["content"].is_null(),
+            "the original message must be replaced wholesale, not merged into"
+        );
+        assert!(body["choices"][1].get("message").is_none());
     }
 
     #[test]
