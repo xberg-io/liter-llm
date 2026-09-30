@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.96.4"
+alef_version = "0.103.2"
 languages = [
   "python",
   "node",
@@ -302,7 +302,7 @@ ist = "ist"
 "poly.toml" = ["file-too-long"]
 ".alef-toml-merge-provenance.toml" = ["file-too-long"]
 # --- quality-debt baseline (generated) ---
-# 66 size/complexity findings across 43 files that predate these
+# 44 size/complexity findings across 36 files that predate these
 # metrics. Listed per file rather than switching the rules off, so the metrics still
 # fire on every file NOT listed here -- new code stays covered, and each path below is
 # one discrete unit of work.
@@ -314,10 +314,8 @@ ist = "ist"
 "crates/liter-llm-catalog-gen/src/schema.rs" = ["function-too-long", "too-many-parameters"]
 "crates/liter-llm-cli/src/commands/api.rs" = ["function-too-long"]
 "crates/liter-llm-proxy/src/config/mod.rs" = ["function-too-long"]
-"crates/liter-llm-proxy/src/config/provider.rs" = ["function-too-long", "nesting-too-deep"]
 "crates/liter-llm-proxy/src/guardrail.rs" = ["function-too-long"]
 "crates/liter-llm-proxy/src/lib.rs" = ["function-too-long"]
-"crates/liter-llm-proxy/src/routes/realtime.rs" = ["file-too-long", "function-too-long"]
 "crates/liter-llm-proxy/src/service_pool.rs" = ["file-too-long", "function-too-long"]
 "crates/liter-llm-proxy/src/shutdown.rs" = ["function-too-long"]
 "crates/liter-llm/schemas/providers.json" = ["file-too-long"]
@@ -325,32 +323,11 @@ ist = "ist"
 "crates/liter-llm/src/client/llm_config.rs" = ["cyclomatic-complexity", "function-too-long"]
 "crates/liter-llm/src/client/managed.rs" = ["cyclomatic-complexity", "function-too-long"]
 "crates/liter-llm/src/client/mod.rs" = ["file-too-long"]
-"crates/liter-llm/src/provider/anthropic.rs" = [
-  "cyclomatic-complexity",
-  "file-too-long",
-  "function-too-long",
-  "nesting-too-deep",
-]
-"crates/liter-llm/src/provider/bedrock.rs" = [
-  "cyclomatic-complexity",
-  "file-too-long",
-  "function-too-long",
-  "nesting-too-deep",
-  "too-many-parameters",
-]
 "crates/liter-llm/src/provider/cohere.rs" = ["function-too-long"]
 "crates/liter-llm/src/provider/mod.rs" = ["cyclomatic-complexity", "file-too-long"]
 "crates/liter-llm/src/provider/outbound_policy.rs" = ["file-too-long"]
-"crates/liter-llm/src/provider/vertex.rs" = [
-  "cyclomatic-complexity",
-  "file-too-long",
-  "function-too-long",
-  "nesting-too-deep",
-]
 "crates/liter-llm/src/realtime/openai.rs" = ["function-too-long"]
-"crates/liter-llm/src/streaming.rs" = ["function-too-long", "nesting-too-deep"]
 "crates/liter-llm/src/tests.rs" = ["file-too-long"]
-"crates/liter-llm/src/tower/budget.rs" = ["file-too-long", "function-too-long", "too-many-parameters"]
 "crates/liter-llm/src/tower/cache.rs" = ["file-too-long", "function-too-long"]
 "crates/liter-llm/src/tower/cache_singleflight.rs" = ["file-too-long"]
 "crates/liter-llm/src/tower/fallback_chain.rs" = ["function-too-long"]
@@ -2200,8 +2177,8 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-version = "2.1.1"
-hash = "liter_llm-2.1.1-Jfgk_AR7FjNQG4Xrznb1QGb5Ok1RHe9S-qBaV1eYM_f4"
+version = "2.1.2"
+hash = "liter_llm-2.1.2-Jfgk_AR7FjNQG4Xrznb1QGb5Ok1RHe9S-qBaV1eYM_f4"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "xberg-io/homebrew-tap"

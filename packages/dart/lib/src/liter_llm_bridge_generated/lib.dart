@@ -179,6 +179,59 @@ Future<double?> completionCostWithCache({
 Future<ModelInfo?> modelInfo({required String model}) =>
     RustLib.instance.api.crateModelInfo(model: model);
 
+/// Install the overlay registry from a raw catalog JSON string, bypassing
+/// the network and disk cache entirely.
+///
+/// Parses and flattens `catalog_json` with the same
+/// `registry_from_catalog_str` logic used for the embedded catalog and the
+/// network refresh path, then atomically swaps it in as the active overlay.
+/// A parse failure returns `CatalogRefreshError.Parse` and leaves any
+/// existing overlay untouched.
+///
+/// This is primarily a testable seam: it lets tests exercise overlay
+/// installation and the embedded/overlay fallback behavior in
+/// `completion_cost` / `model_info` without a real network
+/// call.
+Future<void> installCatalogOverlayFromStr({required String catalogJson}) =>
+    RustLib.instance.api.crateInstallCatalogOverlayFromStr(
+      catalogJson: catalogJson,
+    );
+
+/// Clear the overlay registry, reverting `completion_cost`,
+/// `completion_cost_with_cache`, and `model_info` to the
+/// embedded catalog.
+///
+/// Primarily a test seam (see `install_catalog_overlay_from_str`); also
+/// usable by long-running processes that want to abandon a runtime refresh.
+Future<void> clearCatalogOverlay() =>
+    RustLib.instance.api.crateClearCatalogOverlay();
+
+/// Refresh the runtime catalog overlay per `config`.
+///
+/// - `config.enabled == false`: returns `Ok(RefreshOutcome.Disabled)`
+///   immediately. No network, filesystem, or overlay activity.
+///
+/// - A fresh on-disk cache (age < `config.ttl_seconds`) exists at the
+///   resolved cache path (`config.cache_path`, or a default under
+///   `std.env.temp_dir()`): read + flatten it and install the overlay,
+///   returning `Ok(RefreshOutcome.FromCache)`. No network request is
+///   made.
+///
+/// - Otherwise: validate `config.source_url` uses `https`
+///   (`CatalogRefreshError.InsecureUrl` otherwise), fetch it, flatten it,
+///   install the overlay, best-effort write the raw JSON to the cache path
+///   (a cache write failure does not fail the refresh), and return
+///   `Ok(RefreshOutcome.Fetched)`.
+///
+/// On any error return, the overlay is left untouched: the previously
+/// active registry (a prior successful overlay, or the embedded catalog if
+/// none was ever installed) remains in effect. This is what makes the
+/// feature air-gap-safe — an unreachable or invalid `source_url` never
+/// degrades `completion_cost` / `model_info` below embedded-catalog
+/// availability.
+Future<RefreshOutcome> refreshCatalog({required CatalogRefreshConfig config}) =>
+    RustLib.instance.api.crateRefreshCatalog(config: config);
+
 /// Remove all guardrails from the global registry.
 ///
 /// Primarily useful in tests to reset state between test cases.
@@ -270,59 +323,6 @@ Future<void> checkBound({
 /// present and no crypto provider installation is needed.
 Future<void> ensureCryptoProvider() =>
     RustLib.instance.api.crateEnsureCryptoProvider();
-
-/// Install the overlay registry from a raw catalog JSON string, bypassing
-/// the network and disk cache entirely.
-///
-/// Parses and flattens `catalog_json` with the same
-/// `registry_from_catalog_str` logic used for the embedded catalog and the
-/// network refresh path, then atomically swaps it in as the active overlay.
-/// A parse failure returns `CatalogRefreshError.Parse` and leaves any
-/// existing overlay untouched.
-///
-/// This is primarily a testable seam: it lets tests exercise overlay
-/// installation and the embedded/overlay fallback behavior in
-/// `completion_cost` / `model_info` without a real network
-/// call.
-Future<void> installCatalogOverlayFromStr({required String catalogJson}) =>
-    RustLib.instance.api.crateInstallCatalogOverlayFromStr(
-      catalogJson: catalogJson,
-    );
-
-/// Clear the overlay registry, reverting `completion_cost`,
-/// `completion_cost_with_cache`, and `model_info` to the
-/// embedded catalog.
-///
-/// Primarily a test seam (see `install_catalog_overlay_from_str`); also
-/// usable by long-running processes that want to abandon a runtime refresh.
-Future<void> clearCatalogOverlay() =>
-    RustLib.instance.api.crateClearCatalogOverlay();
-
-/// Refresh the runtime catalog overlay per `config`.
-///
-/// - `config.enabled == false`: returns `Ok(RefreshOutcome.Disabled)`
-///   immediately. No network, filesystem, or overlay activity.
-///
-/// - A fresh on-disk cache (age < `config.ttl_seconds`) exists at the
-///   resolved cache path (`config.cache_path`, or a default under
-///   `std.env.temp_dir()`): read + flatten it and install the overlay,
-///   returning `Ok(RefreshOutcome.FromCache)`. No network request is
-///   made.
-///
-/// - Otherwise: validate `config.source_url` uses `https`
-///   (`CatalogRefreshError.InsecureUrl` otherwise), fetch it, flatten it,
-///   install the overlay, best-effort write the raw JSON to the cache path
-///   (a cache write failure does not fail the refresh), and return
-///   `Ok(RefreshOutcome.Fetched)`.
-///
-/// On any error return, the overlay is left untouched: the previously
-/// active registry (a prior successful overlay, or the embedded catalog if
-/// none was ever installed) remains in effect. This is what makes the
-/// feature air-gap-safe — an unreachable or invalid `source_url` never
-/// degrades `completion_cost` / `model_info` below embedded-catalog
-/// availability.
-Future<RefreshOutcome> refreshCatalog({required CatalogRefreshConfig config}) =>
-    RustLib.instance.api.crateRefreshCatalog(config: config);
 
 Future<SystemMessage> createSystemMessageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateSystemMessageFromJson(json: json);
@@ -627,6 +627,10 @@ Future<ModelInfo> createModelInfoFromJson({required String json}) =>
 Future<ModelTier> createModelTierFromJson({required String json}) =>
     RustLib.instance.api.crateCreateModelTierFromJson(json: json);
 
+Future<CatalogRefreshConfig> createCatalogRefreshConfigFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateCatalogRefreshConfigFromJson(json: json);
+
 Future<BudgetConfig> createBudgetConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateBudgetConfigFromJson(json: json);
 
@@ -639,10 +643,6 @@ Future<InFlightLimitConfig> createInFlightLimitConfigFromJson({
 
 Future<RateLimitConfig> createRateLimitConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
-
-Future<CatalogRefreshConfig> createCatalogRefreshConfigFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateCatalogRefreshConfigFromJson(json: json);
 
 Future<Message> createMessageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateMessageFromJson(json: json);
@@ -722,14 +722,14 @@ Future<StreamFormat> createStreamFormatFromJson({required String json}) =>
 Future<AuthType> createAuthTypeFromJson({required String json}) =>
     RustLib.instance.api.crateCreateAuthTypeFromJson(json: json);
 
+Future<RefreshOutcome> createRefreshOutcomeFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateRefreshOutcomeFromJson(json: json);
+
 Future<Enforcement> createEnforcementFromJson({required String json}) =>
     RustLib.instance.api.crateCreateEnforcementFromJson(json: json);
 
 Future<CacheBackend> createCacheBackendFromJson({required String json}) =>
     RustLib.instance.api.crateCreateCacheBackendFromJson(json: json);
-
-Future<RefreshOutcome> createRefreshOutcomeFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateRefreshOutcomeFromJson(json: json);
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>
 abstract class DefaultClient implements RustOpaqueInterface {
