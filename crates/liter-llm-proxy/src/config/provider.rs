@@ -344,64 +344,16 @@ async fn etcd_watch_loop(
     key: String,
     tx: mpsc::Sender<ConfigEvent>,
 ) {
-    use etcd_client::WatchOptions;
-
     loop {
         // ~keep Recreate the etcd watch stream on every reconnect attempt.
-        let mut stream = {
-            let mut guard = client.lock().await;
-            match guard.watch(key.as_str(), Some(WatchOptions::new().with_prefix())).await {
-                Ok(stream) => stream,
-                Err(err) => {
-                    tracing::warn!("etcd watch connect failed: {err}; retrying in 5s");
-                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-                    continue;
-                }
-            }
-        };
+        let mut stream = open_watch_stream(&client, &key).await;
 
         loop {
             match stream.message().await {
                 Ok(Some(resp)) => {
-                    for event in resp.events() {
-                        use etcd_client::EventType;
-                        let revision = event.kv().map(|kv| kv.mod_revision() as u64).unwrap_or(0);
-
-                        match event.event_type() {
-                            EventType::Put => {
-                                if let Some(kv) = event.kv() {
-                                    match std::str::from_utf8(kv.value()) {
-                                        Ok(raw) => {
-                                            let expanded = interpolate_env_vars(raw);
-                                            match toml::from_str::<ProxyConfig>(&expanded) {
-                                                Ok(config) => {
-                                                    if tx.send(ConfigEvent::Put { revision, config }).await.is_err() {
-                                                        let _ = stream.cancel(resp.watch_id()).await;
-                                                        return;
-                                                    }
-                                                }
-                                                Err(e) => {
-                                                    tracing::warn!("etcd config parse error: {e}");
-                                                }
-                                            }
-                                        }
-                                        Err(e) => {
-                                            tracing::warn!("etcd value is not valid UTF-8: {e}");
-                                        }
-                                    }
-                                }
-                            }
-                            EventType::Delete => {
-                                let path = event
-                                    .kv()
-                                    .map(|kv| String::from_utf8_lossy(kv.key()).into_owned())
-                                    .unwrap_or_default();
-                                if tx.send(ConfigEvent::Delete { revision, path }).await.is_err() {
-                                    let _ = stream.cancel(resp.watch_id()).await;
-                                    return;
-                                }
-                            }
-                        }
+                    if !forward_watch_events(&resp, &tx).await {
+                        let _ = stream.cancel(resp.watch_id()).await;
+                        return;
                     }
                 }
                 Ok(None) => {
@@ -417,21 +369,7 @@ async fn etcd_watch_loop(
         }
 
         // ~keep Interrupted etcd watches emit a fresh snapshot before reconnecting.
-        let resync_config = {
-            let mut guard = client.lock().await;
-            guard
-                .get(key.as_str(), None)
-                .await
-                .ok()
-                .and_then(|resp| resp.kvs().first().cloned())
-                .and_then(|kv| {
-                    let raw = std::str::from_utf8(kv.value()).ok()?.to_owned();
-                    let revision = kv.mod_revision() as u64;
-                    let expanded = interpolate_env_vars(&raw);
-                    let config = toml::from_str::<ProxyConfig>(&expanded).ok()?;
-                    Some((revision, config))
-                })
-        };
+        let resync_config = fetch_resync_snapshot(&client, &key).await;
 
         if let Some((revision, config)) = resync_config
             && tx.send(ConfigEvent::Resync { revision, config }).await.is_err()
@@ -441,6 +379,104 @@ async fn etcd_watch_loop(
 
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
+}
+
+#[cfg(feature = "etcd-watch")]
+/// Open a prefix watch on `key`, retrying every 5s until it connects.
+async fn open_watch_stream(client: &tokio::sync::Mutex<etcd_client::Client>, key: &str) -> etcd_client::WatchStream {
+    use etcd_client::WatchOptions;
+
+    loop {
+        let mut guard = client.lock().await;
+        match guard.watch(key, Some(WatchOptions::new().with_prefix())).await {
+            Ok(stream) => return stream,
+            Err(err) => {
+                // ~keep As before the split, the client lock is held through the back-off sleep.
+                tracing::warn!("etcd watch connect failed: {err}; retrying in 5s");
+                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            }
+        }
+    }
+}
+
+#[cfg(feature = "etcd-watch")]
+/// Send every event in `resp` that maps to a [`ConfigEvent`], in order.
+///
+/// Returns `false` as soon as the receiver has been dropped.
+async fn forward_watch_events(resp: &etcd_client::WatchResponse, tx: &mpsc::Sender<ConfigEvent>) -> bool {
+    for event in resp.events() {
+        if let Some(config_event) = config_event(event)
+            && tx.send(config_event).await.is_err()
+        {
+            return false;
+        }
+    }
+    true
+}
+
+#[cfg(feature = "etcd-watch")]
+/// Map one etcd watch event to a [`ConfigEvent`]. A `Put` whose value is not
+/// valid UTF-8 TOML config is logged and yields `None`.
+fn config_event(event: &etcd_client::Event) -> Option<ConfigEvent> {
+    use etcd_client::EventType;
+
+    let revision = event.kv().map(|kv| kv.mod_revision() as u64).unwrap_or(0);
+
+    match event.event_type() {
+        EventType::Put => {
+            let config = parse_put_value(event.kv()?)?;
+            Some(ConfigEvent::Put { revision, config })
+        }
+        EventType::Delete => {
+            let path = event
+                .kv()
+                .map(|kv| String::from_utf8_lossy(kv.key()).into_owned())
+                .unwrap_or_default();
+            Some(ConfigEvent::Delete { revision, path })
+        }
+    }
+}
+
+#[cfg(feature = "etcd-watch")]
+/// Parse a `Put` value as env-interpolated TOML config, warning on failure.
+fn parse_put_value(kv: &etcd_client::KeyValue) -> Option<ProxyConfig> {
+    let raw = match std::str::from_utf8(kv.value()) {
+        Ok(raw) => raw,
+        Err(e) => {
+            tracing::warn!("etcd value is not valid UTF-8: {e}");
+            return None;
+        }
+    };
+    let expanded = interpolate_env_vars(raw);
+    match toml::from_str::<ProxyConfig>(&expanded) {
+        Ok(config) => Some(config),
+        Err(e) => {
+            tracing::warn!("etcd config parse error: {e}");
+            None
+        }
+    }
+}
+
+#[cfg(feature = "etcd-watch")]
+/// Fetch the current value at `key` as a `(revision, config)` resync snapshot,
+/// or `None` when it is absent or unparsable.
+async fn fetch_resync_snapshot(
+    client: &tokio::sync::Mutex<etcd_client::Client>,
+    key: &str,
+) -> Option<(u64, ProxyConfig)> {
+    let mut guard = client.lock().await;
+    guard
+        .get(key, None)
+        .await
+        .ok()
+        .and_then(|resp| resp.kvs().first().cloned())
+        .and_then(|kv| {
+            let raw = std::str::from_utf8(kv.value()).ok()?.to_owned();
+            let revision = kv.mod_revision() as u64;
+            let expanded = interpolate_env_vars(&raw);
+            let config = toml::from_str::<ProxyConfig>(&expanded).ok()?;
+            Some((revision, config))
+        })
 }
 
 /// Load and parse a TOML file with env-var interpolation.
