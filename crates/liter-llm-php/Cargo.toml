@@ -24,7 +24,7 @@ crate-type = ["cdylib"]
 extension-module = []
 
 [dependencies]
-ext-php-rs = "0.15.15"
+ext-php-rs = "0.16.0"
 futures-util = "0.3"
 liter-llm = { version = "2.1.1", path = "../liter-llm", features = ["native-http", "full"] }
 serde = { version = "1", features = ["derive"] }
