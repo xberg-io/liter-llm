@@ -11,7 +11,7 @@ use memchr::memchr;
 use pin_project_lite::pin_project;
 
 use crate::error::{LiterLlmError, Result};
-use crate::http::request::{ResponseReadOptions, StreamingPost, with_retry_bounded};
+use crate::http::request::{ResponseReadOptions, StreamingPost};
 #[cfg(test)]
 use crate::types::ChatCompletionChunk;
 
@@ -136,7 +136,7 @@ where
     P: Fn(&str) -> Result<Option<T>> + Send + 'static,
     T: Send + 'static,
 {
-    let resp = send_streaming_post(client, &request, options).await?;
+    let resp = request.send(client, options).await?;
     let byte_stream = resp.bytes_stream();
     let stream = SseParser::new(byte_stream, parse_event, None);
     Ok(Box::pin(stream))
@@ -197,51 +197,10 @@ where
     P: Fn(&str) -> Result<Option<T>> + Send + 'static,
     T: Send + 'static,
 {
-    let resp = send_streaming_post(client, &request, options).await?;
+    let resp = request.send(client, options).await?;
     let byte_stream = resp.bytes_stream();
     let stream = SseParser::new(byte_stream, parse_event, Some(cancel));
     Ok(Box::pin(stream))
-}
-
-/// Send `request` as a JSON `POST` under the retry policy in `options`.
-///
-/// Once a response is obtained, its status and the retry count are recorded on
-/// the calling `post_stream*` span; a terminal error returns before anything is
-/// recorded.
-async fn send_streaming_post(
-    client: &reqwest::Client,
-    request: &StreamingPost<'_>,
-    options: ResponseReadOptions,
-) -> Result<reqwest::Response> {
-    let ResponseReadOptions {
-        max_retries,
-        max_response_bytes,
-    } = options;
-    let mut retry_count = 0u32;
-
-    let resp = with_retry_bounded(request.url, max_retries, max_response_bytes, || {
-        let mut builder = client
-            .post(request.url)
-            .header(reqwest::header::CONTENT_TYPE, "application/json")
-            .body(request.body.clone());
-        if let Some((name, value)) = request.auth_header {
-            builder = builder.header(name, value);
-        }
-        for (name, value) in request.extra_headers {
-            builder = builder.header(*name, *value);
-        }
-        retry_count += 1;
-        builder.send()
-    })
-    .await?;
-
-    {
-        let span = tracing::Span::current();
-        span.record("http.status_code", resp.status().as_u16());
-        span.record("http.retry_count", retry_count.saturating_sub(1));
-    }
-
-    Ok(resp)
 }
 
 // ~keep `pin_project_lite` cannot cfg individual fields; WASM uses a zero-size Infallible cancel field.

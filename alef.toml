@@ -302,7 +302,7 @@ ist = "ist"
 "poly.toml" = ["file-too-long"]
 ".alef-toml-merge-provenance.toml" = ["file-too-long"]
 # --- quality-debt baseline (generated) ---
-# 69 size/complexity findings across 44 files that predate these
+# 66 size/complexity findings across 43 files that predate these
 # metrics. Listed per file rather than switching the rules off, so the metrics still
 # fire on every file NOT listed here -- new code stays covered, and each path below is
 # one discrete unit of work.
@@ -325,7 +325,6 @@ ist = "ist"
 "crates/liter-llm/src/client/llm_config.rs" = ["cyclomatic-complexity", "function-too-long"]
 "crates/liter-llm/src/client/managed.rs" = ["cyclomatic-complexity", "function-too-long"]
 "crates/liter-llm/src/client/mod.rs" = ["file-too-long"]
-"crates/liter-llm/src/http/eventstream.rs" = ["function-too-long", "nesting-too-deep", "too-many-parameters"]
 "crates/liter-llm/src/provider/anthropic.rs" = [
   "cyclomatic-complexity",
   "file-too-long",

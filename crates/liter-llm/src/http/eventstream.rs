@@ -18,12 +18,12 @@
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use bytes::{Bytes, BytesMut};
+use bytes::BytesMut;
 use futures_core::Stream;
 use pin_project_lite::pin_project;
 
 use crate::error::{LiterLlmError, Result};
-use crate::http::request::{ResponseReadOptions, with_retry_bounded};
+use crate::http::request::{ResponseReadOptions, StreamingPost};
 use crate::types::ChatCompletionChunk;
 
 /// Minimum frame size: prelude (12) + message CRC (4) = 16 bytes.
@@ -38,15 +38,15 @@ const HEADER_TYPE_STRING: u8 = 7;
 /// Send a streaming POST request and return a stream of `ChatCompletionChunk`s
 /// parsed from AWS EventStream binary frames.
 ///
+/// `request` carries the target URL, the optional auth header, any
+/// provider-specific extra headers, and the body; see [`StreamingPost`].
+///
 /// The `parse_event` function receives `(event_type, payload_json)` for each
 /// event and returns a parsed chunk or `None` for terminal events.
 #[allow(dead_code, reason = "retain the unconfigured raw request entry point")]
 pub async fn post_eventstream<P>(
     client: &reqwest::Client,
-    url: &str,
-    auth_header: Option<(&str, &str)>,
-    extra_headers: &[(&str, &str)],
-    body: Bytes,
+    request: StreamingPost<'_>,
     max_retries: u32,
     parse_event: P,
 ) -> Result<crate::client::BoxStream<'static, Result<ChatCompletionChunk>>>
@@ -55,10 +55,7 @@ where
 {
     post_eventstream_bounded(
         client,
-        url,
-        auth_header,
-        extra_headers,
-        body,
+        request,
         parse_event,
         ResponseReadOptions {
             max_retries,
@@ -74,52 +71,21 @@ where
     skip_all,
     fields(
         http.method = "POST",
-        http.url = %url,
+        http.url = %request.url,
         http.status_code = tracing::field::Empty,
         http.retry_count = tracing::field::Empty,
     )
 )]
-
 pub(crate) async fn post_eventstream_bounded<P>(
     client: &reqwest::Client,
-    url: &str,
-    auth_header: Option<(&str, &str)>,
-    extra_headers: &[(&str, &str)],
-    body: Bytes,
+    request: StreamingPost<'_>,
     parse_event: P,
     options: ResponseReadOptions,
 ) -> Result<crate::client::BoxStream<'static, Result<ChatCompletionChunk>>>
 where
     P: Fn(&str, &str) -> Result<Option<ChatCompletionChunk>> + Send + 'static,
 {
-    let ResponseReadOptions {
-        max_retries,
-        max_response_bytes,
-    } = options;
-    let mut retry_count = 0u32;
-
-    let resp = with_retry_bounded(url, max_retries, max_response_bytes, || {
-        let mut builder = client
-            .post(url)
-            .header(reqwest::header::CONTENT_TYPE, "application/json")
-            .body(body.clone());
-        if let Some((name, value)) = auth_header {
-            builder = builder.header(name, value);
-        }
-        for (name, value) in extra_headers {
-            builder = builder.header(*name, *value);
-        }
-        retry_count += 1;
-        builder.send()
-    })
-    .await?;
-
-    {
-        let span = tracing::Span::current();
-        span.record("http.status_code", resp.status().as_u16());
-        span.record("http.retry_count", retry_count.saturating_sub(1));
-    }
-
+    let resp = request.send(client, options).await?;
     let byte_stream = resp.bytes_stream();
     let stream = EventStreamParser::new(byte_stream, parse_event);
     Ok(Box::pin(stream))
@@ -180,31 +146,7 @@ fn parse_headers(mut data: &[u8]) -> Result<Vec<EventHeader>> {
             data = &data[value_len..];
             headers.push(EventHeader { name, value });
         } else {
-            // ~keep AWS EventStream bool header types have no value bytes; the type byte encodes true/false.
-            let skip = match value_type {
-                0 => 0,
-                1 => 0,
-                2 => 1,
-                3 => 2,
-                4 => 4,
-                5 => 8,
-                6 => {
-                    if data.len() < 2 {
-                        return Err(LiterLlmError::Streaming {
-                            message: "EventStream bytes header length truncated".into(),
-                        });
-                    }
-                    let len = u16::from_be_bytes([data[0], data[1]]) as usize;
-                    2 + len
-                }
-                8 => 8,
-                9 => 16,
-                _ => {
-                    return Err(LiterLlmError::Streaming {
-                        message: format!("unknown EventStream header type: {value_type}"),
-                    });
-                }
-            };
+            let skip = skipped_header_value_len(value_type, data)?;
             if data.len() < skip {
                 return Err(LiterLlmError::Streaming {
                     message: "EventStream header value data truncated".into(),
@@ -214,6 +156,37 @@ fn parse_headers(mut data: &[u8]) -> Result<Vec<EventHeader>> {
         }
     }
     Ok(headers)
+}
+
+/// Number of value bytes that follow the type byte of a non-string header,
+/// which [`parse_headers`] skips. `data` starts right after the type byte.
+fn skipped_header_value_len(value_type: u8, data: &[u8]) -> Result<usize> {
+    // ~keep AWS EventStream bool header types have no value bytes; the type byte encodes true/false.
+    let skip = match value_type {
+        0 => 0,
+        1 => 0,
+        2 => 1,
+        3 => 2,
+        4 => 4,
+        5 => 8,
+        6 => {
+            if data.len() < 2 {
+                return Err(LiterLlmError::Streaming {
+                    message: "EventStream bytes header length truncated".into(),
+                });
+            }
+            let len = u16::from_be_bytes([data[0], data[1]]) as usize;
+            2 + len
+        }
+        8 => 8,
+        9 => 16,
+        _ => {
+            return Err(LiterLlmError::Streaming {
+                message: format!("unknown EventStream header type: {value_type}"),
+            });
+        }
+    };
+    Ok(skip)
 }
 
 /// CRC32 (ISO 3309) implementation for EventStream frame validation.
@@ -286,103 +259,15 @@ where
         let mut this = self.project();
 
         loop {
-            if this.buffer.len() >= MIN_FRAME_SIZE {
-                let total_length =
-                    u32::from_be_bytes([this.buffer[0], this.buffer[1], this.buffer[2], this.buffer[3]]) as usize;
-
-                if !(MIN_FRAME_SIZE..=MAX_FRAME_SIZE).contains(&total_length) {
-                    return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                        message: format!(
-                            "EventStream frame size {total_length} is out of range [{MIN_FRAME_SIZE}, {MAX_FRAME_SIZE}]"
-                        ),
-                    })));
-                }
-
-                if this.buffer.len() < total_length {
-                } else {
-                    let frame = this.buffer.split_to(total_length);
-
-                    let headers_length = u32::from_be_bytes([frame[4], frame[5], frame[6], frame[7]]) as usize;
-
-                    let prelude_crc_expected = u32::from_be_bytes([frame[8], frame[9], frame[10], frame[11]]);
-                    let prelude_crc_actual = crc32(&frame[..8]);
-                    if prelude_crc_expected != prelude_crc_actual {
-                        return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                            message: format!(
-                                "EventStream prelude CRC mismatch: expected {prelude_crc_expected:#010X}, got {prelude_crc_actual:#010X}"
-                            ),
-                        })));
-                    }
-
-                    let message_crc_expected = u32::from_be_bytes([
-                        frame[total_length - 4],
-                        frame[total_length - 3],
-                        frame[total_length - 2],
-                        frame[total_length - 1],
-                    ]);
-                    let message_crc_actual = crc32(&frame[..total_length - 4]);
-                    if message_crc_expected != message_crc_actual {
-                        return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                            message: format!(
-                                "EventStream message CRC mismatch: expected {message_crc_expected:#010X}, got {message_crc_actual:#010X}"
-                            ),
-                        })));
-                    }
-
-                    let headers_start = 12;
-                    let headers_end = headers_start + headers_length;
-                    if headers_end > total_length - 4 {
-                        return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                            message: "EventStream headers extend past frame boundary".into(),
-                        })));
-                    }
-
-                    let headers = match parse_headers(&frame[headers_start..headers_end]) {
-                        Ok(h) => h,
-                        Err(e) => return Poll::Ready(Some(Err(e))),
-                    };
-
-                    let mut event_type = "";
-                    let mut message_type = "";
-                    for h in &headers {
-                        match h.name.as_str() {
-                            ":event-type" => event_type = &h.value,
-                            ":message-type" => message_type = &h.value,
-                            _ => {}
-                        }
-                    }
-
-                    if message_type == "exception" {
-                        let payload = &frame[headers_end..total_length - 4];
-                        let payload_str = std::str::from_utf8(payload).unwrap_or("<binary>");
-                        return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                            message: format!("Bedrock EventStream exception ({event_type}): {payload_str}"),
-                        })));
-                    }
-
-                    if message_type != "event" {
-                        continue;
-                    }
-
-                    let payload = &frame[headers_end..total_length - 4];
-                    let payload_str = match std::str::from_utf8(payload) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                                message: format!("EventStream payload is not UTF-8: {e}"),
-                            })));
-                        }
-                    };
-
-                    match (this.parse_event)(event_type, payload_str) {
-                        Ok(None) => {
-                            // ~keep Bedrock may send metadata after terminal events; drain the inner stream.
-                            continue;
-                        }
-                        Ok(Some(chunk)) => return Poll::Ready(Some(Ok(chunk))),
-                        Err(e) => return Poll::Ready(Some(Err(e))),
-                    }
-                }
+            match next_complete_frame(this.buffer) {
+                Err(e) => return Poll::Ready(Some(Err(e))),
+                Ok(Some(frame)) => match decode_frame(&frame, &*this.parse_event).transpose() {
+                    // ~keep Non-event frames and terminal events (Bedrock may send metadata after them)
+                    // yield nothing; keep draining the inner stream.
+                    None => continue,
+                    Some(item) => return Poll::Ready(Some(item)),
+                },
+                Ok(None) => {}
             }
 
             if *this.done {
@@ -423,6 +308,122 @@ where
             }
         }
     }
+}
+
+/// Split one complete frame off the front of `buffer`.
+///
+/// Returns `Ok(None)` while the buffered bytes do not yet hold a whole frame.
+/// A declared length outside `[MIN_FRAME_SIZE, MAX_FRAME_SIZE]` is an error
+/// and leaves `buffer` untouched.
+fn next_complete_frame(buffer: &mut BytesMut) -> Result<Option<BytesMut>> {
+    if buffer.len() < MIN_FRAME_SIZE {
+        return Ok(None);
+    }
+    let total_length = u32::from_be_bytes([buffer[0], buffer[1], buffer[2], buffer[3]]) as usize;
+
+    if !(MIN_FRAME_SIZE..=MAX_FRAME_SIZE).contains(&total_length) {
+        return Err(LiterLlmError::Streaming {
+            message: format!(
+                "EventStream frame size {total_length} is out of range [{MIN_FRAME_SIZE}, {MAX_FRAME_SIZE}]"
+            ),
+        });
+    }
+
+    if buffer.len() < total_length {
+        return Ok(None);
+    }
+    Ok(Some(buffer.split_to(total_length)))
+}
+
+/// Validate one complete frame and turn it into a chunk.
+///
+/// `Ok(None)` means the frame yields nothing: it is not an `event` message,
+/// or `parse_event` treated it as terminal.
+fn decode_frame<P>(frame: &[u8], parse_event: &P) -> Result<Option<ChatCompletionChunk>>
+where
+    P: Fn(&str, &str) -> Result<Option<ChatCompletionChunk>>,
+{
+    let total_length = frame.len();
+    let headers_length = u32::from_be_bytes([frame[4], frame[5], frame[6], frame[7]]) as usize;
+
+    verify_frame_crcs(frame)?;
+
+    let headers_start = 12;
+    let headers_end = headers_start + headers_length;
+    if headers_end > total_length - 4 {
+        return Err(LiterLlmError::Streaming {
+            message: "EventStream headers extend past frame boundary".into(),
+        });
+    }
+
+    let headers = parse_headers(&frame[headers_start..headers_end])?;
+    let (event_type, message_type) = frame_types(&headers);
+
+    if message_type == "exception" {
+        let payload = &frame[headers_end..total_length - 4];
+        let payload_str = std::str::from_utf8(payload).unwrap_or("<binary>");
+        return Err(LiterLlmError::Streaming {
+            message: format!("Bedrock EventStream exception ({event_type}): {payload_str}"),
+        });
+    }
+
+    if message_type != "event" {
+        return Ok(None);
+    }
+
+    let payload = &frame[headers_end..total_length - 4];
+    let payload_str = std::str::from_utf8(payload).map_err(|e| LiterLlmError::Streaming {
+        message: format!("EventStream payload is not UTF-8: {e}"),
+    })?;
+
+    parse_event(event_type, payload_str)
+}
+
+/// Check the prelude CRC (over the first 8 bytes) and the message CRC (over
+/// everything but the trailing 4) of a complete frame.
+fn verify_frame_crcs(frame: &[u8]) -> Result<()> {
+    let total_length = frame.len();
+
+    let prelude_crc_expected = u32::from_be_bytes([frame[8], frame[9], frame[10], frame[11]]);
+    let prelude_crc_actual = crc32(&frame[..8]);
+    if prelude_crc_expected != prelude_crc_actual {
+        return Err(LiterLlmError::Streaming {
+            message: format!(
+                "EventStream prelude CRC mismatch: expected {prelude_crc_expected:#010X}, got {prelude_crc_actual:#010X}"
+            ),
+        });
+    }
+
+    let message_crc_expected = u32::from_be_bytes([
+        frame[total_length - 4],
+        frame[total_length - 3],
+        frame[total_length - 2],
+        frame[total_length - 1],
+    ]);
+    let message_crc_actual = crc32(&frame[..total_length - 4]);
+    if message_crc_expected != message_crc_actual {
+        return Err(LiterLlmError::Streaming {
+            message: format!(
+                "EventStream message CRC mismatch: expected {message_crc_expected:#010X}, got {message_crc_actual:#010X}"
+            ),
+        });
+    }
+    Ok(())
+}
+
+/// The `:event-type` and `:message-type` header values, `""` when absent.
+/// A repeated header takes its last value.
+fn frame_types(headers: &[EventHeader]) -> (&str, &str) {
+    let mut event_type = "";
+    let mut message_type = "";
+    for h in headers {
+        match h.name.as_str() {
+            ":event-type" => event_type = &h.value,
+            ":message-type" => message_type = &h.value,
+            _ => {}
+        }
+    }
+    (event_type, message_type)
 }
 
 #[cfg(test)]

@@ -241,12 +241,15 @@ async fn should_bound_final_stream_errors_without_limiting_successful_streams() 
     server.join().expect("join stream error");
     assert_body_limit(result.err().expect("oversized stream error"), BODY_LIMIT);
     let (address, server) = one_shot_server("HTTP/1.1 400 error\r\nContent-Length: 3\r\n\r\nerr".into());
+    let url = format!("http://{address}/");
     let result = crate::http::eventstream::post_eventstream_bounded(
         &reqwest::Client::new(),
-        &format!("http://{address}/"),
-        None,
-        &[],
-        Bytes::from_static(b"{}"),
+        crate::http::request::StreamingPost {
+            url: &url,
+            auth_header: None,
+            extra_headers: &[],
+            body: Bytes::from_static(b"{}"),
+        },
         |_, _| Ok(None),
         ResponseReadOptions {
             max_retries: 0,
