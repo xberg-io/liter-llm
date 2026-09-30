@@ -190,36 +190,11 @@ where
         }
 
         loop {
-            if let Some(offset) = memchr_newline(&this.buffer.as_bytes()[*this.cursor..]) {
-                let newline_pos = *this.cursor + offset;
-                let line = this.buffer[*this.cursor..newline_pos].trim_end_matches('\r').trim();
-
-                if line.is_empty() || line.starts_with(':') {
-                    *this.cursor = newline_pos + 1;
-                    compact_buffer(this.buffer, this.cursor);
-                    continue;
-                }
-
-                if let Some(raw) = line.strip_prefix("data:") {
-                    let data = raw.strip_prefix(' ').unwrap_or(raw).trim();
-                    if data == "[DONE]" {
-                        *this.cursor = newline_pos + 1;
-                        compact_buffer(this.buffer, this.cursor);
-                        return Poll::Ready(None);
-                    }
-                    let result = (this.parse_event)(data);
-                    *this.cursor = newline_pos + 1;
-                    compact_buffer(this.buffer, this.cursor);
-                    match result {
-                        Ok(None) => continue,
-                        Ok(Some(chunk)) => return Poll::Ready(Some(Ok(chunk))),
-                        Err(e) => return Poll::Ready(Some(Err(e))),
-                    }
-                }
-
-                *this.cursor = newline_pos + 1;
-                compact_buffer(this.buffer, this.cursor);
-                continue;
+            match take_ingress_line(this.buffer, this.cursor, &*this.parse_event) {
+                IngressLine::Incomplete => {}
+                IngressLine::Consumed => continue,
+                IngressLine::Done => return Poll::Ready(None),
+                IngressLine::Chunk(item) => return Poll::Ready(Some(item)),
             }
 
             if *this.done {
@@ -242,39 +217,9 @@ where
 
             match this.inner.as_mut().poll_next(cx) {
                 Poll::Ready(Some(Ok(bytes))) => {
-                    const MAX_BUFFER_BYTES: usize = 1024 * 1024;
-                    if this.buffer.len() + this.pending.len() + bytes.len() > MAX_BUFFER_BYTES {
+                    if let Some(e) = append_ingress_chunk(this.buffer, this.pending, &bytes) {
                         *this.done = true;
-                        return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                            message: format!("SSE buffer exceeded {MAX_BUFFER_BYTES} bytes; stream aborted"),
-                        })));
-                    }
-                    // ~keep Prepend any bytes left over from a codepoint that was
-                    // split across the previous chunk, then decode what is now valid.
-                    this.pending.extend_from_slice(&bytes);
-                    match std::str::from_utf8(this.pending) {
-                        Ok(s) => {
-                            this.buffer.push_str(s);
-                            this.pending.clear();
-                        }
-                        Err(e) => {
-                            let valid = e.valid_up_to();
-                            let complete_error = e.error_len().is_some();
-                            // SAFETY: `valid_up_to()` bytes are guaranteed to be valid UTF-8.
-                            this.buffer
-                                .push_str(unsafe { std::str::from_utf8_unchecked(&this.pending[..valid]) });
-                            if complete_error {
-                                // ~keep `error_len()` is `Some` only for a genuinely
-                                // malformed sequence, not a codepoint split across a
-                                // chunk boundary.
-                                *this.done = true;
-                                return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                                    message: format!("invalid UTF-8 in SSE stream: {e}"),
-                                })));
-                            }
-                            // ~keep Incomplete trailing codepoint: keep the tail for the next chunk.
-                            this.pending.drain(..valid);
-                        }
+                        return Poll::Ready(Some(Err(e)));
                     }
                 }
                 Poll::Ready(Some(Err(e))) => {
@@ -288,6 +233,91 @@ where
             }
         }
     }
+}
+
+/// What the line at the ingress read cursor produced.
+enum IngressLine {
+    /// No complete line is buffered yet; more bytes are needed.
+    Incomplete,
+    /// A line was consumed without yielding a chunk: a blank line, an SSE
+    /// comment, a non-`data:` field, or an event the parser chose to skip.
+    Consumed,
+    /// The `[DONE]` sentinel was consumed.
+    Done,
+    /// A `data:` payload was parsed into a chunk or an error.
+    Chunk(Result<ChatCompletionChunk>),
+}
+
+/// Consume the next complete line from `buffer` (starting at `cursor`) and
+/// classify it, parsing `data:` payloads with `parse_event`.
+fn take_ingress_line<P>(buffer: &mut String, cursor: &mut usize, parse_event: &P) -> IngressLine
+where
+    P: Fn(&str) -> Result<Option<ChatCompletionChunk>>,
+{
+    let Some(offset) = memchr_newline(&buffer.as_bytes()[*cursor..]) else {
+        return IngressLine::Incomplete;
+    };
+    let newline_pos = *cursor + offset;
+    let line = buffer[*cursor..newline_pos].trim_end_matches('\r').trim();
+
+    let outcome = if line.is_empty() || line.starts_with(':') {
+        IngressLine::Consumed
+    } else if let Some(raw) = line.strip_prefix("data:") {
+        let data = raw.strip_prefix(' ').unwrap_or(raw).trim();
+        if data == "[DONE]" {
+            IngressLine::Done
+        } else {
+            match parse_event(data) {
+                Ok(None) => IngressLine::Consumed,
+                Ok(Some(chunk)) => IngressLine::Chunk(Ok(chunk)),
+                Err(e) => IngressLine::Chunk(Err(e)),
+            }
+        }
+    } else {
+        IngressLine::Consumed
+    };
+
+    *cursor = newline_pos + 1;
+    compact_buffer(buffer, cursor);
+    outcome
+}
+
+/// Decode an upstream chunk into `buffer`, carrying any split trailing
+/// codepoint in `pending`. Returns the error that must end the stream when the
+/// buffer limit is exceeded or the bytes are not valid UTF-8.
+fn append_ingress_chunk(buffer: &mut String, pending: &mut Vec<u8>, bytes: &[u8]) -> Option<LiterLlmError> {
+    const MAX_BUFFER_BYTES: usize = 1024 * 1024;
+    if buffer.len() + pending.len() + bytes.len() > MAX_BUFFER_BYTES {
+        return Some(LiterLlmError::Streaming {
+            message: format!("SSE buffer exceeded {MAX_BUFFER_BYTES} bytes; stream aborted"),
+        });
+    }
+    // ~keep Prepend any bytes left over from a codepoint that was
+    // split across the previous chunk, then decode what is now valid.
+    pending.extend_from_slice(bytes);
+    match std::str::from_utf8(pending) {
+        Ok(s) => {
+            buffer.push_str(s);
+            pending.clear();
+        }
+        Err(e) => {
+            let valid = e.valid_up_to();
+            let complete_error = e.error_len().is_some();
+            // SAFETY: `valid_up_to()` bytes are guaranteed to be valid UTF-8.
+            buffer.push_str(unsafe { std::str::from_utf8_unchecked(&pending[..valid]) });
+            if complete_error {
+                // ~keep `error_len()` is `Some` only for a genuinely
+                // malformed sequence, not a codepoint split across a
+                // chunk boundary.
+                return Some(LiterLlmError::Streaming {
+                    message: format!("invalid UTF-8 in SSE stream: {e}"),
+                });
+            }
+            // ~keep Incomplete trailing codepoint: keep the tail for the next chunk.
+            pending.drain(..valid);
+        }
+    }
+    None
 }
 
 pin_project! {
@@ -362,40 +392,32 @@ where
                     return Poll::Ready(None);
                 }
                 Poll::Ready(Some(Err(e))) => return Poll::Ready(Some(Err(e))),
-                Poll::Ready(Some(Ok(chunk))) => {
-                    let mut accumulator: Option<ChatCompletionChunk> = Some(chunk);
-                    let mut error: Option<LiterLlmError> = None;
-
-                    for mw in this.middleware.iter() {
-                        match accumulator.take() {
-                            None => break,
-                            Some(c) => match mw.process(c) {
-                                Ok(Some(next)) => accumulator = Some(next),
-                                Ok(None) => {
-                                    accumulator = None;
-                                    break;
-                                }
-                                Err(e) => {
-                                    error = Some(e);
-                                    break;
-                                }
-                            },
-                        }
-                    }
-
-                    if let Some(e) = error {
-                        return Poll::Ready(Some(Err(e)));
-                    }
-                    match accumulator {
-                        None => {
-                            continue;
-                        }
-                        Some(final_chunk) => return Poll::Ready(Some(Ok(final_chunk))),
-                    }
-                }
+                Poll::Ready(Some(Ok(chunk))) => match apply_middleware(this.middleware, chunk) {
+                    Err(e) => return Poll::Ready(Some(Err(e))),
+                    Ok(None) => continue,
+                    Ok(Some(final_chunk)) => return Poll::Ready(Some(Ok(final_chunk))),
+                },
             }
         }
     }
+}
+
+/// Run `chunk` through every middleware in registration order.
+///
+/// Stops at the first middleware that drops the chunk (`Ok(None)`) or fails;
+/// later middleware is not called in either case.
+fn apply_middleware(
+    middleware: &[Box<dyn ChunkMiddleware>],
+    chunk: ChatCompletionChunk,
+) -> Result<Option<ChatCompletionChunk>> {
+    let mut current = chunk;
+    for mw in middleware {
+        match mw.process(current)? {
+            Some(next) => current = next,
+            None => return Ok(None),
+        }
+    }
+    Ok(Some(current))
 }
 
 /// Which egress encoding path to use.
