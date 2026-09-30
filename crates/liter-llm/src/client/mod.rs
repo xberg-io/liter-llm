@@ -1095,10 +1095,12 @@ impl LlmClient for DefaultClient {
                     let parse_event = move |data: &str| provider.parse_stream_event(data);
                     let stream = http::streaming::post_stream_bounded(
                         &self.http,
-                        &url,
-                        auth,
-                        &extra,
-                        prepared.body_bytes,
+                        http::request::StreamingPost {
+                            url: &url,
+                            auth_header: auth,
+                            extra_headers: &extra,
+                            body: prepared.body_bytes,
+                        },
                         parse_event,
                         self.response_read_options(),
                     )
@@ -1469,10 +1471,12 @@ impl LlmClientRaw for DefaultClient {
                     let parse_event = move |data: &str| provider.parse_stream_event(data);
                     http::streaming::post_stream_bounded(
                         &self.http,
-                        &url,
-                        auth,
-                        &extra,
-                        prepared.body_bytes,
+                        http::request::StreamingPost {
+                            url: &url,
+                            auth_header: auth,
+                            extra_headers: &extra,
+                            body: prepared.body_bytes,
+                        },
                         parse_event,
                         self.response_read_options(),
                     )
@@ -2261,10 +2265,12 @@ impl ResponseClient for DefaultClient {
 
             http::streaming::post_stream_bounded(
                 &self.http,
-                &url,
-                auth,
-                &extra,
-                body_bytes,
+                http::request::StreamingPost {
+                    url: &url,
+                    auth_header: auth,
+                    extra_headers: &extra,
+                    body: body_bytes,
+                },
                 parse_response_stream_event,
                 self.response_read_options(),
             )

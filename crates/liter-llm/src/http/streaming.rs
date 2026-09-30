@@ -11,7 +11,7 @@ use memchr::memchr;
 use pin_project_lite::pin_project;
 
 use crate::error::{LiterLlmError, Result};
-use crate::http::request::{ResponseReadOptions, with_retry_bounded};
+use crate::http::request::{ResponseReadOptions, StreamingPost, with_retry_bounded};
 #[cfg(test)]
 use crate::types::ChatCompletionChunk;
 
@@ -85,11 +85,8 @@ pub use tokio_util::sync::CancellationToken;
 /// is open, individual chunk errors are yielded as `Err` items rather than
 /// causing a retry.
 ///
-/// `auth_header` is `Some((name, value))` when the provider requires
-/// authentication, or `None` when no auth header should be added.
-///
-/// `extra_headers` carries provider-specific mandatory headers (e.g.
-/// `anthropic-version`) beyond the single auth header.
+/// `request` carries the target URL, the optional auth header, any
+/// provider-specific extra headers, and the body; see [`StreamingPost`].
 ///
 /// `parse_event` translates a raw SSE `data:` payload string into a `T`.
 /// Pass the provider's `parse_stream_event` method for chat completion
@@ -98,10 +95,7 @@ pub use tokio_util::sync::CancellationToken;
 #[allow(dead_code, reason = "retain the unconfigured raw request entry point")]
 pub async fn post_stream<P, T>(
     client: &reqwest::Client,
-    url: &str,
-    auth_header: Option<(&str, &str)>,
-    extra_headers: &[(&str, &str)],
-    body: Bytes,
+    request: StreamingPost<'_>,
     max_retries: u32,
     parse_event: P,
 ) -> Result<crate::client::BoxStream<'static, Result<T>>>
@@ -111,10 +105,7 @@ where
 {
     post_stream_bounded(
         client,
-        url,
-        auth_header,
-        extra_headers,
-        body,
+        request,
         parse_event,
         ResponseReadOptions {
             max_retries,
@@ -130,18 +121,14 @@ where
     skip_all,
     fields(
         http.method = "POST",
-        http.url = %url,
+        http.url = %request.url,
         http.status_code = tracing::field::Empty,
         http.retry_count = tracing::field::Empty,
     )
 )]
-
 pub(crate) async fn post_stream_bounded<P, T>(
     client: &reqwest::Client,
-    url: &str,
-    auth_header: Option<(&str, &str)>,
-    extra_headers: &[(&str, &str)],
-    body: Bytes,
+    request: StreamingPost<'_>,
     parse_event: P,
     options: ResponseReadOptions,
 ) -> Result<crate::client::BoxStream<'static, Result<T>>>
@@ -149,34 +136,7 @@ where
     P: Fn(&str) -> Result<Option<T>> + Send + 'static,
     T: Send + 'static,
 {
-    let ResponseReadOptions {
-        max_retries,
-        max_response_bytes,
-    } = options;
-    let mut retry_count = 0u32;
-
-    let resp = with_retry_bounded(url, max_retries, max_response_bytes, || {
-        let mut builder = client
-            .post(url)
-            .header(reqwest::header::CONTENT_TYPE, "application/json")
-            .body(body.clone());
-        if let Some((name, value)) = auth_header {
-            builder = builder.header(name, value);
-        }
-        for (name, value) in extra_headers {
-            builder = builder.header(*name, *value);
-        }
-        retry_count += 1;
-        builder.send()
-    })
-    .await?;
-
-    {
-        let span = tracing::Span::current();
-        span.record("http.status_code", resp.status().as_u16());
-        span.record("http.retry_count", retry_count.saturating_sub(1));
-    }
-
+    let resp = send_streaming_post(client, &request, options).await?;
     let byte_stream = resp.bytes_stream();
     let stream = SseParser::new(byte_stream, parse_event, None);
     Ok(Box::pin(stream))
@@ -189,13 +149,9 @@ where
 /// SSE stream is aborted cleanly and no further chunks are yielded.
 #[cfg(feature = "native-http")]
 #[allow(dead_code)]
-#[allow(clippy::too_many_arguments)]
 pub async fn post_stream_with_cancel<P, T>(
     client: &reqwest::Client,
-    url: &str,
-    auth_header: Option<(&str, &str)>,
-    extra_headers: &[(&str, &str)],
-    body: Bytes,
+    request: StreamingPost<'_>,
     max_retries: u32,
     parse_event: P,
     cancel: CancellationToken,
@@ -206,10 +162,7 @@ where
 {
     post_stream_with_cancel_bounded(
         client,
-        url,
-        auth_header,
-        extra_headers,
-        body,
+        request,
         parse_event,
         cancel,
         ResponseReadOptions {
@@ -226,20 +179,16 @@ where
     skip_all,
     fields(
         http.method = "POST",
-        http.url = %url,
+        http.url = %request.url,
         http.status_code = tracing::field::Empty,
         http.retry_count = tracing::field::Empty,
     )
 )]
 #[cfg(feature = "native-http")]
 #[allow(dead_code)]
-#[allow(clippy::too_many_arguments)]
 pub(crate) async fn post_stream_with_cancel_bounded<P, T>(
     client: &reqwest::Client,
-    url: &str,
-    auth_header: Option<(&str, &str)>,
-    extra_headers: &[(&str, &str)],
-    body: Bytes,
+    request: StreamingPost<'_>,
     parse_event: P,
     cancel: CancellationToken,
     options: ResponseReadOptions,
@@ -248,21 +197,37 @@ where
     P: Fn(&str) -> Result<Option<T>> + Send + 'static,
     T: Send + 'static,
 {
+    let resp = send_streaming_post(client, &request, options).await?;
+    let byte_stream = resp.bytes_stream();
+    let stream = SseParser::new(byte_stream, parse_event, Some(cancel));
+    Ok(Box::pin(stream))
+}
+
+/// Send `request` as a JSON `POST` under the retry policy in `options`.
+///
+/// Once a response is obtained, its status and the retry count are recorded on
+/// the calling `post_stream*` span; a terminal error returns before anything is
+/// recorded.
+async fn send_streaming_post(
+    client: &reqwest::Client,
+    request: &StreamingPost<'_>,
+    options: ResponseReadOptions,
+) -> Result<reqwest::Response> {
     let ResponseReadOptions {
         max_retries,
         max_response_bytes,
     } = options;
     let mut retry_count = 0u32;
 
-    let resp = with_retry_bounded(url, max_retries, max_response_bytes, || {
+    let resp = with_retry_bounded(request.url, max_retries, max_response_bytes, || {
         let mut builder = client
-            .post(url)
+            .post(request.url)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
-            .body(body.clone());
-        if let Some((name, value)) = auth_header {
+            .body(request.body.clone());
+        if let Some((name, value)) = request.auth_header {
             builder = builder.header(name, value);
         }
-        for (name, value) in extra_headers {
+        for (name, value) in request.extra_headers {
             builder = builder.header(*name, *value);
         }
         retry_count += 1;
@@ -276,9 +241,7 @@ where
         span.record("http.retry_count", retry_count.saturating_sub(1));
     }
 
-    let byte_stream = resp.bytes_stream();
-    let stream = SseParser::new(byte_stream, parse_event, Some(cancel));
-    Ok(Box::pin(stream))
+    Ok(resp)
 }
 
 // ~keep `pin_project_lite` cannot cfg individual fields; WASM uses a zero-size Infallible cancel field.
@@ -371,85 +334,15 @@ where
         }
 
         loop {
-            if let Some(offset) = memchr(b'\n', &this.buffer.as_bytes()[*this.cursor..]) {
-                let newline_pos = *this.cursor + offset;
-
-                let line = this.buffer[*this.cursor..newline_pos].trim_end_matches('\r').trim();
-
-                if line.is_empty() || line.starts_with(':') {
-                    *this.cursor = newline_pos + 1;
-                    compact_if_needed(this.buffer, this.cursor);
-                    continue;
-                }
-
-                if let Some(raw) = line.strip_prefix("data:") {
-                    let data = raw.strip_prefix(' ').unwrap_or(raw).trim();
-
-                    // ~keep `[DONE]` terminates at the SSE parser level regardless of provider.
-                    if data == "[DONE]" {
-                        *this.cursor = newline_pos + 1;
-                        compact_if_needed(this.buffer, this.cursor);
-                        return Poll::Ready(None);
-                    }
-
-                    let result = (this.parse_event)(data);
-                    *this.cursor = newline_pos + 1;
-                    compact_if_needed(this.buffer, this.cursor);
-                    match result {
-                        Ok(None) => continue,
-                        Ok(Some(chunk)) => return Poll::Ready(Some(Ok(chunk))),
-                        Err(e) => return Poll::Ready(Some(Err(e))),
-                    }
-                }
-
-                *this.cursor = newline_pos + 1;
-                compact_if_needed(this.buffer, this.cursor);
-                continue;
+            match take_buffered_line(this.buffer, this.cursor, &*this.parse_event) {
+                BufferedLine::Incomplete => {}
+                BufferedLine::Consumed => continue,
+                BufferedLine::Done => return Poll::Ready(None),
+                BufferedLine::Item(item) => return Poll::Ready(Some(item)),
             }
 
             if *this.done {
-                // ~keep Leftover bytes at EOF are an incomplete SSE line: the connection was
-                // cut mid-event. That is data loss, not a clean end, so it must surface as
-                // an `Err` item rather than a silent `Poll::Ready(None)` (see #44).
-                let remaining = this.buffer.len() - *this.cursor;
-                if remaining > 0 {
-                    let leftover = this.buffer[*this.cursor..].trim();
-                    if !leftover.is_empty() {
-                        let preview: String = leftover.chars().take(TRUNCATION_PREVIEW_CHARS).collect();
-                        tracing::error!(
-                            leftover_bytes = remaining,
-                            preview = %preview,
-                            "SSE stream ended with unterminated data in buffer; stream was truncated"
-                        );
-                        this.buffer.clear();
-                        *this.cursor = 0;
-                        this.pending.clear();
-                        return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                            message: format!(
-                                "SSE stream truncated: {remaining} bytes of incomplete data at end of stream \
-                                 (starts with: {preview:?})"
-                            ),
-                        })));
-                    }
-                    this.buffer.clear();
-                    *this.cursor = 0;
-                }
-                // ~keep Bytes still pending at EOF are a codepoint split by the connection
-                // closing mid-character — also truncation, not something to drop silently.
-                if !this.pending.is_empty() {
-                    let pending_len = this.pending.len();
-                    this.pending.clear();
-                    tracing::error!(
-                        pending_bytes = pending_len,
-                        "SSE stream ended mid-codepoint; stream was truncated"
-                    );
-                    return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                        message: format!(
-                            "SSE stream truncated: {pending_len} bytes of incomplete UTF-8 at end of stream"
-                        ),
-                    })));
-                }
-                return Poll::Ready(None);
+                return Poll::Ready(truncation_error_at_eof(this.buffer, this.cursor, this.pending).map(Err));
             }
 
             // ~keep Re-check cancellation before blocking on the inner stream.
@@ -462,38 +355,9 @@ where
 
             match this.inner.as_mut().poll_next(cx) {
                 Poll::Ready(Some(Ok(bytes))) => {
-                    if this.buffer.len() + this.pending.len() + bytes.len() > MAX_BUFFER_BYTES {
+                    if let Some(e) = append_chunk(this.buffer, this.pending, &bytes) {
                         *this.done = true;
-                        return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                            message: format!("SSE buffer exceeded {MAX_BUFFER_BYTES} bytes; stream aborted"),
-                        })));
-                    }
-                    // ~keep Prepend any bytes left over from a codepoint that was
-                    // split across the previous chunk, then decode what is now valid.
-                    this.pending.extend_from_slice(&bytes);
-                    match std::str::from_utf8(this.pending) {
-                        Ok(s) => {
-                            this.buffer.push_str(s);
-                            this.pending.clear();
-                        }
-                        Err(e) => {
-                            let valid = e.valid_up_to();
-                            let complete_error = e.error_len().is_some();
-                            // SAFETY: `valid_up_to()` bytes are guaranteed to be valid UTF-8.
-                            this.buffer
-                                .push_str(unsafe { std::str::from_utf8_unchecked(&this.pending[..valid]) });
-                            if complete_error {
-                                // ~keep `error_len()` is `Some` only for genuinely
-                                // malformed UTF-8, not a codepoint split across a chunk
-                                // boundary; that corrupts the SSE stream, so stop polling.
-                                *this.done = true;
-                                return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                                    message: format!("invalid UTF-8 in SSE stream: {e}"),
-                                })));
-                            }
-                            // ~keep Incomplete trailing codepoint: keep the tail for the next chunk.
-                            this.pending.drain(..valid);
-                        }
+                        return Poll::Ready(Some(Err(e)));
                     }
                 }
                 Poll::Ready(Some(Err(e))) => {
@@ -509,6 +373,139 @@ where
             }
         }
     }
+}
+
+/// What the line at the read cursor produced.
+enum BufferedLine<T> {
+    /// No complete line is buffered yet; more bytes are needed.
+    Incomplete,
+    /// A line was consumed without yielding anything: a blank line, an SSE
+    /// comment, a non-`data:` field, or an event the parser chose to skip.
+    Consumed,
+    /// The `[DONE]` sentinel was consumed.
+    Done,
+    /// A `data:` payload was parsed into an item or an error.
+    Item(Result<T>),
+}
+
+/// Consume the next complete line from `buffer` (starting at `cursor`) and
+/// classify it, parsing `data:` payloads with `parse_event`.
+fn take_buffered_line<T, P>(buffer: &mut String, cursor: &mut usize, parse_event: &P) -> BufferedLine<T>
+where
+    P: Fn(&str) -> Result<Option<T>>,
+{
+    let Some(offset) = memchr(b'\n', &buffer.as_bytes()[*cursor..]) else {
+        return BufferedLine::Incomplete;
+    };
+    let newline_pos = *cursor + offset;
+
+    let line = buffer[*cursor..newline_pos].trim_end_matches('\r').trim();
+
+    let outcome = if line.is_empty() || line.starts_with(':') {
+        BufferedLine::Consumed
+    } else if let Some(raw) = line.strip_prefix("data:") {
+        let data = raw.strip_prefix(' ').unwrap_or(raw).trim();
+
+        // ~keep `[DONE]` terminates at the SSE parser level regardless of provider.
+        if data == "[DONE]" {
+            BufferedLine::Done
+        } else {
+            match parse_event(data) {
+                Ok(None) => BufferedLine::Consumed,
+                Ok(Some(chunk)) => BufferedLine::Item(Ok(chunk)),
+                Err(e) => BufferedLine::Item(Err(e)),
+            }
+        }
+    } else {
+        BufferedLine::Consumed
+    };
+
+    *cursor = newline_pos + 1;
+    compact_if_needed(buffer, cursor);
+    outcome
+}
+
+/// Once the inner stream has ended, report any bytes left in the buffers as a
+/// truncation error, clearing the leftover data it finds. `None` means a clean
+/// end, in which case there was nothing left to clear.
+fn truncation_error_at_eof(buffer: &mut String, cursor: &mut usize, pending: &mut Vec<u8>) -> Option<LiterLlmError> {
+    // ~keep Leftover bytes at EOF are an incomplete SSE line: the connection was
+    // cut mid-event. That is data loss, not a clean end, so it must surface as
+    // an `Err` item rather than a silent `Poll::Ready(None)` (see #44).
+    let remaining = buffer.len() - *cursor;
+    if remaining > 0 {
+        let leftover = buffer[*cursor..].trim();
+        if !leftover.is_empty() {
+            let preview: String = leftover.chars().take(TRUNCATION_PREVIEW_CHARS).collect();
+            tracing::error!(
+                leftover_bytes = remaining,
+                preview = %preview,
+                "SSE stream ended with unterminated data in buffer; stream was truncated"
+            );
+            buffer.clear();
+            *cursor = 0;
+            pending.clear();
+            return Some(LiterLlmError::Streaming {
+                message: format!(
+                    "SSE stream truncated: {remaining} bytes of incomplete data at end of stream \
+                     (starts with: {preview:?})"
+                ),
+            });
+        }
+        buffer.clear();
+        *cursor = 0;
+    }
+    // ~keep Bytes still pending at EOF are a codepoint split by the connection
+    // closing mid-character — also truncation, not something to drop silently.
+    if !pending.is_empty() {
+        let pending_len = pending.len();
+        pending.clear();
+        tracing::error!(
+            pending_bytes = pending_len,
+            "SSE stream ended mid-codepoint; stream was truncated"
+        );
+        return Some(LiterLlmError::Streaming {
+            message: format!("SSE stream truncated: {pending_len} bytes of incomplete UTF-8 at end of stream"),
+        });
+    }
+    None
+}
+
+/// Decode an upstream chunk into `buffer`, carrying any split trailing
+/// codepoint in `pending`. Returns the error that must end the stream when the
+/// buffer limit is exceeded or the bytes are not valid UTF-8.
+fn append_chunk(buffer: &mut String, pending: &mut Vec<u8>, bytes: &[u8]) -> Option<LiterLlmError> {
+    if buffer.len() + pending.len() + bytes.len() > MAX_BUFFER_BYTES {
+        return Some(LiterLlmError::Streaming {
+            message: format!("SSE buffer exceeded {MAX_BUFFER_BYTES} bytes; stream aborted"),
+        });
+    }
+    // ~keep Prepend any bytes left over from a codepoint that was
+    // split across the previous chunk, then decode what is now valid.
+    pending.extend_from_slice(bytes);
+    match std::str::from_utf8(pending) {
+        Ok(s) => {
+            buffer.push_str(s);
+            pending.clear();
+        }
+        Err(e) => {
+            let valid = e.valid_up_to();
+            let complete_error = e.error_len().is_some();
+            // SAFETY: `valid_up_to()` bytes are guaranteed to be valid UTF-8.
+            buffer.push_str(unsafe { std::str::from_utf8_unchecked(&pending[..valid]) });
+            if complete_error {
+                // ~keep `error_len()` is `Some` only for genuinely
+                // malformed UTF-8, not a codepoint split across a chunk
+                // boundary; that corrupts the SSE stream, so stop polling.
+                return Some(LiterLlmError::Streaming {
+                    message: format!("invalid UTF-8 in SSE stream: {e}"),
+                });
+            }
+            // ~keep Incomplete trailing codepoint: keep the tail for the next chunk.
+            pending.drain(..valid);
+        }
+    }
+    None
 }
 
 /// Compact the buffer when the cursor has advanced past half the buffer length.

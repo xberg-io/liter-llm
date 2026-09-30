@@ -34,6 +34,20 @@ pub(crate) struct ResponseReadOptions {
     pub max_response_bytes: Option<usize>,
 }
 
+/// The request half of a streaming JSON `POST`: where it goes, which headers
+/// it carries, and its body.
+///
+/// `auth_header` is `Some((name, value))` when the provider requires
+/// authentication, or `None` when no auth header should be added.
+/// `extra_headers` carries provider-specific mandatory headers (e.g.
+/// `anthropic-version`) beyond the single auth header.
+pub(crate) struct StreamingPost<'a> {
+    pub url: &'a str,
+    pub auth_header: Option<(&'a str, &'a str)>,
+    pub extra_headers: &'a [(&'a str, &'a str)],
+    pub body: Bytes,
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 fn response_limit_error(limit: usize) -> LiterLlmError {
     LiterLlmError::Streaming {
