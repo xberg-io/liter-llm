@@ -529,6 +529,13 @@ extra_features = ["wasm-http"]
 module = "github.com/xberg-io/liter-llm/packages/go/v2"
 package_name = "literllm"
 
+# ~keep System libraries the static libliter_llm_ffi.a needs, from cargo's
+# `--print native-static-libs` (shipped as lib/native-static-libs.txt) (#247).
+[crates.go.link_flags]
+darwin = ["-framework", "Security", "-framework", "CoreFoundation", "-liconv"]
+linux = ["-lm", "-ldl", "-lpthread", "-lrt"]
+windows = ["-lws2_32", "-luserenv", "-lbcrypt", "-lntdll", "-ladvapi32", "-lkernel32"]
+
 [crates.java]
 package = "io.xberg.literllm"
 project_file = "packages/java/pom.xml"
