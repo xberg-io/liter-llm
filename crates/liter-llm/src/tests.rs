@@ -1350,6 +1350,51 @@ mod error_tests {
             panic!("expected ServerError");
         }
     }
+
+    #[test]
+    fn error_codes_are_unique_domain_codes_covering_every_variant() {
+        let source = include_str!("error.rs");
+        let enum_start = source.find("pub enum LiterLlmError {").expect("enum present");
+        let enum_body = &source[enum_start..];
+        let enum_body = &enum_body[..enum_body.find("\n}\n").expect("enum end")];
+
+        let codes: Vec<u32> = enum_body
+            .lines()
+            .filter_map(|l| l.trim().strip_prefix("#[cfg_attr(alef, alef(error_code = "))
+            .map(|rest| rest.trim_end_matches([')', ']']).parse().expect("numeric error code"))
+            .collect();
+        let variants = enum_body.lines().filter(|l| l.starts_with("    #[error(")).count();
+
+        assert_eq!(codes.len(), variants, "every variant needs an alef error_code");
+        assert!(codes.iter().all(|c| *c >= 100), "codes 0-4 are reserved by alef");
+        let unique: std::collections::BTreeSet<_> = codes.iter().collect();
+        assert_eq!(unique.len(), codes.len(), "error codes must be unique");
+    }
+
+    #[cfg(feature = "native-http")]
+    #[tokio::test]
+    async fn reqwest_timeout_maps_to_timeout_variant() {
+        // ~keep The listener queues connections but never responds, so the request times out.
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
+        let url = format!("http://{}/", listener.local_addr().expect("addr"));
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_millis(50))
+            .build()
+            .expect("client");
+        let err = client.get(&url).send().await.expect_err("request must time out");
+        assert!(matches!(LiterLlmError::from(err), LiterLlmError::Timeout));
+    }
+
+    #[cfg(feature = "native-http")]
+    #[tokio::test]
+    async fn reqwest_connect_failure_stays_network() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
+        let url = format!("http://{}/", listener.local_addr().expect("addr"));
+        drop(listener);
+        let client = reqwest::Client::new();
+        let err = client.get(&url).send().await.expect_err("connection refused");
+        assert!(matches!(LiterLlmError::from(err), LiterLlmError::Network(_)));
+    }
 }
 
 #[cfg(test)]

@@ -21,13 +21,18 @@ pub(crate) struct ApiError {
 }
 
 /// All errors that can occur when using `liter-llm`.
+///
+/// Each variant carries a stable numeric `error_code` (>= 100) that bindings expose
+/// across the FFI boundary. Codes are append-only: never renumber or reuse a code.
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum LiterLlmError {
     /// `status` preserves the exact HTTP status code received (401 or 403).
+    #[cfg_attr(alef, alef(error_code = 100))]
     #[error("authentication failed: {message}")]
     Authentication { message: String, status: u16 },
 
+    #[cfg_attr(alef, alef(error_code = 101))]
     #[error("rate limited: {message}")]
     RateLimited {
         message: String,
@@ -35,31 +40,39 @@ pub enum LiterLlmError {
     },
 
     /// `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).
+    #[cfg_attr(alef, alef(error_code = 102))]
     #[error("bad request: {message}")]
     BadRequest { message: String, status: u16 },
 
+    #[cfg_attr(alef, alef(error_code = 103))]
     #[error("context window exceeded: {message}")]
     ContextWindowExceeded { message: String },
 
+    #[cfg_attr(alef, alef(error_code = 104))]
     #[error("content policy violation: {message}")]
     ContentPolicy { message: String },
 
+    #[cfg_attr(alef, alef(error_code = 105))]
     #[error("not found: {message}")]
     NotFound { message: String },
 
     /// `status` preserves the exact HTTP status code received (500, or other 5xx not covered
     /// by `ServiceUnavailable`).
+    #[cfg_attr(alef, alef(error_code = 106))]
     #[error("server error: {message}")]
     ServerError { message: String, status: u16 },
 
     /// `status` preserves the exact HTTP status code received (502, 503, or 504).
+    #[cfg_attr(alef, alef(error_code = 107))]
     #[error("service unavailable: {message}")]
     ServiceUnavailable { message: String, status: u16 },
 
+    #[cfg_attr(alef, alef(error_code = 108))]
     #[error("request timeout")]
     Timeout,
 
     #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+    #[cfg_attr(alef, alef(error_code = 109))]
     #[error(transparent)]
     Network(reqwest::Error),
 
@@ -69,15 +82,19 @@ pub enum LiterLlmError {
     /// failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors
     /// in individual SSE chunks, and buffer overflow conditions.  The `message`
     /// field contains a human-readable description of the specific failure.
+    #[cfg_attr(alef, alef(error_code = 110))]
     #[error("streaming error: {message}")]
     Streaming { message: String },
 
+    #[cfg_attr(alef, alef(error_code = 111))]
     #[error("provider {provider} does not support {endpoint}")]
     EndpointNotSupported { endpoint: String, provider: String },
 
+    #[cfg_attr(alef, alef(error_code = 112))]
     #[error("invalid header {name:?}: {reason}")]
     InvalidHeader { name: String, reason: String },
 
+    #[cfg_attr(alef, alef(error_code = 113))]
     #[error("serialization error: {0}")]
     Serialization(
         #[from]
@@ -85,9 +102,11 @@ pub enum LiterLlmError {
         serde_json::Error,
     ),
 
+    #[cfg_attr(alef, alef(error_code = 114))]
     #[error("budget exceeded: {message}")]
     BudgetExceeded { message: String, model: Option<String> },
 
+    #[cfg_attr(alef, alef(error_code = 115))]
     #[error("hook rejected: {message}")]
     HookRejected { message: String },
 
@@ -95,6 +114,7 @@ pub enum LiterLlmError {
     ///
     /// This should never surface in normal operation — if it does, it
     /// indicates a bug in the library.
+    #[cfg_attr(alef, alef(error_code = 116))]
     #[error("internal error: {message}")]
     InternalError { message: String },
 
@@ -103,6 +123,7 @@ pub enum LiterLlmError {
     /// Returned when `register_custom_provider` is called with a `base_url` that
     /// violates the policy (e.g. a private-range IP under `DenyPrivate`), or when
     /// the per-connection DNS resolver detects a forbidden address at connect time.
+    #[cfg_attr(alef, alef(error_code = 117))]
     #[error("outbound request to {url} forbidden: {reason}")]
     OutboundForbidden { url: String, reason: String },
 
@@ -113,6 +134,7 @@ pub enum LiterLlmError {
     /// an identical body.  A body mismatch is a hard error (not retryable).
     ///
     /// HTTP equivalent: 409 Conflict.
+    #[cfg_attr(alef, alef(error_code = 118))]
     #[error("idempotency conflict: key '{key}' was already used with a different request body")]
     IdempotencyConflict { key: String },
 
@@ -124,6 +146,7 @@ pub enum LiterLlmError {
     /// the operation twice.
     ///
     /// HTTP equivalent: 409 Conflict (retryable after a brief delay).
+    #[cfg_attr(alef, alef(error_code = 119))]
     #[error("idempotency key '{key}' is currently in-flight; retry after the first request completes")]
     IdempotencyInFlight { key: String },
 }
@@ -134,6 +157,9 @@ impl From<reqwest::Error> for LiterLlmError {
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(policy_error) = crate::provider::outbound_forbidden_from_reqwest(&error) {
             return policy_error;
+        }
+        if error.is_timeout() {
+            return Self::Timeout;
         }
         Self::Network(error)
     }
