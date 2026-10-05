@@ -714,6 +714,61 @@ mod tests {
         );
     }
 
+    use std::collections::VecDeque;
+
+    use futures_core::Stream;
+
+    use crate::client::BoxStream;
+    use crate::types::ChatCompletionChunk;
+
+    struct ChunkStream(VecDeque<ChatCompletionChunk>);
+    impl Stream for ChunkStream {
+        type Item = Result<ChatCompletionChunk>;
+        fn poll_next(
+            mut self: std::pin::Pin<&mut Self>,
+            _cx: &mut std::task::Context<'_>,
+        ) -> std::task::Poll<Option<Self::Item>> {
+            std::task::Poll::Ready(self.0.pop_front().map(Ok))
+        }
+    }
+
+    fn usage_chunk(usage: Option<Usage>) -> ChatCompletionChunk {
+        ChatCompletionChunk {
+            id: "chunk".into(),
+            object: "chat.completion.chunk".into(),
+            created: 0,
+            model: "gpt-4".into(),
+            choices: vec![],
+            usage,
+            system_fingerprint: None,
+            service_tier: None,
+        }
+    }
+
+    #[derive(Clone)]
+    struct StreamingUsageService;
+    impl tower::Service<LlmRequest> for StreamingUsageService {
+        type Response = LlmResponse;
+        type Error = LiterLlmError;
+        type Future = BoxFuture<'static, Result<LlmResponse>>;
+        fn poll_ready(&mut self, _cx: &mut std::task::Context<'_>) -> std::task::Poll<Result<()>> {
+            std::task::Poll::Ready(Ok(()))
+        }
+        fn call(&mut self, _req: LlmRequest) -> Self::Future {
+            Box::pin(async move {
+                let usage = Usage {
+                    prompt_tokens: 30,
+                    completion_tokens: 20,
+                    total_tokens: 50,
+                    prompt_tokens_details: None,
+                };
+                let chunks = VecDeque::from([usage_chunk(None), usage_chunk(Some(usage))]);
+                let stream: BoxStream<'static, Result<ChatCompletionChunk>> = Box::pin(ChunkStream(chunks));
+                Ok(LlmResponse::ChatStream(stream))
+            })
+        }
+    }
+
     /// Regression for the "streaming bypasses rate-limit accounting" bug:
     /// `LlmResponse::usage()` always returns `None` for `ChatStream`, so a
     /// naive post-response check never sees a streamed call's token count and
@@ -721,61 +776,7 @@ mod tests {
     /// could stream unlimited tokens through a TPM-limited model.
     #[tokio::test]
     async fn model_rate_limit_records_tokens_for_streamed_response() {
-        use std::collections::VecDeque;
-
-        use futures_core::Stream;
         use futures_util::StreamExt as _;
-
-        use crate::client::BoxStream;
-        use crate::types::ChatCompletionChunk;
-
-        struct ChunkStream(VecDeque<ChatCompletionChunk>);
-        impl Stream for ChunkStream {
-            type Item = Result<ChatCompletionChunk>;
-            fn poll_next(
-                mut self: std::pin::Pin<&mut Self>,
-                _cx: &mut std::task::Context<'_>,
-            ) -> std::task::Poll<Option<Self::Item>> {
-                std::task::Poll::Ready(self.0.pop_front().map(Ok))
-            }
-        }
-
-        fn usage_chunk(usage: Option<Usage>) -> ChatCompletionChunk {
-            ChatCompletionChunk {
-                id: "chunk".into(),
-                object: "chat.completion.chunk".into(),
-                created: 0,
-                model: "gpt-4".into(),
-                choices: vec![],
-                usage,
-                system_fingerprint: None,
-                service_tier: None,
-            }
-        }
-
-        #[derive(Clone)]
-        struct StreamingUsageService;
-        impl tower::Service<LlmRequest> for StreamingUsageService {
-            type Response = LlmResponse;
-            type Error = LiterLlmError;
-            type Future = BoxFuture<'static, Result<LlmResponse>>;
-            fn poll_ready(&mut self, _cx: &mut std::task::Context<'_>) -> std::task::Poll<Result<()>> {
-                std::task::Poll::Ready(Ok(()))
-            }
-            fn call(&mut self, _req: LlmRequest) -> Self::Future {
-                Box::pin(async move {
-                    let usage = Usage {
-                        prompt_tokens: 30,
-                        completion_tokens: 20,
-                        total_tokens: 50,
-                        prompt_tokens_details: None,
-                    };
-                    let chunks = VecDeque::from([usage_chunk(None), usage_chunk(Some(usage))]);
-                    let stream: BoxStream<'static, Result<ChatCompletionChunk>> = Box::pin(ChunkStream(chunks));
-                    Ok(LlmResponse::ChatStream(stream))
-                })
-            }
-        }
 
         let config = RateLimitConfig {
             rpm: None,
