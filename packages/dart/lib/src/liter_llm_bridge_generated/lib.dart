@@ -39,11 +39,19 @@ Future<DefaultClient> createClient({
 /// Create a new LLM client from a JSON string.
 ///
 /// The JSON object accepts the same fields as `liter-llm.toml` (snake_case).
+/// Middleware keys (`cache`, `budget`, `cooldown_secs`, `rate_limit`,
+/// `in_flight_limit`, `health_check_secs`, `cost_tracking`, `tracing`) are
+/// applied: the returned client routes the `LlmClient` methods (`chat`,
+/// `chat_stream`, `embed`, `list_models`, `image_generate`, `speech`,
+/// `transcribe`, `moderate`, `rerank`, `search`, `ocr`) through the managed
+/// Tower stack. File, batch and response operations bypass it. Each `providers`
+/// entry is registered process-wide via `register_custom_provider`.
 ///
 /// **Errors:**
 ///
-/// Returns `LiterLlmError.BadRequest` if `json` is not valid JSON or
-/// contains unknown fields.
+/// Returns `LiterLlmError.BadRequest` if `json` is not valid JSON, contains
+/// unknown fields, or sets middleware keys in a build without the `tower` and
+/// `native-http` features. Provider registration failures are propagated.
 Future<DefaultClient> createClientFromJson({required String json}) =>
     RustLib.instance.api.crateCreateClientFromJson(json: json);
 
@@ -124,7 +132,7 @@ Future<List<String>> complexProviderNames() =>
 /// Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 ///
 /// When an exact model name match is not found, progressively shorter prefixes
-/// are tried by stripping from the last `-` or `.` separator.  For example,
+/// are tried by stripping from the last `-` or `.` separator. For example,
 /// `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 Future<double?> completionCost({
   required String model,
@@ -291,7 +299,7 @@ Future<void> recordCostUsd({
 /// Assert that `current_len + incoming` does not exceed `limit`.
 ///
 /// Call this before appending `incoming` bytes to any buffer that must
-/// stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
+/// stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
 /// and emits a `tracing.warn!` with context.
 Future<void> checkBound({
   required String context,
@@ -3106,7 +3114,9 @@ class LlmConfig {
   final String? apiKey;
 
   /// Override base URL. When set, all requests go here and provider
-  /// auto-detection is skipped.
+  /// auto-detection is skipped. The model is sent verbatim, except that a
+  /// leading `X/` is stripped when `X` is the provider named by `model_hint`
+  /// (`"openai"` strips `openai/gpt-4o-mini` to `gpt-4o-mini`).
   final String? baseUrl;
 
   /// Request timeout, in seconds.
@@ -5191,7 +5201,6 @@ class WaitForBatchConfig {
           timeoutSecs == other.timeoutSecs;
 }
 
-
 extension AssistantContentTextExt on AssistantContent {
   /// Returns the plain-text display value of this content.
   ///
@@ -5202,7 +5211,9 @@ extension AssistantContentTextExt on AssistantContent {
   String text() {
     return switch (this) {
       AssistantContent_Text(:final field0) => field0,
-      AssistantContent_Parts(:final field0) => _extractTextFromContentParts(field0),
+      AssistantContent_Parts(:final field0) => _extractTextFromContentParts(
+        field0,
+      ),
       _ => '',
     };
   }

@@ -29,9 +29,10 @@
       "csharp",
       "ruby",
       "node",
-      "wasm"
+      "wasm",
+      "go"
     ],
-    "reason": "Typed FilePurpose bindings reject invalid values before HTTP (Rust/Python/Kotlin/C#/Ruby/Node). WASM exposes only declared enum members; an undeclared JavaScript member is undefined and coerces to Assistants, so it cannot send this invalid-purpose request. HTTP 400 is therefore not exercised by these bindings."
+    "reason": "Typed FilePurpose bindings reject invalid values before HTTP (Rust/Python/Kotlin/C#/Ruby/Node/Go). WASM exposes only declared enum members; an undeclared JavaScript member is undefined and coerces to Assistants, so it cannot send this invalid-purpose request. HTTP 400 is therefore not exercised by these bindings."
   },
   "call": "create_file",
   "input": {
