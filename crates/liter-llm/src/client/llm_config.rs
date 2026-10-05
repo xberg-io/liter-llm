@@ -37,10 +37,9 @@ pub struct LlmConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub api_key: Option<String>,
     /// Override base URL. When set, all requests go here and provider
-    /// auto-detection is skipped. A leading `provider/` segment that names a
-    /// known provider (`openai/gpt-4o-mini`) is stripped from the model sent
-    /// to the server; other prefixes such as `meta-llama/llama-3` are
-    /// forwarded unchanged.
+    /// auto-detection is skipped. The model is sent verbatim, except that a
+    /// leading `X/` is stripped when `X` is the provider named by `model_hint`
+    /// (`"openai"` strips `openai/gpt-4o-mini` to `gpt-4o-mini`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_url: Option<String>,
     /// Request timeout, in seconds.

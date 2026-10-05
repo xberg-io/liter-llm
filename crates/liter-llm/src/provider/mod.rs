@@ -693,6 +693,8 @@ pub(crate) struct OpenAiCompatibleProvider {
     #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     pub env_var: Option<&'static str>,
     pub model_prefixes: Vec<String>,
+    /// Provider named by the client's `model_hint`; its `name/` prefix is stripped from models.
+    pub hint_provider: Option<String>,
 }
 
 impl Provider for OpenAiCompatibleProvider {
@@ -718,17 +720,17 @@ impl Provider for OpenAiCompatibleProvider {
             .any(|prefix| model.starts_with(prefix.as_str()))
     }
 
-    /// Strip the leading `provider/` segment only when it names a known provider.
+    /// Strip a leading `X/` only when `X` is this provider's own name or the provider
+    /// named by the client's `model_hint`.
     ///
-    /// This provider fronts a user-supplied `base_url` (Ollama, vLLM, LM Studio, a proxy).
-    /// `openai/gpt-4o-mini` is a routing hint that the server does not understand, while
-    /// `meta-llama/llama-3` or `Qwen/Qwen2.5` are real model ids that must reach it intact.
-    /// Only the first segment is removed, so `huggingface/meta-llama/Llama-3` becomes
-    /// `meta-llama/Llama-3`.
+    /// This provider fronts a user-supplied `base_url`. Gateways there (OpenRouter, a
+    /// liter-llm or LiteLLM proxy) route on the prefix, so `openai/gpt-4o` must reach them
+    /// verbatim unless the caller declared via `model_hint` that the endpoint is that
+    /// provider. Only the first segment is removed.
     fn strip_model_prefix<'m>(&self, model: &'m str) -> &'m str {
         if let Some((prefix, rest)) = model.split_once('/')
             && !rest.is_empty()
-            && (prefix == self.name || is_known_provider_prefix(prefix))
+            && (prefix == self.name || self.hint_provider.as_deref() == Some(prefix))
         {
             return rest;
         }
@@ -736,21 +738,12 @@ impl Provider for OpenAiCompatibleProvider {
     }
 }
 
-/// Whether `prefix` names a provider liter-llm can route to: a registry entry from
-/// `providers.json`, one of the built-in provider aliases, or a runtime-registered
-/// custom provider.
-pub(crate) fn is_known_provider_prefix(prefix: &str) -> bool {
-    // ~keep `google_ai` is a built-in alias handled by `detect_provider` that has no registry entry.
-    if prefix == "google_ai" {
-        return true;
-    }
-    if REGISTRY
-        .as_ref()
-        .is_ok_and(|reg| reg.providers.iter().any(|e| e.config.name == prefix))
-    {
-        return true;
-    }
-    custom::is_registered_custom_provider(prefix)
+/// Provider name designated by a `model_hint` (`"openai"` or `"openai/gpt-4o-mini"` -> `"openai"`).
+///
+/// Uses the same `provider/` split as [`detect_provider`].
+pub(crate) fn hint_provider_name(model_hint: &str) -> Option<String> {
+    let name = model_hint.split_once('/').map_or(model_hint, |(prefix, _)| prefix);
+    (!name.is_empty()).then(|| name.to_owned())
 }
 
 /// A data-driven provider backed by a [`ProviderConfig`] entry from providers.json.

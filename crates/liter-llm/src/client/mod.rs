@@ -1000,9 +1000,9 @@ impl DefaultClient {
 ///      (Azure embeds the deployment name and `?api-version=…`), construct
 ///      that provider with the override (issue #83).
 ///    - Otherwise, treat the override as a generic OpenAI-compatible endpoint
-///      (LM Studio, Ollama, vLLM, etc.).  A leading segment naming a known
-///      provider is stripped from the model; unknown org prefixes are kept
-///      (issue #249).
+///      (LM Studio, Ollama, vLLM, gateways, etc.).  Models are sent verbatim
+///      except for a leading `custom/` and a leading `X/` where `X` is the
+///      provider named by `model_hint` (issue #249).
 /// 2. `model_hint` -> auto-detect by model name prefix.
 /// 3. Default -> OpenAI.
 fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Arc<dyn Provider> {
@@ -1022,6 +1022,7 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Arc<dyn Pr
             base_url: base_url.clone(),
             env_var: None,
             model_prefixes: vec![],
+            hint_provider: model_hint.and_then(provider::hint_provider_name),
         });
     }
 
@@ -2512,22 +2513,25 @@ mod build_provider_tests {
     }
 
     #[test]
-    fn base_url_provider_strips_only_known_provider_prefixes() {
+    fn base_url_provider_strips_only_hint_provider_and_self_prefix() {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:11434/v1")
             .build();
-        let p = build_provider(&config, None);
-        assert_eq!(p.strip_model_prefix("openai/gpt-4o-mini"), "gpt-4o-mini");
-        assert_eq!(p.strip_model_prefix("custom/my-model"), "my-model");
-        assert_eq!(p.strip_model_prefix("google_ai/gemini-pro"), "gemini-pro");
-        assert_eq!(
-            p.strip_model_prefix("huggingface/meta-llama/Llama-3.1-8B"),
-            "meta-llama/Llama-3.1-8B"
-        );
-        assert_eq!(p.strip_model_prefix("meta-llama/llama-3"), "meta-llama/llama-3");
-        assert_eq!(p.strip_model_prefix("Qwen/Qwen2.5-7B"), "Qwen/Qwen2.5-7B");
-        assert_eq!(p.strip_model_prefix("llama3.1:8b"), "llama3.1:8b");
-        assert_eq!(p.strip_model_prefix("openai/"), "openai/");
+
+        let hinted = build_provider(&config, Some("openai"));
+        assert_eq!(hinted.strip_model_prefix("openai/gpt-4o-mini"), "gpt-4o-mini");
+        assert_eq!(hinted.strip_model_prefix("custom/my-model"), "my-model");
+        assert_eq!(hinted.strip_model_prefix("anthropic/claude-x"), "anthropic/claude-x");
+        assert_eq!(hinted.strip_model_prefix("meta-llama/llama-3"), "meta-llama/llama-3");
+        assert_eq!(hinted.strip_model_prefix("llama3.1:8b"), "llama3.1:8b");
+        assert_eq!(hinted.strip_model_prefix("openai/"), "openai/");
+
+        let hinted_with_model = build_provider(&config, Some("openai/gpt-4o-mini"));
+        assert_eq!(hinted_with_model.strip_model_prefix("openai/gpt-4o"), "gpt-4o");
+
+        let unhinted = build_provider(&config, None);
+        assert_eq!(unhinted.strip_model_prefix("openai/gpt-4o-mini"), "openai/gpt-4o-mini");
+        assert_eq!(unhinted.strip_model_prefix("custom/my-model"), "my-model");
     }
 
     #[test]

@@ -120,14 +120,6 @@ pub(crate) fn detect_custom_provider(model: &str) -> Option<Box<dyn Provider>> {
     None
 }
 
-/// Whether a custom provider with exactly this `name` is currently registered.
-pub(crate) fn is_registered_custom_provider(name: &str) -> bool {
-    let providers = CUSTOM_PROVIDERS
-        .read()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    providers.iter().any(|p| p.name == name)
-}
-
 /// Clear all custom providers.  Intended for test isolation only.
 #[cfg(test)]
 pub(crate) fn clear_custom_providers() {

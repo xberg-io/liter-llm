@@ -248,14 +248,15 @@ async fn should_pass_model_in_body() {
     assert_eq!(body["model"], "gpt-4", "model should be present in request body");
 }
 
-/// Send one chat request through a `base_url`-pinned client and return the `model` the server received.
-async fn model_received_by_server(requested: &str) -> String {
+/// Send one chat request through a `base_url`-pinned client built with `hint`
+/// and return the `model` the server received.
+async fn model_received_by_server(hint: Option<&str>, requested: &str) -> String {
     let mock = MockServer::start();
     let config = ClientConfigBuilder::new("test-key")
         .base_url(mock.url())
         .max_retries(0)
         .build();
-    let client = DefaultClient::new(config, None).expect("client creation should succeed");
+    let client = DefaultClient::new(config, hint).expect("client creation should succeed");
 
     let resp = client.chat(chat_request(requested)).await;
     assert!(resp.is_ok(), "chat request should succeed: {resp:?}");
@@ -267,33 +268,43 @@ async fn model_received_by_server(requested: &str) -> String {
 }
 
 #[tokio::test]
-async fn should_strip_known_provider_prefix_from_model_when_base_url_set() {
-    assert_eq!(model_received_by_server("openai/gpt-4o-mini").await, "gpt-4o-mini");
+async fn should_strip_hint_provider_prefix_from_model_when_base_url_set() {
     assert_eq!(
-        model_received_by_server("anthropic/claude-3-sonnet-20240229").await,
-        "claude-3-sonnet-20240229"
+        model_received_by_server(Some("openai"), "openai/gpt-4o-mini").await,
+        "gpt-4o-mini"
     );
-    assert_eq!(model_received_by_server("groq/llama3-70b").await, "llama3-70b");
+    assert_eq!(
+        model_received_by_server(Some("openai/gpt-4o-mini"), "openai/gpt-4o").await,
+        "gpt-4o"
+    );
 }
 
 #[tokio::test]
-async fn should_keep_unknown_org_prefix_in_model_when_base_url_set() {
+async fn should_send_model_verbatim_when_base_url_set_without_hint() {
     assert_eq!(
-        model_received_by_server("meta-llama/llama-3").await,
+        model_received_by_server(None, "openai/gpt-4o-mini").await,
+        "openai/gpt-4o-mini"
+    );
+    assert_eq!(
+        model_received_by_server(None, "anthropic/claude-3-sonnet-20240229").await,
+        "anthropic/claude-3-sonnet-20240229"
+    );
+    assert_eq!(model_received_by_server(None, "custom/my-model").await, "my-model");
+}
+
+#[tokio::test]
+async fn should_keep_prefixes_other_than_the_hint_provider() {
+    assert_eq!(
+        model_received_by_server(Some("openai"), "anthropic/claude-x").await,
+        "anthropic/claude-x"
+    );
+    assert_eq!(
+        model_received_by_server(Some("openai"), "meta-llama/llama-3").await,
         "meta-llama/llama-3"
     );
     assert_eq!(
-        model_received_by_server("Qwen/Qwen2.5-7B-Instruct").await,
-        "Qwen/Qwen2.5-7B-Instruct"
-    );
-    assert_eq!(model_received_by_server("gpt-4o-mini").await, "gpt-4o-mini");
-}
-
-#[tokio::test]
-async fn should_strip_only_the_first_segment_for_huggingface_routing_prefix() {
-    assert_eq!(
-        model_received_by_server("huggingface/meta-llama/Llama-3.1-8B-Instruct").await,
-        "meta-llama/Llama-3.1-8B-Instruct"
+        model_received_by_server(Some("openai"), "gpt-4o-mini").await,
+        "gpt-4o-mini"
     );
 }
 
