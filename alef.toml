@@ -302,7 +302,7 @@ ist = "ist"
 "poly.toml" = ["file-too-long"]
 ".alef-toml-merge-provenance.toml" = ["file-too-long"]
 # --- quality-debt baseline (generated) ---
-# 44 size/complexity findings across 36 files that predate these
+# 41 size/complexity findings across 33 files that predate these
 # metrics. Listed per file rather than switching the rules off, so the metrics still
 # fire on every file NOT listed here -- new code stays covered, and each path below is
 # one discrete unit of work.
@@ -333,11 +333,8 @@ ist = "ist"
 "crates/liter-llm/src/tower/fallback_chain.rs" = ["function-too-long"]
 "crates/liter-llm/src/tower/guardrail.rs" = ["file-too-long", "function-too-long"]
 "crates/liter-llm/src/tower/health.rs" = ["file-too-long"]
-"crates/liter-llm/src/tower/hedge.rs" = ["function-too-long"]
-"crates/liter-llm/src/tower/hooks.rs" = ["function-too-long"]
 "crates/liter-llm/src/tower/idempotency.rs" = ["file-too-long", "function-too-long"]
 "crates/liter-llm/src/tower/metrics.rs" = ["file-too-long"]
-"crates/liter-llm/src/tower/rate_limit.rs" = ["function-too-long"]
 "crates/liter-llm/src/tower/route_classify.rs" = ["file-too-long"]
 "crates/liter-llm/src/tower/router.rs" = ["file-too-long"]
 "crates/liter-llm/src/types/common.rs" = ["file-too-long"]
