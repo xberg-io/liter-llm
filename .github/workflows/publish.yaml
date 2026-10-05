@@ -908,6 +908,12 @@ jobs:
       )
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
+    env:
+      # ~keep Without this, cc-built C objects inside the staticlib (ring, etc.)
+      # take the runner SDK's minos while Rust objects use 11.0, so every Go
+      # consumer linking libliter_llm_ffi.a gets "built for newer macOS" warnings
+      # (#248). Ignored on non-Apple legs.
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
     strategy:
       fail-fast: false
       matrix:
