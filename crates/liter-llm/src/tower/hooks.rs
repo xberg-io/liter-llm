@@ -176,23 +176,11 @@ where
         let mut inner = std::mem::replace(&mut self.inner, standby);
 
         Box::pin(async move {
-            for hook in hooks.iter() {
-                let result = AssertUnwindSafe(hook.on_request(&req_clone)).catch_unwind().await;
-                match result {
-                    Ok(Ok(())) => {}
-                    Ok(Err(e)) => return Err(e),
-                    Err(_panic) => {
-                        tracing::error!("hook panicked during on_request");
-                        return Err(LiterLlmError::HookRejected {
-                            message: "hook panicked".into(),
-                        });
-                    }
-                }
-            }
+            run_on_request_hooks(&hooks, &req_clone).await?;
 
             let start = Instant::now();
 
-            let mut cancel_guard = usage_sink
+            let cancel_guard = usage_sink
                 .as_ref()
                 .map(|s| CancellationGuard::new(Arc::clone(s), req_clone.clone(), start));
 
@@ -206,75 +194,118 @@ where
                 })
                 .await;
 
+            let latency_ms = start.elapsed().as_millis() as u64;
+            let completion = Completion {
+                hooks: &hooks,
+                usage_sink,
+                req: &req_clone,
+                cancel_guard,
+                latency_ms,
+                cache_state,
+            };
             match inner_result {
-                Ok(resp) => {
-                    let latency_ms = start.elapsed().as_millis() as u64;
-
-                    for hook in hooks.iter() {
-                        if AssertUnwindSafe(hook.on_response(&req_clone, &resp))
-                            .catch_unwind()
-                            .await
-                            .is_err()
-                        {
-                            tracing::error!("hook panicked during on_response");
-                        }
-                    }
-
-                    if let Some(guard) = cancel_guard.take() {
-                        guard.disarm();
-                    }
-
-                    if let Some(sink) = usage_sink {
-                        let event =
-                            build_usage_event(&req_clone, &resp, latency_ms, UsageEventOutcome::Success, cache_state);
-                        tokio::spawn(async move {
-                            if let Err(err) = sink.emit_erased(event).await {
-                                tracing::warn!(
-                                    target: "gen_ai.usage",
-                                    error = %err,
-                                    "usage sink emit failed"
-                                );
-                            }
-                        });
-                    }
-
-                    Ok(resp)
-                }
-                Err(err) => {
-                    let latency_ms = start.elapsed().as_millis() as u64;
-
-                    for hook in hooks.iter() {
-                        if AssertUnwindSafe(hook.on_error(&req_clone, &err))
-                            .catch_unwind()
-                            .await
-                            .is_err()
-                        {
-                            tracing::error!("hook panicked during on_error");
-                        }
-                    }
-
-                    if let Some(guard) = cancel_guard.take() {
-                        guard.disarm();
-                    }
-
-                    if let Some(sink) = usage_sink {
-                        let outcome = classify_error_outcome(&err);
-                        let event = build_error_usage_event(&req_clone, latency_ms, outcome, cache_state);
-                        tokio::spawn(async move {
-                            if let Err(sink_err) = sink.emit_erased(event).await {
-                                tracing::warn!(
-                                    target: "gen_ai.usage",
-                                    error = %sink_err,
-                                    "usage sink emit failed on error path"
-                                );
-                            }
-                        });
-                    }
-
-                    Err(err)
-                }
+                Ok(resp) => completion.on_success(resp).await,
+                Err(err) => completion.on_error(err).await,
             }
         })
+    }
+}
+
+async fn run_on_request_hooks(hooks: &[Arc<dyn LlmHook>], req: &LlmRequest) -> Result<()> {
+    for hook in hooks {
+        let result = AssertUnwindSafe(hook.on_request(req)).catch_unwind().await;
+        match result {
+            Ok(Ok(())) => {}
+            Ok(Err(e)) => return Err(e),
+            Err(_panic) => {
+                tracing::error!("hook panicked during on_request");
+                return Err(LiterLlmError::HookRejected {
+                    message: "hook panicked".into(),
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Everything the post-call hook and usage-sink steps need once the inner call has finished.
+struct Completion<'a> {
+    hooks: &'a [Arc<dyn LlmHook>],
+    usage_sink: Option<Arc<dyn UsageSinkErased>>,
+    req: &'a LlmRequest,
+    cancel_guard: Option<CancellationGuard>,
+    latency_ms: u64,
+    cache_state: CacheState,
+}
+
+impl Completion<'_> {
+    async fn on_success(mut self, resp: LlmResponse) -> Result<LlmResponse> {
+        for hook in self.hooks {
+            if AssertUnwindSafe(hook.on_response(self.req, &resp))
+                .catch_unwind()
+                .await
+                .is_err()
+            {
+                tracing::error!("hook panicked during on_response");
+            }
+        }
+
+        if let Some(guard) = self.cancel_guard.take() {
+            guard.disarm();
+        }
+
+        if let Some(sink) = self.usage_sink {
+            let event = build_usage_event(
+                self.req,
+                &resp,
+                self.latency_ms,
+                UsageEventOutcome::Success,
+                self.cache_state,
+            );
+            tokio::spawn(async move {
+                if let Err(err) = sink.emit_erased(event).await {
+                    tracing::warn!(
+                        target: "gen_ai.usage",
+                        error = %err,
+                        "usage sink emit failed"
+                    );
+                }
+            });
+        }
+
+        Ok(resp)
+    }
+
+    async fn on_error(mut self, err: LiterLlmError) -> Result<LlmResponse> {
+        for hook in self.hooks {
+            if AssertUnwindSafe(hook.on_error(self.req, &err))
+                .catch_unwind()
+                .await
+                .is_err()
+            {
+                tracing::error!("hook panicked during on_error");
+            }
+        }
+
+        if let Some(guard) = self.cancel_guard.take() {
+            guard.disarm();
+        }
+
+        if let Some(sink) = self.usage_sink {
+            let outcome = classify_error_outcome(&err);
+            let event = build_error_usage_event(self.req, self.latency_ms, outcome, self.cache_state);
+            tokio::spawn(async move {
+                if let Err(sink_err) = sink.emit_erased(event).await {
+                    tracing::warn!(
+                        target: "gen_ai.usage",
+                        error = %sink_err,
+                        "usage sink emit failed on error path"
+                    );
+                }
+            });
+        }
+
+        Err(err)
     }
 }
 
