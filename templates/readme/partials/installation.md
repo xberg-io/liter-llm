@@ -284,7 +284,7 @@ Pre-built binaries available for:
 
 {% elif language == "go" %}
 
-- **Go 1.21+** required
+- **Go 1.26+** required
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% elif language == "java" %}
 - **Java 21+** required (Panama FFM API)

@@ -24,23 +24,18 @@ func main() {
 	ctx := context.Background()
 
 	// Create client with OpenAI API key
-	client, err := ll.CreateClient(os.Getenv("OPENAI_API_KEY"), "", 0, 0, "")
+	client, err := ll.CreateClient(os.Getenv("OPENAI_API_KEY"), nil, nil, nil, nil)
 	if err != nil {
 		log.Fatalf("failed to create client: %v", err)
 	}
 
 	// Build a multimodal user message with text and image
-	imageURL := ll.ImageURL{
-		URL:    "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
-		Detail: ll.Ptr(ll.ImageDetailLow),
-	}
-
 	userMessage := ll.Message{
 		Role: "user",
 		User: &ll.UserMessage{
 			Content: ll.UserContent(json.RawMessage(`[
 				{"type":"text","text":"Describe this image in one sentence."},
-				{"type":"image_url","image_url":{"url":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg","detail":"Low"}}
+				{"type":"image_url","image_url":{"url":"https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg","detail":"low"}}
 			]`)),
 			Name: nil,
 		},
@@ -70,7 +65,7 @@ func main() {
 	}
 
 	// Send request and get response
-	response, err := client.Chat(ctx, request)
+	response, err := client.ChatWithContext(ctx, request)
 	if err != nil {
 		log.Fatalf("failed to call chat: %v", err)
 	}
@@ -90,7 +85,7 @@ func main() {
 		Modalities: []ll.Modality{ll.ModalityText, ll.ModalityImage},
 	}
 
-	responseWithImage, err := client.Chat(ctx, requestWithImage)
+	responseWithImage, err := client.ChatWithContext(ctx, requestWithImage)
 	if err != nil {
 		log.Fatalf("failed to call chat with image output: %v", err)
 	}
@@ -107,23 +102,18 @@ func main() {
 	}
 
 	// Example: Stream multimodal response
-	stream, err := client.ChatStream(ctx, requestWithImage)
+	stream, err := client.ChatStreamWithContext(ctx, requestWithImage)
 	if err != nil {
 		log.Fatalf("failed to start stream: %v", err)
 	}
-	defer stream.Close()
 
-	for {
-		chunk, err := stream.Next()
-		if err != nil {
-			log.Fatalf("stream error: %v", err)
-		}
-		if chunk == nil {
-			break
-		}
+	for chunk := range stream.Chan() {
 		if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != nil {
-			fmt.Printf("Streamed: %s", string(*chunk.Choices[0].Delta.Content))
+			fmt.Printf("Streamed: %s", *chunk.Choices[0].Delta.Content)
 		}
+	}
+	if err := stream.Err(); err != nil {
+		log.Fatalf("stream error: %v", err)
 	}
 }
 ```
