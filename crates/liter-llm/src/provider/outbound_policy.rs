@@ -332,19 +332,33 @@ pub fn is_forbidden(ip: IpAddr) -> bool {
     }
 }
 
+/// Inclusive `(a, b, c)` octet ranges that must not be reached; the fourth octet is never inspected.
+type ForbiddenV4Range = ((u8, u8), (u8, u8), (u8, u8));
+
+const ANY: (u8, u8) = (0, 255);
+
+const FORBIDDEN_V4_RANGES: [ForbiddenV4Range; 13] = [
+    ((0, 0), ANY, ANY),
+    ((10, 10), ANY, ANY),
+    ((100, 100), (64, 127), ANY),
+    ((127, 127), ANY, ANY),
+    ((169, 169), (254, 254), ANY),
+    ((172, 172), (16, 31), ANY),
+    ((192, 192), (0, 0), (0, 0)),
+    ((192, 192), (0, 0), (2, 2)),
+    ((192, 192), (168, 168), ANY),
+    ((198, 198), (18, 19), ANY),
+    ((198, 198), (51, 51), (100, 100)),
+    ((203, 203), (0, 0), (113, 113)),
+    ((224, 255), ANY, ANY),
+];
+
 fn is_forbidden_v4(ip: std::net::Ipv4Addr) -> bool {
     let [a, b, c, _] = ip.octets();
-    a == 0
-        || a == 10
-        || (a == 100 && (64..=127).contains(&b))
-        || a == 127
-        || (a == 169 && b == 254)
-        || (a == 172 && (16..=31).contains(&b))
-        || (a == 192 && b == 0 && (c == 0 || c == 2))
-        || (a == 192 && b == 168)
-        || (a == 198 && (b == 18 || b == 19 || (b == 51 && c == 100)))
-        || (a == 203 && b == 0 && c == 113)
-        || a >= 224
+    let within = |value: u8, (lo, hi): (u8, u8)| (lo..=hi).contains(&value);
+    FORBIDDEN_V4_RANGES
+        .iter()
+        .any(|&(ra, rb, rc)| within(a, ra) && within(b, rb) && within(c, rc))
 }
 
 fn is_forbidden_v6(ip: std::net::Ipv6Addr) -> bool {
@@ -771,6 +785,89 @@ mod tests {
         for (addr, expected) in cases {
             let ip: IpAddr = addr.parse().expect("valid IP");
             assert_eq!(is_forbidden(ip), *expected, "is_forbidden({addr}) should be {expected}");
+        }
+    }
+
+    #[test]
+    fn is_forbidden_v4_range_boundaries() {
+        let cases: &[(&str, bool)] = &[
+            ("0.0.0.0", true),
+            ("0.255.255.255", true),
+            ("1.0.0.0", false),
+            ("9.255.255.255", false),
+            ("10.0.0.0", true),
+            ("10.255.255.255", true),
+            ("11.0.0.0", false),
+            ("100.63.255.255", false),
+            ("100.64.0.0", true),
+            ("100.127.255.255", true),
+            ("100.128.0.0", false),
+            ("126.255.255.255", false),
+            ("127.0.0.0", true),
+            ("127.255.255.255", true),
+            ("128.0.0.0", false),
+            ("169.253.255.255", false),
+            ("169.254.0.0", true),
+            ("169.254.255.255", true),
+            ("169.255.0.0", false),
+            ("172.15.255.255", false),
+            ("172.16.0.0", true),
+            ("172.31.255.255", true),
+            ("172.32.0.0", false),
+            ("191.255.255.255", false),
+            ("192.0.0.0", true),
+            ("192.0.0.255", true),
+            ("192.0.1.0", false),
+            ("192.0.1.255", false),
+            ("192.0.2.0", true),
+            ("192.0.2.255", true),
+            ("192.0.3.0", false),
+            ("192.1.0.0", false),
+            ("192.167.255.255", false),
+            ("192.168.0.0", true),
+            ("192.168.255.255", true),
+            ("192.169.0.0", false),
+            ("198.17.255.255", false),
+            ("198.18.0.0", true),
+            ("198.19.255.255", true),
+            ("198.20.0.0", false),
+            ("198.50.100.0", false),
+            ("198.51.99.255", false),
+            ("198.51.100.0", true),
+            ("198.51.100.255", true),
+            ("198.51.101.0", false),
+            ("198.52.100.0", false),
+            ("202.255.255.255", false),
+            ("203.0.112.255", false),
+            ("203.0.113.0", true),
+            ("203.0.113.255", true),
+            ("203.0.114.0", false),
+            ("203.1.113.0", false),
+            ("204.0.113.0", false),
+            ("223.255.255.255", false),
+            ("224.0.0.0", true),
+            ("255.255.255.255", true),
+        ];
+        for (addr, expected) in cases {
+            let ip: std::net::Ipv4Addr = addr.parse().expect("valid IPv4");
+            assert_eq!(
+                is_forbidden_v4(ip),
+                *expected,
+                "is_forbidden_v4({addr}) should be {expected}"
+            );
+            assert_eq!(
+                is_forbidden(IpAddr::V4(ip)),
+                *expected,
+                "is_forbidden({addr}) should be {expected}"
+            );
+        }
+    }
+
+    #[test]
+    fn is_forbidden_ipv4_mapped_ipv6_follows_v4_table() {
+        for (addr, expected) in [("::ffff:10.0.0.1", true), ("::ffff:8.8.8.8", false)] {
+            let ip: IpAddr = addr.parse().expect("valid IPv6");
+            assert_eq!(is_forbidden(ip), expected, "is_forbidden({addr}) should be {expected}");
         }
     }
 
