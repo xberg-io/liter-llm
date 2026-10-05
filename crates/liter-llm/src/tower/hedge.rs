@@ -312,8 +312,6 @@ where
 {
     use std::time::Instant;
 
-    use tower::ServiceExt as _;
-
     let dispatch_time = Instant::now();
 
     if max_attempts == 1 {
@@ -345,28 +343,48 @@ where
             break;
         };
 
-        let req_clone = req.clone();
-        let mut svc_clone = inner_for_hedges.clone();
-        join_set.spawn(async move {
-            if hedge_delay > Duration::ZERO {
-                tokio::time::sleep(hedge_delay).await;
-            }
-            tracing::debug!(attempt, "launching hedged request");
-
-            let model = req_clone.model().unwrap_or("").to_owned();
-            let system = model.split_once('/').map(|(p, _)| p.to_owned()).unwrap_or_default();
-            super::metrics::record_retry_attempt(&system, &model, req_clone.operation_name());
-
-            // ~keep ready() acquires any per-instance permits before the hedged call.
-            let ready_result = svc_clone.ready().await;
-            let result = match ready_result {
-                Ok(ready_svc) => ready_svc.call(req_clone).await,
-                Err(e) => Err(e),
-            };
-            (attempt, result)
-        });
+        join_set.spawn(run_hedged_attempt(
+            attempt,
+            hedge_delay,
+            req.clone(),
+            inner_for_hedges.clone(),
+        ));
     }
 
+    first_success(join_set).await
+}
+
+async fn run_hedged_attempt<S>(
+    attempt: u32,
+    hedge_delay: Duration,
+    req: LlmRequest,
+    mut svc: S,
+) -> (u32, Result<LlmResponse>)
+where
+    S: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError> + Send + 'static,
+    S::Future: Send + 'static,
+{
+    use tower::ServiceExt as _;
+
+    if hedge_delay > Duration::ZERO {
+        tokio::time::sleep(hedge_delay).await;
+    }
+    tracing::debug!(attempt, "launching hedged request");
+
+    let model = req.model().unwrap_or("").to_owned();
+    let system = model.split_once('/').map(|(p, _)| p.to_owned()).unwrap_or_default();
+    super::metrics::record_retry_attempt(&system, &model, req.operation_name());
+
+    // ~keep ready() acquires any per-instance permits before the hedged call.
+    let ready_result = svc.ready().await;
+    let result = match ready_result {
+        Ok(ready_svc) => ready_svc.call(req).await,
+        Err(e) => Err(e),
+    };
+    (attempt, result)
+}
+
+async fn first_success(mut join_set: tokio::task::JoinSet<(u32, Result<LlmResponse>)>) -> Result<LlmResponse> {
     let mut last_err: Option<LiterLlmError> = None;
 
     while let Some(join_result) = join_set.join_next().await {
@@ -621,6 +639,57 @@ mod tests {
         );
     }
 
+    /// RAII helper: drops decrement `live_count`.
+    struct DropGuard {
+        live_count: Arc<std::sync::atomic::AtomicUsize>,
+    }
+    impl Drop for DropGuard {
+        fn drop(&mut self) {
+            self.live_count.fetch_sub(1, Ordering::SeqCst);
+        }
+    }
+
+    #[derive(Clone)]
+    struct SlowOrFast {
+        live: Arc<std::sync::atomic::AtomicUsize>,
+        total_calls: Arc<std::sync::atomic::AtomicUsize>,
+        attempt: Arc<std::sync::atomic::AtomicUsize>,
+        winner_signal: Arc<tokio::sync::Notify>,
+    }
+
+    impl tower::Service<LlmRequest> for SlowOrFast {
+        type Response = LlmResponse;
+        type Error = LiterLlmError;
+        type Future = crate::client::BoxFuture<'static, crate::error::Result<LlmResponse>>;
+
+        fn poll_ready(&mut self, _cx: &mut std::task::Context<'_>) -> std::task::Poll<crate::error::Result<()>> {
+            std::task::Poll::Ready(Ok(()))
+        }
+
+        fn call(&mut self, _req: LlmRequest) -> Self::Future {
+            let attempt = self.attempt.fetch_add(1, Ordering::SeqCst) + 1;
+            self.total_calls.fetch_add(1, Ordering::SeqCst);
+            self.live.fetch_add(1, Ordering::SeqCst);
+            let guard = DropGuard {
+                live_count: Arc::clone(&self.live),
+            };
+            let winner_signal = Arc::clone(&self.winner_signal);
+            Box::pin(async move {
+                let _g = guard;
+                if attempt == 1 {
+                    tokio::time::sleep(Duration::from_millis(20)).await;
+                    winner_signal.notify_one();
+                    Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response(
+                        "gpt-4",
+                    )))
+                } else {
+                    std::future::pending::<()>().await;
+                    unreachable!("loser must be cancelled before completing");
+                }
+            })
+        }
+    }
+
     /// HIGH-priority correctness: when the winner returns, the loser must be
     /// dropped (cancelled) so its long-running future does not continue to
     /// consume permits or upstream resources.
@@ -632,64 +701,12 @@ mod tests {
     #[tokio::test]
     async fn hedge_loser_is_dropped_before_winner_returns() {
         use std::sync::atomic::AtomicUsize;
-        use std::task::Poll;
 
         use tokio::sync::Notify;
-
-        /// RAII helper: drops decrement `live_count`.
-        struct DropGuard {
-            live_count: Arc<AtomicUsize>,
-        }
-        impl Drop for DropGuard {
-            fn drop(&mut self) {
-                self.live_count.fetch_sub(1, Ordering::SeqCst);
-            }
-        }
 
         let live = Arc::new(AtomicUsize::new(0));
         let total_calls = Arc::new(AtomicUsize::new(0));
         let winner_signal = Arc::new(Notify::new());
-
-        #[derive(Clone)]
-        struct SlowOrFast {
-            live: Arc<AtomicUsize>,
-            total_calls: Arc<AtomicUsize>,
-            attempt: Arc<AtomicUsize>,
-            winner_signal: Arc<Notify>,
-        }
-
-        impl tower::Service<LlmRequest> for SlowOrFast {
-            type Response = LlmResponse;
-            type Error = LiterLlmError;
-            type Future = crate::client::BoxFuture<'static, crate::error::Result<LlmResponse>>;
-
-            fn poll_ready(&mut self, _cx: &mut std::task::Context<'_>) -> Poll<crate::error::Result<()>> {
-                Poll::Ready(Ok(()))
-            }
-
-            fn call(&mut self, _req: LlmRequest) -> Self::Future {
-                let attempt = self.attempt.fetch_add(1, Ordering::SeqCst) + 1;
-                self.total_calls.fetch_add(1, Ordering::SeqCst);
-                self.live.fetch_add(1, Ordering::SeqCst);
-                let guard = DropGuard {
-                    live_count: Arc::clone(&self.live),
-                };
-                let winner_signal = Arc::clone(&self.winner_signal);
-                Box::pin(async move {
-                    let _g = guard;
-                    if attempt == 1 {
-                        tokio::time::sleep(Duration::from_millis(20)).await;
-                        winner_signal.notify_one();
-                        Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response(
-                            "gpt-4",
-                        )))
-                    } else {
-                        std::future::pending::<()>().await;
-                        unreachable!("loser must be cancelled before completing");
-                    }
-                })
-            }
-        }
 
         let inner = SlowOrFast {
             live: Arc::clone(&live),
