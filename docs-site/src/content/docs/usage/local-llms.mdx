@@ -300,6 +300,8 @@ api_key = ""
 base_url = "http://192.168.1.100:9000/v1"
 ```
 
+With a custom `base_url`, every request goes to that server. A leading `provider/` segment is stripped from the model name only when it names a known provider, so `openai/gpt-4o-mini` is sent as `gpt-4o-mini` while `meta-llama/llama-3` and `Qwen/Qwen2.5-7B-Instruct` are forwarded unchanged. For `huggingface/meta-llama/Llama-3.1-8B-Instruct` only the `huggingface/` routing prefix is removed. If your server expects a provider-style id such as OpenRouter's `anthropic/claude-3.5-sonnet`, prefix it with the provider that owns the endpoint (`openrouter/anthropic/claude-3.5-sonnet`) so the first segment is the one stripped.
+
 ## Docker Compose
 
 Run Ollama alongside the liter-llm proxy for a self-contained local setup:

@@ -717,6 +717,40 @@ impl Provider for OpenAiCompatibleProvider {
             .iter()
             .any(|prefix| model.starts_with(prefix.as_str()))
     }
+
+    /// Strip the leading `provider/` segment only when it names a known provider.
+    ///
+    /// This provider fronts a user-supplied `base_url` (Ollama, vLLM, LM Studio, a proxy).
+    /// `openai/gpt-4o-mini` is a routing hint that the server does not understand, while
+    /// `meta-llama/llama-3` or `Qwen/Qwen2.5` are real model ids that must reach it intact.
+    /// Only the first segment is removed, so `huggingface/meta-llama/Llama-3` becomes
+    /// `meta-llama/Llama-3`.
+    fn strip_model_prefix<'m>(&self, model: &'m str) -> &'m str {
+        if let Some((prefix, rest)) = model.split_once('/')
+            && !rest.is_empty()
+            && (prefix == self.name || is_known_provider_prefix(prefix))
+        {
+            return rest;
+        }
+        model
+    }
+}
+
+/// Whether `prefix` names a provider liter-llm can route to: a registry entry from
+/// `providers.json`, one of the built-in provider aliases, or a runtime-registered
+/// custom provider.
+pub(crate) fn is_known_provider_prefix(prefix: &str) -> bool {
+    // ~keep `google_ai` is a built-in alias handled by `detect_provider` that has no registry entry.
+    if prefix == "google_ai" {
+        return true;
+    }
+    if REGISTRY
+        .as_ref()
+        .is_ok_and(|reg| reg.providers.iter().any(|e| e.config.name == prefix))
+    {
+        return true;
+    }
+    custom::is_registered_custom_provider(prefix)
 }
 
 /// A data-driven provider backed by a [`ProviderConfig`] entry from providers.json.

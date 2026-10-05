@@ -978,7 +978,9 @@ impl DefaultClient {
 ///      (Azure embeds the deployment name and `?api-version=…`), construct
 ///      that provider with the override (issue #83).
 ///    - Otherwise, treat the override as a generic OpenAI-compatible endpoint
-///      (LM Studio, Ollama, vLLM, etc.).
+///      (LM Studio, Ollama, vLLM, etc.).  A leading segment naming a known
+///      provider is stripped from the model; unknown org prefixes are kept
+///      (issue #249).
 /// 2. `model_hint` -> auto-detect by model name prefix.
 /// 3. Default -> OpenAI.
 fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Arc<dyn Provider> {
@@ -2441,6 +2443,25 @@ mod build_provider_tests {
         assert_eq!(p.name(), "custom");
         let url = p.build_url("/chat/completions", "llama3.1:8b");
         assert_eq!(url, "http://localhost:11434/v1/chat/completions");
+    }
+
+    #[test]
+    fn base_url_provider_strips_only_known_provider_prefixes() {
+        let config = ClientConfigBuilder::new("test-key")
+            .base_url("http://localhost:11434/v1")
+            .build();
+        let p = build_provider(&config, None);
+        assert_eq!(p.strip_model_prefix("openai/gpt-4o-mini"), "gpt-4o-mini");
+        assert_eq!(p.strip_model_prefix("custom/my-model"), "my-model");
+        assert_eq!(p.strip_model_prefix("google_ai/gemini-pro"), "gemini-pro");
+        assert_eq!(
+            p.strip_model_prefix("huggingface/meta-llama/Llama-3.1-8B"),
+            "meta-llama/Llama-3.1-8B"
+        );
+        assert_eq!(p.strip_model_prefix("meta-llama/llama-3"), "meta-llama/llama-3");
+        assert_eq!(p.strip_model_prefix("Qwen/Qwen2.5-7B"), "Qwen/Qwen2.5-7B");
+        assert_eq!(p.strip_model_prefix("llama3.1:8b"), "llama3.1:8b");
+        assert_eq!(p.strip_model_prefix("openai/"), "openai/");
     }
 
     #[test]

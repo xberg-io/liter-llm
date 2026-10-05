@@ -30,7 +30,10 @@ pub struct ClientConfig {
     /// API key for authentication (stored as a secret).
     pub api_key: SecretString,
     /// Override base URL.  When set, all requests go here regardless of model
-    /// name, and provider auto-detection is skipped.
+    /// name, and provider auto-detection is skipped.  A leading `provider/`
+    /// segment that names a known provider (`openai/gpt-4o-mini`) is stripped
+    /// from the model sent to the server; other prefixes such as
+    /// `meta-llama/llama-3` are forwarded unchanged.
     pub base_url: Option<String>,
     /// Request timeout.
     pub timeout: Duration,
