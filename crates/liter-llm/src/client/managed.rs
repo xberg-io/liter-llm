@@ -123,9 +123,14 @@ impl ManagedClient {
     /// constructed (e.g. invalid headers or HTTP client build failure).
     pub fn new(config: ClientConfig, model_hint: Option<&str>) -> Result<Self> {
         let client = DefaultClient::new(config.clone(), model_hint)?;
+        Self::from_client(client, &config)
+    }
+
+    /// Wrap an already-built `client` with the middleware described by `config`.
+    pub(crate) fn from_client(client: DefaultClient, config: &ClientConfig) -> Result<Self> {
         let inner = Arc::new(client);
 
-        let (service, budget_state) = build_service_stack(&config, Arc::clone(&inner))?;
+        let (service, budget_state) = build_service_stack(config, Arc::clone(&inner))?;
 
         Ok(Self {
             inner,

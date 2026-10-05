@@ -125,7 +125,7 @@ Array of custom provider definitions. Each entry contains:
 | ---------------- | -------- | ------------------------------------------------ |
 | `name`           | string   | Unique provider name.                            |
 | `base_url`       | string   | Provider's API base URL.                         |
-| `auth_header`    | string   | Auth scheme (optional).                          |
+| `auth_header`    | string   | `"Bearer"` (default), `"none"`, or a header name. |
 | `model_prefixes` | string[] | Model name prefixes that route to this provider. |
 
 ## Construction
@@ -178,7 +178,7 @@ client = create_client(
 response = await client.chat(...)
 ```
 
-For richer configuration (cache, budget, hooks), use `create_client_from_json` with a serialized `ClientConfig`:
+For middleware and custom providers, use `create_client_from_json` (see [JSON configuration](#json-configuration)):
 
 ```python
 from liter_llm import create_client_from_json
@@ -187,6 +187,8 @@ import json
 client = create_client_from_json(json.dumps({
     "api_key": "sk-...",
     "timeout_secs": 120,
+    "cache": {"max_entries": 256, "ttl_seconds": 300},
+    "budget": {"global_limit": 50.0, "enforcement": "hard"},
 }))
 ```
 
@@ -207,7 +209,7 @@ const client = createClient(
 const response = await client.chat({ /* ... */ });
 ```
 
-For richer configuration, serialize a `ClientConfig` and pass it to `createClientFromJson`:
+For middleware and custom providers, pass a JSON config to `createClientFromJson` (see [JSON configuration](#json-configuration)):
 
 ```typescript
 import { createClientFromJson } from "@xberg-io/liter-llm";
@@ -215,11 +217,25 @@ import { createClientFromJson } from "@xberg-io/liter-llm";
 const client = createClientFromJson(JSON.stringify({
   api_key: process.env.OPENAI_API_KEY,
   timeout_secs: 120,
+  cache: { max_entries: 256, ttl_seconds: 300 },
+  budget: { global_limit: 50.0, enforcement: "hard" },
 }));
 ```
 
 </TabItem>
 </Tabs>
+
+### JSON configuration
+
+`create_client_from_json` (`createClientFromJson` in TypeScript) accepts the same snake_case keys as `liter-llm.toml`, as a JSON object. Unknown keys are rejected.
+
+| Key                                                                                                | Effect                                                                                                        |
+| -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `api_key`, `base_url`, `model_hint`, `timeout_secs`, `max_retries`, `extra_headers`                | Client settings, applied to the underlying HTTP client.                                                       |
+| `cache`, `budget`, `cooldown_secs`, `rate_limit`, `in_flight_limit`, `health_check_secs`, `cost_tracking`, `tracing` | Middleware. When any is set, `chat`, `chat_stream`, `embed`, `list_models`, `image_generate`, `speech`, `transcribe`, `moderate`, `rerank`, `search` and `ocr` run through the managed Tower stack. File, batch and response operations bypass it. |
+| `providers`                                                                                        | Each entry is registered process-wide as a custom provider (`auth_header`: `"Bearer"`/`"Authorization"`/unset sends a bearer token, `"none"` sends no auth header, any other value names a header that carries the raw key). |
+
+Hooks are not expressible in JSON; build a `ClientConfig` in Rust to use them. A build compiled without the `tower` feature rejects the middleware keys with an error instead of ignoring them.
 
 ### Per-language snippets
 
@@ -582,7 +598,7 @@ unregister_custom_provider("my-provider")
 </TabItem>
 <TabItem label="TOML">
 
-`liter-llm.toml` can declare custom providers, but loading the file does **not** register them automatically — `FileConfig::into_builder()` only maps client-level settings onto `ClientConfigBuilder`. Read the entries back with `FileConfig::providers()` and call `register_custom_provider` yourself for each one:
+`liter-llm.toml` can declare custom providers, but loading the file with `FileConfig::into_builder()` does **not** register them — it only maps client-level settings onto `ClientConfigBuilder`. (`create_client_from_json` does register its `providers` entries.) Read the entries back with `FileConfig::providers()` and register each one with `register_custom_provider`:
 
 ```toml
 [[providers]]
@@ -593,16 +609,11 @@ model_prefixes = ["my-provider/"]
 ```
 
 ```rust
-use liter_llm::{register_custom_provider, AuthHeaderFormat, CustomProviderConfig, FileConfig};
+use liter_llm::{register_custom_provider, FileConfig};
 
 if let Some(file) = FileConfig::discover()? {
     for provider in file.providers() {
-        register_custom_provider(CustomProviderConfig {
-            name: provider.name.clone(),
-            base_url: provider.base_url.clone(),
-            auth_header: AuthHeaderFormat::Bearer,
-            model_prefixes: provider.model_prefixes.clone(),
-        })?;
+        register_custom_provider(provider.to_custom_provider_config())?;
     }
 }
 ```
@@ -610,7 +621,7 @@ if let Some(file) = FileConfig::discover()? {
 </TabItem>
 </Tabs>
 
-`AuthHeaderFormat` has three variants: `Bearer` (sends `Authorization: Bearer <key>`), `ApiKey(header_name)` (sends a custom header), and `None` (no auth header). Note that `FileProviderConfig::auth_header` (from TOML) is a raw header-name string, not an `AuthHeaderFormat`; map it to the enum yourself as shown above.
+`AuthHeaderFormat` has three variants: `Bearer` (sends `Authorization: Bearer <key>`), `ApiKey(header_name)` (sends a custom header), and `None` (no auth header). `FileProviderConfig::auth_header` (from TOML or JSON) is a string; `to_custom_provider_config()` maps unset, `"Bearer"` and `"Authorization"` to `Bearer`, `"none"` to `None`, and any other value to `ApiKey` with that header name.
 
 ## Tracing
 

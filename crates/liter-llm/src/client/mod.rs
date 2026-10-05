@@ -680,10 +680,32 @@ pub struct DefaultClient {
     /// Pre-computed static extra headers — avoids converting `&'static str` pairs
     /// to `(String, String)` on every request.
     cached_extra_headers: Vec<(String, String)>,
+    /// Tower middleware stack installed by [`create_client_from_json`](crate::create_client_from_json).
+    ///
+    /// ~keep The managed client wraps a separate `DefaultClient` whose own `managed` is `None`,
+    /// so delegation never recurses.
+    #[cfg_attr(not(all(feature = "native-http", feature = "tower")), allow(dead_code))]
+    managed: Option<ManagedHandle>,
 }
+
+/// Handle to the managed middleware stack; uninhabited when the stack is not compiled in.
+#[cfg(all(feature = "native-http", feature = "tower"))]
+type ManagedHandle = Arc<managed::ManagedClient>;
+#[cfg(all(
+    any(feature = "native-http", feature = "wasm-http"),
+    not(all(feature = "native-http", feature = "tower"))
+))]
+type ManagedHandle = std::convert::Infallible;
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 impl DefaultClient {
+    /// Route the [`LlmClient`] methods through `managed`'s middleware stack.
+    #[cfg(all(feature = "native-http", feature = "tower"))]
+    pub(crate) fn with_managed(mut self, managed: Arc<managed::ManagedClient>) -> Self {
+        self.managed = Some(managed);
+        self
+    }
+
     fn response_read_options(&self) -> http::request::ResponseReadOptions {
         http::request::ResponseReadOptions {
             max_retries: self.config.max_retries,
@@ -776,7 +798,6 @@ impl DefaultClient {
         let cached_auth_header = provider
             .auth_header(config.api_key.expose_secret())
             .map(|(name, value)| (name.into_owned(), value.into_owned()));
-
         let cached_extra_headers = provider
             .extra_headers()
             .iter()
@@ -789,6 +810,7 @@ impl DefaultClient {
             provider,
             cached_auth_header,
             cached_extra_headers,
+            managed: None,
         })
     }
 
@@ -1033,6 +1055,10 @@ fn build_bedrock_provider(config: &ClientConfig) -> Arc<dyn Provider> {
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 impl LlmClient for DefaultClient {
     fn chat(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<ChatCompletionResponse>> {
+        #[cfg(all(feature = "native-http", feature = "tower"))]
+        if let Some(managed) = &self.managed {
+            return managed.chat(req);
+        }
         Box::pin(async move {
             // ~keep Pass stream=false so providers can transform non-streaming chat correctly.
             let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))?;
@@ -1068,6 +1094,10 @@ impl LlmClient for DefaultClient {
         &self,
         req: ChatCompletionRequest,
     ) -> BoxFuture<'_, Result<BoxStream<'static, Result<ChatCompletionChunk>>>> {
+        #[cfg(all(feature = "native-http", feature = "tower"))]
+        if let Some(managed) = &self.managed {
+            return managed.chat_stream(req);
+        }
         Box::pin(async move {
             // ~keep Prepare first for validation/transforms, then override with provider stream URL.
             let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))?;
@@ -1129,6 +1159,10 @@ impl LlmClient for DefaultClient {
     }
 
     fn embed(&self, req: EmbeddingRequest) -> BoxFuture<'_, Result<EmbeddingResponse>> {
+        #[cfg(all(feature = "native-http", feature = "tower"))]
+        if let Some(managed) = &self.managed {
+            return managed.embed(req);
+        }
         Box::pin(async move {
             // ~keep Embeddings have no stream flag; passing None prevents inserting one.
             let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, None)?;
@@ -1161,6 +1195,10 @@ impl LlmClient for DefaultClient {
     }
 
     fn list_models(&self) -> BoxFuture<'_, Result<ModelsListResponse>> {
+        #[cfg(all(feature = "native-http", feature = "tower"))]
+        if let Some(managed) = &self.managed {
+            return managed.list_models();
+        }
         Box::pin(async move {
             // ~keep list_models has no model string, so use the construction-time provider.
             let url = self.provider.build_url(self.provider.models_path(), "");
@@ -1184,6 +1222,10 @@ impl LlmClient for DefaultClient {
     }
 
     fn image_generate(&self, req: CreateImageRequest) -> BoxFuture<'_, Result<ImagesResponse>> {
+        #[cfg(all(feature = "native-http", feature = "tower"))]
+        if let Some(managed) = &self.managed {
+            return managed.image_generate(req);
+        }
         Box::pin(async move {
             let model = req.model.as_deref().unwrap_or_default();
             let prepared = self.prepare_request(&req, |p| p.image_generations_path(), model, None)?;
@@ -1216,6 +1258,10 @@ impl LlmClient for DefaultClient {
     }
 
     fn speech(&self, req: CreateSpeechRequest) -> BoxFuture<'_, Result<bytes::Bytes>> {
+        #[cfg(all(feature = "native-http", feature = "tower"))]
+        if let Some(managed) = &self.managed {
+            return managed.speech(req);
+        }
         Box::pin(async move {
             let prepared = self.prepare_request(&req, |p| p.audio_speech_path(), &req.model, None)?;
 
@@ -1245,6 +1291,10 @@ impl LlmClient for DefaultClient {
     }
 
     fn transcribe(&self, req: CreateTranscriptionRequest) -> BoxFuture<'_, Result<TranscriptionResponse>> {
+        #[cfg(all(feature = "native-http", feature = "tower"))]
+        if let Some(managed) = &self.managed {
+            return managed.transcribe(req);
+        }
         Box::pin(async move {
             let prepared = self.prepare_request(&req, |p| p.audio_transcriptions_path(), &req.model, None)?;
 
@@ -1276,6 +1326,10 @@ impl LlmClient for DefaultClient {
     }
 
     fn moderate(&self, req: ModerationRequest) -> BoxFuture<'_, Result<ModerationResponse>> {
+        #[cfg(all(feature = "native-http", feature = "tower"))]
+        if let Some(managed) = &self.managed {
+            return managed.moderate(req);
+        }
         Box::pin(async move {
             let model = req.model.as_deref().unwrap_or_default();
             let prepared = self.prepare_request(&req, |p| p.moderations_path(), model, None)?;
@@ -1308,6 +1362,10 @@ impl LlmClient for DefaultClient {
     }
 
     fn rerank(&self, req: RerankRequest) -> BoxFuture<'_, Result<RerankResponse>> {
+        #[cfg(all(feature = "native-http", feature = "tower"))]
+        if let Some(managed) = &self.managed {
+            return managed.rerank(req);
+        }
         Box::pin(async move {
             let prepared = self.prepare_request(&req, |p| p.rerank_path(), &req.model, None)?;
 
@@ -1339,6 +1397,10 @@ impl LlmClient for DefaultClient {
     }
 
     fn search(&self, req: SearchRequest) -> BoxFuture<'_, Result<SearchResponse>> {
+        #[cfg(all(feature = "native-http", feature = "tower"))]
+        if let Some(managed) = &self.managed {
+            return managed.search(req);
+        }
         Box::pin(async move {
             let prepared = self.prepare_request(&req, |p| p.search_path(), &req.model, None)?;
 
@@ -1370,6 +1432,10 @@ impl LlmClient for DefaultClient {
     }
 
     fn ocr(&self, req: OcrRequest) -> BoxFuture<'_, Result<OcrResponse>> {
+        #[cfg(all(feature = "native-http", feature = "tower"))]
+        if let Some(managed) = &self.managed {
+            return managed.ocr(req);
+        }
         Box::pin(async move {
             let prepared = self.prepare_request(&req, |p| p.ocr_path(), &req.model, None)?;
 

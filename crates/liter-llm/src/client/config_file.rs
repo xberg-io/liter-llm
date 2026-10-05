@@ -10,6 +10,7 @@ use std::time::Duration;
 use serde::Deserialize;
 
 use crate::error::{LiterLlmError, Result};
+use crate::provider::custom::{AuthHeaderFormat, CustomProviderConfig};
 
 /// TOML file representation of client configuration.
 ///
@@ -102,6 +103,34 @@ pub struct FileProviderConfig {
     pub base_url: String,
     pub auth_header: Option<String>,
     pub model_prefixes: Vec<String>,
+}
+
+#[cfg_attr(alef, alef(skip))]
+impl FileProviderConfig {
+    /// Convert into the runtime [`CustomProviderConfig`] accepted by
+    /// [`register_custom_provider`](crate::register_custom_provider).
+    ///
+    /// `auth_header` is matched case-insensitively: unset, `"Bearer"` and
+    /// `"Authorization"` send `Authorization: Bearer <key>`, `"none"` sends no
+    /// auth header, and any other value is used as the name of a custom header
+    /// that carries the raw key.
+    #[must_use]
+    pub fn to_custom_provider_config(&self) -> CustomProviderConfig {
+        let auth_header = match self.auth_header.as_deref() {
+            None => AuthHeaderFormat::Bearer,
+            Some(h) if h.eq_ignore_ascii_case("bearer") || h.eq_ignore_ascii_case("authorization") => {
+                AuthHeaderFormat::Bearer
+            }
+            Some(h) if h.eq_ignore_ascii_case("none") => AuthHeaderFormat::None,
+            Some(h) => AuthHeaderFormat::ApiKey(h.to_owned()),
+        };
+        CustomProviderConfig {
+            name: self.name.clone(),
+            base_url: self.base_url.clone(),
+            auth_header,
+            model_prefixes: self.model_prefixes.clone(),
+        }
+    }
 }
 
 #[cfg_attr(alef, alef(skip))]
@@ -337,6 +366,40 @@ max_retries = 2
         let config = file_config.into_builder().build();
         assert_eq!(config.timeout, Duration::from_secs(30));
         assert_eq!(config.max_retries, 2);
+    }
+
+    #[test]
+    fn provider_auth_header_maps_to_auth_header_format() {
+        let provider = |auth_header: Option<&str>| FileProviderConfig {
+            name: "p".into(),
+            base_url: "https://p.example.com/v1".into(),
+            auth_header: auth_header.map(str::to_owned),
+            model_prefixes: vec!["p/".into()],
+        };
+        assert!(matches!(
+            provider(None).to_custom_provider_config().auth_header,
+            AuthHeaderFormat::Bearer
+        ));
+        assert!(matches!(
+            provider(Some("Bearer")).to_custom_provider_config().auth_header,
+            AuthHeaderFormat::Bearer
+        ));
+        assert!(matches!(
+            provider(Some("authorization")).to_custom_provider_config().auth_header,
+            AuthHeaderFormat::Bearer
+        ));
+        assert!(matches!(
+            provider(Some("None")).to_custom_provider_config().auth_header,
+            AuthHeaderFormat::None
+        ));
+        match provider(Some("X-Api-Key")).to_custom_provider_config().auth_header {
+            AuthHeaderFormat::ApiKey(name) => assert_eq!(name, "X-Api-Key"),
+            other => panic!("expected ApiKey, got {other:?}"),
+        }
+        let cfg = provider(None).to_custom_provider_config();
+        assert_eq!(cfg.name, "p");
+        assert_eq!(cfg.base_url, "https://p.example.com/v1");
+        assert_eq!(cfg.model_prefixes, vec!["p/".to_owned()]);
     }
 
     #[test]
