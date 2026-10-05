@@ -969,7 +969,10 @@ jobs:
         uses: xberg-io/actions/install-alef@v1
       - name: Build FFI
         shell: bash
-        run: alef publish build --lang ffi --target ${{ matrix.target }}
+        # ~keep `--lang go` builds the FFI crate as Go's dependency, which is what makes
+        # alef record cargo's native-static-libs into the Go tarball (#247); the
+        # cdylib/staticlib it leaves in target/ also feed the C FFI staging below.
+        run: alef publish build --lang go --target ${{ matrix.target }}
       - name: Package Go FFI
         shell: bash
         run: alef publish package --lang go --target ${{ matrix.target }} -o go-ffi-dist
