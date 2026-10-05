@@ -1080,12 +1080,14 @@ owned = true
 
 [crates.e2e.call.overrides.node]
 client_factory = "createClient"
+client_factory_from_json = "createClientFromJson"
 
 [crates.e2e.call.overrides.php]
 php_client_factory = "createClient"
 
 [crates.e2e.call.overrides.wasm]
 client_factory = "createClient"
+client_factory_from_json = "createClientFromJson"
 options_type = "WasmChatCompletionRequest"
 bigint_fields = ["maxTokens", "seed"]
 
@@ -1095,28 +1097,35 @@ client_factory = "create_client"
 
 [crates.e2e.call.overrides.go]
 client_factory = "CreateClient"
+client_factory_from_json = "CreateClientFromJSON"
 
 [crates.e2e.call.overrides.python]
 client_factory = "create_client"
+client_factory_from_json = "create_client_from_json"
 
 [crates.e2e.call.overrides.rust]
 client_factory = "create_client"
+client_factory_from_json = "create_client_from_json"
 trait_imports = ["LlmClient", "FileClient", "BatchClient", "ResponseClient"]
 
 [crates.e2e.call.overrides.csharp]
 class = "LiterLlmConverter"
 client_factory = "CreateClient"
+client_factory_from_json = "CreateClientFromJson"
 options_via = "from_json"
 
 [crates.e2e.call.overrides.ruby]
 client_factory = "create_client"
+client_factory_from_json = "create_client_from_json"
 options_type = "ChatCompletionRequest"
 
 [crates.e2e.call.overrides.elixir]
 client_factory = "create_client"
+client_factory_from_json = "create_client_from_json"
 
 [crates.e2e.call.overrides.java]
 client_factory = "createClient"
+client_factory_from_json = "createClientFromJson"
 
 [crates.e2e.call.overrides.zig]
 client_factory = "create_client"

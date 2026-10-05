@@ -11,13 +11,7 @@
     "c/batches/smoke-create-batch.md",
     "c/batches/smoke-list-batches.md",
     "c/batches/smoke-retrieve-batch.md",
-    "c/budget/budget-enforced.md",
-    "c/budget/budget-per-model.md",
-    "c/budget/budget-tracked.md",
-    "c/cache/cache-hit.md",
-    "c/cache/cache-miss-ttl.md",
     "c/cache/cache-opendal-memory.md",
-    "c/cache/cache-stream-bypass.md",
     "c/chat/developer-message.md",
     "c/chat/edge-chat-max-tokens.md",
     "c/chat/edge-chat-system-only.md",
@@ -387,13 +381,7 @@
     "dart/batches/smoke-create-batch.md",
     "dart/batches/smoke-list-batches.md",
     "dart/batches/smoke-retrieve-batch.md",
-    "dart/budget/budget-enforced.md",
-    "dart/budget/budget-per-model.md",
-    "dart/budget/budget-tracked.md",
-    "dart/cache/cache-hit.md",
-    "dart/cache/cache-miss-ttl.md",
     "dart/cache/cache-opendal-memory.md",
-    "dart/cache/cache-stream-bypass.md",
     "dart/chat/developer-message.md",
     "dart/chat/edge-chat-max-tokens.md",
     "dart/chat/edge-chat-system-only.md",
@@ -1139,13 +1127,7 @@
     "kotlin-android/batches/smoke-create-batch.md",
     "kotlin-android/batches/smoke-list-batches.md",
     "kotlin-android/batches/smoke-retrieve-batch.md",
-    "kotlin-android/budget/budget-enforced.md",
-    "kotlin-android/budget/budget-per-model.md",
-    "kotlin-android/budget/budget-tracked.md",
-    "kotlin-android/cache/cache-hit.md",
-    "kotlin-android/cache/cache-miss-ttl.md",
     "kotlin-android/cache/cache-opendal-memory.md",
-    "kotlin-android/cache/cache-stream-bypass.md",
     "kotlin-android/chat/developer-message.md",
     "kotlin-android/chat/edge-chat-max-tokens.md",
     "kotlin-android/chat/edge-chat-system-only.md",
@@ -1327,13 +1309,7 @@
     "php/batches/smoke-create-batch.md",
     "php/batches/smoke-list-batches.md",
     "php/batches/smoke-retrieve-batch.md",
-    "php/budget/budget-enforced.md",
-    "php/budget/budget-per-model.md",
-    "php/budget/budget-tracked.md",
-    "php/cache/cache-hit.md",
-    "php/cache/cache-miss-ttl.md",
     "php/cache/cache-opendal-memory.md",
-    "php/cache/cache-stream-bypass.md",
     "php/chat/developer-message.md",
     "php/chat/edge-chat-max-tokens.md",
     "php/chat/edge-chat-system-only.md",
@@ -1703,13 +1679,7 @@
     "ruby/batches/smoke-create-batch.md",
     "ruby/batches/smoke-list-batches.md",
     "ruby/batches/smoke-retrieve-batch.md",
-    "ruby/budget/budget-enforced.md",
-    "ruby/budget/budget-per-model.md",
-    "ruby/budget/budget-tracked.md",
-    "ruby/cache/cache-hit.md",
-    "ruby/cache/cache-miss-ttl.md",
     "ruby/cache/cache-opendal-memory.md",
-    "ruby/cache/cache-stream-bypass.md",
     "ruby/chat/developer-message.md",
     "ruby/chat/edge-chat-max-tokens.md",
     "ruby/chat/edge-chat-system-only.md",
@@ -2079,13 +2049,7 @@
     "swift/batches/smoke-create-batch.md",
     "swift/batches/smoke-list-batches.md",
     "swift/batches/smoke-retrieve-batch.md",
-    "swift/budget/budget-enforced.md",
-    "swift/budget/budget-per-model.md",
-    "swift/budget/budget-tracked.md",
-    "swift/cache/cache-hit.md",
-    "swift/cache/cache-miss-ttl.md",
     "swift/cache/cache-opendal-memory.md",
-    "swift/cache/cache-stream-bypass.md",
     "swift/chat/developer-message.md",
     "swift/chat/edge-chat-max-tokens.md",
     "swift/chat/edge-chat-system-only.md",
@@ -2641,13 +2605,7 @@
     "zig/batches/smoke-create-batch.md",
     "zig/batches/smoke-list-batches.md",
     "zig/batches/smoke-retrieve-batch.md",
-    "zig/budget/budget-enforced.md",
-    "zig/budget/budget-per-model.md",
-    "zig/budget/budget-tracked.md",
-    "zig/cache/cache-hit.md",
-    "zig/cache/cache-miss-ttl.md",
     "zig/cache/cache-opendal-memory.md",
-    "zig/cache/cache-stream-bypass.md",
     "zig/chat/developer-message.md",
     "zig/chat/edge-chat-max-tokens.md",
     "zig/chat/edge-chat-system-only.md",
@@ -2943,82 +2901,10 @@
     },
     {
       "key": {
-        "fixture_id": "budget_enforced",
-        "language": "c"
-      },
-      "path": "c/budget/budget-enforced.md",
-      "language": "c",
-      "target": "c",
-      "session": "c",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "c"
-      },
-      "path": "c/budget/budget-per-model.md",
-      "language": "c",
-      "target": "c",
-      "session": "c",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "c"
-      },
-      "path": "c/budget/budget-tracked.md",
-      "language": "c",
-      "target": "c",
-      "session": "c",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "c"
-      },
-      "path": "c/cache/cache-hit.md",
-      "language": "c",
-      "target": "c",
-      "session": "c",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "c"
-      },
-      "path": "c/cache/cache-miss-ttl.md",
-      "language": "c",
-      "target": "c",
-      "session": "c",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "c"
       },
       "path": "c/cache/cache-opendal-memory.md",
-      "language": "c",
-      "target": "c",
-      "session": "c",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "c"
-      },
-      "path": "c/cache/cache-stream-bypass.md",
       "language": "c",
       "target": "c",
       "session": "c",
@@ -7455,82 +7341,10 @@
     },
     {
       "key": {
-        "fixture_id": "budget_enforced",
-        "language": "dart"
-      },
-      "path": "dart/budget/budget-enforced.md",
-      "language": "dart",
-      "target": "dart",
-      "session": "dart",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "dart"
-      },
-      "path": "dart/budget/budget-per-model.md",
-      "language": "dart",
-      "target": "dart",
-      "session": "dart",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "dart"
-      },
-      "path": "dart/budget/budget-tracked.md",
-      "language": "dart",
-      "target": "dart",
-      "session": "dart",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "dart"
-      },
-      "path": "dart/cache/cache-hit.md",
-      "language": "dart",
-      "target": "dart",
-      "session": "dart",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "dart"
-      },
-      "path": "dart/cache/cache-miss-ttl.md",
-      "language": "dart",
-      "target": "dart",
-      "session": "dart",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "dart"
       },
       "path": "dart/cache/cache-opendal-memory.md",
-      "language": "dart",
-      "target": "dart",
-      "session": "dart",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "dart"
-      },
-      "path": "dart/cache/cache-stream-bypass.md",
       "language": "dart",
       "target": "dart",
       "session": "dart",
@@ -16479,82 +16293,10 @@
     },
     {
       "key": {
-        "fixture_id": "budget_enforced",
-        "language": "kotlin_android"
-      },
-      "path": "kotlin-android/budget/budget-enforced.md",
-      "language": "kotlin",
-      "target": "kotlin_android",
-      "session": "kotlin_android",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "kotlin_android"
-      },
-      "path": "kotlin-android/budget/budget-per-model.md",
-      "language": "kotlin",
-      "target": "kotlin_android",
-      "session": "kotlin_android",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "kotlin_android"
-      },
-      "path": "kotlin-android/budget/budget-tracked.md",
-      "language": "kotlin",
-      "target": "kotlin_android",
-      "session": "kotlin_android",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "kotlin_android"
-      },
-      "path": "kotlin-android/cache/cache-hit.md",
-      "language": "kotlin",
-      "target": "kotlin_android",
-      "session": "kotlin_android",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "kotlin_android"
-      },
-      "path": "kotlin-android/cache/cache-miss-ttl.md",
-      "language": "kotlin",
-      "target": "kotlin_android",
-      "session": "kotlin_android",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "kotlin_android"
       },
       "path": "kotlin-android/cache/cache-opendal-memory.md",
-      "language": "kotlin",
-      "target": "kotlin_android",
-      "session": "kotlin_android",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "kotlin_android"
-      },
-      "path": "kotlin-android/cache/cache-stream-bypass.md",
       "language": "kotlin",
       "target": "kotlin_android",
       "session": "kotlin_android",
@@ -18735,82 +18477,10 @@
     },
     {
       "key": {
-        "fixture_id": "budget_enforced",
-        "language": "php"
-      },
-      "path": "php/budget/budget-enforced.md",
-      "language": "php",
-      "target": "php",
-      "session": "php",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "php"
-      },
-      "path": "php/budget/budget-per-model.md",
-      "language": "php",
-      "target": "php",
-      "session": "php",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "php"
-      },
-      "path": "php/budget/budget-tracked.md",
-      "language": "php",
-      "target": "php",
-      "session": "php",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "php"
-      },
-      "path": "php/cache/cache-hit.md",
-      "language": "php",
-      "target": "php",
-      "session": "php",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "php"
-      },
-      "path": "php/cache/cache-miss-ttl.md",
-      "language": "php",
-      "target": "php",
-      "session": "php",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "php"
       },
       "path": "php/cache/cache-opendal-memory.md",
-      "language": "php",
-      "target": "php",
-      "session": "php",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "php"
-      },
-      "path": "php/cache/cache-stream-bypass.md",
       "language": "php",
       "target": "php",
       "session": "php",
@@ -23247,82 +22917,10 @@
     },
     {
       "key": {
-        "fixture_id": "budget_enforced",
-        "language": "ruby"
-      },
-      "path": "ruby/budget/budget-enforced.md",
-      "language": "ruby",
-      "target": "ruby",
-      "session": "ruby",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "ruby"
-      },
-      "path": "ruby/budget/budget-per-model.md",
-      "language": "ruby",
-      "target": "ruby",
-      "session": "ruby",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "ruby"
-      },
-      "path": "ruby/budget/budget-tracked.md",
-      "language": "ruby",
-      "target": "ruby",
-      "session": "ruby",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "ruby"
-      },
-      "path": "ruby/cache/cache-hit.md",
-      "language": "ruby",
-      "target": "ruby",
-      "session": "ruby",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "ruby"
-      },
-      "path": "ruby/cache/cache-miss-ttl.md",
-      "language": "ruby",
-      "target": "ruby",
-      "session": "ruby",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "ruby"
       },
       "path": "ruby/cache/cache-opendal-memory.md",
-      "language": "ruby",
-      "target": "ruby",
-      "session": "ruby",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "ruby"
-      },
-      "path": "ruby/cache/cache-stream-bypass.md",
       "language": "ruby",
       "target": "ruby",
       "session": "ruby",
@@ -28314,82 +27912,10 @@
     },
     {
       "key": {
-        "fixture_id": "budget_enforced",
-        "language": "swift"
-      },
-      "path": "swift/budget/budget-enforced.md",
-      "language": "swift",
-      "target": "swift",
-      "session": "swift",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "swift"
-      },
-      "path": "swift/budget/budget-per-model.md",
-      "language": "swift",
-      "target": "swift",
-      "session": "swift",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "swift"
-      },
-      "path": "swift/budget/budget-tracked.md",
-      "language": "swift",
-      "target": "swift",
-      "session": "swift",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "swift"
-      },
-      "path": "swift/cache/cache-hit.md",
-      "language": "swift",
-      "target": "swift",
-      "session": "swift",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "swift"
-      },
-      "path": "swift/cache/cache-miss-ttl.md",
-      "language": "swift",
-      "target": "swift",
-      "session": "swift",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "swift"
       },
       "path": "swift/cache/cache-opendal-memory.md",
-      "language": "swift",
-      "target": "swift",
-      "session": "swift",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "swift"
-      },
-      "path": "swift/cache/cache-stream-bypass.md",
       "language": "swift",
       "target": "swift",
       "session": "swift",
@@ -35058,82 +34584,10 @@
     },
     {
       "key": {
-        "fixture_id": "budget_enforced",
-        "language": "zig"
-      },
-      "path": "zig/budget/budget-enforced.md",
-      "language": "zig",
-      "target": "zig",
-      "session": "zig",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "zig"
-      },
-      "path": "zig/budget/budget-per-model.md",
-      "language": "zig",
-      "target": "zig",
-      "session": "zig",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "zig"
-      },
-      "path": "zig/budget/budget-tracked.md",
-      "language": "zig",
-      "target": "zig",
-      "session": "zig",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "zig"
-      },
-      "path": "zig/cache/cache-hit.md",
-      "language": "zig",
-      "target": "zig",
-      "session": "zig",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "zig"
-      },
-      "path": "zig/cache/cache-miss-ttl.md",
-      "language": "zig",
-      "target": "zig",
-      "session": "zig",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "zig"
       },
       "path": "zig/cache/cache-opendal-memory.md",
-      "language": "zig",
-      "target": "zig",
-      "session": "zig",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "zig"
-      },
-      "path": "zig/cache/cache-stream-bypass.md",
       "language": "zig",
       "target": "zig",
       "session": "zig",
@@ -49738,15 +49192,7 @@
     },
     {
       "fixture_id": "budget_enforced",
-      "language": "c"
-    },
-    {
-      "fixture_id": "budget_enforced",
       "language": "csharp"
-    },
-    {
-      "fixture_id": "budget_enforced",
-      "language": "dart"
     },
     {
       "fixture_id": "budget_enforced",
@@ -49762,15 +49208,7 @@
     },
     {
       "fixture_id": "budget_enforced",
-      "language": "kotlin_android"
-    },
-    {
-      "fixture_id": "budget_enforced",
       "language": "node"
-    },
-    {
-      "fixture_id": "budget_enforced",
-      "language": "php"
     },
     {
       "fixture_id": "budget_enforced",
@@ -49778,35 +49216,15 @@
     },
     {
       "fixture_id": "budget_enforced",
-      "language": "ruby"
-    },
-    {
-      "fixture_id": "budget_enforced",
       "language": "rust"
-    },
-    {
-      "fixture_id": "budget_enforced",
-      "language": "swift"
     },
     {
       "fixture_id": "budget_enforced",
       "language": "wasm"
     },
     {
-      "fixture_id": "budget_enforced",
-      "language": "zig"
-    },
-    {
-      "fixture_id": "budget_per_model",
-      "language": "c"
-    },
-    {
       "fixture_id": "budget_per_model",
       "language": "csharp"
-    },
-    {
-      "fixture_id": "budget_per_model",
-      "language": "dart"
     },
     {
       "fixture_id": "budget_per_model",
@@ -49822,15 +49240,7 @@
     },
     {
       "fixture_id": "budget_per_model",
-      "language": "kotlin_android"
-    },
-    {
-      "fixture_id": "budget_per_model",
       "language": "node"
-    },
-    {
-      "fixture_id": "budget_per_model",
-      "language": "php"
     },
     {
       "fixture_id": "budget_per_model",
@@ -49838,35 +49248,15 @@
     },
     {
       "fixture_id": "budget_per_model",
-      "language": "ruby"
-    },
-    {
-      "fixture_id": "budget_per_model",
       "language": "rust"
-    },
-    {
-      "fixture_id": "budget_per_model",
-      "language": "swift"
     },
     {
       "fixture_id": "budget_per_model",
       "language": "wasm"
     },
     {
-      "fixture_id": "budget_per_model",
-      "language": "zig"
-    },
-    {
-      "fixture_id": "budget_tracked",
-      "language": "c"
-    },
-    {
       "fixture_id": "budget_tracked",
       "language": "csharp"
-    },
-    {
-      "fixture_id": "budget_tracked",
-      "language": "dart"
     },
     {
       "fixture_id": "budget_tracked",
@@ -49882,15 +49272,7 @@
     },
     {
       "fixture_id": "budget_tracked",
-      "language": "kotlin_android"
-    },
-    {
-      "fixture_id": "budget_tracked",
       "language": "node"
-    },
-    {
-      "fixture_id": "budget_tracked",
-      "language": "php"
     },
     {
       "fixture_id": "budget_tracked",
@@ -49898,35 +49280,15 @@
     },
     {
       "fixture_id": "budget_tracked",
-      "language": "ruby"
-    },
-    {
-      "fixture_id": "budget_tracked",
       "language": "rust"
-    },
-    {
-      "fixture_id": "budget_tracked",
-      "language": "swift"
     },
     {
       "fixture_id": "budget_tracked",
       "language": "wasm"
     },
     {
-      "fixture_id": "budget_tracked",
-      "language": "zig"
-    },
-    {
-      "fixture_id": "cache_hit",
-      "language": "c"
-    },
-    {
       "fixture_id": "cache_hit",
       "language": "csharp"
-    },
-    {
-      "fixture_id": "cache_hit",
-      "language": "dart"
     },
     {
       "fixture_id": "cache_hit",
@@ -49942,15 +49304,7 @@
     },
     {
       "fixture_id": "cache_hit",
-      "language": "kotlin_android"
-    },
-    {
-      "fixture_id": "cache_hit",
       "language": "node"
-    },
-    {
-      "fixture_id": "cache_hit",
-      "language": "php"
     },
     {
       "fixture_id": "cache_hit",
@@ -49958,35 +49312,15 @@
     },
     {
       "fixture_id": "cache_hit",
-      "language": "ruby"
-    },
-    {
-      "fixture_id": "cache_hit",
       "language": "rust"
-    },
-    {
-      "fixture_id": "cache_hit",
-      "language": "swift"
     },
     {
       "fixture_id": "cache_hit",
       "language": "wasm"
     },
     {
-      "fixture_id": "cache_hit",
-      "language": "zig"
-    },
-    {
-      "fixture_id": "cache_miss_ttl",
-      "language": "c"
-    },
-    {
       "fixture_id": "cache_miss_ttl",
       "language": "csharp"
-    },
-    {
-      "fixture_id": "cache_miss_ttl",
-      "language": "dart"
     },
     {
       "fixture_id": "cache_miss_ttl",
@@ -50002,15 +49336,7 @@
     },
     {
       "fixture_id": "cache_miss_ttl",
-      "language": "kotlin_android"
-    },
-    {
-      "fixture_id": "cache_miss_ttl",
       "language": "node"
-    },
-    {
-      "fixture_id": "cache_miss_ttl",
-      "language": "php"
     },
     {
       "fixture_id": "cache_miss_ttl",
@@ -50018,23 +49344,11 @@
     },
     {
       "fixture_id": "cache_miss_ttl",
-      "language": "ruby"
-    },
-    {
-      "fixture_id": "cache_miss_ttl",
       "language": "rust"
     },
     {
       "fixture_id": "cache_miss_ttl",
-      "language": "swift"
-    },
-    {
-      "fixture_id": "cache_miss_ttl",
       "language": "wasm"
-    },
-    {
-      "fixture_id": "cache_miss_ttl",
-      "language": "zig"
     },
     {
       "fixture_id": "cache_opendal_memory",
@@ -50098,15 +49412,7 @@
     },
     {
       "fixture_id": "cache_stream_bypass",
-      "language": "c"
-    },
-    {
-      "fixture_id": "cache_stream_bypass",
       "language": "csharp"
-    },
-    {
-      "fixture_id": "cache_stream_bypass",
-      "language": "dart"
     },
     {
       "fixture_id": "cache_stream_bypass",
@@ -50122,15 +49428,7 @@
     },
     {
       "fixture_id": "cache_stream_bypass",
-      "language": "kotlin_android"
-    },
-    {
-      "fixture_id": "cache_stream_bypass",
       "language": "node"
-    },
-    {
-      "fixture_id": "cache_stream_bypass",
-      "language": "php"
     },
     {
       "fixture_id": "cache_stream_bypass",
@@ -50138,23 +49436,11 @@
     },
     {
       "fixture_id": "cache_stream_bypass",
-      "language": "ruby"
-    },
-    {
-      "fixture_id": "cache_stream_bypass",
       "language": "rust"
     },
     {
       "fixture_id": "cache_stream_bypass",
-      "language": "swift"
-    },
-    {
-      "fixture_id": "cache_stream_bypass",
       "language": "wasm"
-    },
-    {
-      "fixture_id": "cache_stream_bypass",
-      "language": "zig"
     },
     {
       "fixture_id": "content_policy_violation",
@@ -59751,6 +59037,342 @@
   ],
   "missing": [],
   "documented_exceptions": [
+    {
+      "key": {
+        "fixture_id": "budget_enforced",
+        "language": "c"
+      },
+      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_enforced",
+        "language": "dart"
+      },
+      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/dart/lib/src/liter_llm.dart"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_enforced",
+        "language": "kotlin_android"
+      },
+      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_enforced",
+        "language": "php"
+      },
+      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
+      "reference": "crates/liter-llm-php/src/LiterLlm.php"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_enforced",
+        "language": "ruby"
+      },
+      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
+      "reference": "packages/ruby/sig/types.rbs"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_enforced",
+        "language": "swift"
+      },
+      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_enforced",
+        "language": "zig"
+      },
+      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/zig/src/liter_llm.zig"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "c"
+      },
+      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "dart"
+      },
+      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/dart/lib/src/liter_llm.dart"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "kotlin_android"
+      },
+      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "php"
+      },
+      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
+      "reference": "crates/liter-llm-php/src/LiterLlm.php"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "ruby"
+      },
+      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
+      "reference": "packages/ruby/sig/types.rbs"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "swift"
+      },
+      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "zig"
+      },
+      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/zig/src/liter_llm.zig"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "c"
+      },
+      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "dart"
+      },
+      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/dart/lib/src/liter_llm.dart"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "kotlin_android"
+      },
+      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "php"
+      },
+      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
+      "reference": "crates/liter-llm-php/src/LiterLlm.php"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "ruby"
+      },
+      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
+      "reference": "packages/ruby/sig/types.rbs"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "swift"
+      },
+      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "zig"
+      },
+      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+      "reference": "packages/zig/src/liter_llm.zig"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "c"
+      },
+      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "dart"
+      },
+      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/dart/lib/src/liter_llm.dart"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "kotlin_android"
+      },
+      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "php"
+      },
+      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
+      "reference": "crates/liter-llm-php/src/LiterLlm.php"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "ruby"
+      },
+      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
+      "reference": "packages/ruby/sig/types.rbs"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "swift"
+      },
+      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "zig"
+      },
+      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/zig/src/liter_llm.zig"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "c"
+      },
+      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "dart"
+      },
+      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/dart/lib/src/liter_llm.dart"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "kotlin_android"
+      },
+      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "php"
+      },
+      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
+      "reference": "crates/liter-llm-php/src/LiterLlm.php"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "ruby"
+      },
+      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
+      "reference": "packages/ruby/sig/types.rbs"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "swift"
+      },
+      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "zig"
+      },
+      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/zig/src/liter_llm.zig"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "c"
+      },
+      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "dart"
+      },
+      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/dart/lib/src/liter_llm.dart"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "kotlin_android"
+      },
+      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "php"
+      },
+      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
+      "reference": "crates/liter-llm-php/src/LiterLlm.php"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "ruby"
+      },
+      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
+      "reference": "packages/ruby/sig/types.rbs"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "swift"
+      },
+      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "zig"
+      },
+      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
+      "reference": "packages/zig/src/liter_llm.zig"
+    },
     {
       "key": {
         "fixture_id": "error_file_bad_purpose",

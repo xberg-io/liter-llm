@@ -4,7 +4,43 @@
   "docs": {
     "topic": "budget",
     "stem": "budget-enforced",
-    "title": "Tests that a request is rejected when budget is exceeded"
+    "title": "Tests that a request is rejected when budget is exceeded",
+    "coverage_exceptions": {
+      "c": {
+        "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+        "documentation": "crates/liter-llm-ffi/include/liter_llm.h"
+      },
+      "dart": {
+        "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+        "documentation": "packages/dart/lib/src/liter_llm.dart"
+      },
+      "kotlin_android": {
+        "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+        "documentation": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
+      },
+      "php": {
+        "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
+        "documentation": "crates/liter-llm-php/src/LiterLlm.php"
+      },
+      "ruby": {
+        "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
+        "documentation": "packages/ruby/sig/types.rbs"
+      },
+      "swift": {
+        "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+        "documentation": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
+      },
+      "zig": {
+        "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
+        "documentation": "packages/zig/src/liter_llm.zig"
+      }
+    },
+    "client": {
+      "config": {
+        "api_key": "your-api-key",
+        "budget": { "global_limit": 0.0, "enforcement": "hard" }
+      }
+    }
   },
   "category": "budget",
   "tags": ["budget"],
