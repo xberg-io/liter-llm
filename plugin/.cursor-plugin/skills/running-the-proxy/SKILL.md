@@ -5,8 +5,8 @@ description: Use when running the `liter-llm api` OpenAI-compatible gateway — 
 
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:3f5a5101eedafb1369ac00a325e19a411310e607700c789e0fbdb49e3694fb60
-Source-Hash: blake3:651c31e789b5b3a98bbebecbda0ea4f0b6222b63c8264db7c677af355c5fe27b
+Content-Hash: blake3:f64a695a6f03738acb7f80e2d91d2446346006e3a2c4858b5fe87f88f14c86f5
+Source-Hash: blake3:eb1131dcbadcce344720c2e5c173f4f851ac4005cc014f3f95d94578677654f1
 Schema-Version: v1
 -->
 

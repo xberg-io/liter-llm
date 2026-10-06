@@ -1,0 +1,43 @@
+{
+  "mcp": {
+    "liter-llm": {
+      "type": "local",
+      "command": [
+        "${PLUGIN_ROOT}/scripts/mcp-launch.sh",
+        "mcp",
+        "--transport",
+        "stdio"
+      ]
+    }
+  },
+  "skills": {
+    "calling-llms": {
+      "name": "calling-llms",
+      "description": "Use when sending chat completions through liter-llm and routing to a specific provider via the `provider/model` prefix. Covers the chat call shape, provider routing, model_hint, message roles, and error categories."
+    },
+    "embeddings-and-search": {
+      "name": "embeddings-and-search",
+      "description": "Use when generating embeddings, calling the 12 web-search providers, or running OCR over documents with the 4 OCR providers through liter-llm. Covers embed, search, and ocr methods plus reranking."
+    },
+    "liter-llm": {
+      "name": "liter-llm",
+      "description": "Universal LLM API client for 174 providers with native bindings for 14 languages. Use when writing code that calls LLM APIs via liter-llm in Python, TypeScript, Rust, Go, Java, C#, Ruby, PHP, Elixir, WASM, or C, when running the OpenAI-compatible proxy, or when calling LLMs through the MCP server. Covers chat, streaming, tool calling, embeddings, image generation, speech, transcription, moderation, web search, OCR, reranking, provider routing, middleware, and configuration."
+    },
+    "running-the-proxy": {
+      "name": "running-the-proxy",
+      "description": "Use when running the `liter-llm api` OpenAI-compatible gateway — virtual keys, per-key rate limits, budgets, cost tracking, and model routing. Covers the TOML config and the 22 REST endpoints."
+    },
+    "streaming-responses": {
+      "name": "streaming-responses",
+      "description": "Use when streaming tokens incrementally from an LLM via liter-llm over SSE or async iterators. Covers chat_stream, delta handling, and null-content chunks."
+    },
+    "tool-calling": {
+      "name": "tool-calling",
+      "description": "Use when defining functions/tools for an LLM to call through liter-llm, or requesting structured JSON outputs. Covers tool schemas, tool_calls handling, and response formats."
+    },
+    "using-the-mcp-server": {
+      "name": "using-the-mcp-server",
+      "description": "Use when calling LLM APIs through the liter-llm MCP server's 22 tools, and to decide when MCP beats the CLI or SDK. Covers the tool surface, the auto-installing launcher, and authentication."
+    }
+  }
+}

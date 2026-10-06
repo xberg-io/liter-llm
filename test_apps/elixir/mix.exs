@@ -12,7 +12,7 @@ defmodule E2eElixir.MixProject do
 
   defp deps do
     [
-      {:liter_llm, "2.1.2"},
+      {:liter_llm, "2.1.3"},
       {:rustler_precompiled, "~> 0.9"},
       {:rustler, "~> 0.38", runtime: false},
       {:finch, "~> 0.23"},
