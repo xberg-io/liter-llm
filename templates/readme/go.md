@@ -235,7 +235,7 @@ if err := stream.Err(); err != nil {
 
 ### Error Handling
 
-Errors are `*literllm.Error` (fields `Code`, `Message`, `StatusCode`, `IsTransient`, `ErrorType`) and wrap sentinel errors such as `ErrRateLimited`, `ErrAuthentication`, `ErrTimeout`, `ErrBudgetExceeded`, and `ErrContextWindowExceeded`.
+Errors are `*literllm.Error` (fields `Code`, `Message`, `StatusCode`, `IsTransient`, `ErrorType`, and `RetryAfter`, the server's Retry-After hint in milliseconds or nil) and wrap sentinel errors such as `ErrRateLimited`, `ErrAuthentication`, `ErrTimeout`, `ErrBudgetExceeded`, and `ErrContextWindowExceeded`.
 
 {% raw %}
 
