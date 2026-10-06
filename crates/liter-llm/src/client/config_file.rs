@@ -214,9 +214,11 @@ impl FileConfig {
             use crate::tower::{CacheBackend, CacheConfig};
             let backend = match cache.backend.as_deref() {
                 Some("memory") | None => CacheBackend::Memory,
+                // ~keep "memory" means the in-process LRU, so OpenDAL's own memory service
+                // (and any other scheme) is reachable explicitly as "opendal:<scheme>".
                 #[cfg(feature = "opendal-cache")]
                 Some(scheme) => CacheBackend::OpenDal {
-                    scheme: scheme.to_string(),
+                    scheme: scheme.strip_prefix("opendal:").unwrap_or(scheme).to_string(),
                     config: cache.backend_config.unwrap_or_default(),
                 },
                 #[cfg(not(feature = "opendal-cache"))]
@@ -400,6 +402,30 @@ max_retries = 2
         assert_eq!(cfg.name, "p");
         assert_eq!(cfg.base_url, "https://p.example.com/v1");
         assert_eq!(cfg.model_prefixes, vec!["p/".to_owned()]);
+    }
+
+    #[cfg(feature = "opendal-cache")]
+    #[test]
+    fn opendal_prefix_selects_opendal_even_for_memory() {
+        use crate::tower::CacheBackend;
+        let config = |backend: &str| {
+            FileConfig::from_toml_str(&format!("[cache]\nbackend = \"{backend}\""))
+                .expect("TOML should parse")
+                .into_builder()
+                .build()
+                .cache_config
+                .expect("cache configured")
+                .backend
+        };
+        assert!(matches!(config("memory"), CacheBackend::Memory));
+        match config("opendal:memory") {
+            CacheBackend::OpenDal { scheme, .. } => assert_eq!(scheme, "memory"),
+            other => panic!("expected OpenDal, got {other:?}"),
+        }
+        match config("redis") {
+            CacheBackend::OpenDal { scheme, .. } => assert_eq!(scheme, "redis"),
+            other => panic!("expected OpenDal, got {other:?}"),
+        }
     }
 
     #[test]

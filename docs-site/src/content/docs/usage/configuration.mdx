@@ -90,7 +90,7 @@ model_prefixes = ["my-provider/"]
 | ---------------- | ------ | ------------------------------------------------------------------------------------ |
 | `max_entries`    | int    | Maximum cached responses (default: 256).                                             |
 | `ttl_seconds`    | int    | Time-to-live for each entry in seconds (default: 300).                               |
-| `backend`        | string | `"memory"` (default) or an OpenDAL scheme (`"redis"`, `"s3"`, `"fs"`, `"gcs"`, ...). |
+| `backend`        | string | `"memory"` (default, in-process LRU) or an OpenDAL scheme (`"redis"`, `"s3"`, `"fs"`, `"gcs"`, ...). Prefix with `opendal:` to select any OpenDAL service explicitly, e.g. `"opendal:memory"`. |
 | `backend_config` | map    | OpenDAL backend-specific key-value config.                                           |
 
 The `backend` and `backend_config` fields are only honored when liter-llm is compiled with the `opendal-cache` feature.
