@@ -6,7 +6,7 @@ description: Use when running the `liter-llm api` OpenAI-compatible gateway — 
 # Running the Proxy
 
 `liter-llm api` is a drop-in OpenAI-compatible gateway: 22 REST endpoints that
-route to 165 providers, with multi-tenant virtual keys, rate limits, budgets,
+route to 174 providers, with multi-tenant virtual keys, rate limits, budgets,
 and cost tracking.
 
 ## Start it

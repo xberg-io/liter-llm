@@ -1,12 +1,12 @@
 version = "4.0"
 name = "liter-llm"
-description = "Universal LLM API client for 165 providers — chat, streaming, tools, embeddings, search, OCR, plus an OpenAI-compatible proxy and an MCP server."
+description = "Universal LLM API client for 174 providers — chat, streaming, tools, embeddings, search, OCR, plus an OpenAI-compatible proxy and an MCP server."
 
 [plugin]
 name = "liter-llm"
 version = "2.1.2"
 display_name = "Liter-LLM"
-description = "Universal LLM API client for 165 providers — chat, streaming, tools, embeddings, search, OCR, plus an OpenAI-compatible proxy and an MCP server."
+description = "Universal LLM API client for 174 providers — chat, streaming, tools, embeddings, search, OCR, plus an OpenAI-compatible proxy and an MCP server."
 homepage = "https://xberg.io"
 repository = "https://github.com/xberg-io/liter-llm"
 license = "MIT"
@@ -28,8 +28,8 @@ args = ["mcp", "--transport", "stdio"]
 
 [plugin.interface]
 display_name = "Liter-LLM"
-short_description = "Universal LLM client for 165 providers with proxy and MCP server"
-long_description = "Call 165 LLM providers through one unified interface — chat, streaming, tool calling, embeddings, image generation, audio, moderation, web search, OCR, and reranking. Routes by `provider/model` prefix with built-in caching, rate limiting, cost tracking, budgets, and fallback. Ships an OpenAI-compatible proxy server and an auto-installing MCP server exposing 22 tools. The plugin's MCP launcher locates or downloads a version-matched `liter-llm` binary on first run."
+short_description = "Universal LLM client for 174 providers with proxy and MCP server"
+long_description = "Call 174 LLM providers through one unified interface — chat, streaming, tool calling, embeddings, image generation, audio, moderation, web search, OCR, and reranking. Routes by `provider/model` prefix with built-in caching, rate limiting, cost tracking, budgets, and fallback. Ships an OpenAI-compatible proxy server and an auto-installing MCP server exposing 22 tools. The plugin's MCP launcher locates or downloads a version-matched `liter-llm` binary on first run."
 developer_name = "Kreuzberg, Inc."
 category = "developer-tools"
 capabilities = ["Read", "Write"]

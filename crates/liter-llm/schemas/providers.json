@@ -674,6 +674,27 @@
       "streaming_format": "sse"
     },
     {
+      "name": "cognition",
+      "display_name": "Cognition",
+      "base_url": "https://api.cognition.ai/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "COGNITION_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["cognition/"],
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "cohere",
       "display_name": "Cohere",
       "base_url": "https://api.cohere.com/v1",
@@ -753,6 +774,27 @@
         "reasoning": false,
         "structured_output": true,
         "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "cortecs",
+      "display_name": "Cortecs",
+      "base_url": "https://api.cortecs.ai/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "CORTECS_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["cortecs/"],
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
         "audio_in": false,
         "audio_out": false,
         "video_in": false
@@ -863,7 +905,7 @@
         "env_var": "DASHSCOPE_API_KEY"
       },
       "endpoints": ["chat", "embedding", "image", "rerank"],
-      "model_prefixes": ["dashscope/", "dashscope/qwen-", "dashscope/qwen3-"],
+      "model_prefixes": ["dashscope/", "dashscope/qwen-", "dashscope/qwen3-", "qwencloud/"],
       "model_count": 32,
       "capabilities": {
         "vision": true,
@@ -1045,6 +1087,27 @@
       "auth": {
         "type": "none"
       },
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "edenai",
+      "display_name": "Eden AI",
+      "base_url": "https://api.edenai.run/v3",
+      "auth": {
+        "type": "bearer",
+        "env_var": "EDENAI_API_KEY"
+      },
+      "endpoints": ["chat", "embedding", "image", "audio"],
+      "model_prefixes": ["edenai/"],
       "capabilities": {
         "vision": false,
         "reasoning": false,
@@ -2132,6 +2195,27 @@
       "streaming_format": "sse"
     },
     {
+      "name": "nadir",
+      "display_name": "Nadir",
+      "base_url": "https://api.getnadir.com/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "NADIR_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["nadir/"],
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": true,
+        "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "nanogpt",
       "display_name": "NanoGPT",
       "base_url": "https://nano-gpt.com/api/v1",
@@ -2736,6 +2820,27 @@
       "streaming_format": "sse"
     },
     {
+      "name": "prism",
+      "display_name": "Prism",
+      "base_url": "https://api.prisminference.com/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "PRISM_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["prism/"],
+      "capabilities": {
+        "vision": true,
+        "reasoning": true,
+        "structured_output": true,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "publicai",
       "display_name": "PublicAI",
       "base_url": "https://api.publicai.co/v1",
@@ -2763,6 +2868,27 @@
     {
       "name": "pydantic_ai_agents",
       "display_name": "Pydantic AI Agents",
+      "capabilities": {
+        "vision": true,
+        "reasoning": true,
+        "structured_output": true,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "qwen_ai_platform",
+      "display_name": "Qianwen AI Platform",
+      "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "QWEN_AI_PLATFORM_API_KEY"
+      },
+      "endpoints": ["chat", "embedding", "image", "rerank"],
+      "model_prefixes": ["qwen_ai_platform/"],
       "capabilities": {
         "vision": true,
         "reasoning": true,
@@ -2822,6 +2948,27 @@
       "endpoints": ["ocr"],
       "model_prefixes": ["reducto/"],
       "model_count": 2,
+      "capabilities": {
+        "vision": false,
+        "reasoning": false,
+        "structured_output": false,
+        "function_calling": false,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "reka",
+      "display_name": "Reka",
+      "base_url": "https://api.reka.ai/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "REKA_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["reka/"],
       "capabilities": {
         "vision": false,
         "reasoning": false,
@@ -2932,6 +3079,27 @@
       "streaming_format": "sse"
     },
     {
+      "name": "sail",
+      "display_name": "Sail",
+      "base_url": "https://api.sailresearch.com/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "SAIL_API_KEY"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["sail/"],
+      "capabilities": {
+        "vision": true,
+        "reasoning": true,
+        "structured_output": true,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
       "name": "sambanova",
       "display_name": "Sambanova",
       "base_url": "https://api.sambanova.ai/v1",
@@ -3004,6 +3172,30 @@
       "capabilities": {
         "vision": true,
         "reasoning": false,
+        "structured_output": true,
+        "function_calling": true,
+        "audio_in": false,
+        "audio_out": false,
+        "video_in": false
+      },
+      "streaming_format": "sse"
+    },
+    {
+      "name": "scx-ai",
+      "display_name": "SCX.ai",
+      "base_url": "https://api.scx.ai/v1",
+      "auth": {
+        "type": "bearer",
+        "env_var": "SCX_API_KEY"
+      },
+      "param_mappings": {
+        "max_completion_tokens": "max_tokens"
+      },
+      "endpoints": ["chat"],
+      "model_prefixes": ["scx-ai/"],
+      "capabilities": {
+        "vision": true,
+        "reasoning": true,
         "structured_output": true,
         "function_calling": true,
         "audio_in": false,

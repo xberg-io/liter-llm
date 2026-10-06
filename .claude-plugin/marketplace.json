@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "liter-llm",
-      "description": "Universal LLM API client for 165 providers — chat, streaming, tools, embeddings, search, OCR, plus an OpenAI-compatible proxy and an MCP server.",
+      "description": "Universal LLM API client for 174 providers — chat, streaming, tools, embeddings, search, OCR, plus an OpenAI-compatible proxy and an MCP server.",
       "source": "./plugin"
     }
   ]

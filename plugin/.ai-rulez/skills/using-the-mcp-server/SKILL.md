@@ -7,7 +7,7 @@ description: Use when calling LLM APIs through the liter-llm MCP server's 22 too
 
 The `liter-llm` MCP server exposes 22 tools that mirror the proxy's REST
 endpoints, so an MCP-compatible client (Claude Code, Claude Desktop) can call
-165 LLM providers as tools with no glue code.
+174 LLM providers as tools with no glue code.
 
 ## How it runs in this plugin
 

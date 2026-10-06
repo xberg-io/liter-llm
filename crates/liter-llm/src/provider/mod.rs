@@ -123,7 +123,7 @@ static DEFAULT_CAPABILITIES: ProviderCapabilities = ProviderCapabilities {
 
 /// Return the capability flags for a named provider.
 ///
-/// Performs an O(n) linear scan over the embedded registry (165 entries).
+/// Performs an O(n) linear scan over the embedded registry (174 entries).
 /// Returns an owned value so bindings can pass capability data without
 /// borrowing registry internals.
 ///

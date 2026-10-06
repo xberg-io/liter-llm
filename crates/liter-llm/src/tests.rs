@@ -1218,6 +1218,96 @@ mod provider_tests {
         assert_eq!(p.base_url(), "https://opencode.ai/zen/go/v1");
         assert_eq!(p.env_var(), Some("OPENCODE_API_KEY"));
     }
+
+    #[test]
+    fn detect_litellm_sourced_providers() {
+        let cases = [
+            (
+                "cognition/swe-1.6",
+                "cognition",
+                "https://api.cognition.ai/v1",
+                "COGNITION_API_KEY",
+            ),
+            (
+                "cortecs/some-model",
+                "cortecs",
+                "https://api.cortecs.ai/v1",
+                "CORTECS_API_KEY",
+            ),
+            (
+                "prism/some-model",
+                "prism",
+                "https://api.prisminference.com/v1",
+                "PRISM_API_KEY",
+            ),
+            ("reka/reka-flash", "reka", "https://api.reka.ai/v1", "REKA_API_KEY"),
+            (
+                "sail/some-model",
+                "sail",
+                "https://api.sailresearch.com/v1",
+                "SAIL_API_KEY",
+            ),
+            (
+                "nadir/some-model",
+                "nadir",
+                "https://api.getnadir.com/v1",
+                "NADIR_API_KEY",
+            ),
+            ("scx-ai/some-model", "scx-ai", "https://api.scx.ai/v1", "SCX_API_KEY"),
+            (
+                "edenai/openai/gpt-4o",
+                "edenai",
+                "https://api.edenai.run/v3",
+                "EDENAI_API_KEY",
+            ),
+            (
+                "qwen_ai_platform/qwen-max",
+                "qwen_ai_platform",
+                "https://dashscope.aliyuncs.com/compatible-mode/v1",
+                "QWEN_AI_PLATFORM_API_KEY",
+            ),
+        ];
+        for (model, name, base_url, env_var) in cases {
+            let p = detect_provider(model).unwrap_or_else(|| panic!("{model} should be detected"));
+            assert_eq!(p.name(), name, "{model}");
+            assert_eq!(p.base_url(), base_url, "{model}");
+            assert_eq!(p.env_var(), Some(env_var), "{model}");
+            let (header, value) = p.auth_header("k").expect("auth header should be present");
+            assert_eq!(header, "Authorization", "{model}");
+            assert_eq!(value, "Bearer k", "{model}");
+        }
+    }
+
+    /// Eden AI model ids are themselves `provider/model`, so only the leading `edenai/` is stripped.
+    #[test]
+    fn edenai_strips_only_its_own_prefix() {
+        let p = detect_provider("edenai/openai/gpt-4o").expect("provider should be detected");
+        assert_eq!(p.strip_model_prefix("edenai/openai/gpt-4o"), "openai/gpt-4o");
+    }
+
+    #[test]
+    fn scx_ai_maps_max_completion_tokens_to_max_tokens() {
+        let p = detect_provider("scx-ai/some-model").expect("provider should be detected");
+        let mut body = serde_json::json!({"model": "some-model", "max_completion_tokens": 64});
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
+        assert_eq!(body["max_tokens"], 64);
+        assert!(body.get("max_completion_tokens").is_none());
+    }
+
+    /// ~keep `detect_provider` skips `/`-terminated prefixes other than `<name>/`
+    /// (same as `lm_studio/` on lmstudio), so this alias is declared metadata only:
+    /// `qwencloud/qwen-max` does not yet route to dashscope.
+    #[test]
+    fn dashscope_declares_qwencloud_alias_prefix() {
+        let dashscope = crate::all_providers()
+            .expect("registry should load")
+            .iter()
+            .find(|p| p.name == "dashscope")
+            .expect("dashscope should be registered");
+        let prefixes = dashscope.model_prefixes.as_deref().unwrap_or_default();
+        assert!(prefixes.iter().any(|p| p == "qwencloud/"));
+    }
 }
 
 #[cfg(test)]
@@ -1601,14 +1691,14 @@ mod capability_tests {
         assert!(!providers.is_empty(), "registry should have at least one provider");
     }
 
-    /// The total number of providers in the embedded registry must equal 165.
+    /// The total number of providers in the embedded registry must equal 174.
     #[test]
-    fn schema_provider_count_is_165() {
+    fn schema_provider_count_is_174() {
         let providers = all_providers().expect("registry should load");
         assert_eq!(
             providers.len(),
-            165,
-            "expected 165 providers in providers.json, found {}",
+            174,
+            "expected 174 providers in providers.json, found {}",
             providers.len()
         );
     }

@@ -1,6 +1,6 @@
 # liter-llm
 
-Universal LLM API client for 165 providers — chat, streaming, tools, embeddings, search, OCR, plus an OpenAI-compatible proxy and an MCP server, in your agent.
+Universal LLM API client for 174 providers — chat, streaming, tools, embeddings, search, OCR, plus an OpenAI-compatible proxy and an MCP server, in your agent.
 
 <!-- ~keep TODO: add screenshot -->
 
@@ -47,7 +47,7 @@ Set provider API keys via environment variables (`OPENAI_API_KEY`,
 
 | Skill | Trigger |
 |-------|---------|
-| **liter-llm** | Universal LLM client surface — chat, streaming, tools, embeddings, image/audio, moderation, search, OCR, reranking — across 165 providers and 14 language bindings. Use when writing LLM code in any supported language or choosing between the SDK, proxy, and MCP server. |
+| **liter-llm** | Universal LLM client surface — chat, streaming, tools, embeddings, image/audio, moderation, search, OCR, reranking — across 174 providers and 14 language bindings. Use when writing LLM code in any supported language or choosing between the SDK, proxy, and MCP server. |
 | **calling-llms** | Use when sending chat completions and routing to a specific provider via the `provider/model` prefix. |
 | **streaming-responses** | Use when streaming tokens incrementally over SSE or async iterators. |
 | **tool-calling** | Use when defining functions/tools for the model to call, or requesting structured outputs. |

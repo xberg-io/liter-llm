@@ -1,7 +1,7 @@
 ---
 name: liter-llm
 description: >-
-  Universal LLM API client for 165 providers with native bindings for 14
+  Universal LLM API client for 174 providers with native bindings for 14
   languages. Use when writing code that calls LLM APIs via liter-llm in Python,
   TypeScript, Rust, Go, Java, C#, Ruby, PHP, Elixir, WASM, or C, when running
   the OpenAI-compatible proxy, or when calling LLMs through the MCP server.
@@ -19,7 +19,7 @@ metadata:
 
 Liter-LLM is a universal LLM API client with a Rust core and native bindings for
 Python, TypeScript/Node.js, Go, Java, C#, Ruby, PHP, Elixir, WebAssembly, and C
-(FFI). One unified interface reaches 165 providers (OpenAI, Anthropic, Google
+(FFI). One unified interface reaches 174 providers (OpenAI, Anthropic, Google
 Gemini, Groq, Mistral, Cohere, AWS Bedrock, Azure, and many more).
 
 ## Capability map
