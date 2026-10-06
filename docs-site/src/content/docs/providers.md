@@ -51,7 +51,7 @@ Liter-llm supports **174 providers** out of the box. Route requests to any provi
 | Custom | `custom/` | :white_check_mark: | -- | -- | -- | -- |
 | Custom OpenAI | `custom_openai/` | :white_check_mark: | -- | -- | :white_check_mark: | :white_check_mark: |
 | Darkbloom | `darkbloom/` | :white_check_mark: | -- | -- | -- | -- |
-| Dashscope | `dashscope/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- | -- |
+| Dashscope | `dashscope/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Databricks | `databricks/` | :white_check_mark: | -- | -- | -- | -- |
 | DataForSEO | `dataforseo/` | -- | -- | -- | -- | -- |
 | DataRobot | `datarobot/` | :white_check_mark: | -- | -- | -- | -- |
@@ -140,7 +140,7 @@ Liter-llm supports **174 providers** out of the box. Route requests to any provi
 | Prism | `prism/` | :white_check_mark: | -- | -- | -- | -- |
 | PublicAI | `publicai/` | :white_check_mark: | -- | -- | -- | -- |
 | Pydantic AI Agents | `pydantic_ai_agents/` | -- | -- | -- | -- | -- |
-| Qianwen AI Platform | `qwen_ai_platform/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- | -- |
+| Qianwen AI Platform | `qwen_ai_platform/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | RAGFlow | `ragflow/` | :white_check_mark: | -- | -- | -- | -- |
 | Recraft | `recraft/` | -- | -- | :white_check_mark: | -- | -- |
 | Reducto | `reducto/` | -- | -- | -- | -- | -- |

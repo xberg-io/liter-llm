@@ -1295,18 +1295,38 @@ mod provider_tests {
         assert!(body.get("max_completion_tokens").is_none());
     }
 
-    /// ~keep `detect_provider` skips `/`-terminated prefixes other than `<name>/`
-    /// (same as `lm_studio/` on lmstudio), so this alias is declared metadata only:
-    /// `qwencloud/qwen-max` does not yet route to dashscope.
     #[test]
-    fn dashscope_declares_qwencloud_alias_prefix() {
-        let dashscope = crate::all_providers()
-            .expect("registry should load")
-            .iter()
-            .find(|p| p.name == "dashscope")
-            .expect("dashscope should be registered");
-        let prefixes = dashscope.model_prefixes.as_deref().unwrap_or_default();
-        assert!(prefixes.iter().any(|p| p == "qwencloud/"));
+    fn dashscope_family_rerank_uses_the_compatible_api_route() {
+        for (model, url) in [
+            (
+                "dashscope/qwen3-rerank",
+                "https://dashscope-intl.aliyuncs.com/compatible-api/v1/reranks",
+            ),
+            (
+                "qwen_ai_platform/qwen3-rerank",
+                "https://dashscope.aliyuncs.com/compatible-api/v1/reranks",
+            ),
+        ] {
+            let p = detect_provider(model).expect("provider should be detected");
+            assert_eq!(p.build_url(p.rerank_path(), model), url, "{model}");
+            assert!(
+                p.build_url(p.chat_completions_path(), model)
+                    .ends_with("/compatible-mode/v1/chat/completions")
+            );
+        }
+    }
+
+    #[test]
+    fn registry_aliases_route_and_strip_like_the_provider_name() {
+        for (model, provider, upstream) in [
+            ("qwencloud/qwen-max", "dashscope", "qwen-max"),
+            ("lm_studio/local-model", "lmstudio", "local-model"),
+            ("ollama_chat/llama3", "ollama", "llama3"),
+        ] {
+            let p = detect_provider(model).expect("alias should route");
+            assert_eq!(p.name(), provider, "{model}");
+            assert_eq!(p.strip_model_prefix(model), upstream, "{model}");
+        }
     }
 }
 

@@ -181,6 +181,15 @@ struct RegionalEndpointConfig {
 struct ProviderEntry {
     #[serde(flatten)]
     config: ProviderConfig,
+    /// Alternative `alias/` namespaces that route to this provider and are stripped like
+    /// `name/` (e.g. `lm_studio` for `lmstudio`). Kept off the public [`ProviderConfig`].
+    #[serde(default)]
+    aliases: Vec<String>,
+    /// Absolute URLs for endpoints that live outside `base_url` (e.g. DashScope rerank under
+    /// `/compatible-api/v1/reranks` while chat is under `/compatible-mode/v1`). Keyed by
+    /// endpoint kind; currently only `rerank` is consulted.
+    #[serde(default)]
+    endpoint_urls: HashMap<String, String>,
     #[serde(default)]
     capabilities: ProviderCapabilities,
     /// Protocol-specific base URLs available in each supported region.
@@ -766,12 +775,27 @@ pub(crate) fn hint_provider_name(model_hint: &str) -> Option<String> {
 /// (`/chat/completions`) that fails immediately at the HTTP layer.
 pub(crate) struct ConfigDrivenProvider {
     config: &'static ProviderConfig,
+    aliases: &'static [String],
+    endpoint_urls: Option<&'static HashMap<String, String>>,
 }
 
 impl ConfigDrivenProvider {
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn new(config: &'static ProviderConfig) -> Self {
-        Self { config }
+        Self {
+            config,
+            aliases: &[],
+            endpoint_urls: None,
+        }
+    }
+
+    fn from_entry(entry: &'static ProviderEntry) -> Self {
+        Self {
+            config: &entry.config,
+            aliases: &entry.aliases,
+            endpoint_urls: Some(&entry.endpoint_urls),
+        }
     }
 }
 
@@ -786,6 +810,24 @@ impl Provider for ConfigDrivenProvider {
 
     fn env_var(&self) -> Option<&str> {
         self.config.auth.as_ref().and_then(|a| a.env_var.as_deref())
+    }
+
+    fn build_url(&self, endpoint_path: &str, _model: &str) -> String {
+        if endpoint_path == self.rerank_path()
+            && let Some(url) = self.endpoint_urls.and_then(|urls| urls.get("rerank"))
+        {
+            return url.clone();
+        }
+        format!("{}{}", self.base_url(), endpoint_path)
+    }
+
+    fn strip_model_prefix<'m>(&self, model: &'m str) -> &'m str {
+        match model.split_once('/') {
+            Some((prefix, rest)) if prefix == self.config.name || self.aliases.iter().any(|alias| alias == prefix) => {
+                rest
+            }
+            _ => model,
+        }
     }
 
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
@@ -898,11 +940,15 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
     };
 
     if let Some((prefix, _)) = model.split_once('/')
-        && let Some(entry) = reg.providers.iter().find(|e| e.config.name == prefix)
+        && let Some(entry) = reg
+            .providers
+            .iter()
+            .find(|e| e.config.name == prefix)
+            .or_else(|| reg.providers.iter().find(|e| e.aliases.iter().any(|a| a == prefix)))
         && entry.config.base_url.is_some()
         && !reg.complex_providers.contains(&entry.config.name)
     {
-        return Some(Box::new(ConfigDrivenProvider::new(&entry.config)));
+        return Some(Box::new(ConfigDrivenProvider::from_entry(entry)));
     }
 
     for entry in &reg.providers {
@@ -914,7 +960,7 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
                 .iter()
                 .any(|p| model.starts_with(p.as_str()) && !p.ends_with('/'));
             if matches && entry.config.base_url.is_some() {
-                return Some(Box::new(ConfigDrivenProvider::new(&entry.config)));
+                return Some(Box::new(ConfigDrivenProvider::from_entry(entry)));
             }
         }
     }

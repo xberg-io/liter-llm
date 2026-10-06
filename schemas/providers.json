@@ -904,8 +904,10 @@
         "type": "bearer",
         "env_var": "DASHSCOPE_API_KEY"
       },
-      "endpoints": ["chat", "embedding", "image", "rerank"],
-      "model_prefixes": ["dashscope/", "dashscope/qwen-", "dashscope/qwen3-", "qwencloud/"],
+      "endpoints": ["chat", "embedding", "rerank"],
+      "endpoint_urls": { "rerank": "https://dashscope-intl.aliyuncs.com/compatible-api/v1/reranks" },
+      "model_prefixes": ["dashscope/", "dashscope/qwen-", "dashscope/qwen3-"],
+      "aliases": ["qwencloud"],
       "model_count": 32,
       "capabilities": {
         "vision": true,
@@ -1933,7 +1935,8 @@
         "type": "none"
       },
       "endpoints": ["chat", "completion", "embedding"],
-      "model_prefixes": ["lmstudio/", "lm_studio/"],
+      "model_prefixes": ["lmstudio/"],
+      "aliases": ["lm_studio"],
       "capabilities": {
         "vision": true,
         "reasoning": false,
@@ -2439,14 +2442,8 @@
         "type": "none"
       },
       "endpoints": ["chat", "embedding"],
-      "model_prefixes": [
-        "ollama/",
-        "ollama/deepseek-",
-        "ollama/gpt-",
-        "ollama/mistral-",
-        "ollama/mixtral-",
-        "ollama_chat/"
-      ],
+      "model_prefixes": ["ollama/", "ollama/deepseek-", "ollama/gpt-", "ollama/mistral-", "ollama/mixtral-"],
+      "aliases": ["ollama_chat"],
       "model_count": 29,
       "capabilities": {
         "vision": true,
@@ -2887,7 +2884,8 @@
         "type": "bearer",
         "env_var": "QWEN_AI_PLATFORM_API_KEY"
       },
-      "endpoints": ["chat", "embedding", "image", "rerank"],
+      "endpoints": ["chat", "embedding", "rerank"],
+      "endpoint_urls": { "rerank": "https://dashscope.aliyuncs.com/compatible-api/v1/reranks" },
       "model_prefixes": ["qwen_ai_platform/"],
       "capabilities": {
         "vision": true,
