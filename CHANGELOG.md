@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.4] - 2026-10-06
+
+Publishes the 2.1.3 changes. The 2.1.3 publish run stopped at version validation, so 2.1.3 reached
+only Packagist; every other registry goes from 2.1.2 to 2.1.4. Generated with Alef 0.106.1.
+
+### Fixed
+
+- **Kotlin Android: the library compiles again.** `LiterLlmError.RateLimited` redeclared
+  `retryAfter`, which the sealed base now exposes as an `open val` accessor; the field is now
+  declared `override`.
+- Plugin bundles and test-app coordinates are pinned to the release version.
+
 ## [2.1.3] - 2026-10-06
 
 Go/FFI fixes for the issues filed against 2.1.2, client-config fixes, and nine new providers.

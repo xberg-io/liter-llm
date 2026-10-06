@@ -1,6 +1,6 @@
 # AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 # Content-Hash: blake3:ea67a2034fe7813e671d3946523d836f6a1d77bc2fa96f766f838d77aa9068a4
-# Source-Hash: blake3:eb1131dcbadcce344720c2e5c173f4f851ac4005cc014f3f95d94578677654f1
+# Source-Hash: blake3:02b026777d0c20a671829ba370551050e1d05cf0091923f87a1ff46697f6e603
 # Schema-Version: v1
 
 """Hermes adapter for liter-llm.
