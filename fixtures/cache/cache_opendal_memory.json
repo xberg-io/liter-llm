@@ -4,7 +4,13 @@
   "docs": {
     "topic": "cache",
     "stem": "cache-opendal-memory",
-    "title": "Cache hit with OpenDAL memory backend returns cached response on repeat request"
+    "title": "Cache hit with OpenDAL memory backend returns cached response on repeat request",
+    "client": {
+      "config": {
+        "api_key": "your-api-key",
+        "cache": { "max_entries": 256, "ttl_seconds": 300, "backend": "opendal:memory" }
+      }
+    }
   },
   "category": "cache",
   "tags": ["cache", "opendal"],

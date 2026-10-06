@@ -11,7 +11,13 @@
     "c/batches/smoke-create-batch.md",
     "c/batches/smoke-list-batches.md",
     "c/batches/smoke-retrieve-batch.md",
+    "c/budget/budget-enforced.md",
+    "c/budget/budget-per-model.md",
+    "c/budget/budget-tracked.md",
+    "c/cache/cache-hit.md",
+    "c/cache/cache-miss-ttl.md",
     "c/cache/cache-opendal-memory.md",
+    "c/cache/cache-stream-bypass.md",
     "c/chat/developer-message.md",
     "c/chat/edge-chat-max-tokens.md",
     "c/chat/edge-chat-system-only.md",
@@ -66,10 +72,6 @@
     "c/files/smoke-file-content.md",
     "c/files/smoke-list-files.md",
     "c/files/smoke-retrieve-file.md",
-    "c/hooks/hook-guardrail.md",
-    "c/hooks/hook-on-error.md",
-    "c/hooks/hook-on-request.md",
-    "c/hooks/hook-on-response.md",
     "c/image-generate/edge-image-b64-response.md",
     "c/image-generate/edge-image-empty-prompt.md",
     "c/image-generate/edge-image-multiple-n.md",
@@ -254,10 +256,6 @@
     "csharp/files/smoke-file-content.md",
     "csharp/files/smoke-list-files.md",
     "csharp/files/smoke-retrieve-file.md",
-    "csharp/hooks/hook-guardrail.md",
-    "csharp/hooks/hook-on-error.md",
-    "csharp/hooks/hook-on-request.md",
-    "csharp/hooks/hook-on-response.md",
     "csharp/image-generate/edge-image-b64-response.md",
     "csharp/image-generate/edge-image-empty-prompt.md",
     "csharp/image-generate/edge-image-multiple-n.md",
@@ -381,7 +379,13 @@
     "dart/batches/smoke-create-batch.md",
     "dart/batches/smoke-list-batches.md",
     "dart/batches/smoke-retrieve-batch.md",
+    "dart/budget/budget-enforced.md",
+    "dart/budget/budget-per-model.md",
+    "dart/budget/budget-tracked.md",
+    "dart/cache/cache-hit.md",
+    "dart/cache/cache-miss-ttl.md",
     "dart/cache/cache-opendal-memory.md",
+    "dart/cache/cache-stream-bypass.md",
     "dart/chat/developer-message.md",
     "dart/chat/edge-chat-max-tokens.md",
     "dart/chat/edge-chat-system-only.md",
@@ -436,10 +440,6 @@
     "dart/files/smoke-file-content.md",
     "dart/files/smoke-list-files.md",
     "dart/files/smoke-retrieve-file.md",
-    "dart/hooks/hook-guardrail.md",
-    "dart/hooks/hook-on-error.md",
-    "dart/hooks/hook-on-request.md",
-    "dart/hooks/hook-on-response.md",
     "dart/image-generate/edge-image-b64-response.md",
     "dart/image-generate/edge-image-empty-prompt.md",
     "dart/image-generate/edge-image-multiple-n.md",
@@ -624,10 +624,6 @@
     "elixir/files/smoke-file-content.md",
     "elixir/files/smoke-list-files.md",
     "elixir/files/smoke-retrieve-file.md",
-    "elixir/hooks/hook-guardrail.md",
-    "elixir/hooks/hook-on-error.md",
-    "elixir/hooks/hook-on-request.md",
-    "elixir/hooks/hook-on-response.md",
     "elixir/image-generate/edge-image-b64-response.md",
     "elixir/image-generate/edge-image-empty-prompt.md",
     "elixir/image-generate/edge-image-multiple-n.md",
@@ -812,10 +808,6 @@
     "go/files/smoke-file-content.md",
     "go/files/smoke-list-files.md",
     "go/files/smoke-retrieve-file.md",
-    "go/hooks/hook-guardrail.md",
-    "go/hooks/hook-on-error.md",
-    "go/hooks/hook-on-request.md",
-    "go/hooks/hook-on-response.md",
     "go/image-generate/edge-image-b64-response.md",
     "go/image-generate/edge-image-empty-prompt.md",
     "go/image-generate/edge-image-multiple-n.md",
@@ -1000,10 +992,6 @@
     "java/files/smoke-file-content.md",
     "java/files/smoke-list-files.md",
     "java/files/smoke-retrieve-file.md",
-    "java/hooks/hook-guardrail.md",
-    "java/hooks/hook-on-error.md",
-    "java/hooks/hook-on-request.md",
-    "java/hooks/hook-on-response.md",
     "java/image-generate/edge-image-b64-response.md",
     "java/image-generate/edge-image-empty-prompt.md",
     "java/image-generate/edge-image-multiple-n.md",
@@ -1127,7 +1115,13 @@
     "kotlin-android/batches/smoke-create-batch.md",
     "kotlin-android/batches/smoke-list-batches.md",
     "kotlin-android/batches/smoke-retrieve-batch.md",
+    "kotlin-android/budget/budget-enforced.md",
+    "kotlin-android/budget/budget-per-model.md",
+    "kotlin-android/budget/budget-tracked.md",
+    "kotlin-android/cache/cache-hit.md",
+    "kotlin-android/cache/cache-miss-ttl.md",
     "kotlin-android/cache/cache-opendal-memory.md",
+    "kotlin-android/cache/cache-stream-bypass.md",
     "kotlin-android/chat/developer-message.md",
     "kotlin-android/chat/edge-chat-max-tokens.md",
     "kotlin-android/chat/edge-chat-system-only.md",
@@ -1182,10 +1176,6 @@
     "kotlin-android/files/smoke-file-content.md",
     "kotlin-android/files/smoke-list-files.md",
     "kotlin-android/files/smoke-retrieve-file.md",
-    "kotlin-android/hooks/hook-guardrail.md",
-    "kotlin-android/hooks/hook-on-error.md",
-    "kotlin-android/hooks/hook-on-request.md",
-    "kotlin-android/hooks/hook-on-response.md",
     "kotlin-android/image-generate/edge-image-b64-response.md",
     "kotlin-android/image-generate/edge-image-empty-prompt.md",
     "kotlin-android/image-generate/edge-image-multiple-n.md",
@@ -1309,7 +1299,13 @@
     "php/batches/smoke-create-batch.md",
     "php/batches/smoke-list-batches.md",
     "php/batches/smoke-retrieve-batch.md",
+    "php/budget/budget-enforced.md",
+    "php/budget/budget-per-model.md",
+    "php/budget/budget-tracked.md",
+    "php/cache/cache-hit.md",
+    "php/cache/cache-miss-ttl.md",
     "php/cache/cache-opendal-memory.md",
+    "php/cache/cache-stream-bypass.md",
     "php/chat/developer-message.md",
     "php/chat/edge-chat-max-tokens.md",
     "php/chat/edge-chat-system-only.md",
@@ -1364,10 +1360,6 @@
     "php/files/smoke-file-content.md",
     "php/files/smoke-list-files.md",
     "php/files/smoke-retrieve-file.md",
-    "php/hooks/hook-guardrail.md",
-    "php/hooks/hook-on-error.md",
-    "php/hooks/hook-on-request.md",
-    "php/hooks/hook-on-response.md",
     "php/image-generate/edge-image-b64-response.md",
     "php/image-generate/edge-image-empty-prompt.md",
     "php/image-generate/edge-image-multiple-n.md",
@@ -1552,10 +1544,6 @@
     "python/files/smoke-file-content.md",
     "python/files/smoke-list-files.md",
     "python/files/smoke-retrieve-file.md",
-    "python/hooks/hook-guardrail.md",
-    "python/hooks/hook-on-error.md",
-    "python/hooks/hook-on-request.md",
-    "python/hooks/hook-on-response.md",
     "python/image-generate/edge-image-b64-response.md",
     "python/image-generate/edge-image-empty-prompt.md",
     "python/image-generate/edge-image-multiple-n.md",
@@ -1740,10 +1728,6 @@
     "ruby/files/smoke-file-content.md",
     "ruby/files/smoke-list-files.md",
     "ruby/files/smoke-retrieve-file.md",
-    "ruby/hooks/hook-guardrail.md",
-    "ruby/hooks/hook-on-error.md",
-    "ruby/hooks/hook-on-request.md",
-    "ruby/hooks/hook-on-response.md",
     "ruby/image-generate/edge-image-b64-response.md",
     "ruby/image-generate/edge-image-empty-prompt.md",
     "ruby/image-generate/edge-image-multiple-n.md",
@@ -1928,10 +1912,6 @@
     "rust/files/smoke-file-content.md",
     "rust/files/smoke-list-files.md",
     "rust/files/smoke-retrieve-file.md",
-    "rust/hooks/hook-guardrail.md",
-    "rust/hooks/hook-on-error.md",
-    "rust/hooks/hook-on-request.md",
-    "rust/hooks/hook-on-response.md",
     "rust/image-generate/edge-image-b64-response.md",
     "rust/image-generate/edge-image-empty-prompt.md",
     "rust/image-generate/edge-image-multiple-n.md",
@@ -2055,7 +2035,13 @@
     "swift/batches/smoke-create-batch.md",
     "swift/batches/smoke-list-batches.md",
     "swift/batches/smoke-retrieve-batch.md",
+    "swift/budget/budget-enforced.md",
+    "swift/budget/budget-per-model.md",
+    "swift/budget/budget-tracked.md",
+    "swift/cache/cache-hit.md",
+    "swift/cache/cache-miss-ttl.md",
     "swift/cache/cache-opendal-memory.md",
+    "swift/cache/cache-stream-bypass.md",
     "swift/chat/developer-message.md",
     "swift/chat/edge-chat-max-tokens.md",
     "swift/chat/edge-chat-system-only.md",
@@ -2110,10 +2096,6 @@
     "swift/files/smoke-file-content.md",
     "swift/files/smoke-list-files.md",
     "swift/files/smoke-retrieve-file.md",
-    "swift/hooks/hook-guardrail.md",
-    "swift/hooks/hook-on-error.md",
-    "swift/hooks/hook-on-request.md",
-    "swift/hooks/hook-on-response.md",
     "swift/image-generate/edge-image-b64-response.md",
     "swift/image-generate/edge-image-empty-prompt.md",
     "swift/image-generate/edge-image-multiple-n.md",
@@ -2297,10 +2279,6 @@
     "typescript/files/smoke-file-content.md",
     "typescript/files/smoke-list-files.md",
     "typescript/files/smoke-retrieve-file.md",
-    "typescript/hooks/hook-guardrail.md",
-    "typescript/hooks/hook-on-error.md",
-    "typescript/hooks/hook-on-request.md",
-    "typescript/hooks/hook-on-response.md",
     "typescript/image-generate/edge-image-b64-response.md",
     "typescript/image-generate/edge-image-empty-prompt.md",
     "typescript/image-generate/edge-image-multiple-n.md",
@@ -2484,10 +2462,6 @@
     "wasm/files/smoke-file-content.md",
     "wasm/files/smoke-list-files.md",
     "wasm/files/smoke-retrieve-file.md",
-    "wasm/hooks/hook-guardrail.md",
-    "wasm/hooks/hook-on-error.md",
-    "wasm/hooks/hook-on-request.md",
-    "wasm/hooks/hook-on-response.md",
     "wasm/image-generate/edge-image-b64-response.md",
     "wasm/image-generate/edge-image-empty-prompt.md",
     "wasm/image-generate/edge-image-multiple-n.md",
@@ -2611,7 +2585,13 @@
     "zig/batches/smoke-create-batch.md",
     "zig/batches/smoke-list-batches.md",
     "zig/batches/smoke-retrieve-batch.md",
+    "zig/budget/budget-enforced.md",
+    "zig/budget/budget-per-model.md",
+    "zig/budget/budget-tracked.md",
+    "zig/cache/cache-hit.md",
+    "zig/cache/cache-miss-ttl.md",
     "zig/cache/cache-opendal-memory.md",
+    "zig/cache/cache-stream-bypass.md",
     "zig/chat/developer-message.md",
     "zig/chat/edge-chat-max-tokens.md",
     "zig/chat/edge-chat-system-only.md",
@@ -2666,10 +2646,6 @@
     "zig/files/smoke-file-content.md",
     "zig/files/smoke-list-files.md",
     "zig/files/smoke-retrieve-file.md",
-    "zig/hooks/hook-guardrail.md",
-    "zig/hooks/hook-on-error.md",
-    "zig/hooks/hook-on-request.md",
-    "zig/hooks/hook-on-response.md",
     "zig/image-generate/edge-image-b64-response.md",
     "zig/image-generate/edge-image-empty-prompt.md",
     "zig/image-generate/edge-image-multiple-n.md",
@@ -2907,10 +2883,82 @@
     },
     {
       "key": {
+        "fixture_id": "budget_enforced",
+        "language": "c"
+      },
+      "path": "c/budget/budget-enforced.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "c"
+      },
+      "path": "c/budget/budget-per-model.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "c"
+      },
+      "path": "c/budget/budget-tracked.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "c"
+      },
+      "path": "c/cache/cache-hit.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "c"
+      },
+      "path": "c/cache/cache-miss-ttl.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "c"
       },
       "path": "c/cache/cache-opendal-memory.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "c"
+      },
+      "path": "c/cache/cache-stream-bypass.md",
       "language": "c",
       "target": "c",
       "session": "c",
@@ -3559,54 +3607,6 @@
         "language": "c"
       },
       "path": "c/files/smoke-retrieve-file.md",
-      "language": "c",
-      "target": "c",
-      "session": "c",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "c"
-      },
-      "path": "c/hooks/hook-guardrail.md",
-      "language": "c",
-      "target": "c",
-      "session": "c",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "c"
-      },
-      "path": "c/hooks/hook-on-error.md",
-      "language": "c",
-      "target": "c",
-      "session": "c",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "c"
-      },
-      "path": "c/hooks/hook-on-request.md",
-      "language": "c",
-      "target": "c",
-      "session": "c",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "c"
-      },
-      "path": "c/hooks/hook-on-response.md",
       "language": "c",
       "target": "c",
       "session": "c",
@@ -5823,54 +5823,6 @@
     },
     {
       "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "csharp"
-      },
-      "path": "csharp/hooks/hook-guardrail.md",
-      "language": "csharp",
-      "target": "csharp",
-      "session": "csharp",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "csharp"
-      },
-      "path": "csharp/hooks/hook-on-error.md",
-      "language": "csharp",
-      "target": "csharp",
-      "session": "csharp",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "csharp"
-      },
-      "path": "csharp/hooks/hook-on-request.md",
-      "language": "csharp",
-      "target": "csharp",
-      "session": "csharp",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "csharp"
-      },
-      "path": "csharp/hooks/hook-on-response.md",
-      "language": "csharp",
-      "target": "csharp",
-      "session": "csharp",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "edge_image_b64_response",
         "language": "csharp"
       },
@@ -7347,10 +7299,82 @@
     },
     {
       "key": {
+        "fixture_id": "budget_enforced",
+        "language": "dart"
+      },
+      "path": "dart/budget/budget-enforced.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "dart"
+      },
+      "path": "dart/budget/budget-per-model.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "dart"
+      },
+      "path": "dart/budget/budget-tracked.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "dart"
+      },
+      "path": "dart/cache/cache-hit.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "dart"
+      },
+      "path": "dart/cache/cache-miss-ttl.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "dart"
       },
       "path": "dart/cache/cache-opendal-memory.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "dart"
+      },
+      "path": "dart/cache/cache-stream-bypass.md",
       "language": "dart",
       "target": "dart",
       "session": "dart",
@@ -7999,54 +8023,6 @@
         "language": "dart"
       },
       "path": "dart/files/smoke-retrieve-file.md",
-      "language": "dart",
-      "target": "dart",
-      "session": "dart",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "dart"
-      },
-      "path": "dart/hooks/hook-guardrail.md",
-      "language": "dart",
-      "target": "dart",
-      "session": "dart",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "dart"
-      },
-      "path": "dart/hooks/hook-on-error.md",
-      "language": "dart",
-      "target": "dart",
-      "session": "dart",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "dart"
-      },
-      "path": "dart/hooks/hook-on-request.md",
-      "language": "dart",
-      "target": "dart",
-      "session": "dart",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "dart"
-      },
-      "path": "dart/hooks/hook-on-response.md",
       "language": "dart",
       "target": "dart",
       "session": "dart",
@@ -10263,54 +10239,6 @@
     },
     {
       "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "elixir"
-      },
-      "path": "elixir/hooks/hook-guardrail.md",
-      "language": "elixir",
-      "target": "elixir",
-      "session": "elixir",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "elixir"
-      },
-      "path": "elixir/hooks/hook-on-error.md",
-      "language": "elixir",
-      "target": "elixir",
-      "session": "elixir",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "elixir"
-      },
-      "path": "elixir/hooks/hook-on-request.md",
-      "language": "elixir",
-      "target": "elixir",
-      "session": "elixir",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "elixir"
-      },
-      "path": "elixir/hooks/hook-on-response.md",
-      "language": "elixir",
-      "target": "elixir",
-      "session": "elixir",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "edge_image_b64_response",
         "language": "elixir"
       },
@@ -12511,54 +12439,6 @@
         "language": "go"
       },
       "path": "go/files/smoke-retrieve-file.md",
-      "language": "go",
-      "target": "go",
-      "session": "go",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "go"
-      },
-      "path": "go/hooks/hook-guardrail.md",
-      "language": "go",
-      "target": "go",
-      "session": "go",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "go"
-      },
-      "path": "go/hooks/hook-on-error.md",
-      "language": "go",
-      "target": "go",
-      "session": "go",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "go"
-      },
-      "path": "go/hooks/hook-on-request.md",
-      "language": "go",
-      "target": "go",
-      "session": "go",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "go"
-      },
-      "path": "go/hooks/hook-on-response.md",
       "language": "go",
       "target": "go",
       "session": "go",
@@ -14775,54 +14655,6 @@
     },
     {
       "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "java"
-      },
-      "path": "java/hooks/hook-guardrail.md",
-      "language": "java",
-      "target": "java",
-      "session": "java",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "java"
-      },
-      "path": "java/hooks/hook-on-error.md",
-      "language": "java",
-      "target": "java",
-      "session": "java",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "java"
-      },
-      "path": "java/hooks/hook-on-request.md",
-      "language": "java",
-      "target": "java",
-      "session": "java",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "java"
-      },
-      "path": "java/hooks/hook-on-response.md",
-      "language": "java",
-      "target": "java",
-      "session": "java",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "edge_image_b64_response",
         "language": "java"
       },
@@ -16299,10 +16131,82 @@
     },
     {
       "key": {
+        "fixture_id": "budget_enforced",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/budget/budget-enforced.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/budget/budget-per-model.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/budget/budget-tracked.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/cache/cache-hit.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/cache/cache-miss-ttl.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "kotlin_android"
       },
       "path": "kotlin-android/cache/cache-opendal-memory.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/cache/cache-stream-bypass.md",
       "language": "kotlin",
       "target": "kotlin_android",
       "session": "kotlin_android",
@@ -16951,54 +16855,6 @@
         "language": "kotlin_android"
       },
       "path": "kotlin-android/files/smoke-retrieve-file.md",
-      "language": "kotlin",
-      "target": "kotlin_android",
-      "session": "kotlin_android",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "kotlin_android"
-      },
-      "path": "kotlin-android/hooks/hook-guardrail.md",
-      "language": "kotlin",
-      "target": "kotlin_android",
-      "session": "kotlin_android",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "kotlin_android"
-      },
-      "path": "kotlin-android/hooks/hook-on-error.md",
-      "language": "kotlin",
-      "target": "kotlin_android",
-      "session": "kotlin_android",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "kotlin_android"
-      },
-      "path": "kotlin-android/hooks/hook-on-request.md",
-      "language": "kotlin",
-      "target": "kotlin_android",
-      "session": "kotlin_android",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "kotlin_android"
-      },
-      "path": "kotlin-android/hooks/hook-on-response.md",
       "language": "kotlin",
       "target": "kotlin_android",
       "session": "kotlin_android",
@@ -18483,10 +18339,82 @@
     },
     {
       "key": {
+        "fixture_id": "budget_enforced",
+        "language": "php"
+      },
+      "path": "php/budget/budget-enforced.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "php"
+      },
+      "path": "php/budget/budget-per-model.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "php"
+      },
+      "path": "php/budget/budget-tracked.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "php"
+      },
+      "path": "php/cache/cache-hit.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "php"
+      },
+      "path": "php/cache/cache-miss-ttl.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "php"
       },
       "path": "php/cache/cache-opendal-memory.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "php"
+      },
+      "path": "php/cache/cache-stream-bypass.md",
       "language": "php",
       "target": "php",
       "session": "php",
@@ -19135,54 +19063,6 @@
         "language": "php"
       },
       "path": "php/files/smoke-retrieve-file.md",
-      "language": "php",
-      "target": "php",
-      "session": "php",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "php"
-      },
-      "path": "php/hooks/hook-guardrail.md",
-      "language": "php",
-      "target": "php",
-      "session": "php",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "php"
-      },
-      "path": "php/hooks/hook-on-error.md",
-      "language": "php",
-      "target": "php",
-      "session": "php",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "php"
-      },
-      "path": "php/hooks/hook-on-request.md",
-      "language": "php",
-      "target": "php",
-      "session": "php",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "php"
-      },
-      "path": "php/hooks/hook-on-response.md",
       "language": "php",
       "target": "php",
       "session": "php",
@@ -21399,54 +21279,6 @@
     },
     {
       "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "python"
-      },
-      "path": "python/hooks/hook-guardrail.md",
-      "language": "python",
-      "target": "python",
-      "session": "python",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "python"
-      },
-      "path": "python/hooks/hook-on-error.md",
-      "language": "python",
-      "target": "python",
-      "session": "python",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "python"
-      },
-      "path": "python/hooks/hook-on-request.md",
-      "language": "python",
-      "target": "python",
-      "session": "python",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "python"
-      },
-      "path": "python/hooks/hook-on-response.md",
-      "language": "python",
-      "target": "python",
-      "session": "python",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "edge_image_b64_response",
         "language": "python"
       },
@@ -23647,54 +23479,6 @@
         "language": "ruby"
       },
       "path": "ruby/files/smoke-retrieve-file.md",
-      "language": "ruby",
-      "target": "ruby",
-      "session": "ruby",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "ruby"
-      },
-      "path": "ruby/hooks/hook-guardrail.md",
-      "language": "ruby",
-      "target": "ruby",
-      "session": "ruby",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "ruby"
-      },
-      "path": "ruby/hooks/hook-on-error.md",
-      "language": "ruby",
-      "target": "ruby",
-      "session": "ruby",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "ruby"
-      },
-      "path": "ruby/hooks/hook-on-request.md",
-      "language": "ruby",
-      "target": "ruby",
-      "session": "ruby",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "ruby"
-      },
-      "path": "ruby/hooks/hook-on-response.md",
       "language": "ruby",
       "target": "ruby",
       "session": "ruby",
@@ -26111,66 +25895,6 @@
     },
     {
       "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "rust"
-      },
-      "path": "rust/hooks/hook-guardrail.md",
-      "language": "rust",
-      "target": "rust",
-      "session": "rust",
-      "requires": [
-        "crate:serde_json",
-        "crate:tokio"
-      ],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "rust"
-      },
-      "path": "rust/hooks/hook-on-error.md",
-      "language": "rust",
-      "target": "rust",
-      "session": "rust",
-      "requires": [
-        "crate:serde_json",
-        "crate:tokio"
-      ],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "rust"
-      },
-      "path": "rust/hooks/hook-on-request.md",
-      "language": "rust",
-      "target": "rust",
-      "session": "rust",
-      "requires": [
-        "crate:serde_json",
-        "crate:tokio"
-      ],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "rust"
-      },
-      "path": "rust/hooks/hook-on-response.md",
-      "language": "rust",
-      "target": "rust",
-      "session": "rust",
-      "requires": [
-        "crate:serde_json",
-        "crate:tokio"
-      ],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "edge_image_b64_response",
         "language": "rust"
       },
@@ -27990,10 +27714,82 @@
     },
     {
       "key": {
+        "fixture_id": "budget_enforced",
+        "language": "swift"
+      },
+      "path": "swift/budget/budget-enforced.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "swift"
+      },
+      "path": "swift/budget/budget-per-model.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "swift"
+      },
+      "path": "swift/budget/budget-tracked.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "swift"
+      },
+      "path": "swift/cache/cache-hit.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "swift"
+      },
+      "path": "swift/cache/cache-miss-ttl.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "swift"
       },
       "path": "swift/cache/cache-opendal-memory.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "swift"
+      },
+      "path": "swift/cache/cache-stream-bypass.md",
       "language": "swift",
       "target": "swift",
       "session": "swift",
@@ -28642,54 +28438,6 @@
         "language": "swift"
       },
       "path": "swift/files/smoke-retrieve-file.md",
-      "language": "swift",
-      "target": "swift",
-      "session": "swift",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "swift"
-      },
-      "path": "swift/hooks/hook-guardrail.md",
-      "language": "swift",
-      "target": "swift",
-      "session": "swift",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "swift"
-      },
-      "path": "swift/hooks/hook-on-error.md",
-      "language": "swift",
-      "target": "swift",
-      "session": "swift",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "swift"
-      },
-      "path": "swift/hooks/hook-on-request.md",
-      "language": "swift",
-      "target": "swift",
-      "session": "swift",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "swift"
-      },
-      "path": "swift/hooks/hook-on-response.md",
       "language": "swift",
       "target": "swift",
       "session": "swift",
@@ -30894,54 +30642,6 @@
     },
     {
       "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "node"
-      },
-      "path": "typescript/hooks/hook-guardrail.md",
-      "language": "typescript",
-      "target": "node",
-      "session": "node",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "node"
-      },
-      "path": "typescript/hooks/hook-on-error.md",
-      "language": "typescript",
-      "target": "node",
-      "session": "node",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "node"
-      },
-      "path": "typescript/hooks/hook-on-request.md",
-      "language": "typescript",
-      "target": "node",
-      "session": "node",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "node"
-      },
-      "path": "typescript/hooks/hook-on-response.md",
-      "language": "typescript",
-      "target": "node",
-      "session": "node",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "edge_image_b64_response",
         "language": "node"
       },
@@ -33138,54 +32838,6 @@
     },
     {
       "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "wasm"
-      },
-      "path": "wasm/hooks/hook-guardrail.md",
-      "language": "typescript",
-      "target": "wasm",
-      "session": "wasm",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "wasm"
-      },
-      "path": "wasm/hooks/hook-on-error.md",
-      "language": "typescript",
-      "target": "wasm",
-      "session": "wasm",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "wasm"
-      },
-      "path": "wasm/hooks/hook-on-request.md",
-      "language": "typescript",
-      "target": "wasm",
-      "session": "wasm",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "wasm"
-      },
-      "path": "wasm/hooks/hook-on-response.md",
-      "language": "typescript",
-      "target": "wasm",
-      "session": "wasm",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
         "fixture_id": "edge_image_b64_response",
         "language": "wasm"
       },
@@ -34662,10 +34314,82 @@
     },
     {
       "key": {
+        "fixture_id": "budget_enforced",
+        "language": "zig"
+      },
+      "path": "zig/budget/budget-enforced.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "zig"
+      },
+      "path": "zig/budget/budget-per-model.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "zig"
+      },
+      "path": "zig/budget/budget-tracked.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "zig"
+      },
+      "path": "zig/cache/cache-hit.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "zig"
+      },
+      "path": "zig/cache/cache-miss-ttl.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "zig"
       },
       "path": "zig/cache/cache-opendal-memory.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "zig"
+      },
+      "path": "zig/cache/cache-stream-bypass.md",
       "language": "zig",
       "target": "zig",
       "session": "zig",
@@ -35314,54 +35038,6 @@
         "language": "zig"
       },
       "path": "zig/files/smoke-retrieve-file.md",
-      "language": "zig",
-      "target": "zig",
-      "session": "zig",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_guardrail",
-        "language": "zig"
-      },
-      "path": "zig/hooks/hook-guardrail.md",
-      "language": "zig",
-      "target": "zig",
-      "session": "zig",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_error",
-        "language": "zig"
-      },
-      "path": "zig/hooks/hook-on-error.md",
-      "language": "zig",
-      "target": "zig",
-      "session": "zig",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_request",
-        "language": "zig"
-      },
-      "path": "zig/hooks/hook-on-request.md",
-      "language": "zig",
-      "target": "zig",
-      "session": "zig",
-      "requires": [],
-      "side_effect": "safe"
-    },
-    {
-      "key": {
-        "fixture_id": "hook_on_response",
-        "language": "zig"
-      },
-      "path": "zig/hooks/hook-on-response.md",
       "language": "zig",
       "target": "zig",
       "session": "zig",
@@ -49270,7 +48946,15 @@
     },
     {
       "fixture_id": "budget_enforced",
+      "language": "c"
+    },
+    {
+      "fixture_id": "budget_enforced",
       "language": "csharp"
+    },
+    {
+      "fixture_id": "budget_enforced",
+      "language": "dart"
     },
     {
       "fixture_id": "budget_enforced",
@@ -49286,7 +48970,15 @@
     },
     {
       "fixture_id": "budget_enforced",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "budget_enforced",
       "language": "node"
+    },
+    {
+      "fixture_id": "budget_enforced",
+      "language": "php"
     },
     {
       "fixture_id": "budget_enforced",
@@ -49302,11 +48994,27 @@
     },
     {
       "fixture_id": "budget_enforced",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "budget_enforced",
       "language": "wasm"
+    },
+    {
+      "fixture_id": "budget_enforced",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "budget_per_model",
+      "language": "c"
     },
     {
       "fixture_id": "budget_per_model",
       "language": "csharp"
+    },
+    {
+      "fixture_id": "budget_per_model",
+      "language": "dart"
     },
     {
       "fixture_id": "budget_per_model",
@@ -49322,7 +49030,15 @@
     },
     {
       "fixture_id": "budget_per_model",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "budget_per_model",
       "language": "node"
+    },
+    {
+      "fixture_id": "budget_per_model",
+      "language": "php"
     },
     {
       "fixture_id": "budget_per_model",
@@ -49338,11 +49054,27 @@
     },
     {
       "fixture_id": "budget_per_model",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "budget_per_model",
       "language": "wasm"
+    },
+    {
+      "fixture_id": "budget_per_model",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "budget_tracked",
+      "language": "c"
     },
     {
       "fixture_id": "budget_tracked",
       "language": "csharp"
+    },
+    {
+      "fixture_id": "budget_tracked",
+      "language": "dart"
     },
     {
       "fixture_id": "budget_tracked",
@@ -49358,7 +49090,15 @@
     },
     {
       "fixture_id": "budget_tracked",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "budget_tracked",
       "language": "node"
+    },
+    {
+      "fixture_id": "budget_tracked",
+      "language": "php"
     },
     {
       "fixture_id": "budget_tracked",
@@ -49374,11 +49114,27 @@
     },
     {
       "fixture_id": "budget_tracked",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "budget_tracked",
       "language": "wasm"
+    },
+    {
+      "fixture_id": "budget_tracked",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "cache_hit",
+      "language": "c"
     },
     {
       "fixture_id": "cache_hit",
       "language": "csharp"
+    },
+    {
+      "fixture_id": "cache_hit",
+      "language": "dart"
     },
     {
       "fixture_id": "cache_hit",
@@ -49394,7 +49150,15 @@
     },
     {
       "fixture_id": "cache_hit",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "cache_hit",
       "language": "node"
+    },
+    {
+      "fixture_id": "cache_hit",
+      "language": "php"
     },
     {
       "fixture_id": "cache_hit",
@@ -49410,11 +49174,27 @@
     },
     {
       "fixture_id": "cache_hit",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "cache_hit",
       "language": "wasm"
+    },
+    {
+      "fixture_id": "cache_hit",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "cache_miss_ttl",
+      "language": "c"
     },
     {
       "fixture_id": "cache_miss_ttl",
       "language": "csharp"
+    },
+    {
+      "fixture_id": "cache_miss_ttl",
+      "language": "dart"
     },
     {
       "fixture_id": "cache_miss_ttl",
@@ -49430,7 +49210,15 @@
     },
     {
       "fixture_id": "cache_miss_ttl",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "cache_miss_ttl",
       "language": "node"
+    },
+    {
+      "fixture_id": "cache_miss_ttl",
+      "language": "php"
     },
     {
       "fixture_id": "cache_miss_ttl",
@@ -49446,7 +49234,15 @@
     },
     {
       "fixture_id": "cache_miss_ttl",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "cache_miss_ttl",
       "language": "wasm"
+    },
+    {
+      "fixture_id": "cache_miss_ttl",
+      "language": "zig"
     },
     {
       "fixture_id": "cache_opendal_memory",
@@ -49510,7 +49306,15 @@
     },
     {
       "fixture_id": "cache_stream_bypass",
+      "language": "c"
+    },
+    {
+      "fixture_id": "cache_stream_bypass",
       "language": "csharp"
+    },
+    {
+      "fixture_id": "cache_stream_bypass",
+      "language": "dart"
     },
     {
       "fixture_id": "cache_stream_bypass",
@@ -49526,7 +49330,15 @@
     },
     {
       "fixture_id": "cache_stream_bypass",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "cache_stream_bypass",
       "language": "node"
+    },
+    {
+      "fixture_id": "cache_stream_bypass",
+      "language": "php"
     },
     {
       "fixture_id": "cache_stream_bypass",
@@ -49542,7 +49354,15 @@
     },
     {
       "fixture_id": "cache_stream_bypass",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "cache_stream_bypass",
       "language": "wasm"
+    },
+    {
+      "fixture_id": "cache_stream_bypass",
+      "language": "zig"
     },
     {
       "fixture_id": "content_policy_violation",
@@ -53314,246 +53134,6 @@
     },
     {
       "fixture_id": "github_copilot_error_auth",
-      "language": "zig"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "c"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "csharp"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "dart"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "elixir"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "go"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "java"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "kotlin_android"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "node"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "php"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "python"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "ruby"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "rust"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "swift"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "wasm"
-    },
-    {
-      "fixture_id": "hook_guardrail",
-      "language": "zig"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "c"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "csharp"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "dart"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "elixir"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "go"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "java"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "kotlin_android"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "node"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "php"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "python"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "ruby"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "rust"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "swift"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "wasm"
-    },
-    {
-      "fixture_id": "hook_on_error",
-      "language": "zig"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "c"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "csharp"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "dart"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "elixir"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "go"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "java"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "kotlin_android"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "node"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "php"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "python"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "ruby"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "rust"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "swift"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "wasm"
-    },
-    {
-      "fixture_id": "hook_on_request",
-      "language": "zig"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "c"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "csharp"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "dart"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "elixir"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "go"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "java"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "kotlin_android"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "node"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "php"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "python"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "ruby"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "rust"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "swift"
-    },
-    {
-      "fixture_id": "hook_on_response",
-      "language": "wasm"
-    },
-    {
-      "fixture_id": "hook_on_response",
       "language": "zig"
     },
     {
@@ -59141,294 +58721,6 @@
   "documented_exceptions": [
     {
       "key": {
-        "fixture_id": "budget_enforced",
-        "language": "c"
-      },
-      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_enforced",
-        "language": "dart"
-      },
-      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/dart/lib/src/liter_llm.dart"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_enforced",
-        "language": "kotlin_android"
-      },
-      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_enforced",
-        "language": "php"
-      },
-      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
-      "reference": "crates/liter-llm-php/src/LiterLlm.php"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_enforced",
-        "language": "swift"
-      },
-      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_enforced",
-        "language": "zig"
-      },
-      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/zig/src/liter_llm.zig"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "c"
-      },
-      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "dart"
-      },
-      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/dart/lib/src/liter_llm.dart"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "kotlin_android"
-      },
-      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "php"
-      },
-      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
-      "reference": "crates/liter-llm-php/src/LiterLlm.php"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "swift"
-      },
-      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "zig"
-      },
-      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/zig/src/liter_llm.zig"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "c"
-      },
-      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "dart"
-      },
-      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/dart/lib/src/liter_llm.dart"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "kotlin_android"
-      },
-      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "php"
-      },
-      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
-      "reference": "crates/liter-llm-php/src/LiterLlm.php"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "swift"
-      },
-      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
-        "language": "zig"
-      },
-      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
-      "reference": "packages/zig/src/liter_llm.zig"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "c"
-      },
-      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "dart"
-      },
-      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/dart/lib/src/liter_llm.dart"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "kotlin_android"
-      },
-      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "php"
-      },
-      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
-      "reference": "crates/liter-llm-php/src/LiterLlm.php"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "swift"
-      },
-      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
-        "language": "zig"
-      },
-      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/zig/src/liter_llm.zig"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "c"
-      },
-      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "dart"
-      },
-      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/dart/lib/src/liter_llm.dart"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "kotlin_android"
-      },
-      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "php"
-      },
-      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
-      "reference": "crates/liter-llm-php/src/LiterLlm.php"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "swift"
-      },
-      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
-        "language": "zig"
-      },
-      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/zig/src/liter_llm.zig"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "c"
-      },
-      "reason": "alef's C snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "crates/liter-llm-ffi/include/liter_llm.h"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "dart"
-      },
-      "reason": "alef's Dart snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/dart/lib/src/liter_llm.dart"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "kotlin_android"
-      },
-      "reason": "alef's Kotlin Android snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/LiterLlm.kt"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "php"
-      },
-      "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
-      "reference": "crates/liter-llm-php/src/LiterLlm.php"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "swift"
-      },
-      "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/swift/Sources/LiterLlm/LiterLlm.swift"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "zig"
-      },
-      "reason": "alef's Zig snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
-      "reference": "packages/zig/src/liter_llm.zig"
-    },
-    {
-      "key": {
         "fixture_id": "error_file_bad_purpose",
         "language": "node"
       },
@@ -59442,6 +58734,486 @@
       },
       "reason": "WasmFilePurpose contains only declared members; InvalidPurpose does not exist. Accessing that absent JavaScript member yields undefined and coerces to Assistants, so it cannot demonstrate an invalid-purpose HTTP request.",
       "reference": "crates/liter-llm-wasm/src/lib.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "c"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the c binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "csharp"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the csharp binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "dart"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the dart binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "elixir"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the elixir binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "go"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the go binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "java"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the java binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "kotlin_android"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the kotlin_android binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "node"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the node binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "php"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the php binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "python"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the python binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "ruby"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the ruby binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "rust"
+      },
+      "reason": "A hook is a user-defined type implementing `LlmHook`, which a fixture cannot express, so a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "swift"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the swift binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "wasm"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the wasm binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_guardrail",
+        "language": "zig"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the zig binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "c"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the c binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "csharp"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the csharp binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "dart"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the dart binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "elixir"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the elixir binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "go"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the go binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "java"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the java binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "kotlin_android"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the kotlin_android binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "node"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the node binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "php"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the php binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "python"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the python binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "ruby"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the ruby binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "rust"
+      },
+      "reason": "A hook is a user-defined type implementing `LlmHook`, which a fixture cannot express, so a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "swift"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the swift binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "wasm"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the wasm binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_error",
+        "language": "zig"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the zig binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "c"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the c binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "csharp"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the csharp binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "dart"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the dart binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "elixir"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the elixir binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "go"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the go binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "java"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the java binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "kotlin_android"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the kotlin_android binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "node"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the node binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "php"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the php binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "python"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the python binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "ruby"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the ruby binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "rust"
+      },
+      "reason": "A hook is a user-defined type implementing `LlmHook`, which a fixture cannot express, so a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "swift"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the swift binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "wasm"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the wasm binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_request",
+        "language": "zig"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the zig binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "c"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the c binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "csharp"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the csharp binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "dart"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the dart binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "elixir"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the elixir binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "go"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the go binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "java"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the java binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "kotlin_android"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the kotlin_android binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "node"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the node binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "php"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the php binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "python"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the python binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "ruby"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the ruby binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "rust"
+      },
+      "reason": "A hook is a user-defined type implementing `LlmHook`, which a fixture cannot express, so a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "swift"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the swift binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "wasm"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the wasm binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
+    },
+    {
+      "key": {
+        "fixture_id": "hook_on_response",
+        "language": "zig"
+      },
+      "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the zig binding cannot register one and a plain-client snippet would demonstrate no hook.",
+      "reference": "crates/liter-llm/src/tower/hooks.rs"
     }
   ]
 }

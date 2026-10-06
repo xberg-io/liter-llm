@@ -1084,6 +1084,7 @@ client_factory_from_json = "createClientFromJson"
 
 [crates.e2e.call.overrides.php]
 php_client_factory = "createClient"
+client_factory_from_json = "createClientFromJson"
 
 [crates.e2e.call.overrides.wasm]
 client_factory = "createClient"
@@ -1094,6 +1095,7 @@ bigint_fields = ["maxTokens", "seed"]
 [crates.e2e.call.overrides.c]
 result_type = "ChatCompletionResponse"
 client_factory = "create_client"
+client_factory_from_json = "create_client_from_json"
 
 [crates.e2e.call.overrides.go]
 client_factory = "CreateClient"
@@ -1129,12 +1131,18 @@ client_factory_from_json = "createClientFromJson"
 
 [crates.e2e.call.overrides.zig]
 client_factory = "create_client"
+client_factory_from_json = "create_client_from_json"
 
 [crates.e2e.call.overrides.swift]
 client_factory = "createClient"
+client_factory_from_json = "createClientFromJson"
 
 [crates.e2e.call.overrides.dart]
 client_factory = "createClient"
+client_factory_from_json = "createClientFromJson"
+
+[crates.e2e.call.overrides.kotlin_android]
+client_factory_from_json = "createClientFromJson"
 
 [crates.e2e.calls.chat]
 function = "chat"

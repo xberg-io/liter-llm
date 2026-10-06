@@ -4,10 +4,73 @@
   "docs": {
     "topic": "hooks",
     "stem": "hook-on-response",
-    "title": "Tests that on_response hook is called with response data"
+    "title": "Tests that on_response hook is called with response data",
+    "coverage_exceptions": {
+      "rust": {
+        "reason": "A hook is a user-defined type implementing `LlmHook`, which a fixture cannot express, so a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "python": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the python binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "node": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the node binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "ruby": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the ruby binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "php": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the php binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "c": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the c binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "go": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the go binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "java": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the java binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "csharp": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the csharp binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "elixir": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the elixir binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "wasm": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the wasm binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "dart": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the dart binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "kotlin_android": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the kotlin_android binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "swift": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the swift binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      },
+      "zig": {
+        "reason": "Hooks are Rust trait objects: the client builder takes an `Arc<dyn LlmHook>` and `LlmHook` is `alef(skip)`, so the zig binding cannot register one and a plain-client snippet would demonstrate no hook.",
+        "documentation": "crates/liter-llm/src/tower/hooks.rs"
+      }
+    }
   },
   "category": "hooks",
   "tags": ["hooks"],
+  "requirements": ["feature:hook-registration"],
   "skip": {
     "languages": []
   },
