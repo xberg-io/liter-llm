@@ -19,77 +19,677 @@ public func assistantMessageOutputAudioFromJson<GenericIntoRustString: IntoRustS
 public func createDefaultClient<GenericIntoRustString: IntoRustString>(_ api_key: GenericIntoRustString, _ base_url: Optional<GenericIntoRustString>) throws -> DefaultClient {
     try { let val = __swift_bridge__$create_default_client({ let rustString = api_key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let rustString = optionalStringIntoRustString(base_url) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()); if val.is_ok { return DefaultClient(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func defaultClientChat(_ client: DefaultClientRef, _ req: ChatCompletionRequest) throws -> ChatCompletionResponse {
-    try { let val = __swift_bridge__$default_client_chat(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return ChatCompletionResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientChat(_ client: DefaultClientRef, _ req: ChatCompletionRequest) async throws -> ChatCompletionResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_chat>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(ChatCompletionResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<ChatCompletionResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_chat(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_chat(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
 }
-public func defaultClientEmbed(_ client: DefaultClientRef, _ req: EmbeddingRequest) throws -> EmbeddingResponse {
-    try { let val = __swift_bridge__$default_client_embed(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return EmbeddingResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_chat {
+    var cb: (Result<ChatCompletionResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<ChatCompletionResponse, Error>) -> ()) {
+        self.cb = cb
+    }
 }
-public func defaultClientListModels(_ client: DefaultClientRef) throws -> ModelsListResponse {
-    try { let val = __swift_bridge__$default_client_list_models(client.ptr); if val.is_ok { return ModelsListResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientEmbed(_ client: DefaultClientRef, _ req: EmbeddingRequest) async throws -> EmbeddingResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_embed>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(EmbeddingResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<EmbeddingResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_embed(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_embed(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
 }
-public func defaultClientImageGenerate(_ client: DefaultClientRef, _ req: CreateImageRequest) throws -> ImagesResponse {
-    try { let val = __swift_bridge__$default_client_image_generate(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return ImagesResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_embed {
+    var cb: (Result<EmbeddingResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<EmbeddingResponse, Error>) -> ()) {
+        self.cb = cb
+    }
 }
-public func defaultClientSpeech(_ client: DefaultClientRef, _ req: CreateSpeechRequest) throws -> RustVec<UInt8> {
-    try { let val = __swift_bridge__$default_client_speech(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return RustVec(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientListModels(_ client: DefaultClientRef) async throws -> ModelsListResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_list_models>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(ModelsListResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<ModelsListResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_list_models(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_list_models(wrapperPtr, onComplete, client.ptr)
+    })
 }
-public func defaultClientTranscribe(_ client: DefaultClientRef, _ req: CreateTranscriptionRequest) throws -> TranscriptionResponse {
-    try { let val = __swift_bridge__$default_client_transcribe(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return TranscriptionResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_list_models {
+    var cb: (Result<ModelsListResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<ModelsListResponse, Error>) -> ()) {
+        self.cb = cb
+    }
 }
-public func defaultClientModerate(_ client: DefaultClientRef, _ req: ModerationRequest) throws -> ModerationResponse {
-    try { let val = __swift_bridge__$default_client_moderate(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return ModerationResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientImageGenerate(_ client: DefaultClientRef, _ req: CreateImageRequest) async throws -> ImagesResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_image_generate>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(ImagesResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<ImagesResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_image_generate(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_image_generate(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
 }
-public func defaultClientRerank(_ client: DefaultClientRef, _ req: RerankRequest) throws -> RerankResponse {
-    try { let val = __swift_bridge__$default_client_rerank(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return RerankResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_image_generate {
+    var cb: (Result<ImagesResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<ImagesResponse, Error>) -> ()) {
+        self.cb = cb
+    }
 }
-public func defaultClientSearch(_ client: DefaultClientRef, _ req: SearchRequest) throws -> SearchResponse {
-    try { let val = __swift_bridge__$default_client_search(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return SearchResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientSpeech(_ client: DefaultClientRef, _ req: CreateSpeechRequest) async throws -> RustVec<UInt8> {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_speech>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(RustVec<UInt8>(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<RustVec<UInt8>, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_speech(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_speech(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
 }
-public func defaultClientOcr(_ client: DefaultClientRef, _ req: OcrRequest) throws -> OcrResponse {
-    try { let val = __swift_bridge__$default_client_ocr(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return OcrResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_speech {
+    var cb: (Result<RustVec<UInt8>, Error>) -> ()
+
+    public init(cb: @escaping (Result<RustVec<UInt8>, Error>) -> ()) {
+        self.cb = cb
+    }
 }
-public func defaultClientCreateFile(_ client: DefaultClientRef, _ req: CreateFileRequest) throws -> FileObject {
-    try { let val = __swift_bridge__$default_client_create_file(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return FileObject(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientTranscribe(_ client: DefaultClientRef, _ req: CreateTranscriptionRequest) async throws -> TranscriptionResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_transcribe>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(TranscriptionResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<TranscriptionResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_transcribe(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_transcribe(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
 }
-public func defaultClientRetrieveFile<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ file_id: GenericIntoRustString) throws -> FileObject {
-    try { let val = __swift_bridge__$default_client_retrieve_file(client.ptr, { let rustString = file_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return FileObject(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_transcribe {
+    var cb: (Result<TranscriptionResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<TranscriptionResponse, Error>) -> ()) {
+        self.cb = cb
+    }
 }
-public func defaultClientDeleteFile<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ file_id: GenericIntoRustString) throws -> DeleteResponse {
-    try { let val = __swift_bridge__$default_client_delete_file(client.ptr, { let rustString = file_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return DeleteResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientModerate(_ client: DefaultClientRef, _ req: ModerationRequest) async throws -> ModerationResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_moderate>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(ModerationResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<ModerationResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_moderate(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_moderate(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
 }
-public func defaultClientListFiles(_ client: DefaultClientRef, _ query: Optional<FileListQuery>) throws -> FileListResponse {
-    try { let val = __swift_bridge__$default_client_list_files(client.ptr, { if let val = query { val.isOwned = false; return val.ptr } else { return nil } }()); if val.is_ok { return FileListResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_moderate {
+    var cb: (Result<ModerationResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<ModerationResponse, Error>) -> ()) {
+        self.cb = cb
+    }
 }
-public func defaultClientFileContent<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ file_id: GenericIntoRustString) throws -> RustVec<UInt8> {
-    try { let val = __swift_bridge__$default_client_file_content(client.ptr, { let rustString = file_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustVec(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientRerank(_ client: DefaultClientRef, _ req: RerankRequest) async throws -> RerankResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_rerank>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(RerankResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<RerankResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_rerank(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_rerank(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
 }
-public func defaultClientCreateBatch(_ client: DefaultClientRef, _ req: CreateBatchRequest) throws -> BatchObject {
-    try { let val = __swift_bridge__$default_client_create_batch(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return BatchObject(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_rerank {
+    var cb: (Result<RerankResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<RerankResponse, Error>) -> ()) {
+        self.cb = cb
+    }
 }
-public func defaultClientRetrieveBatch<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ batch_id: GenericIntoRustString) throws -> BatchObject {
-    try { let val = __swift_bridge__$default_client_retrieve_batch(client.ptr, { let rustString = batch_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return BatchObject(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientSearch(_ client: DefaultClientRef, _ req: SearchRequest) async throws -> SearchResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_search>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(SearchResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<SearchResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_search(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_search(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
 }
-public func defaultClientListBatches(_ client: DefaultClientRef, _ query: Optional<BatchListQuery>) throws -> BatchListResponse {
-    try { let val = __swift_bridge__$default_client_list_batches(client.ptr, { if let val = query { val.isOwned = false; return val.ptr } else { return nil } }()); if val.is_ok { return BatchListResponse(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_search {
+    var cb: (Result<SearchResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<SearchResponse, Error>) -> ()) {
+        self.cb = cb
+    }
 }
-public func defaultClientCancelBatch<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ batch_id: GenericIntoRustString) throws -> BatchObject {
-    try { let val = __swift_bridge__$default_client_cancel_batch(client.ptr, { let rustString = batch_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return BatchObject(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientOcr(_ client: DefaultClientRef, _ req: OcrRequest) async throws -> OcrResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_ocr>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(OcrResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<OcrResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_ocr(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_ocr(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
 }
-public func defaultClientFetchBatchForPolling<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ batch_id: GenericIntoRustString) throws -> BatchObject {
-    try { let val = __swift_bridge__$default_client_fetch_batch_for_polling(client.ptr, { let rustString = batch_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return BatchObject(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_ocr {
+    var cb: (Result<OcrResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<OcrResponse, Error>) -> ()) {
+        self.cb = cb
+    }
 }
-public func defaultClientWaitForBatch<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ batch_id: GenericIntoRustString, _ config: WaitForBatchConfig) throws -> BatchObject {
-    try { let val = __swift_bridge__$default_client_wait_for_batch(client.ptr, { let rustString = batch_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), {config.isOwned = false; return config.ptr;}()); if val.is_ok { return BatchObject(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientCreateFile(_ client: DefaultClientRef, _ req: CreateFileRequest) async throws -> FileObject {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_create_file>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(FileObject(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<FileObject, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_create_file(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_create_file(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
 }
-public func defaultClientCreateResponse(_ client: DefaultClientRef, _ req: CreateResponseRequest) throws -> ResponseObject {
-    try { let val = __swift_bridge__$default_client_create_response(client.ptr, {req.isOwned = false; return req.ptr;}()); if val.is_ok { return ResponseObject(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_create_file {
+    var cb: (Result<FileObject, Error>) -> ()
+
+    public init(cb: @escaping (Result<FileObject, Error>) -> ()) {
+        self.cb = cb
+    }
 }
-public func defaultClientRetrieveResponse<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ response_id: GenericIntoRustString) throws -> ResponseObject {
-    try { let val = __swift_bridge__$default_client_retrieve_response(client.ptr, { let rustString = response_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ResponseObject(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientRetrieveFile<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ file_id: GenericIntoRustString) async throws -> FileObject {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_retrieve_file>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(FileObject(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<FileObject, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_retrieve_file(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_retrieve_file(wrapperPtr, onComplete, client.ptr, { let rustString = file_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }())
+    })
 }
-public func defaultClientCancelResponse<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ response_id: GenericIntoRustString) throws -> ResponseObject {
-    try { let val = __swift_bridge__$default_client_cancel_response(client.ptr, { let rustString = response_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ResponseObject(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+class CbWrapper$default_client_retrieve_file {
+    var cb: (Result<FileObject, Error>) -> ()
+
+    public init(cb: @escaping (Result<FileObject, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientDeleteFile<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ file_id: GenericIntoRustString) async throws -> DeleteResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_delete_file>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(DeleteResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<DeleteResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_delete_file(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_delete_file(wrapperPtr, onComplete, client.ptr, { let rustString = file_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }())
+    })
+}
+class CbWrapper$default_client_delete_file {
+    var cb: (Result<DeleteResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<DeleteResponse, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientListFiles(_ client: DefaultClientRef, _ query: Optional<FileListQuery>) async throws -> FileListResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_list_files>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(FileListResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<FileListResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_list_files(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_list_files(wrapperPtr, onComplete, client.ptr, { if let val = query { val.isOwned = false; return val.ptr } else { return nil } }())
+    })
+}
+class CbWrapper$default_client_list_files {
+    var cb: (Result<FileListResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<FileListResponse, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientFileContent<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ file_id: GenericIntoRustString) async throws -> RustVec<UInt8> {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_file_content>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(RustVec<UInt8>(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<RustVec<UInt8>, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_file_content(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_file_content(wrapperPtr, onComplete, client.ptr, { let rustString = file_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }())
+    })
+}
+class CbWrapper$default_client_file_content {
+    var cb: (Result<RustVec<UInt8>, Error>) -> ()
+
+    public init(cb: @escaping (Result<RustVec<UInt8>, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientCreateBatch(_ client: DefaultClientRef, _ req: CreateBatchRequest) async throws -> BatchObject {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_create_batch>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(BatchObject(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<BatchObject, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_create_batch(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_create_batch(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
+}
+class CbWrapper$default_client_create_batch {
+    var cb: (Result<BatchObject, Error>) -> ()
+
+    public init(cb: @escaping (Result<BatchObject, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientRetrieveBatch<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ batch_id: GenericIntoRustString) async throws -> BatchObject {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_retrieve_batch>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(BatchObject(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<BatchObject, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_retrieve_batch(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_retrieve_batch(wrapperPtr, onComplete, client.ptr, { let rustString = batch_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }())
+    })
+}
+class CbWrapper$default_client_retrieve_batch {
+    var cb: (Result<BatchObject, Error>) -> ()
+
+    public init(cb: @escaping (Result<BatchObject, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientListBatches(_ client: DefaultClientRef, _ query: Optional<BatchListQuery>) async throws -> BatchListResponse {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_list_batches>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(BatchListResponse(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<BatchListResponse, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_list_batches(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_list_batches(wrapperPtr, onComplete, client.ptr, { if let val = query { val.isOwned = false; return val.ptr } else { return nil } }())
+    })
+}
+class CbWrapper$default_client_list_batches {
+    var cb: (Result<BatchListResponse, Error>) -> ()
+
+    public init(cb: @escaping (Result<BatchListResponse, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientCancelBatch<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ batch_id: GenericIntoRustString) async throws -> BatchObject {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_cancel_batch>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(BatchObject(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<BatchObject, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_cancel_batch(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_cancel_batch(wrapperPtr, onComplete, client.ptr, { let rustString = batch_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }())
+    })
+}
+class CbWrapper$default_client_cancel_batch {
+    var cb: (Result<BatchObject, Error>) -> ()
+
+    public init(cb: @escaping (Result<BatchObject, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientFetchBatchForPolling<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ batch_id: GenericIntoRustString) async throws -> BatchObject {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_fetch_batch_for_polling>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(BatchObject(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<BatchObject, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_fetch_batch_for_polling(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_fetch_batch_for_polling(wrapperPtr, onComplete, client.ptr, { let rustString = batch_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }())
+    })
+}
+class CbWrapper$default_client_fetch_batch_for_polling {
+    var cb: (Result<BatchObject, Error>) -> ()
+
+    public init(cb: @escaping (Result<BatchObject, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientWaitForBatch<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ batch_id: GenericIntoRustString, _ config: WaitForBatchConfig) async throws -> BatchObject {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_wait_for_batch>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(BatchObject(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<BatchObject, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_wait_for_batch(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_wait_for_batch(wrapperPtr, onComplete, client.ptr, { let rustString = batch_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), {config.isOwned = false; return config.ptr;}())
+    })
+}
+class CbWrapper$default_client_wait_for_batch {
+    var cb: (Result<BatchObject, Error>) -> ()
+
+    public init(cb: @escaping (Result<BatchObject, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientCreateResponse(_ client: DefaultClientRef, _ req: CreateResponseRequest) async throws -> ResponseObject {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_create_response>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(ResponseObject(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<ResponseObject, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_create_response(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_create_response(wrapperPtr, onComplete, client.ptr, {req.isOwned = false; return req.ptr;}())
+    })
+}
+class CbWrapper$default_client_create_response {
+    var cb: (Result<ResponseObject, Error>) -> ()
+
+    public init(cb: @escaping (Result<ResponseObject, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientRetrieveResponse<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ response_id: GenericIntoRustString) async throws -> ResponseObject {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_retrieve_response>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(ResponseObject(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<ResponseObject, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_retrieve_response(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_retrieve_response(wrapperPtr, onComplete, client.ptr, { let rustString = response_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }())
+    })
+}
+class CbWrapper$default_client_retrieve_response {
+    var cb: (Result<ResponseObject, Error>) -> ()
+
+    public init(cb: @escaping (Result<ResponseObject, Error>) -> ()) {
+        self.cb = cb
+    }
+}
+public func defaultClientCancelResponse<GenericIntoRustString: IntoRustString>(_ client: DefaultClientRef, _ response_id: GenericIntoRustString) async throws -> ResponseObject {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_cancel_response>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(ResponseObject(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<ResponseObject, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_cancel_response(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_cancel_response(wrapperPtr, onComplete, client.ptr, { let rustString = response_id.intoRustString(); rustString.isOwned = false; return rustString.ptr }())
+    })
+}
+class CbWrapper$default_client_cancel_response {
+    var cb: (Result<ResponseObject, Error>) -> ()
+
+    public init(cb: @escaping (Result<ResponseObject, Error>) -> ()) {
+        self.cb = cb
+    }
 }
 public func llmConfigProvidersFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
     try { let val = __swift_bridge__$llm_config_providers_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -130,8 +730,33 @@ public func installCatalogOverlayFromStr<GenericIntoRustString: IntoRustString>(
 public func modelInfo<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString) -> Optional<ModelInfo> {
     { let val = __swift_bridge__$model_info({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val != nil { return ModelInfo(ptr: val!) } else { return nil } }()
 }
-public func refreshCatalog(_ config: CatalogRefreshConfig) throws -> RefreshOutcome {
-    try { let val = __swift_bridge__$refresh_catalog({config.isOwned = false; return config.ptr;}()); if val.is_ok { return RefreshOutcome(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func refreshCatalog(_ config: CatalogRefreshConfig) async throws -> RefreshOutcome {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$refresh_catalog>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(RefreshOutcome(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<RefreshOutcome, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$refresh_catalog(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$refresh_catalog(wrapperPtr, onComplete, {config.isOwned = false; return config.ptr;}())
+    })
+}
+class CbWrapper$refresh_catalog {
+    var cb: (Result<RefreshOutcome, Error>) -> ()
+
+    public init(cb: @escaping (Result<RefreshOutcome, Error>) -> ()) {
+        self.cb = cb
+    }
 }
 public func registerCustomProvider(_ config: CustomProviderConfig) throws -> () {
     try { let val = __swift_bridge__$register_custom_provider({config.isOwned = false; return config.ptr;}()); if val != nil { throw RustString(ptr: val!) } else { return } }()
@@ -157,8 +782,33 @@ public func countTokens<GenericIntoRustString: IntoRustString>(_ model: GenericI
 public func recordCostUsd<GenericIntoRustString: IntoRustString>(_ system: GenericIntoRustString, _ model: GenericIntoRustString, _ operation: GenericIntoRustString, _ cost_usd: Double) -> () {
     __swift_bridge__$record_cost_usd({ let rustString = system.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = operation.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), cost_usd)
 }
-public func defaultClientChatStreamStart(_ client: DefaultClientRef, _ req: ChatCompletionRequestRef) throws -> DefaultClientChatStreamStreamHandle {
-    try { let val = __swift_bridge__$default_client_chat_stream_start(client.ptr, req.ptr); if val.is_ok { return DefaultClientChatStreamStreamHandle(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func defaultClientChatStreamStart(_ client: DefaultClientRef, _ req: ChatCompletionRequestRef) async throws -> DefaultClientChatStreamStreamHandle {
+    func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+        let wrapper = Unmanaged<CbWrapper$default_client_chat_stream_start>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+        if rustFnRetVal.is_ok {
+            wrapper.cb(.success(DefaultClientChatStreamStreamHandle(ptr: rustFnRetVal.ok_or_err!)))
+        } else {
+            wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+        }
+    }
+
+    return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<DefaultClientChatStreamStreamHandle, Error>) in
+        let callback = { rustFnRetVal in
+            continuation.resume(with: rustFnRetVal)
+        }
+
+        let wrapper = CbWrapper$default_client_chat_stream_start(cb: callback)
+        let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+        __swift_bridge__$default_client_chat_stream_start(wrapperPtr, onComplete, client.ptr, req.ptr)
+    })
+}
+class CbWrapper$default_client_chat_stream_start {
+    var cb: (Result<DefaultClientChatStreamStreamHandle, Error>) -> ()
+
+    public init(cb: @escaping (Result<DefaultClientChatStreamStreamHandle, Error>) -> ()) {
+        self.cb = cb
+    }
 }
 public func assistantMessageFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> AssistantMessage {
     try { let val = __swift_bridge__$assistant_message_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return AssistantMessage(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -12396,16 +13046,41 @@ public class DefaultClientChatStreamStreamHandleRefMut: DefaultClientChatStreamS
         super.init(ptr: ptr)
     }
 }
-extension DefaultClientChatStreamStreamHandleRefMut {
-    public func next() throws -> RustString {
-        try { let val = __swift_bridge__$DefaultClientChatStreamStreamHandle$next(ptr); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-    }
-}
 public class DefaultClientChatStreamStreamHandleRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
+    }
+}
+extension DefaultClientChatStreamStreamHandleRef {
+    public func next() async throws -> RustString {
+        func onComplete(cbWrapperPtr: UnsafeMutableRawPointer?, rustFnRetVal: __private__ResultPtrAndPtr) {
+            let wrapper = Unmanaged<CbWrapper$DefaultClientChatStreamStreamHandle$next>.fromOpaque(cbWrapperPtr!).takeRetainedValue()
+            if rustFnRetVal.is_ok {
+                wrapper.cb(.success(RustString(ptr: rustFnRetVal.ok_or_err!)))
+            } else {
+                wrapper.cb(.failure(RustString(ptr: rustFnRetVal.ok_or_err!)))
+            }
+        }
+
+        return try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<RustString, Error>) in
+            let callback = { rustFnRetVal in
+                continuation.resume(with: rustFnRetVal)
+            }
+
+            let wrapper = CbWrapper$DefaultClientChatStreamStreamHandle$next(cb: callback)
+            let wrapperPtr = Unmanaged.passRetained(wrapper).toOpaque()
+
+            __swift_bridge__$DefaultClientChatStreamStreamHandle$next(wrapperPtr, onComplete, ptr)
+        })
+    }
+    class CbWrapper$DefaultClientChatStreamStreamHandle$next {
+        var cb: (Result<RustString, Error>) -> ()
+
+        public init(cb: @escaping (Result<RustString, Error>) -> ()) {
+            self.cb = cb
+        }
     }
 }
 extension DefaultClientChatStreamStreamHandle: Vectorizable {

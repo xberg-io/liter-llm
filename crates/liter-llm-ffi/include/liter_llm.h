@@ -207,7 +207,7 @@ typedef struct LITERLLMDecodedDataUrl LITERLLMDecodedDataUrl;
 /**
  * Default client implementation backed by `reqwest`.
  *
- * Sends requests to 165 LLM providers with automatic provider detection
+ * Sends requests to 174 LLM providers with automatic provider detection
  * and per-request routing. The provider is resolved at construction time
  * from `model_hint` (or defaults to OpenAI), but individual requests can
  * override the provider via model name prefix (e.g. `"anthropic/claude-3-5-sonnet"`
@@ -792,6 +792,15 @@ const char *literllm_last_error_variant(void);
  * This function does not allocate and returns no owned pointer.
  */
 uint16_t literllm_last_error_status_code(void);
+
+/**
+ * Return the last error's `retry_after` value in whole milliseconds, or `-1` when the last
+ * error did not carry one.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * This function does not allocate and returns no owned pointer.
+ */
+int64_t literllm_last_error_retry_after(void);
 
 /**
  * Return the last error's `is_transient` value (the zero value when there is no typed error).
@@ -9215,7 +9224,7 @@ uintptr_t literllm_all_providers_len(void);
 /**
  * Return the capability flags for a named provider.
  *
- * Performs an O(n) linear scan over the embedded registry (165 entries).
+ * Performs an O(n) linear scan over the embedded registry (174 entries).
  * Returns an owned value so bindings can pass capability data without
  * borrowing registry internals.
  *

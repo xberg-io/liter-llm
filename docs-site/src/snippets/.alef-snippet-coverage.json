@@ -1679,7 +1679,13 @@
     "ruby/batches/smoke-create-batch.md",
     "ruby/batches/smoke-list-batches.md",
     "ruby/batches/smoke-retrieve-batch.md",
+    "ruby/budget/budget-enforced.md",
+    "ruby/budget/budget-per-model.md",
+    "ruby/budget/budget-tracked.md",
+    "ruby/cache/cache-hit.md",
+    "ruby/cache/cache-miss-ttl.md",
     "ruby/cache/cache-opendal-memory.md",
+    "ruby/cache/cache-stream-bypass.md",
     "ruby/chat/developer-message.md",
     "ruby/chat/edge-chat-max-tokens.md",
     "ruby/chat/edge-chat-system-only.md",
@@ -22917,10 +22923,82 @@
     },
     {
       "key": {
+        "fixture_id": "budget_enforced",
+        "language": "ruby"
+      },
+      "path": "ruby/budget/budget-enforced.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_per_model",
+        "language": "ruby"
+      },
+      "path": "ruby/budget/budget-per-model.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "budget_tracked",
+        "language": "ruby"
+      },
+      "path": "ruby/budget/budget-tracked.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_hit",
+        "language": "ruby"
+      },
+      "path": "ruby/cache/cache-hit.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_miss_ttl",
+        "language": "ruby"
+      },
+      "path": "ruby/cache/cache-miss-ttl.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "cache_opendal_memory",
         "language": "ruby"
       },
       "path": "ruby/cache/cache-opendal-memory.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "cache_stream_bypass",
+        "language": "ruby"
+      },
+      "path": "ruby/cache/cache-stream-bypass.md",
       "language": "ruby",
       "target": "ruby",
       "session": "ruby",
@@ -49216,6 +49294,10 @@
     },
     {
       "fixture_id": "budget_enforced",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "budget_enforced",
       "language": "rust"
     },
     {
@@ -49248,6 +49330,10 @@
     },
     {
       "fixture_id": "budget_per_model",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "budget_per_model",
       "language": "rust"
     },
     {
@@ -49280,6 +49366,10 @@
     },
     {
       "fixture_id": "budget_tracked",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "budget_tracked",
       "language": "rust"
     },
     {
@@ -49312,6 +49402,10 @@
     },
     {
       "fixture_id": "cache_hit",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "cache_hit",
       "language": "rust"
     },
     {
@@ -49341,6 +49435,10 @@
     {
       "fixture_id": "cache_miss_ttl",
       "language": "python"
+    },
+    {
+      "fixture_id": "cache_miss_ttl",
+      "language": "ruby"
     },
     {
       "fixture_id": "cache_miss_ttl",
@@ -49433,6 +49531,10 @@
     {
       "fixture_id": "cache_stream_bypass",
       "language": "python"
+    },
+    {
+      "fixture_id": "cache_stream_bypass",
+      "language": "ruby"
     },
     {
       "fixture_id": "cache_stream_bypass",
@@ -59072,14 +59174,6 @@
     {
       "key": {
         "fixture_id": "budget_enforced",
-        "language": "ruby"
-      },
-      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
-      "reference": "packages/ruby/sig/types.rbs"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_enforced",
         "language": "swift"
       },
       "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
@@ -59124,14 +59218,6 @@
       },
       "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
       "reference": "crates/liter-llm-php/src/LiterLlm.php"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_per_model",
-        "language": "ruby"
-      },
-      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
-      "reference": "packages/ruby/sig/types.rbs"
     },
     {
       "key": {
@@ -59184,14 +59270,6 @@
     {
       "key": {
         "fixture_id": "budget_tracked",
-        "language": "ruby"
-      },
-      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
-      "reference": "packages/ruby/sig/types.rbs"
-    },
-    {
-      "key": {
-        "fixture_id": "budget_tracked",
         "language": "swift"
       },
       "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured budget.",
@@ -59240,14 +59318,6 @@
     {
       "key": {
         "fixture_id": "cache_hit",
-        "language": "ruby"
-      },
-      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
-      "reference": "packages/ruby/sig/types.rbs"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_hit",
         "language": "swift"
       },
       "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
@@ -59296,14 +59366,6 @@
     {
       "key": {
         "fixture_id": "cache_miss_ttl",
-        "language": "ruby"
-      },
-      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
-      "reference": "packages/ruby/sig/types.rbs"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_miss_ttl",
         "language": "swift"
       },
       "reason": "alef's Swift snippet generator cannot yet construct a client from a fixture's client config, so a snippet here would show a client with none of the configured cache.",
@@ -59348,14 +59410,6 @@
       },
       "reason": "The PHP chat snippets call the static facade: the call resolves no client factory, so there is no client for the fixture's client config to configure.",
       "reference": "crates/liter-llm-php/src/LiterLlm.php"
-    },
-    {
-      "key": {
-        "fixture_id": "cache_stream_bypass",
-        "language": "ruby"
-      },
-      "reason": "The Ruby chat snippets call the module function: the call override sets no client_factory, so there is no client for the fixture's client config to configure.",
-      "reference": "packages/ruby/sig/types.rbs"
     },
     {
       "key": {

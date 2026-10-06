@@ -99,7 +99,7 @@ Future<bool> unregisterCustomProvider({required String name}) =>
 
 /// Return the capability flags for a named provider.
 ///
-/// Performs an O(n) linear scan over the embedded registry (165 entries).
+/// Performs an O(n) linear scan over the embedded registry (174 entries).
 /// Returns an owned value so bindings can pass capability data without
 /// borrowing registry internals.
 ///
@@ -3016,6 +3016,16 @@ sealed class LiterLlmError with _$LiterLlmError {
   /// alternative endpoint.
   Future<bool> isTransient() =>
       RustLib.instance.api.crateLiterLlmErrorIsTransient(that: this);
+
+  /// Returns the server-advertised retry delay, when the error carries one.
+  ///
+  /// Parsed from the upstream `Retry-After` header on a 429.  Exposed as an
+  /// accessor alongside [`Self::status_code`] and [`Self::error_type`] so the
+  /// generated bindings can surface it: the value reached the Rust core but
+  /// stopped there, leaving every binding consumer to re-derive its own
+  /// backoff from nothing more than the status code.
+  Future<PlatformInt64?> retryAfter() =>
+      RustLib.instance.api.crateLiterLlmErrorRetryAfter(that: this);
 
   /// Returns the canonical HTTP status code associated with this error.
   ///

@@ -5428,8 +5428,10 @@ version = "0.1.59"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384ed39ea10f1cefabb197b7d8e67f0034b15a94ccbb1038b8e020da59bfb0be"
 dependencies = [
+ "once_cell",
  "swift-bridge-build",
  "swift-bridge-macro",
+ "tokio",
 ]
 
 [[package]]

@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1842578408;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1158134047;
 
 // Section: executor
 
@@ -5087,6 +5087,34 @@ fn wire__crate__liter_llm_error_is_transient_impl(
         },
     )
 }
+fn wire__crate__liter_llm_error_retry_after_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "liter_llm_error_retry_after",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::LiterLlmError>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::LiterLlmError::retry_after(&api_that))?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__liter_llm_error_status_code_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -9647,13 +9675,14 @@ fn pde_ffi_dispatcher_primary_impl(
         160 => wire__crate__install_catalog_overlay_from_str_impl(port, ptr, rust_vec_len, data_len),
         161 => wire__crate__liter_llm_error_error_type_impl(port, ptr, rust_vec_len, data_len),
         162 => wire__crate__liter_llm_error_is_transient_impl(port, ptr, rust_vec_len, data_len),
-        163 => wire__crate__liter_llm_error_status_code_impl(port, ptr, rust_vec_len, data_len),
-        164 => wire__crate__model_info_impl(port, ptr, rust_vec_len, data_len),
+        163 => wire__crate__liter_llm_error_retry_after_impl(port, ptr, rust_vec_len, data_len),
+        164 => wire__crate__liter_llm_error_status_code_impl(port, ptr, rust_vec_len, data_len),
+        165 => wire__crate__model_info_impl(port, ptr, rust_vec_len, data_len),
         #[cfg(feature = "tower")]
-        165 => wire__crate__record_cost_usd_impl(port, ptr, rust_vec_len, data_len),
-        166 => wire__crate__refresh_catalog_impl(port, ptr, rust_vec_len, data_len),
-        167 => wire__crate__register_custom_provider_impl(port, ptr, rust_vec_len, data_len),
-        168 => wire__crate__unregister_custom_provider_impl(port, ptr, rust_vec_len, data_len),
+        166 => wire__crate__record_cost_usd_impl(port, ptr, rust_vec_len, data_len),
+        167 => wire__crate__refresh_catalog_impl(port, ptr, rust_vec_len, data_len),
+        168 => wire__crate__register_custom_provider_impl(port, ptr, rust_vec_len, data_len),
+        169 => wire__crate__unregister_custom_provider_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
