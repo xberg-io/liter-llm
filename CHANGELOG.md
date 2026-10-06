@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.3] - 2026-10-06
+
+Go/FFI fixes for the issues filed against 2.1.2, client-config fixes, and nine new providers.
+Generated with Alef 0.105.0.
+
+### Added
+
+- **Providers:** cognition, cortecs, prism, reka, sail, nadir, scx-ai, edenai and
+  qwen_ai_platform (174 providers total). Registry entries can now declare `aliases`, so
+  `lm_studio/`, `ollama_chat/` and `qwencloud/` route and strip like the provider name. DashScope
+  and Qwen AI Platform support rerank via the compatible-api route.
+- **Cache:** an `opendal:<scheme>` backend value selects any OpenDAL service, including
+  `opendal:memory`.
+- **Errors:** every `LiterLlmError` variant has a stable error code, and reqwest timeouts map to
+  `Timeout`.
+
+### Fixed
+
+- **Go: typed errors.** Native errors surface as `*literllm.Error` with code, status, transient
+  flag, error type and `RetryAfter`; `errors.Is` matches the sentinels (#244).
+- **Go: per-call cancellation.** `ChatWithContext` / `EmbedWithContext` cancel the in-flight
+  native request when the context is done (#245).
+- **Go: no more `(nil, nil)`.** Serialisation and decode failures return an error (#246).
+- **FFI static library links on its own.** The cgo preamble declares the system libraries, and
+  the Go release asset ships `native-static-libs.txt` (#247). macOS FFI builds pin
+  `MACOSX_DEPLOYMENT_TARGET=11.0` so C objects match the Rust objects (#248).
+- **`base_url` prefix stripping.** A known `provider/` prefix is stripped from the model name
+  when `base_url` is set; unknown org prefixes such as `meta-llama/` are kept (#249).
+- **JSON client config is applied.** `create_client_from_json` now builds the middleware stack
+  (budget, cache, cost tracking, rate limits, hooks) and registers custom providers, which it
+  previously parsed and ignored (#251). The budget and cache snippets configure a client in
+  every language.
+- **Go README** documents the real release asset names, static vs dynamic linking, the current
+  API, typed errors and the slim FFI build (#250, #252).
+- Swift basic chat snippet compiles.
+
+### Changed
+
+- Lint-debt pay-down (#201): table-driven outbound IPv4 policy, smaller tower hedge, hooks and
+  rate-limit functions.
+
 ## [2.1.1] - 2026-09-25
 
 Two binding fixes from Alef 0.96.4. No Rust, Kotlin or wire-format change — 0.96.4's third fix
