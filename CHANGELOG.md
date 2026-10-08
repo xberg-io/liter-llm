@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-10-08
+
+Gemini thinking-token accounting and the corresponding cross-language usage API. Generated with
+Alef 0.106.1.
+
+### Added
+
+- Usage responses expose `completion_tokens_details.reasoning_tokens` in Rust and every generated
+  language binding.
+
+### Fixed
+
+- **Gemini usage includes thinking tokens.** Google AI and Vertex AI responses now add
+  `thoughtsTokenCount` to completion tokens, preserve `totalTokenCount`, and report usage on
+  streaming chunks (#253).
+
+### Changed
+
+- Lint-debt pay-down (#201): split the provider documentation generator into focused helpers and
+  removed its `function-too-long` baseline exemption.
+
 ## [2.1.4] - 2026-10-06
 
 Publishes the 2.1.3 changes. The 2.1.3 publish run stopped at version validation, so 2.1.3 reached

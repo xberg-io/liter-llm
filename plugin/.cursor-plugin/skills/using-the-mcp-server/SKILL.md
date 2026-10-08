@@ -6,7 +6,7 @@ description: Use when calling LLM APIs through the liter-llm MCP server's 22 too
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 Content-Hash: blake3:bb42aaf38dca362b154240ddbee4e03bb76614ff452facc744f7d560cfc6d523
-Source-Hash: blake3:02b026777d0c20a671829ba370551050e1d05cf0091923f87a1ff46697f6e603
+Source-Hash: blake3:8e912c45817ab091b08e38cc7bf8e0a4d28b63546499306a907ade79e33dbe17
 Schema-Version: v1
 -->
 

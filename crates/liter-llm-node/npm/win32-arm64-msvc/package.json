@@ -1,6 +1,6 @@
 {
   "name": "@xberg-io/liter-llm-win32-arm64-msvc",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "license": "MIT",
   "repository": {
     "type": "git",
