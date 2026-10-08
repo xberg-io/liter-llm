@@ -226,6 +226,7 @@ mod tests {
                         completion_tokens: 0,
                         total_tokens: 4,
                         prompt_tokens_details: None,
+                        completion_tokens_details: None,
                     }),
                 })
             })

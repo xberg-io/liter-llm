@@ -48,7 +48,7 @@ pub(crate) fn transform_gemini_response(body: &mut Value) -> Result<()> {
     let tool_calls = tool_calls_from_parts(&parts);
     let finish_reason = gemini_finish_reason(finish_reason_raw);
 
-    let (prompt_tokens, completion_tokens) = usage_token_counts(body);
+    let usage = usage_metadata(body);
 
     let response_id = body.get("responseId").cloned().unwrap_or_else(|| json!("gemini-resp"));
 
@@ -75,9 +75,12 @@ pub(crate) fn transform_gemini_response(body: &mut Value) -> Result<()> {
             "finish_reason": finish_reason
         }],
         "usage": {
-            "prompt_tokens": prompt_tokens,
-            "completion_tokens": completion_tokens,
-            "total_tokens": prompt_tokens + completion_tokens
+            "prompt_tokens": usage.prompt_tokens,
+            "completion_tokens": usage.completion_tokens,
+            "total_tokens": usage.total_tokens,
+            "completion_tokens_details": {
+                "reasoning_tokens": usage.reasoning_tokens
+            }
         }
     });
 
@@ -284,17 +287,38 @@ fn blocked_prompt_response(body: &Value) -> Value {
     })
 }
 
-/// `(prompt_tokens, completion_tokens)` from Gemini `usageMetadata`.
-fn usage_token_counts(body: &Value) -> (u64, u64) {
+struct GeminiUsage {
+    prompt_tokens: u64,
+    completion_tokens: u64,
+    total_tokens: u64,
+    reasoning_tokens: u64,
+}
+
+/// OpenAI-compatible token accounting from Gemini `usageMetadata`.
+fn usage_metadata(body: &Value) -> GeminiUsage {
     let prompt_tokens = body
         .pointer("/usageMetadata/promptTokenCount")
         .and_then(|v| v.as_u64())
         .unwrap_or(0);
-    let completion_tokens = body
+    let candidate_tokens = body
         .pointer("/usageMetadata/candidatesTokenCount")
         .and_then(|v| v.as_u64())
         .unwrap_or(0);
-    (prompt_tokens, completion_tokens)
+    let reasoning_tokens = body
+        .pointer("/usageMetadata/thoughtsTokenCount")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
+    let completion_tokens = candidate_tokens.saturating_add(reasoning_tokens);
+    let total_tokens = body
+        .pointer("/usageMetadata/totalTokenCount")
+        .and_then(|v| v.as_u64())
+        .unwrap_or_else(|| prompt_tokens.saturating_add(completion_tokens));
+    GeminiUsage {
+        prompt_tokens,
+        completion_tokens,
+        total_tokens,
+        reasoning_tokens,
+    }
 }
 
 impl CollectedParts {

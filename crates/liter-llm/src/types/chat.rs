@@ -478,6 +478,7 @@ mod tests {
                     cached_tokens: 200,
                     audio_tokens: 0,
                 }),
+                completion_tokens_details: None,
             },
         );
         let with_cache = resp.estimated_cost().expect("should price");
@@ -488,6 +489,7 @@ mod tests {
                 completion_tokens: 50,
                 total_tokens: 1_050,
                 prompt_tokens_details: None,
+                completion_tokens_details: None,
             },
         )
         .estimated_cost()
@@ -508,12 +510,14 @@ mod tests {
                 cached_tokens: 500,
                 audio_tokens: 0,
             }),
+            completion_tokens_details: None,
         };
         let usage_no_details = Usage {
             prompt_tokens: 1_000,
             completion_tokens: 50,
             total_tokens: 1_050,
             prompt_tokens_details: None,
+            completion_tokens_details: None,
         };
         let a = make_response("gpt-4", usage_with_cached)
             .estimated_cost()

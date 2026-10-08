@@ -52,6 +52,7 @@ impl liter_llm::client::LlmClient for ConcurrencyMockClient {
                 completion_tokens: 5,
                 total_tokens: 15,
                 prompt_tokens_details: None,
+                completion_tokens_details: None,
             }),
             system_fingerprint: None,
             service_tier: None,
@@ -90,6 +91,7 @@ impl liter_llm::client::LlmClient for ConcurrencyMockClient {
                 completion_tokens: 0,
                 total_tokens: 4,
                 prompt_tokens_details: None,
+                completion_tokens_details: None,
             }),
         };
         Box::pin(async move { Ok(resp) })

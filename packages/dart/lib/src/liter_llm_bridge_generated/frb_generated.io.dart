@@ -133,6 +133,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CompletionTokensDetails dco_decode_box_autoadd_completion_tokens_details(
+    dynamic raw,
+  );
+
+  @protected
   CreateBatchRequest dco_decode_box_autoadd_create_batch_request(dynamic raw);
 
   @protected
@@ -317,6 +322,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CircuitState dco_decode_circuit_state(dynamic raw);
+
+  @protected
+  CompletionTokensDetails dco_decode_completion_tokens_details(dynamic raw);
 
   @protected
   ContentPart dco_decode_content_part(dynamic raw);
@@ -635,6 +643,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
+  CompletionTokensDetails? dco_decode_opt_box_autoadd_completion_tokens_details(
+    dynamic raw,
+  );
 
   @protected
   DecodedDataUrl? dco_decode_opt_box_autoadd_decoded_data_url(dynamic raw);
@@ -1024,6 +1037,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CompletionTokensDetails sse_decode_box_autoadd_completion_tokens_details(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   CreateBatchRequest sse_decode_box_autoadd_create_batch_request(
     SseDeserializer deserializer,
   );
@@ -1286,6 +1304,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CircuitState sse_decode_circuit_state(SseDeserializer deserializer);
+
+  @protected
+  CompletionTokensDetails sse_decode_completion_tokens_details(
+    SseDeserializer deserializer,
+  );
 
   @protected
   ContentPart sse_decode_content_part(SseDeserializer deserializer);
@@ -1680,6 +1703,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  CompletionTokensDetails? sse_decode_opt_box_autoadd_completion_tokens_details(
+    SseDeserializer deserializer,
+  );
 
   @protected
   DecodedDataUrl? sse_decode_opt_box_autoadd_decoded_data_url(
@@ -2162,6 +2190,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_completion_tokens_details(
+    CompletionTokensDetails self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_create_batch_request(
     CreateBatchRequest self,
     SseSerializer serializer,
@@ -2493,6 +2527,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_circuit_state(CircuitState self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_completion_tokens_details(
+    CompletionTokensDetails self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_content_part(ContentPart self, SseSerializer serializer);
@@ -3006,6 +3046,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_completion_tokens_details(
+    CompletionTokensDetails? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_decoded_data_url(

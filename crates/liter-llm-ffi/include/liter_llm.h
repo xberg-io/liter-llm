@@ -149,6 +149,13 @@ typedef uint64_t LITERLLMChunkMiddleware;
  */
 typedef struct LITERLLMCircuitState LITERLLMCircuitState;
 /**
+ * Breakdown of tokens used in the completion portion of a request.
+ *
+ * `reasoning_tokens` is included in `Usage::completion_tokens` â it is not
+ * additional usage on top of the completion token count.
+ */
+typedef struct LITERLLMCompletionTokensDetails LITERLLMCompletionTokensDetails;
+/**
  * A single content part in a user message â text, image, document, or audio.
  */
 typedef struct LITERLLMContentPart LITERLLMContentPart;
@@ -2456,6 +2463,36 @@ LITERLLMAlefHandle literllm_choice_finish_reason(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_choice_logprobs(LITERLLMAlefHandle handle);
+
+/**
+ * Create a `CompletionTokensDetails` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_completion_tokens_details_free`.
+ */
+LITERLLMAlefHandle literllm_completion_tokens_details_from_json(const char *json);
+
+/**
+ * Serialize a `CompletionTokensDetails` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_completion_tokens_details_to_json(LITERLLMAlefHandle handle);
+
+/**
+ * Free a `CompletionTokensDetails` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void literllm_completion_tokens_details_free(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `reasoning_tokens` field from a `CompletionTokensDetails`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_completion_tokens_details_reasoning_tokens(LITERLLMAlefHandle handle);
 
 /**
  * Create a `CreateBatchRequest` from a JSON string. Returns null on failure.
@@ -8067,6 +8104,15 @@ uint64_t literllm_usage_total_tokens(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 LITERLLMAlefHandle literllm_usage_prompt_tokens_details(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `completion_tokens_details` field from a `Usage`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `literllm_completion_tokens_details_free`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+LITERLLMAlefHandle literllm_usage_completion_tokens_details(LITERLLMAlefHandle handle);
 
 /**
  * Create a `UserMessage` from a JSON string. Returns null on failure.

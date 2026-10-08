@@ -855,6 +855,9 @@ public func chatCompletionToolFromJson<GenericIntoRustString: IntoRustString>(_ 
 public func choiceFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> Choice {
     try { let val = __swift_bridge__$choice_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return Choice(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
+public func completionTokensDetailsFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CompletionTokensDetails {
+    try { let val = __swift_bridge__$completion_tokens_details_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CompletionTokensDetails(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
 public func createBatchRequestFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CreateBatchRequest {
     try { let val = __swift_bridge__$create_batch_request_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CreateBatchRequest(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
@@ -1208,6 +1211,9 @@ public func __alef_phantom_vec_chat_completion_tool() -> RustVec<ChatCompletionT
 }
 public func __alef_phantom_vec_choice() -> RustVec<Choice> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_choice())
+}
+public func __alef_phantom_vec_completion_tokens_details() -> RustVec<CompletionTokensDetails> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_completion_tokens_details())
 }
 public func __alef_phantom_vec_create_batch_request() -> RustVec<CreateBatchRequest> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_create_batch_request())
@@ -3208,6 +3214,91 @@ extension Choice: Vectorizable {
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
         __swift_bridge__$Vec_Choice$len(vecPtr)
+    }
+}
+
+
+public class CompletionTokensDetails: CompletionTokensDetailsRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$CompletionTokensDetails$_free(ptr)
+        }
+    }
+}
+extension CompletionTokensDetails {
+    public convenience init(_ reasoning_tokens: UInt64) {
+        self.init(ptr: __swift_bridge__$CompletionTokensDetails$new(reasoning_tokens))
+    }
+}
+public class CompletionTokensDetailsRefMut: CompletionTokensDetailsRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class CompletionTokensDetailsRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension CompletionTokensDetailsRef {
+    public func reasoningTokens() -> UInt64 {
+        __swift_bridge__$CompletionTokensDetails$reasoning_tokens(ptr)
+    }
+}
+extension CompletionTokensDetails: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_CompletionTokensDetails$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_CompletionTokensDetails$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: CompletionTokensDetails) {
+        __swift_bridge__$Vec_CompletionTokensDetails$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_CompletionTokensDetails$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (CompletionTokensDetails(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<CompletionTokensDetailsRef> {
+        let pointer = __swift_bridge__$Vec_CompletionTokensDetails$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return CompletionTokensDetailsRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<CompletionTokensDetailsRefMut> {
+        let pointer = __swift_bridge__$Vec_CompletionTokensDetails$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return CompletionTokensDetailsRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<CompletionTokensDetailsRef> {
+        UnsafePointer<CompletionTokensDetailsRef>(OpaquePointer(__swift_bridge__$Vec_CompletionTokensDetails$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_CompletionTokensDetails$len(vecPtr)
     }
 }
 
@@ -10359,8 +10450,8 @@ public class Usage: UsageRefMut {
     }
 }
 extension Usage {
-    public convenience init(_ prompt_tokens: UInt64, _ completion_tokens: UInt64, _ total_tokens: UInt64, _ prompt_tokens_details: Optional<PromptTokensDetails>) {
-        self.init(ptr: __swift_bridge__$Usage$new(prompt_tokens, completion_tokens, total_tokens, { if let val = prompt_tokens_details { val.isOwned = false; return val.ptr } else { return nil } }()))
+    public convenience init(_ prompt_tokens: UInt64, _ completion_tokens: UInt64, _ total_tokens: UInt64, _ prompt_tokens_details: Optional<PromptTokensDetails>, _ completion_tokens_details: Optional<CompletionTokensDetails>) {
+        self.init(ptr: __swift_bridge__$Usage$new(prompt_tokens, completion_tokens, total_tokens, { if let val = prompt_tokens_details { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = completion_tokens_details { val.isOwned = false; return val.ptr } else { return nil } }()))
     }
 }
 public class UsageRefMut: UsageRef {
@@ -10390,6 +10481,10 @@ extension UsageRef {
 
     public func promptTokensDetails() -> Optional<PromptTokensDetails> {
         { let val = __swift_bridge__$Usage$prompt_tokens_details(ptr); if val != nil { return PromptTokensDetails(ptr: val!) } else { return nil } }()
+    }
+
+    public func completionTokensDetails() -> Optional<CompletionTokensDetails> {
+        { let val = __swift_bridge__$Usage$completion_tokens_details(ptr); if val != nil { return CompletionTokensDetails(ptr: val!) } else { return nil } }()
     }
 }
 extension Usage: Vectorizable {

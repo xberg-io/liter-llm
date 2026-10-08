@@ -70,6 +70,7 @@ fn message_start_chunk(event: &Value) -> ChatCompletionChunk {
             completion_tokens: 0,
             total_tokens: prompt_tokens,
             prompt_tokens_details: None,
+            completion_tokens_details: None,
         })
     } else {
         None
@@ -165,6 +166,7 @@ fn message_delta_chunk(event: &Value) -> ChatCompletionChunk {
         completion_tokens: ct,
         total_tokens: ct,
         prompt_tokens_details: None,
+        completion_tokens_details: None,
     });
 
     ChatCompletionChunk {

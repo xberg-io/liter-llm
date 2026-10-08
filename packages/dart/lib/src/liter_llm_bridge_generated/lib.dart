@@ -10,7 +10,7 @@ part 'lib.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `try_convert_assistant_content_from_core`, `try_convert_assistant_part_from_core`, `try_convert_auth_header_format_from_core`, `try_convert_auth_type_from_core`, `try_convert_batch_status_from_core`, `try_convert_cache_backend_from_core`, `try_convert_content_part_from_core`, `try_convert_embedding_content_part_from_core`, `try_convert_embedding_format_from_core`, `try_convert_embedding_input_from_core`, `try_convert_enforcement_from_core`, `try_convert_file_purpose_from_core`, `try_convert_finish_reason_from_core`, `try_convert_image_detail_from_core`, `try_convert_message_from_core`, `try_convert_modality_from_core`, `try_convert_moderation_input_from_core`, `try_convert_ocr_document_from_core`, `try_convert_reasoning_effort_from_core`, `try_convert_refresh_outcome_from_core`, `try_convert_rerank_document_from_core`, `try_convert_response_format_from_core`, `try_convert_stop_sequence_from_core`, `try_convert_stream_format_from_core`, `try_convert_tool_choice_from_core`, `try_convert_tool_choice_mode_from_core`, `try_convert_tool_type_from_core`, `try_convert_user_content_from_core`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `IntentPrototype`, `SingleflightResult`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -393,6 +393,11 @@ Future<Usage> createUsageFromJson({required String json}) =>
 Future<PromptTokensDetails> createPromptTokensDetailsFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreatePromptTokensDetailsFromJson(json: json);
+
+Future<CompletionTokensDetails> createCompletionTokensDetailsFromJson({
+  required String json,
+}) =>
+    RustLib.instance.api.crateCreateCompletionTokensDetailsFromJson(json: json);
 
 Future<ChatCompletionRequest> createChatCompletionRequestFromJson({
   required String json,
@@ -1853,6 +1858,27 @@ enum CircuitState {
 
   /// One probe request is allowed through to test service health.
   halfOpen,
+}
+
+/// Breakdown of tokens used in the completion portion of a request.
+///
+/// `reasoning_tokens` is included in `Usage::completion_tokens` — it is not
+/// additional usage on top of the completion token count.
+class CompletionTokensDetails {
+  /// Reasoning or thinking tokens present in the completion. Defaults to 0 when absent.
+  final PlatformInt64 reasoningTokens;
+
+  const CompletionTokensDetails({required this.reasoningTokens});
+
+  @override
+  int get hashCode => reasoningTokens.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CompletionTokensDetails &&
+          runtimeType == other.runtimeType &&
+          reasoningTokens == other.reasoningTokens;
 }
 
 @freezed
@@ -5110,11 +5136,16 @@ class Usage {
   /// does not return prompt-token details.
   final PromptTokensDetails? promptTokensDetails;
 
+  /// Breakdown of tokens used in the completion, including reasoning tokens.
+  /// Absent when the provider does not return completion-token details.
+  final CompletionTokensDetails? completionTokensDetails;
+
   const Usage({
     required this.promptTokens,
     required this.completionTokens,
     required this.totalTokens,
     this.promptTokensDetails,
+    this.completionTokensDetails,
   });
 
   @override
@@ -5122,7 +5153,8 @@ class Usage {
       promptTokens.hashCode ^
       completionTokens.hashCode ^
       totalTokens.hashCode ^
-      promptTokensDetails.hashCode;
+      promptTokensDetails.hashCode ^
+      completionTokensDetails.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -5132,7 +5164,8 @@ class Usage {
           promptTokens == other.promptTokens &&
           completionTokens == other.completionTokens &&
           totalTokens == other.totalTokens &&
-          promptTokensDetails == other.promptTokensDetails;
+          promptTokensDetails == other.promptTokensDetails &&
+          completionTokensDetails == other.completionTokensDetails;
 }
 
 @freezed

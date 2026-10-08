@@ -200,6 +200,40 @@ fn parse_stream_event_basic_chunk() {
 }
 
 #[test]
+fn parse_stream_event_reports_thinking_token_usage() {
+    let p = provider();
+    let event_data = r#"{
+        "candidates": [{
+            "content": {"role": "model", "parts": [{"text": "Hello"}]},
+            "finishReason": "STOP"
+        }],
+        "usageMetadata": {
+            "promptTokenCount": 5,
+            "candidatesTokenCount": 2,
+            "thoughtsTokenCount": 7,
+            "totalTokenCount": 15
+        }
+    }"#;
+
+    let chunk = p
+        .parse_stream_event(event_data)
+        .expect("parse_stream_event should not fail")
+        .expect("should yield a chunk");
+    let usage = chunk.usage.expect("final Gemini chunk should carry usage");
+
+    assert_eq!(usage.prompt_tokens, 5);
+    assert_eq!(usage.completion_tokens, 9);
+    assert_eq!(usage.total_tokens, 15);
+    assert_eq!(
+        usage
+            .completion_tokens_details
+            .expect("thinking tokens should be exposed separately")
+            .reasoning_tokens,
+        7
+    );
+}
+
+#[test]
 fn parse_stream_event_thought_part_routes_to_reasoning_content() {
     // ~keep Regression test for #52: the streaming path must also route "thought"
     // parts to `reasoning_content`, not just the non-streaming response transform.
@@ -530,6 +564,29 @@ fn transform_response_text_only_back_compat() {
         "text-only response must be a scalar string, got: {content}"
     );
     assert_eq!(content.as_str().unwrap(), "Hello!");
+}
+
+#[test]
+fn transform_response_reports_thinking_token_usage() {
+    let mut body = json!({
+        "candidates": [{
+            "content": {"parts": [{"text": "Hello!"}]},
+            "finishReason": "STOP"
+        }],
+        "usageMetadata": {
+            "promptTokenCount": 11,
+            "candidatesTokenCount": 3,
+            "thoughtsTokenCount": 13,
+            "totalTokenCount": 27
+        }
+    });
+
+    transform_gemini_response(&mut body).expect("transform must succeed");
+
+    assert_eq!(body["usage"]["prompt_tokens"], 11);
+    assert_eq!(body["usage"]["completion_tokens"], 16);
+    assert_eq!(body["usage"]["total_tokens"], 27);
+    assert_eq!(body["usage"]["completion_tokens_details"]["reasoning_tokens"], 13);
 }
 
 #[test]

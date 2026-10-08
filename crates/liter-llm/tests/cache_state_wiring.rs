@@ -77,6 +77,7 @@ fn make_chat_response(model: &str) -> ChatCompletionResponse {
             completion_tokens: 3,
             total_tokens: 8,
             prompt_tokens_details: None,
+            completion_tokens_details: None,
         }),
         system_fingerprint: None,
         service_tier: None,

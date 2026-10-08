@@ -342,6 +342,7 @@ mod tests {
                     completion_tokens: 50,
                     total_tokens: 150,
                     prompt_tokens_details: None,
+                    completion_tokens_details: None,
                 }),
                 system_fingerprint: None,
                 service_tier: None,
@@ -374,6 +375,7 @@ mod tests {
                     completion_tokens: 0,
                     total_tokens: 10,
                     prompt_tokens_details: None,
+                    completion_tokens_details: None,
                 }),
             };
             Box::pin(async move { Ok(resp) })
@@ -605,6 +607,7 @@ mod tests {
             completion_tokens: 50,
             total_tokens: 150,
             prompt_tokens_details: None,
+            completion_tokens_details: None,
         };
 
         let inner: BoxStream<'static, Result<ChatCompletionChunk>> = Box::pin(VecStream {

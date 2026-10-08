@@ -747,6 +747,7 @@ mod tests {
                             completion_tokens: 5,
                             total_tokens: 15,
                             prompt_tokens_details: None,
+                            completion_tokens_details: None,
                         }),
                         system_fingerprint: None,
                         service_tier: None,

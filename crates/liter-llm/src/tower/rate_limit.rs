@@ -761,6 +761,7 @@ mod tests {
                     completion_tokens: 20,
                     total_tokens: 50,
                     prompt_tokens_details: None,
+                    completion_tokens_details: None,
                 };
                 let chunks = VecDeque::from([usage_chunk(None), usage_chunk(Some(usage))]);
                 let stream: BoxStream<'static, Result<ChatCompletionChunk>> = Box::pin(ChunkStream(chunks));

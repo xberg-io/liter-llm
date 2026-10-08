@@ -426,6 +426,7 @@ fn extract_cohere_stream_usage(v: &Value) -> Option<crate::types::Usage> {
         completion_tokens: output,
         total_tokens: input + output,
         prompt_tokens_details: None,
+        completion_tokens_details: None,
     })
 }
 

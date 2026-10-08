@@ -287,6 +287,7 @@ impl tower::Service<LlmRequest> for StreamingUsageService {
             completion_tokens: self.completion_tokens,
             total_tokens: self.prompt_tokens + self.completion_tokens,
             prompt_tokens_details: None,
+            completion_tokens_details: None,
         };
         Box::pin(async move {
             let chunks =

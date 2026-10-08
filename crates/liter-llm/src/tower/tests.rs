@@ -162,6 +162,7 @@ fn make_chat_response(model: &str) -> ChatCompletionResponse {
             completion_tokens: 5,
             total_tokens: 15,
             prompt_tokens_details: None,
+            completion_tokens_details: None,
         }),
         system_fingerprint: None,
         service_tier: None,
@@ -202,6 +203,7 @@ impl LlmClient for MockClient {
                 completion_tokens: 0,
                 total_tokens: 4,
                 prompt_tokens_details: None,
+                completion_tokens_details: None,
             }),
         };
         Box::pin(async move { Ok(resp) })

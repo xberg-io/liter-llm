@@ -194,7 +194,7 @@ where
                 IngressLine::Incomplete => {}
                 IngressLine::Consumed => continue,
                 IngressLine::Done => return Poll::Ready(None),
-                IngressLine::Chunk(item) => return Poll::Ready(Some(item)),
+                IngressLine::Chunk(item) => return Poll::Ready(Some(*item)),
             }
 
             if *this.done {
@@ -245,7 +245,7 @@ enum IngressLine {
     /// The `[DONE]` sentinel was consumed.
     Done,
     /// A `data:` payload was parsed into a chunk or an error.
-    Chunk(Result<ChatCompletionChunk>),
+    Chunk(Box<Result<ChatCompletionChunk>>),
 }
 
 /// Consume the next complete line from `buffer` (starting at `cursor`) and
@@ -269,8 +269,8 @@ where
         } else {
             match parse_event(data) {
                 Ok(None) => IngressLine::Consumed,
-                Ok(Some(chunk)) => IngressLine::Chunk(Ok(chunk)),
-                Err(e) => IngressLine::Chunk(Err(e)),
+                Ok(Some(chunk)) => IngressLine::Chunk(Box::new(Ok(chunk))),
+                Err(e) => IngressLine::Chunk(Box::new(Err(e))),
             }
         }
     } else {

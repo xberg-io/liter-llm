@@ -1014,6 +1014,7 @@ mod inner {
                 completion_tokens: 7,
                 total_tokens: 49,
                 prompt_tokens_details: None,
+                completion_tokens_details: None,
             };
 
             let client = StreamingMockClient {

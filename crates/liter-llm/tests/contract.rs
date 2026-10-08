@@ -146,6 +146,7 @@ fn chat_completion_response_matches_schema() {
             completion_tokens: 5,
             total_tokens: 15,
             prompt_tokens_details: None,
+            completion_tokens_details: None,
         }),
         system_fingerprint: Some("fp_abc123".into()),
         service_tier: None,
@@ -224,6 +225,7 @@ fn embedding_response_matches_schema() {
             completion_tokens: 0,
             total_tokens: 8,
             prompt_tokens_details: None,
+            completion_tokens_details: None,
         }),
     };
 
