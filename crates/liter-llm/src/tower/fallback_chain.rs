@@ -183,6 +183,84 @@ impl<S: Clone, R: RetryPolicy> Clone for FallbackChainService<S, R> {
     }
 }
 
+enum AttemptError {
+    Ready(LiterLlmError),
+    Call(LiterLlmError),
+}
+
+enum AttemptDecision {
+    Retry(LiterLlmError),
+    Abort(LiterLlmError),
+}
+
+async fn execute_attempt<S>(mut service: S, request: LlmRequest) -> std::result::Result<LlmResponse, AttemptError>
+where
+    S: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError>,
+{
+    let ready_service = service.ready().await.map_err(AttemptError::Ready)?;
+    ready_service.call(request).await.map_err(AttemptError::Call)
+}
+
+fn decide_ready_error<R: RetryPolicy>(
+    policy: &R,
+    error: LiterLlmError,
+    attempt: usize,
+    chain_len: usize,
+    span: &tracing::Span,
+) -> AttemptDecision {
+    match policy.classify(&error) {
+        RetryClass::Terminal => {
+            tracing::debug!(
+                attempt,
+                error = %error,
+                "fallback chain: terminal error in poll_ready, aborting"
+            );
+            span.record("outcome", "terminal");
+            AttemptDecision::Abort(error)
+        }
+        RetryClass::Transient => {
+            tracing::warn!(
+                attempt,
+                chain_len,
+                error = %error,
+                "fallback chain: transient error in poll_ready, trying next service"
+            );
+            span.record("outcome", "transient");
+            AttemptDecision::Retry(error)
+        }
+    }
+}
+
+fn decide_call_error<R: RetryPolicy>(
+    policy: &R,
+    error: LiterLlmError,
+    attempt: usize,
+    chain_len: usize,
+    span: &tracing::Span,
+) -> AttemptDecision {
+    match policy.classify(&error) {
+        RetryClass::Terminal => {
+            tracing::debug!(
+                attempt,
+                error = %error,
+                "fallback chain: terminal error, aborting"
+            );
+            span.record("outcome", "terminal");
+            AttemptDecision::Abort(error)
+        }
+        RetryClass::Transient => {
+            tracing::warn!(
+                attempt,
+                chain_len,
+                error = %error,
+                "fallback chain: transient error, trying next service"
+            );
+            span.record("outcome", "transient");
+            AttemptDecision::Retry(error)
+        }
+    }
+}
+
 impl<S, R> Service<LlmRequest> for FallbackChainService<S, R>
 where
     S: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError> + Clone + Send + Sync + 'static,
@@ -214,17 +292,7 @@ where
 
             let mut last_err: Option<LiterLlmError> = None;
 
-            /// Distinguishes a `poll_ready` failure from a `call` failure so the two
-            /// retain their own log messages once both paths funnel through the
-            /// same instrumented future below.
-            enum AttemptError {
-                Ready(LiterLlmError),
-                Call(LiterLlmError),
-            }
-
             for (attempt, svc_template) in chain.iter().enumerate() {
-                let svc = svc_template.clone();
-                let attempt_request = request.clone();
                 let span = tracing::debug_span!(
                     "fallback_chain.attempt",
                     chain_len,
@@ -235,63 +303,31 @@ where
                 // ~keep .instrument (not span.enter()) because this future is awaited;
                 // ~keep holding an entered guard across an await would mis-attribute events
                 // ~keep from other tasks interleaved on this thread to this span.
-                let result: std::result::Result<LlmResponse, AttemptError> = async move {
-                    let mut svc = svc;
-                    // ~keep Drive each fallback service to ready so permit-based readiness is honored.
-                    let ready_svc = svc.ready().await.map_err(AttemptError::Ready)?;
-                    ready_svc.call(attempt_request).await.map_err(AttemptError::Call)
-                }
-                .instrument(span.clone())
-                .await;
+                let result = execute_attempt(svc_template.clone(), request.clone())
+                    .instrument(span.clone())
+                    .await;
 
                 match result {
-                    Ok(resp) => {
+                    Ok(response) => {
                         tracing::debug!(attempt, "fallback chain: success");
                         span.record("outcome", "success");
-                        return Ok(resp);
+                        return Ok(response);
                     }
-                    Err(AttemptError::Ready(e)) => match policy.classify(&e) {
-                        RetryClass::Terminal => {
-                            tracing::debug!(
-                                attempt,
-                                error = %e,
-                                "fallback chain: terminal error in poll_ready, aborting"
-                            );
-                            span.record("outcome", "terminal");
-                            return Err(e);
+                    Err(error) => {
+                        let decision = match error {
+                            AttemptError::Ready(error) => {
+                                decide_ready_error(policy.as_ref(), error, attempt, chain_len, &span)
+                            }
+                            AttemptError::Call(error) => {
+                                decide_call_error(policy.as_ref(), error, attempt, chain_len, &span)
+                            }
+                        };
+
+                        match decision {
+                            AttemptDecision::Abort(error) => return Err(error),
+                            AttemptDecision::Retry(error) => last_err = Some(error),
                         }
-                        RetryClass::Transient => {
-                            tracing::warn!(
-                                attempt,
-                                chain_len,
-                                error = %e,
-                                "fallback chain: transient error in poll_ready, trying next service"
-                            );
-                            span.record("outcome", "transient");
-                            last_err = Some(e);
-                        }
-                    },
-                    Err(AttemptError::Call(err)) => match policy.classify(&err) {
-                        RetryClass::Terminal => {
-                            tracing::debug!(
-                                attempt,
-                                error = %err,
-                                "fallback chain: terminal error, aborting"
-                            );
-                            span.record("outcome", "terminal");
-                            return Err(err);
-                        }
-                        RetryClass::Transient => {
-                            tracing::warn!(
-                                attempt,
-                                chain_len,
-                                error = %err,
-                                "fallback chain: transient error, trying next service"
-                            );
-                            span.record("outcome", "transient");
-                            last_err = Some(err);
-                        }
-                    },
+                    }
                 }
             }
 
@@ -314,6 +350,36 @@ mod tests {
     use crate::tower::service::LlmService;
     use crate::tower::tests_common::{MockClient, chat_req};
     use crate::tower::types::{LlmRequest, LlmResponse};
+
+    #[derive(Clone)]
+    struct CountingService {
+        concurrent: Arc<AtomicUsize>,
+        peak: Arc<AtomicUsize>,
+    }
+
+    impl Service<LlmRequest> for CountingService {
+        type Response = LlmResponse;
+        type Error = LiterLlmError;
+        type Future = crate::client::BoxFuture<'static, Result<LlmResponse>>;
+
+        fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
+            Poll::Ready(Ok(()))
+        }
+
+        fn call(&mut self, _req: LlmRequest) -> Self::Future {
+            let concurrent = Arc::clone(&self.concurrent);
+            let peak = Arc::clone(&self.peak);
+            Box::pin(async move {
+                let current = concurrent.fetch_add(1, Ordering::SeqCst) + 1;
+                peak.fetch_max(current, Ordering::SeqCst);
+                tokio::task::yield_now().await;
+                concurrent.fetch_sub(1, Ordering::SeqCst);
+                Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response(
+                    "gpt-4",
+                )))
+            })
+        }
+    }
 
     #[tokio::test]
     async fn fallback_chain_succeeds_on_first_service() {
@@ -425,36 +491,6 @@ mod tests {
     /// their readiness bypassed, potentially exceeding the concurrency limit.
     #[tokio::test]
     async fn fallback_chain_respects_inner_readiness() {
-        #[derive(Clone)]
-        struct CountingService {
-            concurrent: Arc<AtomicUsize>,
-            peak: Arc<AtomicUsize>,
-        }
-
-        impl Service<LlmRequest> for CountingService {
-            type Response = LlmResponse;
-            type Error = LiterLlmError;
-            type Future = crate::client::BoxFuture<'static, Result<LlmResponse>>;
-
-            fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
-                Poll::Ready(Ok(()))
-            }
-
-            fn call(&mut self, _req: LlmRequest) -> Self::Future {
-                let concurrent = Arc::clone(&self.concurrent);
-                let peak = Arc::clone(&self.peak);
-                Box::pin(async move {
-                    let current = concurrent.fetch_add(1, Ordering::SeqCst) + 1;
-                    peak.fetch_max(current, Ordering::SeqCst);
-                    tokio::task::yield_now().await;
-                    concurrent.fetch_sub(1, Ordering::SeqCst);
-                    Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response(
-                        "gpt-4",
-                    )))
-                })
-            }
-        }
-
         let concurrent = Arc::new(AtomicUsize::new(0));
         let peak = Arc::new(AtomicUsize::new(0));
         let inner = CountingService {

@@ -4,7 +4,9 @@ use serde_json::Value;
 
 use crate::error::{LiterLlmError, Result};
 use crate::provider::{Provider, unix_timestamp_secs};
-use crate::types::{ChatCompletionChunk, FinishReason, StreamChoice, StreamDelta, StreamFunctionCall, StreamToolCall};
+use crate::types::{
+    ChatCompletionChunk, FinishReason, StreamChoice, StreamDelta, StreamFunctionCall, StreamToolCall, Usage,
+};
 
 /// Cohere provider (Command model family).
 ///
@@ -123,186 +125,14 @@ impl Provider for CohereProvider {
 
         let event_type = v.get("type").and_then(|t| t.as_str()).unwrap_or("");
 
-        match event_type {
-            "message-start" => {
-                let id = v.get("id").and_then(|g| g.as_str()).unwrap_or("").to_owned();
-                let role = v
-                    .pointer("/delta/message/role")
-                    .and_then(|r| r.as_str())
-                    .unwrap_or("assistant")
-                    .to_owned();
-
-                Ok(Some(ChatCompletionChunk {
-                    id,
-                    object: "chat.completion.chunk".to_owned(),
-                    created: unix_timestamp_secs(),
-                    model: String::new(),
-                    choices: vec![StreamChoice {
-                        index: 0,
-                        delta: StreamDelta {
-                            role: Some(role),
-                            content: None,
-                            tool_calls: None,
-                            function_call: None,
-                            refusal: None,
-                            reasoning_content: None,
-                        },
-                        finish_reason: None,
-                    }],
-                    usage: None,
-                    system_fingerprint: None,
-                    service_tier: None,
-                }))
-            }
-
-            "content-delta" => {
-                let text = v
-                    .pointer("/delta/message/content/text")
-                    .and_then(|t| t.as_str())
-                    .unwrap_or("")
-                    .to_owned();
-
-                Ok(Some(ChatCompletionChunk {
-                    id: String::new(),
-                    object: "chat.completion.chunk".to_owned(),
-                    created: unix_timestamp_secs(),
-                    model: String::new(),
-                    choices: vec![StreamChoice {
-                        index: 0,
-                        delta: StreamDelta {
-                            role: None,
-                            content: Some(text),
-                            tool_calls: None,
-                            function_call: None,
-                            refusal: None,
-                            reasoning_content: None,
-                        },
-                        finish_reason: None,
-                    }],
-                    usage: None,
-                    system_fingerprint: None,
-                    service_tier: None,
-                }))
-            }
-
-            "tool-call-start" => {
-                let index = v.get("index").and_then(|i| i.as_u64()).unwrap_or(0) as u32;
-                let tool_id = v
-                    .pointer("/delta/message/tool_calls/id")
-                    .and_then(|i| i.as_str())
-                    .unwrap_or("")
-                    .to_owned();
-                let tool_name = v
-                    .pointer("/delta/message/tool_calls/function/name")
-                    .and_then(|n| n.as_str())
-                    .unwrap_or("")
-                    .to_owned();
-
-                Ok(Some(ChatCompletionChunk {
-                    id: String::new(),
-                    object: "chat.completion.chunk".to_owned(),
-                    created: unix_timestamp_secs(),
-                    model: String::new(),
-                    choices: vec![StreamChoice {
-                        index: 0,
-                        delta: StreamDelta {
-                            role: None,
-                            content: None,
-                            tool_calls: Some(vec![StreamToolCall {
-                                index,
-                                id: Some(tool_id),
-                                call_type: Some(crate::types::ToolType::Function),
-                                function: Some(StreamFunctionCall {
-                                    name: Some(tool_name),
-                                    arguments: None,
-                                }),
-                            }]),
-                            function_call: None,
-                            refusal: None,
-                            reasoning_content: None,
-                        },
-                        finish_reason: None,
-                    }],
-                    usage: None,
-                    system_fingerprint: None,
-                    service_tier: None,
-                }))
-            }
-
-            "tool-call-delta" => {
-                let index = v.get("index").and_then(|i| i.as_u64()).unwrap_or(0) as u32;
-                let arguments = v
-                    .pointer("/delta/message/tool_calls/function/arguments")
-                    .and_then(|a| a.as_str())
-                    .unwrap_or("")
-                    .to_owned();
-
-                Ok(Some(ChatCompletionChunk {
-                    id: String::new(),
-                    object: "chat.completion.chunk".to_owned(),
-                    created: unix_timestamp_secs(),
-                    model: String::new(),
-                    choices: vec![StreamChoice {
-                        index: 0,
-                        delta: StreamDelta {
-                            role: None,
-                            content: None,
-                            tool_calls: Some(vec![StreamToolCall {
-                                index,
-                                id: None,
-                                call_type: None,
-                                function: Some(StreamFunctionCall {
-                                    name: None,
-                                    arguments: Some(arguments),
-                                }),
-                            }]),
-                            function_call: None,
-                            refusal: None,
-                            reasoning_content: None,
-                        },
-                        finish_reason: None,
-                    }],
-                    usage: None,
-                    system_fingerprint: None,
-                    service_tier: None,
-                }))
-            }
-
-            "tool-call-end" => Ok(None),
-
-            "message-end" => {
-                let finish_reason = v
-                    .pointer("/delta/finish_reason")
-                    .and_then(|r| r.as_str())
-                    .map(map_cohere_finish_reason);
-
-                let usage = extract_cohere_stream_usage(&v);
-
-                Ok(Some(ChatCompletionChunk {
-                    id: String::new(),
-                    object: "chat.completion.chunk".to_owned(),
-                    created: unix_timestamp_secs(),
-                    model: String::new(),
-                    choices: vec![StreamChoice {
-                        index: 0,
-                        delta: StreamDelta {
-                            role: None,
-                            content: None,
-                            tool_calls: None,
-                            function_call: None,
-                            refusal: None,
-                            reasoning_content: None,
-                        },
-                        finish_reason,
-                    }],
-                    usage,
-                    system_fingerprint: None,
-                    service_tier: None,
-                }))
-            }
-
-            _ => Ok(None),
-        }
+        Ok(match event_type {
+            "message-start" => Some(cohere_message_start_chunk(&v)),
+            "content-delta" => Some(cohere_content_delta_chunk(&v)),
+            "tool-call-start" => Some(cohere_tool_call_start_chunk(&v)),
+            "tool-call-delta" => Some(cohere_tool_call_delta_chunk(&v)),
+            "message-end" => Some(cohere_message_end_chunk(&v)),
+            _ => None,
+        })
     }
 
     /// Normalize a Cohere v2 `/chat` response to OpenAI chat completion format.
@@ -322,13 +152,7 @@ impl Provider for CohereProvider {
 
         let id = body.get("id").cloned().unwrap_or_else(|| Value::String(String::new()));
 
-        let finish_reason_raw = body.get("finish_reason").and_then(Value::as_str).unwrap_or("COMPLETE");
-        let finish_reason = match finish_reason_raw {
-            "COMPLETE" => "stop",
-            "MAX_TOKENS" => "length",
-            "TOOL_CALL" => "tool_calls",
-            other => other,
-        };
+        let finish_reason = normalize_cohere_response_finish_reason(body);
 
         let content_blocks = body.pointer("/message/content").and_then(Value::as_array).cloned();
 
@@ -400,6 +224,126 @@ impl Provider for CohereProvider {
         });
 
         Ok(())
+    }
+}
+
+fn cohere_message_start_chunk(event: &Value) -> ChatCompletionChunk {
+    let id = event.get("id").and_then(Value::as_str).unwrap_or("").to_owned();
+    let role = event
+        .pointer("/delta/message/role")
+        .and_then(Value::as_str)
+        .unwrap_or("assistant")
+        .to_owned();
+    let delta = StreamDelta {
+        role: Some(role),
+        ..Default::default()
+    };
+    cohere_stream_chunk(id, delta, None, None)
+}
+
+fn cohere_content_delta_chunk(event: &Value) -> ChatCompletionChunk {
+    let text = event
+        .pointer("/delta/message/content/text")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_owned();
+    let delta = StreamDelta {
+        content: Some(text),
+        ..Default::default()
+    };
+    cohere_stream_chunk(String::new(), delta, None, None)
+}
+
+fn cohere_tool_call_start_chunk(event: &Value) -> ChatCompletionChunk {
+    let index = event.get("index").and_then(Value::as_u64).unwrap_or(0) as u32;
+    let tool_id = event
+        .pointer("/delta/message/tool_calls/id")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_owned();
+    let tool_name = event
+        .pointer("/delta/message/tool_calls/function/name")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_owned();
+    let delta = StreamDelta {
+        tool_calls: Some(vec![StreamToolCall {
+            index,
+            id: Some(tool_id),
+            call_type: Some(crate::types::ToolType::Function),
+            function: Some(StreamFunctionCall {
+                name: Some(tool_name),
+                arguments: None,
+            }),
+        }]),
+        ..Default::default()
+    };
+    cohere_stream_chunk(String::new(), delta, None, None)
+}
+
+fn cohere_tool_call_delta_chunk(event: &Value) -> ChatCompletionChunk {
+    let index = event.get("index").and_then(Value::as_u64).unwrap_or(0) as u32;
+    let arguments = event
+        .pointer("/delta/message/tool_calls/function/arguments")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_owned();
+    let delta = StreamDelta {
+        tool_calls: Some(vec![StreamToolCall {
+            index,
+            id: None,
+            call_type: None,
+            function: Some(StreamFunctionCall {
+                name: None,
+                arguments: Some(arguments),
+            }),
+        }]),
+        ..Default::default()
+    };
+    cohere_stream_chunk(String::new(), delta, None, None)
+}
+
+fn cohere_message_end_chunk(event: &Value) -> ChatCompletionChunk {
+    let finish_reason = event
+        .pointer("/delta/finish_reason")
+        .and_then(Value::as_str)
+        .map(map_cohere_finish_reason);
+    cohere_stream_chunk(
+        String::new(),
+        StreamDelta::default(),
+        finish_reason,
+        extract_cohere_stream_usage(event),
+    )
+}
+
+fn normalize_cohere_response_finish_reason(body: &Value) -> &str {
+    match body.get("finish_reason").and_then(Value::as_str).unwrap_or("COMPLETE") {
+        "COMPLETE" => "stop",
+        "MAX_TOKENS" => "length",
+        "TOOL_CALL" => "tool_calls",
+        other => other,
+    }
+}
+
+fn cohere_stream_chunk(
+    id: String,
+    delta: StreamDelta,
+    finish_reason: Option<FinishReason>,
+    usage: Option<Usage>,
+) -> ChatCompletionChunk {
+    ChatCompletionChunk {
+        id,
+        object: "chat.completion.chunk".to_owned(),
+        created: unix_timestamp_secs(),
+        model: String::new(),
+        choices: vec![StreamChoice {
+            index: 0,
+            delta,
+            finish_reason,
+        }],
+        usage,
+        system_fingerprint: None,
+        service_tier: None,
     }
 }
 

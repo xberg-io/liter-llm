@@ -302,7 +302,7 @@ ist = "ist"
 "poly.toml" = ["file-too-long"]
 ".alef-toml-merge-provenance.toml" = ["file-too-long"]
 # --- quality-debt baseline (generated) ---
-# 40 size/complexity findings across 32 files that predate these
+# 38 size/complexity findings across 30 files that predate these
 # metrics. Listed per file rather than switching the rules off, so the metrics still
 # fire on every file NOT listed here -- new code stays covered, and each path below is
 # one discrete unit of work.
@@ -323,14 +323,12 @@ ist = "ist"
 "crates/liter-llm/src/client/llm_config.rs" = ["cyclomatic-complexity", "function-too-long"]
 "crates/liter-llm/src/client/managed.rs" = ["cyclomatic-complexity", "function-too-long"]
 "crates/liter-llm/src/client/mod.rs" = ["file-too-long"]
-"crates/liter-llm/src/provider/cohere.rs" = ["function-too-long"]
 "crates/liter-llm/src/provider/mod.rs" = ["cyclomatic-complexity", "file-too-long"]
 "crates/liter-llm/src/provider/outbound_policy.rs" = ["file-too-long"]
 "crates/liter-llm/src/realtime/openai.rs" = ["function-too-long"]
 "crates/liter-llm/src/tests.rs" = ["file-too-long"]
 "crates/liter-llm/src/tower/cache.rs" = ["file-too-long", "function-too-long"]
 "crates/liter-llm/src/tower/cache_singleflight.rs" = ["file-too-long"]
-"crates/liter-llm/src/tower/fallback_chain.rs" = ["function-too-long"]
 "crates/liter-llm/src/tower/guardrail.rs" = ["file-too-long", "function-too-long"]
 "crates/liter-llm/src/tower/health.rs" = ["file-too-long"]
 "crates/liter-llm/src/tower/idempotency.rs" = ["file-too-long", "function-too-long"]
