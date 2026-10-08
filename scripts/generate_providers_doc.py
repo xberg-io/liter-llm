@@ -50,94 +50,112 @@ def endpoint_cell(provider: dict[str, Any], endpoint: str) -> str:
     return CHECK if endpoint in endpoints else DASH
 
 
+def providers_header(count: int) -> list[str]:
+    """Build the page metadata and introduction."""
+    return [
+        "---",
+        f'description: "Complete list of {count} supported LLM providers"',
+        'title: "Supported Providers"',
+        "---",
+        "",
+        (
+            f"Liter-llm supports **{count} providers** out of the box. "
+            "Route requests to any provider using the `provider/model` prefix convention "
+            "-- for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` "
+            "routes to Anthropic. No extra configuration is needed beyond setting the "
+            "provider's API key."
+        ),
+        "",
+    ]
+
+
+def providers_table(providers: list[dict[str, Any]]) -> list[str]:
+    """Build the provider capability table."""
+    lines = [
+        "| Provider | Prefix | Chat | Embeddings | Image | Audio | Moderation |",
+        "| --- | --- | :---: | :---: | :---: | :---: | :---: |",
+    ]
+    for provider in providers:
+        cells = [endpoint_cell(provider, endpoint) for endpoint in ENDPOINT_COLUMNS]
+        lines.append(f"| {provider['display_name']} | {provider_prefix(provider)} | {' | '.join(cells)} |")
+    return [*lines, "", f"*{len(providers)} providers total.*", ""]
+
+
+def usage_section() -> list[str]:
+    """Build the routing examples."""
+    return [
+        "## Usage",
+        "",
+        "Use any provider by prefixing the model name with the provider's routing prefix:",
+        "",
+        "```python",
+        "from liter_llm import LiterLLM",
+        "",
+        "client = LiterLLM()",
+        "",
+        "# OpenAI",
+        'response = await client.chat("openai/gpt-4o", messages=[',
+        '    {"role": "user", "content": "Hello!"}',
+        "])",
+        "",
+        "# Anthropic",
+        'response = await client.chat("anthropic/claude-3-opus", messages=[',
+        '    {"role": "user", "content": "Hello!"}',
+        "])",
+        "",
+        "# Groq",
+        'response = await client.chat("groq/llama3-70b", messages=[',
+        '    {"role": "user", "content": "Hello!"}',
+        "])",
+        "```",
+        "",
+    ]
+
+
+def custom_provider_section() -> list[str]:
+    """Build the custom-provider example."""
+    return [
+        "## Custom Providers",
+        "",
+        "Any OpenAI-compatible API can be used as a custom provider by setting the base URL and API key directly:",
+        "",
+        "```python",
+        'response = await client.chat("custom/my-model",',
+        '    base_url="https://my-api.example.com/v1",',
+        '    api_key="my-key",',
+        "    messages=[",
+        '        {"role": "user", "content": "Hello!"}',
+        "    ]",
+        ")",
+        "```",
+        "",
+    ]
+
+
+def provider_registry_section() -> list[str]:
+    """Build the registry source link."""
+    return [
+        "## Provider Registry",
+        "",
+        (
+            "The full provider registry with base URLs, auth configuration, and model "
+            "mappings is available at [schemas/providers.json]"
+            "(https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)."
+        ),
+        "",
+    ]
+
+
 def generate_markdown(providers: list[dict[str, Any]]) -> str:
     """Generate the full providers.md content."""
-    sorted_providers = sorted(providers, key=lambda p: p["display_name"].lower())
-    count = len(sorted_providers)
-
-    lines: list[str] = []
-
-    lines.append("---")
-    lines.append(f'description: "Complete list of {count} supported LLM providers"')
-    lines.append('title: "Supported Providers"')
-    lines.append("---")
-    lines.append("")
-
-    lines.append(
-        f"Liter-llm supports **{count} providers** out of the box. "
-        "Route requests to any provider using the `provider/model` prefix convention "
-        "-- for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` "
-        "routes to Anthropic. No extra configuration is needed beyond setting the "
-        "provider's API key."
-    )
-    lines.append("")
-
-    lines.append("| Provider | Prefix | Chat | Embeddings | Image | Audio | Moderation |")
-    lines.append("| --- | --- | :---: | :---: | :---: | :---: | :---: |")
-
-    for p in sorted_providers:
-        display = p["display_name"]
-        prefix = provider_prefix(p)
-        cells = [endpoint_cell(p, ep) for ep in ENDPOINT_COLUMNS]
-        row = f"| {display} | {prefix} | {' | '.join(cells)} |"
-        lines.append(row)
-
-    lines.append("")
-    lines.append(f"*{count} providers total.*")
-    lines.append("")
-
-    lines.append("## Usage")
-    lines.append("")
-    lines.append("Use any provider by prefixing the model name with the provider's routing prefix:")
-    lines.append("")
-    lines.append("```python")
-    lines.append("from liter_llm import LiterLLM")
-    lines.append("")
-    lines.append("client = LiterLLM()")
-    lines.append("")
-    lines.append("# OpenAI")
-    lines.append('response = await client.chat("openai/gpt-4o", messages=[')
-    lines.append('    {"role": "user", "content": "Hello!"}')
-    lines.append("])")
-    lines.append("")
-    lines.append("# Anthropic")
-    lines.append('response = await client.chat("anthropic/claude-3-opus", messages=[')
-    lines.append('    {"role": "user", "content": "Hello!"}')
-    lines.append("])")
-    lines.append("")
-    lines.append("# Groq")
-    lines.append('response = await client.chat("groq/llama3-70b", messages=[')
-    lines.append('    {"role": "user", "content": "Hello!"}')
-    lines.append("])")
-    lines.append("```")
-    lines.append("")
-
-    lines.append("## Custom Providers")
-    lines.append("")
-    lines.append(
-        "Any OpenAI-compatible API can be used as a custom provider by setting the base URL and API key directly:"
-    )
-    lines.append("")
-    lines.append("```python")
-    lines.append('response = await client.chat("custom/my-model",')
-    lines.append('    base_url="https://my-api.example.com/v1",')
-    lines.append('    api_key="my-key",')
-    lines.append("    messages=[")
-    lines.append('        {"role": "user", "content": "Hello!"}')
-    lines.append("    ]")
-    lines.append(")")
-    lines.append("```")
-    lines.append("")
-
-    lines.append("## Provider Registry")
-    lines.append("")
-    lines.append(
-        "The full provider registry with base URLs, auth configuration, and model "
-        "mappings is available at "
-        "[schemas/providers.json]"
-        "(https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)."
-    )
-    lines.append("")
+    sorted_providers = sorted(providers, key=lambda provider: provider["display_name"].lower())
+    lines = [
+        *providers_header(len(sorted_providers)),
+        *providers_table(sorted_providers),
+        *usage_section(),
+        *custom_provider_section(),
+        *provider_registry_section(),
+    ]
 
     return "\n".join(lines)
 
