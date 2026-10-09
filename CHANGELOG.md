@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-10-09
+
+Provider correctness, safer transport errors, refreshed catalog metadata, and portable Go release
+assets. Generated with Alef 0.107.7.
+
+### Added
+
+- Go setup supports explicit static linking, offline native-library directories, and Linux musl
+  targets; release builds now publish stripped musl archives (#267).
+- Catalog responses expose provenance and whether model lookup was exact or used a fallback (#260,
+  #262).
+- Network failures have stable cross-language error code 109, including `ErrNetwork` in Go (#258).
+
+### Fixed
+
+- Gemini and Vertex embedding requests preserve every input, requested dimensions, and response
+  order (#268).
+- OpenAI-compatible streams request usage by default, while preserving explicit caller overrides
+  (#266).
+- Anthropic uses native JSON-schema output configuration, preserves caller system-message order,
+  reports ignored strict/seed options, and derives the default output limit from catalog metadata
+  (#264, #265).
+- OpenAI reasoning requests use `max_completion_tokens`; custom endpoints retain the native Google,
+  Vertex, Bedrock, Azure, and Anthropic transforms (#256, #264).
+- Retry classification handles quota exhaustion, 529 responses, 503 retry hints,
+  `retry-after-ms`, HTTP dates, and context-window error variants correctly (#257).
+- Provider error bodies redact configured secrets, network errors omit request URLs, and custom
+  base URLs append paths before query strings (#259).
+- Gemini and Anthropic usage maps cached, cache-creation, tool-use, and thinking tokens into the
+  public usage fields used for pricing (#254, #255).
+- Catalog refresh uses isolated atomic downloads with integrity checks, layers overlays, refreshes
+  the embedded snapshot, and corrects model modes and embedding dimensions (#261, #262, #263).
+
+### Changed
+
+- Paid down the remaining tracked provider, fallback, and generated-documentation lint complexity
+  debt (#201).
+- Completed the ai-rulez integration tracker for usage, pricing, errors, routing, and distribution
+  (#269).
+
 ## [2.2.0] - 2026-10-08
 
 Gemini thinking-token accounting and the corresponding cross-language usage API. Generated with

@@ -11,4 +11,4 @@
 # Do not hand-edit; it is rewritten by `alef generate`/`alef all` on every successful run.
 
 [crates]
-liter-llm = "d587f02305da2a517bc679e364fdfae796fd983d745633e7f2fd68739c078468"
+liter-llm = "518d60302928c3d38ef78f79b2399170e20aaf2247e4ea08d2795d08611e1508"

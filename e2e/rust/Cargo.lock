@@ -1705,7 +1705,7 @@ checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
 
 [[package]]
 name = "liter-llm"
-version = "2.2.0"
+version = "2.2.1"
 dependencies = [
  "ahash",
  "arc-swap",
@@ -1718,6 +1718,9 @@ dependencies = [
  "futures-core",
  "futures-util",
  "gcp_auth",
+ "hex",
+ "http",
+ "httpdate",
  "jsonwebtoken",
  "memchr",
  "opendal",
@@ -1732,6 +1735,7 @@ dependencies = [
  "secrecy",
  "serde",
  "serde_json",
+ "sha2",
  "thiserror",
  "tokenizers",
  "tokio",
@@ -1746,7 +1750,7 @@ dependencies = [
 
 [[package]]
 name = "liter_llm-e2e-rust"
-version = "2.2.0"
+version = "2.2.1"
 dependencies = [
  "axum",
  "brotli",
