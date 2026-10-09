@@ -205,6 +205,11 @@ fn flatten_model(model: &CatalogModelRow) -> ModelPricing {
     };
 
     ModelPricing {
+        price_known: Some(model.pricing.as_ref().is_some_and(|pricing| {
+            pricing.input_cost_per_token != 0.0
+                || pricing.output_cost_per_token != 0.0
+                || model.mode.as_deref() == Some("embedding")
+        })),
         input_cost_per_token,
         output_cost_per_token,
         cache_read_input_token_cost,
@@ -279,6 +284,9 @@ fn catalog_info_from_str(catalog_json: &str, origin: &str) -> std::result::Resul
 #[derive(Debug, Clone, Default, Deserialize)]
 #[cfg_attr(alef, alef(skip))]
 pub struct ModelPricing {
+    /// Whether the catalog has meaningful per-token pricing for this model.
+    #[serde(default)]
+    pub price_known: Option<bool>,
     /// Cost in USD per input (prompt) token.
     pub input_cost_per_token: f64,
     /// Cost in USD per output (completion) token.  Zero for embedding models.
@@ -397,6 +405,8 @@ pub struct ModelInfo {
     pub matched_key: String,
     /// Whether the requested model key matched the catalog exactly.
     pub exact: bool,
+    /// Whether the per-token price is known; false prevents cost estimation.
+    pub price_known: bool,
     /// Cost in USD per input (prompt) token.
     pub input_cost_per_token: f64,
     /// Cost in USD per output (completion) token.
@@ -481,6 +491,7 @@ impl From<&ModelPricing> for ModelInfo {
         ModelInfo {
             matched_key: String::new(),
             exact: false,
+            price_known: pricing.price_known.unwrap_or(true),
             input_cost_per_token: pricing.input_cost_per_token,
             output_cost_per_token: pricing.output_cost_per_token,
             cache_read_input_token_cost: pricing.cache_read_input_token_cost,
@@ -589,6 +600,9 @@ fn compute_cost_in(
     completion_tokens: u64,
 ) -> Option<f64> {
     let (_, pricing) = lookup_in(reg, model)?;
+    if pricing.price_known == Some(false) {
+        return None;
+    }
     Some(compute_cost(
         pricing,
         prompt_tokens,

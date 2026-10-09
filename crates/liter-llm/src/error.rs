@@ -152,6 +152,11 @@ pub enum LiterLlmError {
     #[cfg_attr(alef, alef(error_code = 119))]
     #[error("idempotency key '{key}' is currently in-flight; retry after the first request completes")]
     IdempotencyInFlight { key: String },
+
+    /// The upstream provider rejected the request because the account quota is exhausted.
+    #[cfg_attr(alef, alef(error_code = 120))]
+    #[error("provider quota exceeded: {message}")]
+    ProviderQuotaExceeded { message: String, status: u16 },
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -199,6 +204,7 @@ impl LiterLlmError {
             Self::OutboundForbidden { .. } => 0,
             Self::IdempotencyConflict { .. } => 409,
             Self::IdempotencyInFlight { .. } => 409,
+            Self::ProviderQuotaExceeded { status, .. } => *status,
         }
     }
 
@@ -262,6 +268,7 @@ impl LiterLlmError {
             Self::OutboundForbidden { .. } => "OutboundForbidden",
             Self::IdempotencyConflict { .. } => "IdempotencyConflict",
             Self::IdempotencyInFlight { .. } => "IdempotencyInFlight",
+            Self::ProviderQuotaExceeded { .. } => "ProviderQuotaExceeded",
         }
     }
 
@@ -341,6 +348,10 @@ impl LiterLlmError {
             },
             Self::IdempotencyConflict { key } => Self::IdempotencyConflict { key: key.clone() },
             Self::IdempotencyInFlight { key } => Self::IdempotencyInFlight { key: key.clone() },
+            Self::ProviderQuotaExceeded { message, status } => Self::ProviderQuotaExceeded {
+                message: message.clone(),
+                status: *status,
+            },
         }
     }
 
@@ -358,8 +369,13 @@ impl LiterLlmError {
 
         match status {
             401 | 403 => Self::Authentication { message, status },
-            429 if code.as_deref() == Some("insufficient_quota") => Self::BudgetExceeded { message, model: None },
-            429 | 529 => Self::RateLimited { message, retry_after },
+            429 if code.as_deref() == Some("insufficient_quota") => Self::ProviderQuotaExceeded { message, status },
+            429 => Self::RateLimited { message, retry_after },
+            529 => Self::ServiceUnavailable {
+                message,
+                status,
+                retry_after,
+            },
             400 | 422 => {
                 if code.as_deref() == Some("context_length_exceeded") {
                     Self::ContextWindowExceeded { message }

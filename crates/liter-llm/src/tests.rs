@@ -1361,8 +1361,23 @@ mod error_tests {
             r#"{"error":{"message":"quota exhausted","code":"insufficient_quota"}}"#,
             Some(std::time::Duration::from_secs(7)),
         );
-        assert!(matches!(err, LiterLlmError::BudgetExceeded { .. }));
+        assert!(matches!(err, LiterLlmError::ProviderQuotaExceeded { status: 429, .. }));
+        assert_eq!(err.status_code(), 429);
         assert!(!err.is_transient());
+    }
+
+    #[test]
+    fn anthropic_overload_preserves_529_status() {
+        let err = LiterLlmError::from_status(529, "overloaded", Some(std::time::Duration::from_secs(2)));
+        assert!(matches!(
+            err,
+            LiterLlmError::ServiceUnavailable {
+                status: 529,
+                retry_after: Some(_),
+                ..
+            }
+        ));
+        assert_eq!(err.status_code(), 529);
     }
 
     #[test]

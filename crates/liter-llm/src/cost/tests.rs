@@ -340,13 +340,14 @@ fn completion_cost_uses_tier_above_threshold() {
 
 /// An unpriced catalog model (no `pricing` object upstream) still resolves
 /// through `model_info` with its limits/mode/capabilities populated, and
-/// `completion_cost` treats it as free (`Some(0.0)`) rather than unknown.
+/// `completion_cost` treats it as unknown rather than silently free.
 #[test]
-fn unpriced_model_resolves_with_zero_cost_and_full_metadata() {
+fn unpriced_model_resolves_with_unknown_cost_and_full_metadata() {
     let info = model_info("agentrouter/claude-opus-4-8").expect("unpriced catalog model must still resolve");
 
     assert_eq!(info.input_cost_per_token, 0.0);
     assert_eq!(info.output_cost_per_token, 0.0);
+    assert!(!info.price_known);
     assert_eq!(info.max_tokens, Some(1_000_000));
     assert_eq!(
         info.max_input_tokens,
@@ -364,7 +365,21 @@ fn unpriced_model_resolves_with_zero_cost_and_full_metadata() {
     assert_eq!(info.supports_prompt_caching, Some(false));
 
     let cost = completion_cost("agentrouter/claude-opus-4-8", 1_000, 500);
-    assert_eq!(cost, Some(0.0), "unpriced model must cost exactly zero, not be unknown");
+    assert_eq!(cost, None, "unpriced model must not be presented as free");
+}
+
+#[test]
+fn zero_priced_non_embedding_models_are_marked_unknown() {
+    for model in [
+        "gpt-image-1",
+        "veo-3.1-generate-preview",
+        "lyria-3-clip-preview",
+        "gemma-4-26b-a4b-it",
+    ] {
+        let info = model_info(model).unwrap_or_else(|| panic!("catalog model {model} must resolve"));
+        assert!(!info.price_known, "{model} must not be presented as free");
+        assert_eq!(completion_cost(model, 1_000_000, 1_000_000), None);
+    }
 }
 
 /// A primary-provider ("openai") model resolves both via its combined

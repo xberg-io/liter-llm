@@ -622,9 +622,9 @@ pub use resolver_impl::{cached_guarded_resolver, guarded_resolver};
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
 /// Apply authenticated outbound-request protections to a native HTTP client.
 ///
-/// The returned builder validates every resolved address and redirect target.
-/// Cross-origin redirects are rejected so credentials in custom headers cannot
-/// be forwarded to a different origin. Active policies also disable proxies;
+/// The returned builder validates every resolved address and disables redirects
+/// so credentials and request bodies cannot be forwarded to another origin.
+/// Active policies also disable proxies;
 /// otherwise the proxy could resolve the target outside the guarded resolver.
 ///
 /// Callers must validate each initial request URL with [`validate_outbound_url_sync`]
@@ -636,7 +636,7 @@ pub fn configure_outbound_client_builder(
     mut builder: reqwest::ClientBuilder,
     dns_cache_ttl: Option<std::time::Duration>,
 ) -> reqwest::ClientBuilder {
-    builder = builder.redirect(outbound_redirect_policy(false));
+    builder = builder.redirect(reqwest::redirect::Policy::none());
     if !matches!(current_policy(), OutboundPolicy::Off) {
         builder = builder.no_proxy();
         builder = builder.dns_resolver(cached_guarded_resolver(dns_cache_ttl));
@@ -1389,6 +1389,39 @@ mod tests {
             "allowed source must receive exactly the initial request"
         );
         assert!(!target.finish(), "blocked redirect target must not receive a request");
+    }
+
+    #[tokio::test]
+    #[serial(outbound_policy)]
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    async fn authenticated_client_never_follows_redirects_when_policy_is_off() {
+        let target = OneShotServer::start("HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n{}".to_string());
+        let target_url = format!("http://target.test:{}/done", target.address.port());
+        let source = OneShotServer::start(format!(
+            "HTTP/1.1 307 Temporary Redirect\r\nLocation: {target_url}\r\nContent-Length: 0\r\n\r\n"
+        ));
+        let source_url = format!("http://source.test:{}/start", source.address.port());
+        set_outbound_policy(OutboundPolicy::Off);
+        let client = configure_outbound_client_builder(
+            reqwest::Client::builder()
+                .resolve("source.test", source.address)
+                .resolve("target.test", target.address),
+            None,
+        )
+        .build()
+        .expect("authenticated client");
+
+        let response = client
+            .post(source_url)
+            .header("authorization", "Bearer secret-token")
+            .body("secret prompt")
+            .send()
+            .await
+            .expect("redirect response");
+
+        assert_eq!(response.status(), reqwest::StatusCode::TEMPORARY_REDIRECT);
+        assert!(source.finish(), "source must receive the initial request");
+        assert!(!target.finish(), "redirect target must not receive credentials or body");
     }
 
     #[tokio::test]

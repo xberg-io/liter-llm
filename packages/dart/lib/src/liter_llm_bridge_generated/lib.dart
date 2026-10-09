@@ -10,7 +10,17 @@ part 'lib.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `try_convert_assistant_content_from_core`, `try_convert_assistant_part_from_core`, `try_convert_auth_header_format_from_core`, `try_convert_auth_type_from_core`, `try_convert_batch_status_from_core`, `try_convert_cache_backend_from_core`, `try_convert_content_part_from_core`, `try_convert_embedding_content_part_from_core`, `try_convert_embedding_format_from_core`, `try_convert_embedding_input_from_core`, `try_convert_enforcement_from_core`, `try_convert_file_purpose_from_core`, `try_convert_finish_reason_from_core`, `try_convert_image_detail_from_core`, `try_convert_message_from_core`, `try_convert_modality_from_core`, `try_convert_moderation_input_from_core`, `try_convert_ocr_document_from_core`, `try_convert_reasoning_effort_from_core`, `try_convert_refresh_outcome_from_core`, `try_convert_rerank_document_from_core`, `try_convert_response_format_from_core`, `try_convert_stop_sequence_from_core`, `try_convert_stream_format_from_core`, `try_convert_tool_choice_from_core`, `try_convert_tool_choice_mode_from_core`, `try_convert_tool_type_from_core`, `try_convert_user_content_from_core`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `IntentPrototype`, `SingleflightResult`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+
+/// Create a client from binding-friendly options.
+///
+/// **Errors:**
+///
+/// Returns `LiterLlmError.BadRequest` for a zero or platform-overflowing
+/// `max_response_bytes`, plus the errors documented by `create_client`.
+Future<DefaultClient> createClientWithOptions({
+  required ClientOptions options,
+}) => RustLib.instance.api.crateCreateClientWithOptions(options: options);
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -353,6 +363,9 @@ Future<void> checkBound({
 /// present and no crypto provider installation is needed.
 Future<void> ensureCryptoProvider() =>
     RustLib.instance.api.crateEnsureCryptoProvider();
+
+Future<ClientOptions> createClientOptionsFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateClientOptionsFromJson(json: json);
 
 Future<SystemMessage> createSystemMessageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateSystemMessageFromJson(json: json);
@@ -1940,6 +1953,57 @@ enum CircuitState {
   halfOpen,
 }
 
+/// Binding-friendly options for constructing a client without an unbounded response body.
+class ClientOptions {
+  /// Provider API key; an empty value omits the authentication header.
+  final String apiKey;
+
+  /// Optional provider base URL override.
+  final String? baseUrl;
+
+  /// Optional request timeout in seconds.
+  final PlatformInt64? timeoutSecs;
+
+  /// Optional retry count for retryable provider failures.
+  final PlatformInt64? maxRetries;
+
+  /// Optional maximum number of response bytes retained in memory.
+  final PlatformInt64? maxResponseBytes;
+
+  /// Optional model or provider hint used for initial provider selection.
+  final String? modelHint;
+
+  const ClientOptions({
+    required this.apiKey,
+    this.baseUrl,
+    this.timeoutSecs,
+    this.maxRetries,
+    this.maxResponseBytes,
+    this.modelHint,
+  });
+
+  @override
+  int get hashCode =>
+      apiKey.hashCode ^
+      baseUrl.hashCode ^
+      timeoutSecs.hashCode ^
+      maxRetries.hashCode ^
+      maxResponseBytes.hashCode ^
+      modelHint.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ClientOptions &&
+          runtimeType == other.runtimeType &&
+          apiKey == other.apiKey &&
+          baseUrl == other.baseUrl &&
+          timeoutSecs == other.timeoutSecs &&
+          maxRetries == other.maxRetries &&
+          maxResponseBytes == other.maxResponseBytes &&
+          modelHint == other.modelHint;
+}
+
 /// Breakdown of tokens used in the completion portion of a request.
 ///
 /// `reasoning_tokens` is included in `Usage::completion_tokens` — it is not
@@ -3110,6 +3174,12 @@ sealed class LiterLlmError with _$LiterLlmError {
   const factory LiterLlmError.idempotencyInFlight({required String key}) =
       LiterLlmError_IdempotencyInFlight;
 
+  /// The upstream provider rejected the request because the account quota is exhausted.
+  const factory LiterLlmError.providerQuotaExceeded({
+    required String message,
+    required PlatformInt64 status,
+  }) = LiterLlmError_ProviderQuotaExceeded;
+
   /// Return the OpenTelemetry `error.type` string for this error variant.
   ///
   /// Used by the tracing middleware to record the `error.type` span attribute
@@ -3498,6 +3568,9 @@ class ModelInfo {
   /// Whether the requested model key matched the catalog exactly.
   final bool exact;
 
+  /// Whether the per-token price is known; false prevents cost estimation.
+  final bool priceKnown;
+
   /// Cost in USD per input (prompt) token.
   final double inputCostPerToken;
 
@@ -3559,6 +3632,7 @@ class ModelInfo {
   const ModelInfo({
     required this.matchedKey,
     required this.exact,
+    required this.priceKnown,
     required this.inputCostPerToken,
     required this.outputCostPerToken,
     this.cacheReadInputTokenCost,
@@ -3584,6 +3658,7 @@ class ModelInfo {
   int get hashCode =>
       matchedKey.hashCode ^
       exact.hashCode ^
+      priceKnown.hashCode ^
       inputCostPerToken.hashCode ^
       outputCostPerToken.hashCode ^
       cacheReadInputTokenCost.hashCode ^
@@ -3611,6 +3686,7 @@ class ModelInfo {
           runtimeType == other.runtimeType &&
           matchedKey == other.matchedKey &&
           exact == other.exact &&
+          priceKnown == other.priceKnown &&
           inputCostPerToken == other.inputCostPerToken &&
           outputCostPerToken == other.outputCostPerToken &&
           cacheReadInputTokenCost == other.cacheReadInputTokenCost &&

@@ -178,7 +178,9 @@ jobs:
             --arg tag "$TAG" \
             '.["$provenance"].generated_by_commit = $commit | .["$provenance"].release_tag = $tag' \
             schemas/catalog.json > /tmp/catalog.json
-          gh release upload "$TAG" /tmp/catalog.json --clobber
+          cd /tmp
+          sha256sum catalog.json > catalog.json.sha256
+          gh release upload "$TAG" catalog.json catalog.json.sha256 --clobber
         shell: bash
 
   # ~keep Every job that publishes to a registry or uploads a release asset must gate on
@@ -974,18 +976,14 @@ jobs:
         # cdylib/staticlib it leaves in target/ also feed the C FFI staging below.
         run: alef publish build --lang go --target ${{ matrix.target }}
       - name: Strip static archive debug symbols
-        if: runner.os != 'Windows'
+        if: runner.os == 'Linux'
         shell: bash
         env:
           TARGET: ${{ matrix.target }}
         run: |
           archive="target/${TARGET}/release/libliter_llm_ffi.a"
           test -f "$archive"
-          if [ "${{ runner.os }}" = "macOS" ]; then
-            strip -S "$archive"
-          else
-            strip -g "$archive"
-          fi
+          strip -g "$archive"
       - name: Package Go FFI
         shell: bash
         run: alef publish package --lang go --target ${{ matrix.target }} -o go-ffi-dist

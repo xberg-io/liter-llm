@@ -110,6 +110,25 @@ fn assert_body_limit(error: LiterLlmError, limit: usize) {
 
 #[tokio::test]
 #[serial(outbound_policy)]
+async fn successful_non_json_response_is_a_serialization_error() {
+    set_outbound_policy(OutboundPolicy::Off);
+    let (address, server) =
+        one_shot_server("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 13\r\n\r\n<html></html>".into());
+    let result = get_json_raw_bounded(
+        &reqwest::Client::new(),
+        &format!("http://{address}/"),
+        None,
+        &[],
+        0,
+        None,
+    )
+    .await;
+    server.join().expect("join malformed response server");
+    assert!(matches!(result, Err(LiterLlmError::Serialization(_))));
+}
+
+#[tokio::test]
+#[serial(outbound_policy)]
 async fn should_enforce_exact_success_and_final_error_bounds_on_all_six_readers() {
     set_outbound_policy(OutboundPolicy::Off);
     let operations = [

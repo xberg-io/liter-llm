@@ -16,6 +16,51 @@ use crate::client::{ClientConfigBuilder, FileConfig, config_file::FileProviderCo
 use crate::error::{LiterLlmError, Result};
 use crate::provider::custom::register_custom_provider;
 
+/// Binding-friendly options for constructing a client without an unbounded response body.
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+pub struct ClientOptions {
+    /// Provider API key; an empty value omits the authentication header.
+    pub api_key: String,
+    /// Optional provider base URL override.
+    pub base_url: Option<String>,
+    /// Optional request timeout in seconds.
+    pub timeout_secs: Option<u64>,
+    /// Optional retry count for retryable provider failures.
+    pub max_retries: Option<u32>,
+    /// Optional maximum number of response bytes retained in memory.
+    pub max_response_bytes: Option<u64>,
+    /// Optional model or provider hint used for initial provider selection.
+    pub model_hint: Option<String>,
+}
+
+/// Create a client from binding-friendly options.
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] for a zero or platform-overflowing
+/// `max_response_bytes`, plus the errors documented by [`create_client`].
+#[cfg(feature = "native-http")]
+pub fn create_client_with_options(options: ClientOptions) -> Result<DefaultClient> {
+    let mut builder = ClientConfigBuilder::new(options.api_key);
+    if let Some(url) = options.base_url {
+        builder = builder.base_url(url);
+    }
+    if let Some(secs) = options.timeout_secs {
+        builder = builder.timeout(Duration::from_secs(secs));
+    }
+    if let Some(retries) = options.max_retries {
+        builder = builder.max_retries(retries);
+    }
+    if let Some(limit) = options.max_response_bytes {
+        let limit = usize::try_from(limit).map_err(|_| LiterLlmError::BadRequest {
+            message: "max_response_bytes exceeds the platform limit".into(),
+            status: 400,
+        })?;
+        builder = builder.max_response_bytes(limit)?;
+    }
+    DefaultClient::new(builder.build(), options.model_hint.as_deref())
+}
+
 /// Create a new LLM client with simple scalar configuration.
 ///
 /// This is the primary binding entry-point. All parameters except `api_key`
@@ -153,6 +198,30 @@ mod tests {
     #[test]
     fn create_client_from_json_minimal_succeeds() {
         assert!(create_client_from_json(r#"{"api_key": "sk-test"}"#).is_ok());
+    }
+
+    #[test]
+    fn create_client_from_json_accepts_response_body_limit() {
+        assert!(create_client_from_json(r#"{"api_key":"sk-test","max_response_bytes":33554432}"#).is_ok());
+    }
+
+    #[test]
+    fn create_client_from_json_rejects_zero_response_body_limit() {
+        let error = create_client_from_json(r#"{"api_key":"sk-test","max_response_bytes":0}"#)
+            .err()
+            .expect("zero must be rejected");
+        assert!(matches!(error, LiterLlmError::BadRequest { status: 400, .. }));
+    }
+
+    #[cfg(feature = "native-http")]
+    #[test]
+    fn create_client_with_options_accepts_response_body_limit() {
+        let client = create_client_with_options(ClientOptions {
+            api_key: "sk-test".into(),
+            max_response_bytes: Some(32 * 1024 * 1024),
+            ..ClientOptions::default()
+        });
+        assert!(client.is_ok());
     }
 
     #[cfg(not(all(feature = "native-http", feature = "tower")))]

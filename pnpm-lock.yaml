@@ -180,22 +180,22 @@ importers:
         version: 3.10.8(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@26.6.4)
     optionalDependencies:
       '@xberg-io/liter-llm-darwin-arm64':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:npm/darwin-arm64
       '@xberg-io/liter-llm-darwin-x64':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:npm/darwin-x64
       '@xberg-io/liter-llm-linux-arm64-gnu':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:npm/linux-arm64-gnu
       '@xberg-io/liter-llm-linux-x64-gnu':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:npm/linux-x64-gnu
       '@xberg-io/liter-llm-win32-arm64-msvc':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:npm/win32-arm64-msvc
       '@xberg-io/liter-llm-win32-x64-msvc':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:npm/win32-x64-msvc
 
   crates/liter-llm-node/npm/darwin-arm64: {}
@@ -237,10 +237,10 @@ importers:
         specifier: file:../../crates/liter-llm-wasm/pkg/nodejs
         version: file:crates/liter-llm-wasm/pkg/nodejs
       rollup:
-        specifier: ^4.64.3
+        specifier: ^4.63.1
         version: 4.64.3
       vitest:
-        specifier: ^5.0.3
+        specifier: ^5.0.0
         version: 5.0.3(@types/node@26.6.4)(@vitest/coverage-v8@5.0.3)(vite@7.3.5(@types/node@26.6.4))
 
 packages:

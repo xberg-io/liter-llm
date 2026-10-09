@@ -9,7 +9,7 @@ fn sensitive_header_values<'a>(
     auth_header: Option<(&'a str, &'a str)>,
     extra_headers: &'a [(&'a str, &'a str)],
 ) -> Vec<&'a str> {
-    auth_header
+    let mut values: Vec<&str> = auth_header
         .into_iter()
         .chain(extra_headers.iter().copied())
         .filter(|(name, _)| {
@@ -19,7 +19,14 @@ fn sensitive_header_values<'a>(
         })
         .map(|(_, value)| value)
         .filter(|value| !value.is_empty())
-        .collect()
+        .collect();
+    let bearer_tokens: Vec<&str> = values
+        .iter()
+        .filter_map(|value| value.strip_prefix("Bearer "))
+        .filter(|value| !value.is_empty())
+        .collect();
+    values.extend(bearer_tokens);
+    values
 }
 
 fn redact_sensitive_values(message: &str, sensitive_values: &[&str]) -> String {
@@ -173,9 +180,6 @@ async fn read_limited_response_body(mut response: reqwest::Response, limit: usiz
 }
 
 async fn read_response_json(response: reqwest::Response, limit: Option<usize>) -> Result<serde_json::Value> {
-    if limit.is_none() {
-        return response.json().await.map_err(LiterLlmError::from);
-    }
     let body = read_response_body(response, limit).await?;
     serde_json::from_slice(&body).map_err(LiterLlmError::from)
 }
@@ -215,6 +219,15 @@ mod retry_header_tests {
         assert_eq!(
             redact_sensitive_values(message, &["sk-SECRETKEY123456"]),
             "Incorrect API key provided: [REDACTED]"
+        );
+    }
+
+    #[test]
+    fn bearer_token_is_redacted_without_its_header_prefix() {
+        let secrets = sensitive_header_values(Some(("Authorization", "Bearer sk-SECRETKEY123456")), &[]);
+        assert_eq!(
+            redact_sensitive_values("provider echoed sk-SECRETKEY123456", &secrets),
+            "provider echoed [REDACTED]"
         );
     }
 }

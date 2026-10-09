@@ -31,7 +31,7 @@ use crate::types::responses::{CreateResponseRequest, ResponseObject, ResponseStr
 use crate::types::search::{SearchRequest, SearchResponse};
 use crate::types::{
     ChatCompletionChunk, ChatCompletionRequest, ChatCompletionResponse, EmbeddingRequest, EmbeddingResponse,
-    ModelsListResponse,
+    ModelsListResponse, Usage,
 };
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -169,6 +169,48 @@ struct PreparedRequest {
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 fn str_pair(pair: &(String, String)) -> (&str, &str) {
     (pair.0.as_str(), pair.1.as_str())
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn provider_auth_header(provider: &dyn Provider, api_key: &str) -> Option<(String, String)> {
+    (!api_key.is_empty())
+        .then(|| provider.auth_header(api_key))
+        .flatten()
+        .map(|(name, value)| (name.into_owned(), value.into_owned()))
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn parse_chat_stream_event(
+    provider: &dyn Provider,
+    cumulative_usage: &std::sync::Mutex<Option<Usage>>,
+    data: &str,
+) -> Result<Option<ChatCompletionChunk>> {
+    let mut chunk = match provider.parse_stream_event(data)? {
+        Some(chunk) => chunk,
+        None => return Ok(None),
+    };
+    if provider.name() != "anthropic" {
+        return Ok(Some(chunk));
+    }
+    if let Some(usage) = chunk.usage.as_mut() {
+        let mut cumulative = cumulative_usage.lock().map_err(|_| LiterLlmError::InternalError {
+            message: "stream usage accumulator lock poisoned".into(),
+        })?;
+        let aggregate = cumulative.get_or_insert_with(Usage::default);
+        aggregate.prompt_tokens = aggregate.prompt_tokens.max(usage.prompt_tokens);
+        aggregate.completion_tokens = aggregate.completion_tokens.max(usage.completion_tokens);
+        aggregate.total_tokens = aggregate.prompt_tokens + aggregate.completion_tokens;
+        if usage.prompt_tokens_details.is_some() {
+            aggregate.prompt_tokens_details.clone_from(&usage.prompt_tokens_details);
+        }
+        if usage.completion_tokens_details.is_some() {
+            aggregate
+                .completion_tokens_details
+                .clone_from(&usage.completion_tokens_details);
+        }
+        usage.clone_from(aggregate);
+    }
+    Ok(Some(chunk))
 }
 
 /// Shallow-merge a top-level `"extra_body"` key into `body`, OpenAI-Python-SDK
@@ -795,9 +837,7 @@ impl DefaultClient {
             builder.build().map_err(LiterLlmError::from)?
         };
 
-        let cached_auth_header = provider
-            .auth_header(config.api_key.expose_secret())
-            .map(|(name, value)| (name.into_owned(), value.into_owned()));
+        let cached_auth_header = provider_auth_header(provider.as_ref(), config.api_key.expose_secret());
         let cached_extra_headers = provider
             .extra_headers()
             .iter()
@@ -843,6 +883,7 @@ impl DefaultClient {
         if let Some(ref cp) = self.config.credential_provider {
             let credential = cp.resolve().await?;
             match credential {
+                Credential::BearerToken(token) if token.expose_secret().is_empty() => Ok(None),
                 Credential::BearerToken(token) => Ok(Some((
                     "Authorization".to_owned(),
                     format!("Bearer {}", token.expose_secret()),
@@ -851,9 +892,7 @@ impl DefaultClient {
             }
         } else {
             // ~keep Auth headers must be recomputed after per-request provider resolution.
-            Ok(prov
-                .auth_header(self.config.api_key.expose_secret())
-                .map(|(name, value)| (name.into_owned(), value.into_owned())))
+            Ok(provider_auth_header(prov, self.config.api_key.expose_secret()))
         }
     }
 
@@ -1166,7 +1205,9 @@ impl LlmClient for DefaultClient {
             match prepared.provider.stream_format() {
                 provider::StreamFormat::Sse => {
                     let provider = Arc::clone(&prepared.provider);
-                    let parse_event = move |data: &str| provider.parse_stream_event(data);
+                    let cumulative_usage = std::sync::Mutex::new(None);
+                    let parse_event =
+                        move |data: &str| parse_chat_stream_event(provider.as_ref(), &cumulative_usage, data);
                     let stream = http::streaming::post_stream_bounded(
                         &self.http,
                         http::request::StreamingPost {
@@ -1580,7 +1621,9 @@ impl LlmClientRaw for DefaultClient {
             let stream = match prepared.provider.stream_format() {
                 provider::StreamFormat::Sse => {
                     let provider = Arc::clone(&prepared.provider);
-                    let parse_event = move |data: &str| provider.parse_stream_event(data);
+                    let cumulative_usage = std::sync::Mutex::new(None);
+                    let parse_event =
+                        move |data: &str| parse_chat_stream_event(provider.as_ref(), &cumulative_usage, data);
                     http::streaming::post_stream_bounded(
                         &self.http,
                         http::request::StreamingPost {
@@ -3146,5 +3189,32 @@ mod build_provider_tests {
             .expect("prepare_request should not fail");
         assert_eq!(prepared.body_json["max_tokens"], 512);
         assert!(prepared.body_json.get("max_completion_tokens").is_none());
+    }
+
+    #[test]
+    fn empty_api_key_omits_authorization_header() {
+        let config = ClientConfigBuilder::new("").load_env(false).build();
+        let client = DefaultClient::new(config, Some("openai/gpt-4o")).expect("client construction");
+        assert_eq!(client.cached_auth_header, None);
+    }
+
+    #[test]
+    fn anthropic_final_stream_usage_is_cumulative() {
+        let provider = crate::provider::anthropic::AnthropicProvider::new();
+        let cumulative = std::sync::Mutex::new(None);
+        let start = r#"{"type":"message_start","message":{"id":"msg_1","model":"claude-sonnet-4-5","usage":{"input_tokens":10,"cache_creation_input_tokens":100,"cache_read_input_tokens":200}}}"#;
+        let delta = r#"{"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":7}}"#;
+
+        parse_chat_stream_event(&provider, &cumulative, start).expect("start event");
+        let final_chunk = parse_chat_stream_event(&provider, &cumulative, delta)
+            .expect("delta event")
+            .expect("final chunk");
+        let usage = final_chunk.usage.expect("final cumulative usage");
+        assert_eq!(usage.prompt_tokens, 310);
+        assert_eq!(usage.completion_tokens, 7);
+        assert_eq!(usage.total_tokens, 317);
+        let details = usage.prompt_tokens_details.expect("cache details");
+        assert_eq!(details.cached_tokens, 200);
+        assert_eq!(details.cache_creation_tokens, 100);
     }
 }

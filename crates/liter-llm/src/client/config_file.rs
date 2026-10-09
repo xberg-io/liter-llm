@@ -48,6 +48,7 @@ pub struct FileConfig {
     pub model_hint: Option<String>,
     pub timeout_secs: Option<u64>,
     pub max_retries: Option<u32>,
+    pub max_response_bytes: Option<usize>,
     pub extra_headers: Option<HashMap<String, String>>,
     pub cache: Option<FileCacheConfig>,
     pub budget: Option<FileBudgetConfig>,
@@ -187,6 +188,9 @@ impl FileConfig {
         }
         if let Some(r) = self.max_retries {
             builder = builder.max_retries(r);
+        }
+        if let Some(limit) = self.max_response_bytes {
+            builder.config.max_response_bytes = Some(limit);
         }
 
         #[cfg(any(feature = "native-http", feature = "wasm-http"))]

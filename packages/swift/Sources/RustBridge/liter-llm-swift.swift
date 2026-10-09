@@ -782,6 +782,9 @@ public func createClientFromJson<GenericIntoRustString: IntoRustString>(_ json: 
 public func ensureCryptoProvider() -> () {
     __swift_bridge__$ensure_crypto_provider()
 }
+public func createClientWithOptions(_ options: ClientOptions) throws -> DefaultClient {
+    try { let val = __swift_bridge__$create_client_with_options({options.isOwned = false; return options.ptr;}()); if val.is_ok { return DefaultClient(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
 public func countRequestTokens<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ req: ChatCompletionRequest) throws -> UInt {
     try { let val = __swift_bridge__$count_request_tokens({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), {req.isOwned = false; return req.ptr;}()); switch val.tag { case __swift_bridge__$ResultUIntAndString$ResultOk: return val.payload.ok case __swift_bridge__$ResultUIntAndString$ResultErr: throw RustString(ptr: val.payload.err) default: fatalError() } }()
 }
@@ -866,6 +869,9 @@ public func chatCompletionToolFromJson<GenericIntoRustString: IntoRustString>(_ 
 }
 public func choiceFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> Choice {
     try { let val = __swift_bridge__$choice_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return Choice(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func clientOptionsFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ClientOptions {
+    try { let val = __swift_bridge__$client_options_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ClientOptions(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func completionTokensDetailsFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CompletionTokensDetails {
     try { let val = __swift_bridge__$completion_tokens_details_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CompletionTokensDetails(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -1529,6 +1535,9 @@ public func __alef_phantom_vec_budget_config() -> RustVec<BudgetConfig> {
 }
 public func __alef_phantom_vec_cache_config() -> RustVec<CacheConfig> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_cache_config())
+}
+public func __alef_phantom_vec_client_options() -> RustVec<ClientOptions> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_client_options())
 }
 public func __alef_phantom_vec_in_flight_limit_config() -> RustVec<InFlightLimitConfig> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_in_flight_limit_config())
@@ -3334,6 +3343,111 @@ extension Choice: Vectorizable {
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
         __swift_bridge__$Vec_Choice$len(vecPtr)
+    }
+}
+
+
+public class ClientOptions: ClientOptionsRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$ClientOptions$_free(ptr)
+        }
+    }
+}
+extension ClientOptions {
+    public convenience init<GenericIntoRustString: IntoRustString>(_ api_key: GenericIntoRustString, _ base_url: Optional<GenericIntoRustString>, _ timeout_secs: Optional<UInt64>, _ max_retries: Optional<UInt32>, _ max_response_bytes: Optional<UInt64>, _ model_hint: Optional<GenericIntoRustString>) {
+        self.init(ptr: __swift_bridge__$ClientOptions$new({ let rustString = api_key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let rustString = optionalStringIntoRustString(base_url) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), timeout_secs.intoFfiRepr(), max_retries.intoFfiRepr(), max_response_bytes.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(model_hint) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
+    }
+}
+public class ClientOptionsRefMut: ClientOptionsRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class ClientOptionsRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension ClientOptionsRef {
+    public func apiKey() -> RustString {
+        RustString(ptr: __swift_bridge__$ClientOptions$api_key(ptr))
+    }
+
+    public func baseUrl() -> Optional<RustString> {
+        { let val = __swift_bridge__$ClientOptions$base_url(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func timeoutSecs() -> Optional<UInt64> {
+        __swift_bridge__$ClientOptions$timeout_secs(ptr).intoSwiftRepr()
+    }
+
+    public func maxRetries() -> Optional<UInt32> {
+        __swift_bridge__$ClientOptions$max_retries(ptr).intoSwiftRepr()
+    }
+
+    public func maxResponseBytes() -> Optional<UInt64> {
+        __swift_bridge__$ClientOptions$max_response_bytes(ptr).intoSwiftRepr()
+    }
+
+    public func modelHint() -> Optional<RustString> {
+        { let val = __swift_bridge__$ClientOptions$model_hint(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+}
+extension ClientOptions: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_ClientOptions$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_ClientOptions$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ClientOptions) {
+        __swift_bridge__$Vec_ClientOptions$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_ClientOptions$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (ClientOptions(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ClientOptionsRef> {
+        let pointer = __swift_bridge__$Vec_ClientOptions$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ClientOptionsRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ClientOptionsRefMut> {
+        let pointer = __swift_bridge__$Vec_ClientOptions$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ClientOptionsRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ClientOptionsRef> {
+        UnsafePointer<ClientOptionsRef>(OpaquePointer(__swift_bridge__$Vec_ClientOptions$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_ClientOptions$len(vecPtr)
     }
 }
 
@@ -6574,8 +6688,8 @@ public class ModelInfo: ModelInfoRefMut {
     }
 }
 extension ModelInfo {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ matched_key: GenericIntoRustString, _ exact: Bool, _ input_cost_per_token: Double, _ output_cost_per_token: Double, _ cache_read_input_token_cost: Optional<Double>, _ cache_creation_input_token_cost: Optional<Double>, _ input_cost_per_audio_token: Optional<Double>, _ output_cost_per_audio_token: Optional<Double>, _ output_cost_per_reasoning_token: Optional<Double>, _ max_tokens: Optional<UInt64>, _ max_input_tokens: Optional<UInt64>, _ max_output_tokens: Optional<UInt64>, _ mode: Optional<GenericIntoRustString>, _ supports_vision: Optional<Bool>, _ supports_function_calling: Optional<Bool>, _ supports_reasoning: Optional<Bool>, _ supports_structured_output: Optional<Bool>, _ supports_audio_input: Optional<Bool>, _ supports_audio_output: Optional<Bool>, _ supports_prompt_caching: Optional<Bool>, _ tiers: RustVec<ModelTier>) {
-        self.init(ptr: __swift_bridge__$ModelInfo$new({ let rustString = matched_key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), exact, input_cost_per_token, output_cost_per_token, cache_read_input_token_cost.intoFfiRepr(), cache_creation_input_token_cost.intoFfiRepr(), input_cost_per_audio_token.intoFfiRepr(), output_cost_per_audio_token.intoFfiRepr(), output_cost_per_reasoning_token.intoFfiRepr(), max_tokens.intoFfiRepr(), max_input_tokens.intoFfiRepr(), max_output_tokens.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(mode) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), supports_vision.intoFfiRepr(), supports_function_calling.intoFfiRepr(), supports_reasoning.intoFfiRepr(), supports_structured_output.intoFfiRepr(), supports_audio_input.intoFfiRepr(), supports_audio_output.intoFfiRepr(), supports_prompt_caching.intoFfiRepr(), { let val = tiers; val.isOwned = false; return val.ptr }()))
+    public convenience init<GenericIntoRustString: IntoRustString>(_ matched_key: GenericIntoRustString, _ exact: Bool, _ price_known: Bool, _ input_cost_per_token: Double, _ output_cost_per_token: Double, _ cache_read_input_token_cost: Optional<Double>, _ cache_creation_input_token_cost: Optional<Double>, _ input_cost_per_audio_token: Optional<Double>, _ output_cost_per_audio_token: Optional<Double>, _ output_cost_per_reasoning_token: Optional<Double>, _ max_tokens: Optional<UInt64>, _ max_input_tokens: Optional<UInt64>, _ max_output_tokens: Optional<UInt64>, _ mode: Optional<GenericIntoRustString>, _ supports_vision: Optional<Bool>, _ supports_function_calling: Optional<Bool>, _ supports_reasoning: Optional<Bool>, _ supports_structured_output: Optional<Bool>, _ supports_audio_input: Optional<Bool>, _ supports_audio_output: Optional<Bool>, _ supports_prompt_caching: Optional<Bool>, _ tiers: RustVec<ModelTier>) {
+        self.init(ptr: __swift_bridge__$ModelInfo$new({ let rustString = matched_key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), exact, price_known, input_cost_per_token, output_cost_per_token, cache_read_input_token_cost.intoFfiRepr(), cache_creation_input_token_cost.intoFfiRepr(), input_cost_per_audio_token.intoFfiRepr(), output_cost_per_audio_token.intoFfiRepr(), output_cost_per_reasoning_token.intoFfiRepr(), max_tokens.intoFfiRepr(), max_input_tokens.intoFfiRepr(), max_output_tokens.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(mode) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), supports_vision.intoFfiRepr(), supports_function_calling.intoFfiRepr(), supports_reasoning.intoFfiRepr(), supports_structured_output.intoFfiRepr(), supports_audio_input.intoFfiRepr(), supports_audio_output.intoFfiRepr(), supports_prompt_caching.intoFfiRepr(), { let val = tiers; val.isOwned = false; return val.ptr }()))
     }
 }
 public class ModelInfoRefMut: ModelInfoRef {
@@ -6597,6 +6711,10 @@ extension ModelInfoRef {
 
     public func exact() -> Bool {
         __swift_bridge__$ModelInfo$exact(ptr)
+    }
+
+    public func priceKnown() -> Bool {
+        __swift_bridge__$ModelInfo$price_known(ptr)
     }
 
     public func inputCostPerToken() -> Double {

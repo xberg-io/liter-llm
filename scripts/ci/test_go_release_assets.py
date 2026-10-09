@@ -56,3 +56,11 @@ def test_go_archives_are_stripped_before_packaging() -> None:
     assert workflow.count("Strip static archive debug symbols") == 2
     assert workflow.count('archive="target/${TARGET}/release/libliter_llm_ffi.a"') == 2
     assert workflow.index("Strip static archive debug symbols") < workflow.index("Package Go FFI")
+    assert "if: runner.os == 'Linux'" in workflow
+    assert 'strip -S "$archive"' not in workflow
+
+
+def test_tagged_release_uploads_catalog_checksum() -> None:
+    workflow = PUBLISH_WORKFLOW.read_text()
+    assert "sha256sum catalog.json > catalog.json.sha256" in workflow
+    assert 'gh release upload "$TAG" catalog.json catalog.json.sha256 --clobber' in workflow

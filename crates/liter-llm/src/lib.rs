@@ -84,8 +84,10 @@ pub use http::transport::TransportConfig;
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub use client::DefaultClient;
 // ~keep Binding-friendly constructors require an HTTP stack.
+#[cfg(feature = "native-http")]
+pub use bindings::create_client_with_options;
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-pub use bindings::{create_client, create_client_from_json};
+pub use bindings::{ClientOptions, create_client, create_client_from_json};
 // ~keep ManagedClient requires both native HTTP and Tower middleware.
 #[cfg(all(feature = "native-http", feature = "tower"))]
 pub use client::managed::ManagedClient;

@@ -2964,7 +2964,7 @@ checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
 
 [[package]]
 name = "liter-llm"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "ahash",
  "arc-swap",
@@ -3019,7 +3019,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-catalog-gen"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "chrono",
  "clap",
@@ -3036,7 +3036,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-cli"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "arc-swap",
  "axum",
@@ -3059,7 +3059,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-dart"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "flutter_rust_bridge",
  "futures-util",
@@ -3070,7 +3070,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-ffi"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "ahash",
  "cbindgen",
@@ -3084,7 +3084,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-jni"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -3098,7 +3098,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-node"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "futures-util",
  "liter-llm",
@@ -3111,7 +3111,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-php"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "ext-php-rs",
  "futures-util",
@@ -3123,7 +3123,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-proxy"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "ahash",
  "arc-swap",
@@ -3172,7 +3172,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-py"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "futures",
  "liter-llm",
@@ -3185,7 +3185,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-swift"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "ahash",
  "async-trait",
@@ -3202,7 +3202,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-wasm"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "futures",
  "futures-util",
@@ -5811,9 +5811,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.19"
+version = "0.7.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "494815d09bf52b5548659851081238f0ca39ff638363907596da739561c62c52"
+checksum = "e464cf451ba96ebfc6f9b6542f17ee8b8956e33f1e40d9690624e59d7a7f8a4b"
 dependencies = [
  "bytes",
  "futures-core",
@@ -7135,9 +7135,9 @@ dependencies = [
 
 [[package]]
 name = "zstd-sys"
-version = "2.1.0+zstd.1.5.7"
+version = "2.1.1+zstd.1.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ef0a8027ec3ee71300ab3bcbcd0393f434aa72b91ca6d635a39941deae8eea0"
+checksum = "aeec9eaf2dffbbd09201e23bd0ffcbaa33bb8e9266a10734fd7ed90a85eca078"
 dependencies = [
  "cc",
  "pkg-config",

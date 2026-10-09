@@ -136,6 +136,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ClientOptions dco_decode_box_autoadd_client_options(dynamic raw);
+
+  @protected
   CompletionTokensDetails dco_decode_box_autoadd_completion_tokens_details(
     dynamic raw,
   );
@@ -328,6 +331,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CircuitState dco_decode_circuit_state(dynamic raw);
+
+  @protected
+  ClientOptions dco_decode_client_options(dynamic raw);
 
   @protected
   CompletionTokensDetails dco_decode_completion_tokens_details(dynamic raw);
@@ -1049,6 +1055,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ClientOptions sse_decode_box_autoadd_client_options(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   CompletionTokensDetails sse_decode_box_autoadd_completion_tokens_details(
     SseDeserializer deserializer,
   );
@@ -1319,6 +1330,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CircuitState sse_decode_circuit_state(SseDeserializer deserializer);
+
+  @protected
+  ClientOptions sse_decode_client_options(SseDeserializer deserializer);
 
   @protected
   CompletionTokensDetails sse_decode_completion_tokens_details(
@@ -2216,6 +2230,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_client_options(
+    ClientOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_completion_tokens_details(
     CompletionTokensDetails self,
     SseSerializer serializer,
@@ -2556,6 +2576,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_circuit_state(CircuitState self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_client_options(ClientOptions self, SseSerializer serializer);
 
   @protected
   void sse_encode_completion_tokens_details(

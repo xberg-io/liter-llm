@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.2] - 2026-10-09
+
+Security, provider correctness, bounded Go clients, truthful catalog pricing, and repaired release
+assets. Generated with Alef 0.107.11.
+
+### Added
+
+- Go and the other generated bindings expose `ClientOptions.max_response_bytes`; provider-quota
+  exhaustion has its own stable cross-language error variant (#275, #278).
+- Model metadata exposes `price_known`, allowing callers to distinguish unsupported or missing
+  per-token prices from genuinely free models (#276).
+
+### Fixed
+
+- Authenticated native clients never follow redirects, preventing prompt bodies and credentials
+  from being replayed to another origin even when outbound policy enforcement is disabled (#277).
+- Empty API keys omit authentication headers, and provider error bodies redact both full bearer
+  values and bare echoed tokens (#272, #279).
+- Anthropic's final streaming usage is cumulative and retains prompt-cache details; 529 overloads
+  preserve their status and malformed successful responses are serialization errors (#274, #275).
+- Tagged releases publish catalog checksums, macOS static archives are no longer corrupted by
+  `strip -S`, and the Go module-tag/native-asset publish path uses the corrected Alef packager
+  (#270, #271, #273).
+
+### Changed
+
+- Updated Rust, Node/WASM, and generated language dependency locks.
+
 ## [2.2.1] - 2026-10-09
 
 Provider correctness, safer transport errors, refreshed catalog metadata, and portable Go release
