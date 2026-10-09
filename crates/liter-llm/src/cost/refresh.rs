@@ -24,6 +24,7 @@
 //! by design (see its doc comment) and never reflects this overlay.
 
 use std::collections::HashMap;
+#[cfg(feature = "native-http")]
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock};
@@ -266,6 +267,7 @@ fn verify_checksum(bytes: &[u8], checksum_raw: &str) -> Result<(), CatalogRefres
     }
 }
 
+#[cfg(feature = "native-http")]
 fn write_private_file(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
         #[cfg(unix)]
