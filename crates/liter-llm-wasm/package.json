@@ -13,7 +13,12 @@
     "access": "public"
   },
   "type": "module",
-  "files": ["pkg", "*.wasm", "*.d.ts", "README.md"],
+  "files": [
+    "pkg",
+    "*.wasm",
+    "*.d.ts",
+    "README.md"
+  ],
   "main": "pkg/nodejs/liter_llm_wasm.js",
   "module": "pkg/web/liter_llm_wasm.js",
   "types": "pkg/nodejs/liter_llm_wasm.d.ts",
@@ -43,7 +48,7 @@
     "clean": "rm -rf pkg dist"
   },
   "devDependencies": {
-    "vitest": "^4.1.11",
-    "@vitest/coverage-v8": "^4.1.11"
+    "@vitest/coverage-v8": "^5.0.3",
+    "vitest": "^5.0.3"
   }
 }

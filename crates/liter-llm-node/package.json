@@ -12,7 +12,17 @@
     "url": "https://github.com/xberg-io/liter-llm/issues"
   },
   "author": "Na'aman Hirschfeld",
-  "keywords": ["llm", "ai", "openai", "anthropic", "gemini", "bedrock", "proxy", "napi", "rust"],
+  "keywords": [
+    "llm",
+    "ai",
+    "openai",
+    "anthropic",
+    "gemini",
+    "bedrock",
+    "proxy",
+    "napi",
+    "rust"
+  ],
   "main": "index.js",
   "types": "index.d.ts",
   "exports": {
@@ -22,7 +32,11 @@
       "default": "./index.js"
     }
   },
-  "files": ["index.js", "index.d.ts", "*.node"],
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.node"
+  ],
   "optionalDependencies": {
     "@xberg-io/liter-llm-darwin-arm64": "2.2.0",
     "@xberg-io/liter-llm-darwin-x64": "2.2.0",
@@ -55,6 +69,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.10.5"
+    "@napi-rs/cli": "^3.10.8"
   }
 }

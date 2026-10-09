@@ -30,7 +30,7 @@ tower = ["liter-llm/tower"]
 wasm-http = ["liter-llm/wasm-http"]
 
 [dependencies]
-ext-php-rs = "0.16.0"
+ext-php-rs = "0.16.1"
 futures-util = "0.3"
 liter-llm = { version = "2.2.0", path = "../liter-llm", features = ["native-http", "full"] }
 serde = { version = "1", features = ["derive"] }

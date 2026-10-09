@@ -70,7 +70,7 @@ chrono = { version = "0.4", default-features = false, features = ["std"] }
 
 clap = { version = "4", features = ["derive", "env"] }
 dashmap = "6"
-etcd-client = { version = "0.20", default-features = false }
+etcd-client = { version = "0.21", default-features = false }
 futures-core = "0.3"
 futures-util = "0.3"
 gcp_auth = { version = "0.12", default-features = false, features = ["ring"] }
