@@ -78,6 +78,9 @@ pub(crate) fn transform_gemini_response(body: &mut Value) -> Result<()> {
             "prompt_tokens": usage.prompt_tokens,
             "completion_tokens": usage.completion_tokens,
             "total_tokens": usage.total_tokens,
+            "prompt_tokens_details": {
+                "cached_tokens": usage.cached_tokens
+            },
             "completion_tokens_details": {
                 "reasoning_tokens": usage.reasoning_tokens
             }
@@ -292,20 +295,30 @@ struct GeminiUsage {
     completion_tokens: u64,
     total_tokens: u64,
     reasoning_tokens: u64,
+    cached_tokens: u64,
 }
 
 /// OpenAI-compatible token accounting from Gemini `usageMetadata`.
 fn usage_metadata(body: &Value) -> GeminiUsage {
-    let prompt_tokens = body
+    let base_prompt_tokens = body
         .pointer("/usageMetadata/promptTokenCount")
         .and_then(|v| v.as_u64())
         .unwrap_or(0);
+    let tool_prompt_tokens = body
+        .pointer("/usageMetadata/toolUsePromptTokenCount")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
+    let prompt_tokens = base_prompt_tokens.saturating_add(tool_prompt_tokens);
     let candidate_tokens = body
         .pointer("/usageMetadata/candidatesTokenCount")
         .and_then(|v| v.as_u64())
         .unwrap_or(0);
     let reasoning_tokens = body
         .pointer("/usageMetadata/thoughtsTokenCount")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
+    let cached_tokens = body
+        .pointer("/usageMetadata/cachedContentTokenCount")
         .and_then(|v| v.as_u64())
         .unwrap_or(0);
     let completion_tokens = candidate_tokens.saturating_add(reasoning_tokens);
@@ -318,6 +331,7 @@ fn usage_metadata(body: &Value) -> GeminiUsage {
         completion_tokens,
         total_tokens,
         reasoning_tokens,
+        cached_tokens,
     }
 }
 

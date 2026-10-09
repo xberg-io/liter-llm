@@ -590,6 +590,30 @@ fn transform_response_reports_thinking_token_usage() {
 }
 
 #[test]
+fn transform_response_reports_cached_and_tool_prompt_tokens() {
+    let mut body = json!({
+        "candidates": [{
+            "content": {"parts": [{"text": "Hello!"}]},
+            "finishReason": "STOP"
+        }],
+        "usageMetadata": {
+            "promptTokenCount": 11,
+            "toolUsePromptTokenCount": 5,
+            "cachedContentTokenCount": 7,
+            "candidatesTokenCount": 3,
+            "totalTokenCount": 19
+        }
+    });
+
+    transform_gemini_response(&mut body).expect("transform must succeed");
+
+    assert_eq!(body["usage"]["prompt_tokens"], 16);
+    assert_eq!(body["usage"]["prompt_tokens_details"]["cached_tokens"], 7);
+    assert_eq!(body["usage"]["completion_tokens"], 3);
+    assert_eq!(body["usage"]["total_tokens"], 19);
+}
+
+#[test]
 fn transform_request_response_modalities_translated() {
     let mut body = json!({
         "model": "gemini-2.0-flash",
