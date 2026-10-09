@@ -2982,6 +2982,8 @@ dependencies = [
  "gcp_auth",
  "gloo-timers",
  "hex",
+ "http",
+ "httpdate",
  "jsonschema",
  "jsonwebtoken",
  "memchr",

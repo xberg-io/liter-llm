@@ -28,7 +28,26 @@ const BASE_URL: &str = "https://generativelanguage.googleapis.com/v1beta";
 /// // Or using the google_ai/ prefix:
 /// let client = DefaultClient::new(config, Some("google_ai/gemini-2.0-flash"))?;
 /// ```
-pub struct GoogleAiProvider;
+pub struct GoogleAiProvider {
+    base_url: String,
+}
+
+impl Default for GoogleAiProvider {
+    fn default() -> Self {
+        Self {
+            base_url: BASE_URL.to_owned(),
+        }
+    }
+}
+
+impl GoogleAiProvider {
+    #[must_use]
+    pub fn with_base_url(base_url: impl Into<String>) -> Self {
+        Self {
+            base_url: base_url.into().trim_end_matches('/').to_owned(),
+        }
+    }
+}
 
 impl Provider for GoogleAiProvider {
     fn name(&self) -> &str {
@@ -36,7 +55,7 @@ impl Provider for GoogleAiProvider {
     }
 
     fn base_url(&self) -> &str {
-        BASE_URL
+        &self.base_url
     }
 
     fn env_var(&self) -> Option<&str> {
@@ -69,7 +88,7 @@ impl Provider for GoogleAiProvider {
         if endpoint_path.contains("chat/completions") {
             format!("{base}/models/{model}:generateContent")
         } else if endpoint_path.contains("embeddings") {
-            format!("{base}/models/{model}:embedContent")
+            format!("{base}/models/{model}:batchEmbedContents")
         } else {
             format!("{base}{endpoint_path}")
         }
@@ -91,10 +110,11 @@ impl Provider for GoogleAiProvider {
     /// ~keep `Streaming { "SSE stream truncated" }` error whose message gives no
     /// ~keep hint that the endpoint was wrong.
     fn build_stream_url(&self, endpoint_path: &str, model: &str) -> String {
-        let url = self
-            .build_url(endpoint_path, model)
-            .replace(":generateContent", ":streamGenerateContent");
-        format!("{url}?alt=sse")
+        let url = self.build_url(endpoint_path, model);
+        match url.strip_suffix(":generateContent") {
+            Some(prefix) => format!("{prefix}:streamGenerateContent?alt=sse"),
+            None => url,
+        }
     }
 
     fn parse_stream_event(&self, event_data: &str) -> Result<Option<ChatCompletionChunk>> {
@@ -110,7 +130,7 @@ mod tests {
     use crate::provider::Provider;
 
     fn provider() -> GoogleAiProvider {
-        GoogleAiProvider
+        GoogleAiProvider::default()
     }
 
     #[test]
@@ -160,7 +180,7 @@ mod tests {
         let url = p.build_url("/embeddings", "text-embedding-004");
         assert_eq!(
             url,
-            "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent"
+            "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents"
         );
     }
 
@@ -189,15 +209,16 @@ mod tests {
         assert!(url.ends_with(":generateContent"), "got {url}");
     }
 
-    /// The rewrite keys off `:generateContent`, so the embeddings URL — which
-    /// uses `:embedContent` — must pass through unchanged.
+    /// The rewrite keys off `:generateContent`, so the batch embeddings URL
+    /// must pass through unchanged.
     #[test]
     fn build_stream_url_leaves_embeddings_endpoint_alone() {
         let p = provider();
         let url = p.build_stream_url("/embeddings", "text-embedding-004");
 
-        assert!(url.contains(":embedContent"), "got {url}");
+        assert!(url.contains(":batchEmbedContents"), "got {url}");
         assert!(!url.contains("streamGenerateContent"), "got {url}");
+        assert!(!url.contains("alt=sse"), "got {url}");
     }
 
     #[test]

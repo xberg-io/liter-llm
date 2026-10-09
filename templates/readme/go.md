@@ -51,12 +51,14 @@ Each release publishes `liter-llm-go-v{{ version }}-<platform>.tar.gz` (plus a `
 | ---------------- | ----------------- |
 | Linux x86_64     | `linux-x86_64`    |
 | Linux arm64      | `linux-aarch64`   |
+| Linux musl x86_64 | `linux-x86_64-musl` |
+| Linux musl arm64 | `linux-aarch64-musl` |
 | macOS arm64      | `macos-arm64`     |
 | macOS x86_64     | `macos-x86_64`    |
 | Windows x86_64   | `windows-x86_64`  |
 | Windows arm64    | `windows-arm64`   |
 
-Linux builds target glibc (`*-unknown-linux-gnu`). There are no musl builds; on Alpine and other musl distributions, build the library yourself (Option 2). macOS binaries use a deployment target of 11.0.
+Linux release assets cover both glibc (`*-unknown-linux-gnu`) and musl (`*-unknown-linux-musl`). `cmd/setup` detects musl systems automatically; use `-platform linux-x86_64-musl` or `-platform linux-aarch64-musl` to override detection. macOS binaries use a deployment target of 11.0.
 
 ```bash
 # Example: Linux x86_64
@@ -67,7 +69,9 @@ mkdir -p ~/liter-llm
 cp -R liter-llm-go-v{{ version }}-linux-x86_64/lib liter-llm-go-v{{ version }}-linux-x86_64/include ~/liter-llm/
 ```
 
-Alternatively, `go run {{ package_name }}/cmd/setup` downloads and checksum-verifies the archive for your platform into a per-user cache and writes a cgo link shim into the current package. Run it with `-print-env` to print `CGO_CFLAGS`/`CGO_LDFLAGS` exports instead, or `-lib-dir .lib` to extract the libraries into a directory without writing the shim.
+Alternatively, `go run {{ package_name }}/cmd/setup` downloads and checksum-verifies the archive for your platform into a per-user cache and writes a cgo link shim into the current package. Add `-link static` for a self-contained executable: the generated shim names the `.a` archive directly, includes the flags from `native-static-libs.txt`, and adds no rpath. Run it with `-print-env` to print `CGO_CFLAGS`/`CGO_LDFLAGS` exports instead.
+
+For offline CI, populate an internal mirror and set `LITER_LLM_GO_NATIVE_BASE_URL`, or pre-fetch on a connected machine with `-lib-dir .lib` and vendor the resulting platform directory. `-lib-dir` copies both the shared and static libraries plus `native-static-libs.txt` without writing a machine-local shim.
 
 #### Option 2: Build the Library Yourself
 
@@ -101,10 +105,10 @@ go build
 
 #### Static vs. dynamic linking
 
-The linker picks the file from the `-L` directory itself:
+`cmd/setup` selects the requested link mode explicitly:
 
-- **Static** (`libliter_llm_ffi.a`) produces a self-contained binary. If the directory also holds the shared library, the linker prefers it; to force static linking, keep only the `.a` file in the directory or pass the full path (`CGO_LDFLAGS="$HOME/liter-llm/lib/libliter_llm_ffi.a"`).
-- **Dynamic** (`.so` / `.dylib` / `.dll`) keeps the binary small but needs the library on the runtime loader path: `LD_LIBRARY_PATH` on Linux, `DYLD_LIBRARY_PATH` on macOS, `PATH` on Windows. An rpath baked in by the module's cgo directives covers the `.lib/<platform>` directories only.
+- **Static** (`go run {{ package_name }}/cmd/setup -link static`) produces a self-contained binary and reads the required system libraries from `native-static-libs.txt`.
+- **Dynamic** (the default) writes a shim with an rpath to the checksum-verified cache directory.
 
 Static linking also needs the system libraries the Rust runtime depends on. The generated cgo preamble links them automatically on macOS (`-framework Security -framework CoreFoundation -liconv`), Linux (`-lm -ldl -lpthread -lrt`) and Windows (`-lws2_32 -luserenv -lbcrypt -lntdll -ladvapi32 -lkernel32`). If a link still reports undefined symbols, or you link outside the generated preamble, read `lib/native-static-libs.txt` (cargo's `--print native-static-libs` output) and pass what it lists through `CGO_LDFLAGS`, for example:
 

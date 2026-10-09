@@ -31,6 +31,7 @@ impl From<CircuitOpenError> for crate::error::LiterLlmError {
         Self::ServiceUnavailable {
             message: e.to_string(),
             status: 503,
+            retry_after: None,
         }
     }
 }

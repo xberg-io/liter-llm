@@ -5894,11 +5894,19 @@ const _: fn() = || {
             let _: String = message;
             let _: i64 = status;
         }
-        crate::LiterLlmError::ServiceUnavailable { message, status } => {
+        crate::LiterLlmError::ServiceUnavailable {
+            message,
+            status,
+            retry_after,
+        } => {
             let _: String = message;
             let _: i64 = status;
+            let _: i64 = retry_after;
         }
         crate::LiterLlmError::Timeout => {}
+        crate::LiterLlmError::Network { message } => {
+            let _: String = message;
+        }
         crate::LiterLlmError::Streaming { message } => {
             let _: String = message;
         }
@@ -8015,9 +8023,11 @@ impl SseDecode for crate::LiterLlmError {
             7 => {
                 let mut var_message = <String>::sse_decode(deserializer);
                 let mut var_status = <i64>::sse_decode(deserializer);
+                let mut var_retryAfter = <i64>::sse_decode(deserializer);
                 return crate::LiterLlmError::ServiceUnavailable {
                     message: var_message,
                     status: var_status,
+                    retry_after: var_retryAfter,
                 };
             }
             8 => {
@@ -8025,9 +8035,13 @@ impl SseDecode for crate::LiterLlmError {
             }
             9 => {
                 let mut var_message = <String>::sse_decode(deserializer);
-                return crate::LiterLlmError::Streaming { message: var_message };
+                return crate::LiterLlmError::Network { message: var_message };
             }
             10 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::Streaming { message: var_message };
+            }
+            11 => {
                 let mut var_endpoint = <String>::sse_decode(deserializer);
                 let mut var_provider = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::EndpointNotSupported {
@@ -8035,7 +8049,7 @@ impl SseDecode for crate::LiterLlmError {
                     provider: var_provider,
                 };
             }
-            11 => {
+            12 => {
                 let mut var_name = <String>::sse_decode(deserializer);
                 let mut var_reason = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::InvalidHeader {
@@ -8043,11 +8057,11 @@ impl SseDecode for crate::LiterLlmError {
                     reason: var_reason,
                 };
             }
-            12 => {
+            13 => {
                 let mut var_field0 = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::Serialization { field0: var_field0 };
             }
-            13 => {
+            14 => {
                 let mut var_message = <String>::sse_decode(deserializer);
                 let mut var_model = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::BudgetExceeded {
@@ -8055,15 +8069,15 @@ impl SseDecode for crate::LiterLlmError {
                     model: var_model,
                 };
             }
-            14 => {
+            15 => {
                 let mut var_message = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::HookRejected { message: var_message };
             }
-            15 => {
+            16 => {
                 let mut var_message = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::InternalError { message: var_message };
             }
-            16 => {
+            17 => {
                 let mut var_url = <String>::sse_decode(deserializer);
                 let mut var_reason = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::OutboundForbidden {
@@ -8071,11 +8085,11 @@ impl SseDecode for crate::LiterLlmError {
                     reason: var_reason,
                 };
             }
-            17 => {
+            18 => {
                 let mut var_key = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::IdempotencyConflict { key: var_key };
             }
-            18 => {
+            19 => {
                 let mut var_key = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::IdempotencyInFlight { key: var_key };
             }
@@ -11155,54 +11169,62 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::LiterLlmError> {
                 status.into_into_dart().into_dart(),
             ]
             .into_dart(),
-            crate::LiterLlmError::ServiceUnavailable { message, status } => [
+            crate::LiterLlmError::ServiceUnavailable {
+                message,
+                status,
+                retry_after,
+            } => [
                 7.into_dart(),
                 message.into_into_dart().into_dart(),
                 status.into_into_dart().into_dart(),
+                retry_after.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::LiterLlmError::Timeout => [8.into_dart()].into_dart(),
-            crate::LiterLlmError::Streaming { message } => {
+            crate::LiterLlmError::Network { message } => {
                 [9.into_dart(), message.into_into_dart().into_dart()].into_dart()
             }
+            crate::LiterLlmError::Streaming { message } => {
+                [10.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
             crate::LiterLlmError::EndpointNotSupported { endpoint, provider } => [
-                10.into_dart(),
+                11.into_dart(),
                 endpoint.into_into_dart().into_dart(),
                 provider.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::LiterLlmError::InvalidHeader { name, reason } => [
-                11.into_dart(),
+                12.into_dart(),
                 name.into_into_dart().into_dart(),
                 reason.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::LiterLlmError::Serialization { field0 } => {
-                [12.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+                [13.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
             crate::LiterLlmError::BudgetExceeded { message, model } => [
-                13.into_dart(),
+                14.into_dart(),
                 message.into_into_dart().into_dart(),
                 model.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::LiterLlmError::HookRejected { message } => {
-                [14.into_dart(), message.into_into_dart().into_dart()].into_dart()
-            }
-            crate::LiterLlmError::InternalError { message } => {
                 [15.into_dart(), message.into_into_dart().into_dart()].into_dart()
             }
+            crate::LiterLlmError::InternalError { message } => {
+                [16.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
             crate::LiterLlmError::OutboundForbidden { url, reason } => [
-                16.into_dart(),
+                17.into_dart(),
                 url.into_into_dart().into_dart(),
                 reason.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::LiterLlmError::IdempotencyConflict { key } => {
-                [17.into_dart(), key.into_into_dart().into_dart()].into_dart()
+                [18.into_dart(), key.into_into_dart().into_dart()].into_dart()
             }
             crate::LiterLlmError::IdempotencyInFlight { key } => {
-                [18.into_dart(), key.into_into_dart().into_dart()].into_dart()
+                [19.into_dart(), key.into_into_dart().into_dart()].into_dart()
             }
             _ => {
                 unimplemented!("");
@@ -13650,56 +13672,65 @@ impl SseEncode for crate::LiterLlmError {
                 <String>::sse_encode(message, serializer);
                 <i64>::sse_encode(status, serializer);
             }
-            crate::LiterLlmError::ServiceUnavailable { message, status } => {
+            crate::LiterLlmError::ServiceUnavailable {
+                message,
+                status,
+                retry_after,
+            } => {
                 <i32>::sse_encode(7, serializer);
                 <String>::sse_encode(message, serializer);
                 <i64>::sse_encode(status, serializer);
+                <i64>::sse_encode(retry_after, serializer);
             }
             crate::LiterLlmError::Timeout => {
                 <i32>::sse_encode(8, serializer);
             }
-            crate::LiterLlmError::Streaming { message } => {
+            crate::LiterLlmError::Network { message } => {
                 <i32>::sse_encode(9, serializer);
                 <String>::sse_encode(message, serializer);
             }
-            crate::LiterLlmError::EndpointNotSupported { endpoint, provider } => {
+            crate::LiterLlmError::Streaming { message } => {
                 <i32>::sse_encode(10, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            crate::LiterLlmError::EndpointNotSupported { endpoint, provider } => {
+                <i32>::sse_encode(11, serializer);
                 <String>::sse_encode(endpoint, serializer);
                 <String>::sse_encode(provider, serializer);
             }
             crate::LiterLlmError::InvalidHeader { name, reason } => {
-                <i32>::sse_encode(11, serializer);
+                <i32>::sse_encode(12, serializer);
                 <String>::sse_encode(name, serializer);
                 <String>::sse_encode(reason, serializer);
             }
             crate::LiterLlmError::Serialization { field0 } => {
-                <i32>::sse_encode(12, serializer);
+                <i32>::sse_encode(13, serializer);
                 <String>::sse_encode(field0, serializer);
             }
             crate::LiterLlmError::BudgetExceeded { message, model } => {
-                <i32>::sse_encode(13, serializer);
+                <i32>::sse_encode(14, serializer);
                 <String>::sse_encode(message, serializer);
                 <String>::sse_encode(model, serializer);
             }
             crate::LiterLlmError::HookRejected { message } => {
-                <i32>::sse_encode(14, serializer);
-                <String>::sse_encode(message, serializer);
-            }
-            crate::LiterLlmError::InternalError { message } => {
                 <i32>::sse_encode(15, serializer);
                 <String>::sse_encode(message, serializer);
             }
-            crate::LiterLlmError::OutboundForbidden { url, reason } => {
+            crate::LiterLlmError::InternalError { message } => {
                 <i32>::sse_encode(16, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            crate::LiterLlmError::OutboundForbidden { url, reason } => {
+                <i32>::sse_encode(17, serializer);
                 <String>::sse_encode(url, serializer);
                 <String>::sse_encode(reason, serializer);
             }
             crate::LiterLlmError::IdempotencyConflict { key } => {
-                <i32>::sse_encode(17, serializer);
+                <i32>::sse_encode(18, serializer);
                 <String>::sse_encode(key, serializer);
             }
             crate::LiterLlmError::IdempotencyInFlight { key } => {
-                <i32>::sse_encode(18, serializer);
+                <i32>::sse_encode(19, serializer);
                 <String>::sse_encode(key, serializer);
             }
             _ => {

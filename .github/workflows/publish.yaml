@@ -973,6 +973,19 @@ jobs:
         # alef record cargo's native-static-libs into the Go tarball (#247); the
         # cdylib/staticlib it leaves in target/ also feed the C FFI staging below.
         run: alef publish build --lang go --target ${{ matrix.target }}
+      - name: Strip static archive debug symbols
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          archive="target/${TARGET}/release/libliter_llm_ffi.a"
+          test -f "$archive"
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            strip -S "$archive"
+          else
+            strip -g "$archive"
+          fi
       - name: Package Go FFI
         shell: bash
         run: alef publish package --lang go --target ${{ matrix.target }} -o go-ffi-dist
@@ -1036,6 +1049,60 @@ jobs:
           path: dist/c-ffi/*.tar.gz
           if-no-files-found: error
           retention-days: 14
+      - uses: actions/upload-artifact@v7
+        with:
+          name: go-ffi-${{ matrix.label }}
+          path: go-ffi-dist/
+          retention-days: 14
+
+  build-go-musl:
+    name: Build Go FFI (${{ matrix.label }})
+    needs: [prepare, validate-versions, registry-results]
+    if: |
+      always() &&
+      needs.prepare.result == 'success' &&
+      needs.validate-versions.result == 'success' &&
+      needs.prepare.outputs.release_go == 'true' &&
+      (needs.registry-results.outputs.go != 'true' || needs.prepare.outputs.force_republish == 'true')
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: linux-x86_64-musl
+            runner: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+          - label: linux-aarch64-musl
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - name: Install musl toolchain
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          target: ${{ matrix.target }}
+          use-sccache: false
+      - name: Install alef
+        uses: xberg-io/actions/install-alef@v1
+      - name: Build Go FFI
+        shell: bash
+        run: alef publish build --lang go --target ${{ matrix.target }}
+      - name: Strip static archive debug symbols
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          archive="target/${TARGET}/release/libliter_llm_ffi.a"
+          test -f "$archive"
+          strip -g "$archive"
+      - name: Package Go FFI
+        shell: bash
+        run: alef publish package --lang go --target ${{ matrix.target }} -o go-ffi-dist
       - uses: actions/upload-artifact@v7
         with:
           name: go-ffi-${{ matrix.label }}
@@ -1267,12 +1334,13 @@ jobs:
 
   upload-go-ffi:
     name: Upload Go FFI assets
-    needs: [prepare, validate-versions, registry-results, build-ffi]
+    needs: [prepare, validate-versions, registry-results, build-ffi, build-go-musl]
     if: |
       always() &&
       needs.prepare.outputs.release_go == 'true' &&
       needs.validate-versions.result == 'success' &&
       needs.build-ffi.result == 'success' &&
+      needs.build-go-musl.result == 'success' &&
       (needs.registry-results.outputs.go != 'true' || needs.prepare.outputs.force_republish == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -1315,12 +1383,13 @@ jobs:
 
   publish-go-module:
     name: Bundle Go FFI libs and publish Go module tag
-    needs: [prepare, validate-versions, registry-results, build-ffi, upload-go-ffi]
+    needs: [prepare, validate-versions, registry-results, build-ffi, build-go-musl, upload-go-ffi]
     if: |
       always() &&
       needs.prepare.outputs.release_go == 'true' &&
       needs.validate-versions.result == 'success' &&
       needs.build-ffi.result == 'success' &&
+      needs.build-go-musl.result == 'success' &&
       (needs.upload-go-ffi.result == 'success' || needs.upload-go-ffi.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -1362,6 +1431,8 @@ jobs:
           for tarball in go-ffi-artifacts/*.tar.gz; do
             base=$(basename "$tarball" .tar.gz)
             case "$base" in
+              *-linux-x86_64-musl)  lib_dir="linux-x86_64-musl"  ;;
+              *-linux-aarch64-musl) lib_dir="linux-aarch64-musl" ;;
               *-linux-x86_64)   lib_dir="linux-x86_64"   ;;
               *-linux-aarch64)  lib_dir="linux-aarch64"  ;;
               *-macos-arm64)    lib_dir="macos-arm64"    ;;

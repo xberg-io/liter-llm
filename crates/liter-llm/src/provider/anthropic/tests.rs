@@ -81,7 +81,22 @@ fn transform_request_defaults_max_tokens() {
         .transform_request(&mut body)
         .expect("transform_request should not fail");
 
-    assert_eq!(body["max_tokens"], json!(DEFAULT_MAX_TOKENS));
+    let expected = crate::cost::model_info("claude-3-5-sonnet-20241022")
+        .and_then(|info| info.max_output_tokens)
+        .unwrap_or(DEFAULT_MAX_TOKENS);
+    assert_eq!(body["max_tokens"], json!(expected));
+}
+
+#[test]
+fn transform_request_uses_catalog_output_limit_by_default() {
+    let mut body = json!({
+        "model": "claude-opus-5",
+        "messages": [{"role": "user", "content": "Hi"}]
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert_eq!(body["max_tokens"], json!(128_000));
 }
 
 #[test]

@@ -118,6 +118,13 @@ impl VertexAiProvider {
         Self { base_url }
     }
 
+    #[must_use]
+    pub fn with_base_url(base_url: impl Into<String>) -> Self {
+        Self {
+            base_url: base_url.into().trim_end_matches('/').to_owned(),
+        }
+    }
+
     /// Construct from environment variables.
     ///
     /// Reads `VERTEXAI_PROJECT` and `VERTEXAI_LOCATION` (defaults to `us-central1`).
@@ -243,11 +250,13 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
 
     let input = body.get("input").cloned().unwrap_or_default();
 
-    let text = match &input {
-        serde_json::Value::String(s) => s.clone(),
-        serde_json::Value::Array(arr) if arr.iter().all(serde_json::Value::is_string) => {
-            arr.first().and_then(|v| v.as_str()).unwrap_or("").to_string()
-        }
+    let texts = match &input {
+        serde_json::Value::String(s) => vec![s.clone()],
+        serde_json::Value::Array(arr) if arr.iter().all(serde_json::Value::is_string) => arr
+            .iter()
+            .filter_map(serde_json::Value::as_str)
+            .map(str::to_owned)
+            .collect(),
         _ => {
             return Err(LiterLlmError::BadRequest {
                 message: "Google AI embedding adapters support text input only; use a multimodal-compatible custom provider for image embeddings".into(),
@@ -256,13 +265,26 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
         }
     };
 
-    let new_body = json!({
-        "content": {
-            "parts": [{"text": text}]
-        }
-    });
+    let model = body
+        .get("model")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or_default();
+    let dimensions = body.get("dimensions").and_then(serde_json::Value::as_u64);
+    let requests: Vec<_> = texts
+        .into_iter()
+        .map(|text| {
+            let mut request = json!({
+                "model": format!("models/{model}"),
+                "content": {"parts": [{"text": text}]}
+            });
+            if let Some(dimensions) = dimensions {
+                request["outputDimensionality"] = json!(dimensions);
+            }
+            request
+        })
+        .collect();
 
-    *body = new_body;
+    *body = json!({"requests": requests});
     Ok(())
 }
 
@@ -276,11 +298,13 @@ fn transform_vertex_embed_request(body: &mut serde_json::Value) -> Result<()> {
 
     let input = body.get("input").cloned().unwrap_or_default();
 
-    let text = match &input {
-        serde_json::Value::String(s) => s.clone(),
-        serde_json::Value::Array(arr) if arr.iter().all(serde_json::Value::is_string) => {
-            arr.first().and_then(|v| v.as_str()).unwrap_or("").to_string()
-        }
+    let texts = match &input {
+        serde_json::Value::String(s) => vec![s.clone()],
+        serde_json::Value::Array(arr) if arr.iter().all(serde_json::Value::is_string) => arr
+            .iter()
+            .filter_map(serde_json::Value::as_str)
+            .map(str::to_owned)
+            .collect(),
         _ => {
             return Err(LiterLlmError::BadRequest {
                 message: "Vertex AI embedding adapters support text input only; use a multimodal-compatible custom provider for image embeddings".into(),
@@ -289,9 +313,8 @@ fn transform_vertex_embed_request(body: &mut serde_json::Value) -> Result<()> {
         }
     };
 
-    *body = json!({
-        "instances": [{"content": text}]
-    });
+    let instances: Vec<_> = texts.into_iter().map(|text| json!({"content": text})).collect();
+    *body = json!({"instances": instances});
     Ok(())
 }
 

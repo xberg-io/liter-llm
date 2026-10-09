@@ -614,6 +614,24 @@ fn transform_response_reports_cached_and_tool_prompt_tokens() {
 }
 
 #[test]
+fn transform_response_preserves_gemini_embedding_batch_order() {
+    let mut body = json!({
+        "embeddings": [
+            {"values": [1.0, 2.0]},
+            {"values": [3.0, 4.0]},
+            {"values": [5.0, 6.0]}
+        ]
+    });
+    transform_gemini_response(&mut body).expect("batch embedding response should transform");
+    let data = body["data"].as_array().expect("embedding data must be an array");
+    assert_eq!(data.len(), 3);
+    assert_eq!(data[0]["index"], 0);
+    assert_eq!(data[1]["index"], 1);
+    assert_eq!(data[2]["index"], 2);
+    assert!(body.get("usage").is_none(), "unknown usage must remain absent");
+}
+
+#[test]
 fn transform_request_response_modalities_translated() {
     let mut body = json!({
         "model": "gemini-2.0-flash",

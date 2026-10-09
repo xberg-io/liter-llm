@@ -181,6 +181,7 @@ where
                                      (model: '{model}')"
                             ),
                             status: 503,
+                            retry_after: None,
                         }),
                     }
                 }

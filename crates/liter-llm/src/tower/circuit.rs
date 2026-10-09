@@ -456,6 +456,7 @@ where
                 return Err(LiterLlmError::ServiceUnavailable {
                     message: format!("circuit breaker open for provider '{provider}'"),
                     status: 503,
+                    retry_after: None,
                 });
             }
 

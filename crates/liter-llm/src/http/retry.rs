@@ -8,8 +8,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 ///
 /// When `retry_after` is provided (parsed from the `Retry-After` response
 /// header) it takes precedence over exponential backoff for 429 and 529
-/// responses — both are explicit "back off for N seconds" throttling signals,
-/// unlike a generic 5xx where a server-suggested delay is less reliable.
+/// and 503 responses.
 ///
 /// Exponential backoff includes jitter to prevent thundering-herd effects
 /// when multiple clients retry simultaneously. The jitter scales the delay
@@ -26,7 +25,7 @@ pub fn should_retry(status: u16, attempt: u32, max_retries: u32, retry_after: Op
         return None;
     }
 
-    if matches!(status, 429 | 529)
+    if matches!(status, 429 | 503 | 529)
         && let Some(server_delay) = retry_after
     {
         return Some(server_delay.min(Duration::from_secs(60)));
@@ -88,8 +87,7 @@ fn jittered(delay: Duration) -> Duration {
 ///
 /// The header may be:
 /// - A non-negative integer (number of seconds to wait), or
-/// - An HTTP-date (RFC 7231 format; not yet parsed — falls back to exponential
-///   backoff with a warning).
+/// - An HTTP-date (RFC 7231 format).
 pub fn parse_retry_after(value: &str) -> Option<Duration> {
     let trimmed = value.trim();
 
@@ -97,10 +95,14 @@ pub fn parse_retry_after(value: &str) -> Option<Duration> {
         return Some(Duration::from_secs(secs));
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    if let Ok(deadline) = httpdate::parse_http_date(trimmed) {
+        return deadline.duration_since(SystemTime::now()).ok();
+    }
+
     tracing::warn!(
         retry_after = trimmed,
-        "Retry-After header uses HTTP-date format which is not yet supported; \
-         falling back to exponential backoff"
+        "invalid Retry-After header; falling back to exponential backoff"
     );
     None
 }
@@ -129,6 +131,12 @@ mod tests {
         let server_delay = Duration::from_secs(17);
         let delay = should_retry(529, 0, 3, Some(server_delay)).expect("should retry on 529 with Retry-After");
         assert_eq!(delay, server_delay);
+    }
+
+    #[test]
+    fn retry_after_header_respected_on_503() {
+        let server_delay = Duration::from_secs(3);
+        assert_eq!(should_retry(503, 0, 3, Some(server_delay)), Some(server_delay));
     }
 
     #[test]

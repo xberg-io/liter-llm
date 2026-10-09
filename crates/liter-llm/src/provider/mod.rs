@@ -475,7 +475,16 @@ pub(crate) trait Provider: Send + Sync {
     /// override this to embed deployment names, model IDs, or query parameters
     /// into the URL.
     fn build_url(&self, endpoint_path: &str, _model: &str) -> String {
-        format!("{}{}", self.base_url(), endpoint_path)
+        let Ok(mut base) = url::Url::parse(self.base_url()) else {
+            return format!("{}{}", self.base_url(), endpoint_path);
+        };
+        let path = format!(
+            "{}/{}",
+            base.path().trim_end_matches('/'),
+            endpoint_path.trim_start_matches('/')
+        );
+        base.set_path(&path);
+        base.into()
     }
 
     /// Parse a single SSE event data string into a `ChatCompletionChunk`.
@@ -907,7 +916,7 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
     }
 
     if model.starts_with("gemini/") || model.starts_with("google_ai/") {
-        return Some(Box::new(google_ai::GoogleAiProvider));
+        return Some(Box::new(google_ai::GoogleAiProvider::default()));
     }
 
     if model.starts_with("vertex_ai/") {
@@ -1040,7 +1049,10 @@ mod tests {
             ),
             ("COHERE_API_KEY", Box::new(super::cohere::CohereProvider)),
             ("MISTRAL_API_KEY", Box::new(super::mistral::MistralProvider)),
-            ("GEMINI_API_KEY", Box::new(super::google_ai::GoogleAiProvider)),
+            (
+                "GEMINI_API_KEY",
+                Box::new(super::google_ai::GoogleAiProvider::default()),
+            ),
             (
                 "AZURE_OPENAI_API_KEY",
                 Box::new(super::azure::AzureProvider::with_base_url("https://x.openai.azure.com")),

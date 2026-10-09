@@ -170,7 +170,7 @@ impl From<LiterLlmError> for ProxyError {
             LiterLlmError::Timeout => StatusCode::GATEWAY_TIMEOUT,
             LiterLlmError::ServiceUnavailable { .. } => StatusCode::SERVICE_UNAVAILABLE,
             LiterLlmError::ServerError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
-            LiterLlmError::Network(_) => StatusCode::BAD_GATEWAY,
+            LiterLlmError::Network { .. } => StatusCode::BAD_GATEWAY,
             LiterLlmError::Streaming { .. } => StatusCode::INTERNAL_SERVER_ERROR,
             LiterLlmError::EndpointNotSupported { .. } => StatusCode::NOT_IMPLEMENTED,
             LiterLlmError::InvalidHeader { .. } => StatusCode::BAD_REQUEST,
@@ -318,6 +318,7 @@ mod tests {
         let err: ProxyError = LiterLlmError::ServiceUnavailable {
             message: "down".into(),
             status: 503,
+            retry_after: None,
         }
         .into();
         let (status, _) = extract(err).await;

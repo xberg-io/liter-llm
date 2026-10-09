@@ -65,16 +65,19 @@ pub enum LiterLlmError {
     /// `status` preserves the exact HTTP status code received (502, 503, or 504).
     #[cfg_attr(alef, alef(error_code = 107))]
     #[error("service unavailable: {message}")]
-    ServiceUnavailable { message: String, status: u16 },
+    ServiceUnavailable {
+        message: String,
+        status: u16,
+        retry_after: Option<Duration>,
+    },
 
     #[cfg_attr(alef, alef(error_code = 108))]
     #[error("request timeout")]
     Timeout,
 
-    #[cfg(any(feature = "native-http", feature = "wasm-http"))]
     #[cfg_attr(alef, alef(error_code = 109))]
-    #[error(transparent)]
-    Network(reqwest::Error),
+    #[error("network error: {message}")]
+    Network { message: String },
 
     /// A catch-all for errors that occur during streaming response processing.
     ///
@@ -161,7 +164,9 @@ impl From<reqwest::Error> for LiterLlmError {
         if error.is_timeout() {
             return Self::Timeout;
         }
-        Self::Network(error)
+        Self::Network {
+            message: error.without_url().to_string(),
+        }
     }
 }
 
@@ -183,8 +188,7 @@ impl LiterLlmError {
             Self::ServerError { status, .. } => *status,
             Self::ServiceUnavailable { status, .. } => *status,
             Self::Timeout => 408,
-            #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-            Self::Network(_) => 0,
+            Self::Network { .. } => 0,
             Self::Streaming { .. } => 0,
             Self::EndpointNotSupported { .. } => 400,
             Self::InvalidHeader { .. } => 400,
@@ -208,7 +212,7 @@ impl LiterLlmError {
     #[must_use]
     pub fn retry_after(&self) -> Option<Duration> {
         match self {
-            Self::RateLimited { retry_after, .. } => *retry_after,
+            Self::RateLimited { retry_after, .. } | Self::ServiceUnavailable { retry_after, .. } => *retry_after,
             _ => None,
         }
     }
@@ -221,14 +225,14 @@ impl LiterLlmError {
     /// alternative endpoint.
     #[must_use]
     pub fn is_transient(&self) -> bool {
-        match self {
-            Self::RateLimited { .. } | Self::ServiceUnavailable { .. } | Self::Timeout | Self::ServerError { .. } => {
-                true
-            }
-            #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-            Self::Network(_) => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Self::RateLimited { .. }
+                | Self::ServiceUnavailable { .. }
+                | Self::Timeout
+                | Self::ServerError { .. }
+                | Self::Network { .. }
+        )
     }
 
     /// Return the OpenTelemetry `error.type` string for this error variant.
@@ -247,8 +251,7 @@ impl LiterLlmError {
             Self::ServerError { .. } => "ServerError",
             Self::ServiceUnavailable { .. } => "ServiceUnavailable",
             Self::Timeout => "Timeout",
-            #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-            Self::Network(_) => "Network",
+            Self::Network { .. } => "Network",
             Self::Streaming { .. } => "Streaming",
             Self::EndpointNotSupported { .. } => "EndpointNotSupported",
             Self::InvalidHeader { .. } => "InvalidHeader",
@@ -297,13 +300,19 @@ impl LiterLlmError {
                 message: message.clone(),
                 status: *status,
             },
-            Self::ServiceUnavailable { message, status } => Self::ServiceUnavailable {
+            Self::ServiceUnavailable {
+                message,
+                status,
+                retry_after,
+            } => Self::ServiceUnavailable {
                 message: message.clone(),
                 status: *status,
+                retry_after: *retry_after,
             },
             Self::Timeout => Self::Timeout,
-            #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-            Self::Network(e) => Self::InternalError { message: e.to_string() },
+            Self::Network { message } => Self::Network {
+                message: message.clone(),
+            },
             Self::Streaming { message } => Self::Streaming {
                 message: message.clone(),
             },
@@ -345,10 +354,12 @@ impl LiterLlmError {
         let parsed = serde_json::from_str::<ErrorResponse>(body).ok();
         let code = parsed.as_ref().and_then(|r| r.error.code.clone());
         let message = parsed.map(|r| r.error.message).unwrap_or_else(|| body.to_string());
+        let message_lower = message.to_ascii_lowercase();
 
         match status {
             401 | 403 => Self::Authentication { message, status },
-            429 => Self::RateLimited { message, retry_after },
+            429 if code.as_deref() == Some("insufficient_quota") => Self::BudgetExceeded { message, model: None },
+            429 | 529 => Self::RateLimited { message, retry_after },
             400 | 422 => {
                 if code.as_deref() == Some("context_length_exceeded") {
                     Self::ContextWindowExceeded { message }
@@ -358,12 +369,14 @@ impl LiterLlmError {
                     Self::ContentPolicy { message }
                 }
                 // ~keep Some providers omit `code`, so classify retryable errors from stable message fragments.
-                else if message.contains("context_length_exceeded")
-                    || message.contains("context window")
-                    || message.contains("maximum context length")
+                else if message_lower.contains("context_length_exceeded")
+                    || message_lower.contains("context window")
+                    || message_lower.contains("maximum context length")
+                    || message_lower.contains("prompt is too long")
+                    || message_lower.contains("input token count exceeds the maximum")
                 {
                     Self::ContextWindowExceeded { message }
-                } else if message.contains("content_policy") || message.contains("content_filter") {
+                } else if message_lower.contains("content_policy") || message_lower.contains("content_filter") {
                     Self::ContentPolicy { message }
                 } else {
                     Self::BadRequest { message, status }
@@ -373,7 +386,11 @@ impl LiterLlmError {
             405 | 413 => Self::BadRequest { message, status },
             408 => Self::Timeout,
             500 => Self::ServerError { message, status },
-            502..=504 => Self::ServiceUnavailable { message, status },
+            502..=504 => Self::ServiceUnavailable {
+                message,
+                status,
+                retry_after,
+            },
             400..=499 => Self::BadRequest { message, status },
             _ => Self::ServerError { message, status },
         }

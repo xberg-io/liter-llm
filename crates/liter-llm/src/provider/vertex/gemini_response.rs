@@ -99,6 +99,17 @@ pub(crate) fn transform_gemini_response(body: &mut Value) -> Result<()> {
 /// Normalize the non-chat response shapes this endpoint also carries: Vertex
 /// `:predict` embeddings, a model listing, or a Gemini `embedContent` result.
 fn non_chat_response(body: &Value) -> Option<Value> {
+    if let Some(embeddings) = body.get("embeddings").and_then(|value| value.as_array()) {
+        let data: Vec<Value> = embeddings
+            .iter()
+            .enumerate()
+            .map(|(index, embedding)| {
+                let values = embedding.get("values").cloned().unwrap_or(json!([]));
+                json!({"object": "embedding", "embedding": values, "index": index})
+            })
+            .collect();
+        return Some(json!({"object": "list", "data": data, "model": ""}));
+    }
     if let Some(predictions) = body.get("predictions").and_then(|p| p.as_array()) {
         let data: Vec<Value> = predictions
             .iter()

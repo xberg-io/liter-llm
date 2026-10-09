@@ -3041,8 +3041,11 @@ sealed class LiterLlmError with _$LiterLlmError {
   const factory LiterLlmError.serviceUnavailable({
     required String message,
     required PlatformInt64 status,
+    required PlatformInt64 retryAfter,
   }) = LiterLlmError_ServiceUnavailable;
   const factory LiterLlmError.timeout() = LiterLlmError_Timeout;
+  const factory LiterLlmError.network({required String message}) =
+      LiterLlmError_Network;
 
   /// A catch-all for errors that occur during streaming response processing.
   ///

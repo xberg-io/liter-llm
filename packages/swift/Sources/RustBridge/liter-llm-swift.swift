@@ -700,6 +700,9 @@ public func singleflight_result_noop(_ client: SingleflightResultRef) {
 public func capabilities<GenericIntoRustString: IntoRustString>(_ provider_name: GenericIntoRustString) -> ProviderCapabilities {
     ProviderCapabilities(ptr: __swift_bridge__$capabilities({ let rustString = provider_name.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
 }
+public func catalogInfo() -> Optional<CatalogInfo> {
+    { let val = __swift_bridge__$catalog_info(); if val != nil { return CatalogInfo(ptr: val!) } else { return nil } }()
+}
 public func checkBound<GenericIntoRustString: IntoRustString>(_ context: GenericIntoRustString, _ current_len: UInt, _ incoming: UInt, _ limit: UInt) throws -> () {
     try { let val = __swift_bridge__$check_bound({ let rustString = context.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), current_len, incoming, limit); if val != nil { throw RustString(ptr: val!) } else { return } }()
 }
@@ -715,6 +718,9 @@ public func completionCost<GenericIntoRustString: IntoRustString>(_ model: Gener
 public func completionCostWithCache<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ prompt_tokens: UInt64, _ cached_tokens: UInt64, _ completion_tokens: UInt64) -> RustString {
     RustString(ptr: __swift_bridge__$completion_cost_with_cache({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), prompt_tokens, cached_tokens, completion_tokens))
 }
+public func completionCostWithCacheDetails<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ prompt_tokens: UInt64, _ cached_tokens: UInt64, _ cache_creation_tokens: UInt64, _ completion_tokens: UInt64) -> RustString {
+    RustString(ptr: __swift_bridge__$completion_cost_with_cache_details({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), prompt_tokens, cached_tokens, cache_creation_tokens, completion_tokens))
+}
 public func complexProviderNames() throws -> RustVec<RustString> {
     try { let val = __swift_bridge__$complex_provider_names(); if val.is_ok { return RustVec(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
@@ -723,6 +729,9 @@ public func decodeDataUrl<GenericIntoRustString: IntoRustString>(_ url: GenericI
 }
 public func encodeDataUrl<GenericIntoRustString: IntoRustString>(_ bytes: RustVec<UInt8>, _ mime: Optional<GenericIntoRustString>) -> RustString {
     RustString(ptr: __swift_bridge__$encode_data_url({ let val = bytes; val.isOwned = false; return val.ptr }(), { if let rustString = optionalStringIntoRustString(mime) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
+}
+public func exactModelInfo<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString) -> Optional<ModelInfo> {
+    { let val = __swift_bridge__$exact_model_info({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val != nil { return ModelInfo(ptr: val!) } else { return nil } }()
 }
 public func installCatalogOverlayFromStr<GenericIntoRustString: IntoRustString>(_ catalog_json: GenericIntoRustString) throws -> () {
     try { let val = __swift_bridge__$install_catalog_overlay_from_str({ let rustString = catalog_json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val != nil { throw RustString(ptr: val!) } else { return } }()
@@ -839,6 +848,9 @@ public func budgetConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: 
 }
 public func cacheConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CacheConfig {
     try { let val = __swift_bridge__$cache_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CacheConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func catalogInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CatalogInfo {
+    try { let val = __swift_bridge__$catalog_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CatalogInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func catalogRefreshConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CatalogRefreshConfig {
     try { let val = __swift_bridge__$catalog_refresh_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CatalogRefreshConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -1193,6 +1205,9 @@ public func __alef_phantom_vec_batch_request_counts() -> RustVec<BatchRequestCou
 }
 public func __alef_phantom_vec_bedrock_config() -> RustVec<BedrockConfig> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_bedrock_config())
+}
+public func __alef_phantom_vec_catalog_info() -> RustVec<CatalogInfo> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_catalog_info())
 }
 public func __alef_phantom_vec_catalog_refresh_config() -> RustVec<CatalogRefreshConfig> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_catalog_refresh_config())
@@ -2514,6 +2529,111 @@ extension CacheConfig: Vectorizable {
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
         __swift_bridge__$Vec_CacheConfig$len(vecPtr)
+    }
+}
+
+
+public class CatalogInfo: CatalogInfoRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$CatalogInfo$_free(ptr)
+        }
+    }
+}
+extension CatalogInfo {
+    public convenience init<GenericIntoRustString: IntoRustString>(_ source: GenericIntoRustString, _ source_sha256: GenericIntoRustString, _ fetched: GenericIntoRustString, _ library_version: GenericIntoRustString, _ schema_version: UInt64, _ origin: GenericIntoRustString) {
+        self.init(ptr: __swift_bridge__$CatalogInfo$new({ let rustString = source.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = source_sha256.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = fetched.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = library_version.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), schema_version, { let rustString = origin.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
+    }
+}
+public class CatalogInfoRefMut: CatalogInfoRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class CatalogInfoRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension CatalogInfoRef {
+    public func source() -> RustString {
+        RustString(ptr: __swift_bridge__$CatalogInfo$source(ptr))
+    }
+
+    public func sourceSha256() -> RustString {
+        RustString(ptr: __swift_bridge__$CatalogInfo$source_sha256(ptr))
+    }
+
+    public func fetched() -> RustString {
+        RustString(ptr: __swift_bridge__$CatalogInfo$fetched(ptr))
+    }
+
+    public func libraryVersion() -> RustString {
+        RustString(ptr: __swift_bridge__$CatalogInfo$library_version(ptr))
+    }
+
+    public func schemaVersion() -> UInt64 {
+        __swift_bridge__$CatalogInfo$schema_version(ptr)
+    }
+
+    public func origin() -> RustString {
+        RustString(ptr: __swift_bridge__$CatalogInfo$origin(ptr))
+    }
+}
+extension CatalogInfo: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_CatalogInfo$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_CatalogInfo$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: CatalogInfo) {
+        __swift_bridge__$Vec_CatalogInfo$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_CatalogInfo$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (CatalogInfo(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<CatalogInfoRef> {
+        let pointer = __swift_bridge__$Vec_CatalogInfo$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return CatalogInfoRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<CatalogInfoRefMut> {
+        let pointer = __swift_bridge__$Vec_CatalogInfo$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return CatalogInfoRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<CatalogInfoRef> {
+        UnsafePointer<CatalogInfoRef>(OpaquePointer(__swift_bridge__$Vec_CatalogInfo$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_CatalogInfo$len(vecPtr)
     }
 }
 
@@ -6454,8 +6574,8 @@ public class ModelInfo: ModelInfoRefMut {
     }
 }
 extension ModelInfo {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ input_cost_per_token: Double, _ output_cost_per_token: Double, _ cache_read_input_token_cost: Optional<Double>, _ cache_creation_input_token_cost: Optional<Double>, _ input_cost_per_audio_token: Optional<Double>, _ output_cost_per_audio_token: Optional<Double>, _ output_cost_per_reasoning_token: Optional<Double>, _ max_tokens: Optional<UInt64>, _ max_input_tokens: Optional<UInt64>, _ max_output_tokens: Optional<UInt64>, _ mode: Optional<GenericIntoRustString>, _ supports_vision: Optional<Bool>, _ supports_function_calling: Optional<Bool>, _ supports_reasoning: Optional<Bool>, _ supports_structured_output: Optional<Bool>, _ supports_audio_input: Optional<Bool>, _ supports_audio_output: Optional<Bool>, _ supports_prompt_caching: Optional<Bool>, _ tiers: RustVec<ModelTier>) {
-        self.init(ptr: __swift_bridge__$ModelInfo$new(input_cost_per_token, output_cost_per_token, cache_read_input_token_cost.intoFfiRepr(), cache_creation_input_token_cost.intoFfiRepr(), input_cost_per_audio_token.intoFfiRepr(), output_cost_per_audio_token.intoFfiRepr(), output_cost_per_reasoning_token.intoFfiRepr(), max_tokens.intoFfiRepr(), max_input_tokens.intoFfiRepr(), max_output_tokens.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(mode) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), supports_vision.intoFfiRepr(), supports_function_calling.intoFfiRepr(), supports_reasoning.intoFfiRepr(), supports_structured_output.intoFfiRepr(), supports_audio_input.intoFfiRepr(), supports_audio_output.intoFfiRepr(), supports_prompt_caching.intoFfiRepr(), { let val = tiers; val.isOwned = false; return val.ptr }()))
+    public convenience init<GenericIntoRustString: IntoRustString>(_ matched_key: GenericIntoRustString, _ exact: Bool, _ input_cost_per_token: Double, _ output_cost_per_token: Double, _ cache_read_input_token_cost: Optional<Double>, _ cache_creation_input_token_cost: Optional<Double>, _ input_cost_per_audio_token: Optional<Double>, _ output_cost_per_audio_token: Optional<Double>, _ output_cost_per_reasoning_token: Optional<Double>, _ max_tokens: Optional<UInt64>, _ max_input_tokens: Optional<UInt64>, _ max_output_tokens: Optional<UInt64>, _ mode: Optional<GenericIntoRustString>, _ supports_vision: Optional<Bool>, _ supports_function_calling: Optional<Bool>, _ supports_reasoning: Optional<Bool>, _ supports_structured_output: Optional<Bool>, _ supports_audio_input: Optional<Bool>, _ supports_audio_output: Optional<Bool>, _ supports_prompt_caching: Optional<Bool>, _ tiers: RustVec<ModelTier>) {
+        self.init(ptr: __swift_bridge__$ModelInfo$new({ let rustString = matched_key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), exact, input_cost_per_token, output_cost_per_token, cache_read_input_token_cost.intoFfiRepr(), cache_creation_input_token_cost.intoFfiRepr(), input_cost_per_audio_token.intoFfiRepr(), output_cost_per_audio_token.intoFfiRepr(), output_cost_per_reasoning_token.intoFfiRepr(), max_tokens.intoFfiRepr(), max_input_tokens.intoFfiRepr(), max_output_tokens.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(mode) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), supports_vision.intoFfiRepr(), supports_function_calling.intoFfiRepr(), supports_reasoning.intoFfiRepr(), supports_structured_output.intoFfiRepr(), supports_audio_input.intoFfiRepr(), supports_audio_output.intoFfiRepr(), supports_prompt_caching.intoFfiRepr(), { let val = tiers; val.isOwned = false; return val.ptr }()))
     }
 }
 public class ModelInfoRefMut: ModelInfoRef {
@@ -6471,6 +6591,14 @@ public class ModelInfoRef {
     }
 }
 extension ModelInfoRef {
+    public func matchedKey() -> RustString {
+        RustString(ptr: __swift_bridge__$ModelInfo$matched_key(ptr))
+    }
+
+    public func exact() -> Bool {
+        __swift_bridge__$ModelInfo$exact(ptr)
+    }
+
     public func inputCostPerToken() -> Double {
         __swift_bridge__$ModelInfo$input_cost_per_token(ptr)
     }
@@ -7870,8 +7998,8 @@ public class PromptTokensDetails: PromptTokensDetailsRefMut {
     }
 }
 extension PromptTokensDetails {
-    public convenience init(_ cached_tokens: UInt64, _ audio_tokens: UInt64) {
-        self.init(ptr: __swift_bridge__$PromptTokensDetails$new(cached_tokens, audio_tokens))
+    public convenience init(_ cached_tokens: UInt64, _ cache_creation_tokens: UInt64, _ audio_tokens: UInt64) {
+        self.init(ptr: __swift_bridge__$PromptTokensDetails$new(cached_tokens, cache_creation_tokens, audio_tokens))
     }
 }
 public class PromptTokensDetailsRefMut: PromptTokensDetailsRef {
@@ -7889,6 +8017,10 @@ public class PromptTokensDetailsRef {
 extension PromptTokensDetailsRef {
     public func cachedTokens() -> UInt64 {
         __swift_bridge__$PromptTokensDetails$cached_tokens(ptr)
+    }
+
+    public func cacheCreationTokens() -> UInt64 {
+        __swift_bridge__$PromptTokensDetails$cache_creation_tokens(ptr)
     }
 
     public func audioTokens() -> UInt64 {

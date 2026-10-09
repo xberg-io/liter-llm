@@ -266,6 +266,14 @@ impl BedrockProvider {
         self
     }
 
+    /// Override the Bedrock runtime base URL while retaining native request transforms.
+    #[must_use]
+    pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.base_url = base_url.into().trim_end_matches('/').to_owned();
+        self.cross_region_prefix = None;
+        self
+    }
+
     /// Set explicit AWS credentials for SigV4 signing, overriding the
     /// `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN`
     /// environment variables when present.

@@ -333,6 +333,7 @@ where
             return Poll::Ready(Err(LiterLlmError::ServiceUnavailable {
                 message: "provider is unhealthy (health check failed)".into(),
                 status: 503,
+                retry_after: None,
             }));
         }
         self.inner.poll_ready(cx)
@@ -344,6 +345,7 @@ where
                 Err(LiterLlmError::ServiceUnavailable {
                     message: "provider is unhealthy (health check failed)".into(),
                     status: 503,
+                    retry_after: None,
                 })
             });
         }
@@ -490,6 +492,7 @@ where
             return Poll::Ready(Err(LiterLlmError::ServiceUnavailable {
                 message: "service is unhealthy (health check failed)".into(),
                 status: 503,
+                retry_after: None,
             }));
         }
         self.inner.poll_ready(cx)
@@ -501,6 +504,7 @@ where
                 Err(LiterLlmError::ServiceUnavailable {
                     message: "service is unhealthy (health check failed)".into(),
                     status: 503,
+                    retry_after: None,
                 })
             });
         }
@@ -586,6 +590,7 @@ mod tests {
                     ScriptedOutcome::Unavailable => Err(LiterLlmError::ServiceUnavailable {
                         message: "probe failed".into(),
                         status: 503,
+                        retry_after: None,
                     }),
                     ScriptedOutcome::EndpointNotSupported => Err(LiterLlmError::EndpointNotSupported {
                         endpoint: "list_models".into(),

@@ -913,9 +913,20 @@ impl DefaultClient {
 
         let mut body = serde_json::to_value(serializable)?;
         if let Some(obj) = body.as_object_mut() {
-            obj.insert("model".into(), serde_json::Value::String(bare_model));
+            obj.insert("model".into(), serde_json::Value::String(bare_model.clone()));
             if let Some(s) = stream {
                 obj.insert("stream".into(), serde_json::Value::Bool(s));
+                if s && matches!(prov.name(), "openai" | "azure" | "custom") && !obj.contains_key("stream_options") {
+                    obj.insert("stream_options".into(), serde_json::json!({"include_usage": true}));
+                }
+            }
+            if matches!(prov.name(), "openai" | "azure")
+                && obj.get("max_completion_tokens").is_none()
+                && obj.get("max_tokens").is_some()
+                && model_uses_max_completion_tokens(&bare_model)
+                && let Some(max_tokens) = obj.remove("max_tokens")
+            {
+                obj.insert("max_completion_tokens".into(), max_tokens);
             }
         }
         prov.transform_request(&mut body)?;
@@ -992,6 +1003,16 @@ impl DefaultClient {
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn model_uses_max_completion_tokens(model: &str) -> bool {
+    crate::cost::model_info(model).is_some_and(|info| info.supports_reasoning == Some(true))
+        || model.starts_with("gpt-5")
+        || model
+            .strip_prefix('o')
+            .and_then(|suffix| suffix.chars().next())
+            .is_some_and(|character| character.is_ascii_digit())
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
 /// Resolve the provider to use for all requests on this client.
 ///
 /// Priority:
@@ -1016,6 +1037,21 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Arc<dyn Pr
             && model.starts_with("anthropic/")
         {
             return Arc::new(provider::anthropic::AnthropicProvider::with_base_url(base_url.clone()));
+        }
+        if let Some(model) = model_hint
+            && (model.starts_with("gemini/") || model.starts_with("google_ai/"))
+        {
+            return Arc::new(provider::google_ai::GoogleAiProvider::with_base_url(base_url.clone()));
+        }
+        if let Some(model) = model_hint
+            && model.starts_with("vertex_ai/")
+        {
+            return Arc::new(provider::vertex::VertexAiProvider::with_base_url(base_url.clone()));
+        }
+        if let Some(model) = model_hint
+            && model.starts_with("bedrock/")
+        {
+            return Arc::new(build_bedrock_provider_config(config).with_base_url(base_url.clone()));
         }
         return Arc::new(OpenAiCompatibleProvider {
             name: "custom".into(),
@@ -1044,13 +1080,18 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Arc<dyn Pr
 /// matching [`provider::bedrock::BedrockProvider::from_env`].
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 fn build_bedrock_provider(config: &ClientConfig) -> Arc<dyn Provider> {
-    Arc::new(provider::bedrock::BedrockProvider::from_config(
+    Arc::new(build_bedrock_provider_config(config))
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn build_bedrock_provider_config(config: &ClientConfig) -> provider::bedrock::BedrockProvider {
+    provider::bedrock::BedrockProvider::from_config(
         config.bedrock_region.clone(),
         config.bedrock_cross_region_prefix.clone(),
         config.bedrock_access_key_id.clone(),
         config.bedrock_secret_access_key.clone(),
         config.bedrock_session_token.clone(),
-    ))
+    )
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -2472,7 +2513,7 @@ mod build_provider_tests {
             "bedrock url = {bedrock_url}"
         );
 
-        let google_ai = provider::google_ai::GoogleAiProvider;
+        let google_ai = provider::google_ai::GoogleAiProvider::default();
         let google_ai_url = google_ai.build_url(google_ai.responses_path(), "");
         assert!(
             reject_malformed_responses_url(&google_ai_url, google_ai.name()).is_ok(),
@@ -2510,6 +2551,37 @@ mod build_provider_tests {
         assert_eq!(p.name(), "custom");
         let url = p.build_url("/chat/completions", "llama3.1:8b");
         assert_eq!(url, "http://localhost:11434/v1/chat/completions");
+    }
+
+    #[test]
+    fn base_url_path_is_joined_before_existing_query() {
+        let config = ClientConfigBuilder::new("test-key")
+            .base_url("http://localhost:11434/v1?token=secret")
+            .build();
+        let provider = build_provider(&config, Some("local-model"));
+        let url = provider.build_url("/chat/completions", "local-model");
+        assert_eq!(url, "http://localhost:11434/v1/chat/completions?token=secret");
+    }
+
+    #[test]
+    fn native_provider_prefixes_keep_transforms_with_base_url() {
+        let config = ClientConfigBuilder::new("test-key")
+            .base_url("http://localhost:8080/native")
+            .build();
+
+        for (model, expected_name, expected_path) in [
+            ("gemini/gemini-2.5-flash", "google_ai", ":generateContent"),
+            ("google_ai/gemini-2.5-flash", "google_ai", ":generateContent"),
+            ("vertex_ai/gemini-2.5-flash", "vertex_ai", ":generateContent"),
+            ("bedrock/anthropic.claude-v2", "bedrock", "/model/"),
+        ] {
+            let provider = build_provider(&config, Some(model));
+            let bare_model = provider.strip_model_prefix(model);
+            let url = provider.build_url(provider.chat_completions_path(), bare_model);
+            assert_eq!(provider.name(), expected_name);
+            assert!(url.starts_with("http://localhost:8080/native"), "url = {url}");
+            assert!(url.contains(expected_path), "url = {url}");
+        }
     }
 
     #[test]
@@ -2999,6 +3071,80 @@ mod build_provider_tests {
                 prepared.body_json["stream"], streaming,
                 "OpenAI-shaped bodies must keep the transport-controlled stream flag"
             );
+            if streaming {
+                assert_eq!(prepared.body_json["stream_options"]["include_usage"], true);
+            } else {
+                assert!(prepared.body_json.get("stream_options").is_none());
+            }
         }
+    }
+
+    #[test]
+    fn caller_can_disable_default_stream_usage_request() {
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("gpt-4"))
+            .expect("client construction should succeed");
+        let req = ChatCompletionRequest {
+            model: "gpt-4".into(),
+            messages: vec![],
+            stream_options: Some(crate::types::StreamOptions {
+                include_usage: Some(false),
+            }),
+            ..Default::default()
+        };
+        let prepared = client
+            .prepare_request(
+                &req,
+                |provider| provider.chat_completions_path(),
+                &req.model,
+                Some(true),
+            )
+            .expect("prepare_request should not fail");
+        assert_eq!(prepared.body_json["stream_options"]["include_usage"], false);
+    }
+
+    #[test]
+    fn openai_reasoning_models_translate_max_tokens() {
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("openai/gpt-5"))
+            .expect("client construction should succeed");
+        let req = ChatCompletionRequest {
+            model: "openai/gpt-5".into(),
+            messages: vec![],
+            max_tokens: Some(512),
+            ..Default::default()
+        };
+        let prepared = client
+            .prepare_request(
+                &req,
+                |provider| provider.chat_completions_path(),
+                &req.model,
+                Some(false),
+            )
+            .expect("prepare_request should not fail");
+        assert_eq!(prepared.body_json["max_completion_tokens"], 512);
+        assert!(prepared.body_json.get("max_tokens").is_none());
+    }
+
+    #[test]
+    fn custom_openai_compatible_endpoint_keeps_max_tokens() {
+        let config = ClientConfigBuilder::new("test-key")
+            .base_url("http://localhost:8080/v1")
+            .build();
+        let client = DefaultClient::new(config, Some("gpt-5")).expect("client construction should succeed");
+        let req = ChatCompletionRequest {
+            model: "gpt-5".into(),
+            messages: vec![],
+            max_tokens: Some(512),
+            ..Default::default()
+        };
+        let prepared = client
+            .prepare_request(
+                &req,
+                |provider| provider.chat_completions_path(),
+                &req.model,
+                Some(false),
+            )
+            .expect("prepare_request should not fail");
+        assert_eq!(prepared.body_json["max_tokens"], 512);
+        assert!(prepared.body_json.get("max_completion_tokens").is_none());
     }
 }

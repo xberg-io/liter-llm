@@ -76,6 +76,7 @@ futures-util = "0.3"
 gcp_auth = { version = "0.12", default-features = false, features = ["ring"] }
 hex = "0.4"
 http = "1"
+httpdate = "1"
 jsonschema = "0.58"
 jsonwebtoken = { version = "11", default-features = false, features = ["use_pem"] }
 

@@ -98,14 +98,19 @@ fn split_system_messages(messages: Vec<Value>) -> (Vec<Value>, Vec<Value>) {
     (system_blocks, non_system_messages)
 }
 
-/// Default `max_tokens` from `max_completion_tokens` or [`DEFAULT_MAX_TOKENS`];
+/// Default `max_tokens` from `max_completion_tokens`, catalog metadata, or [`DEFAULT_MAX_TOKENS`];
 /// Anthropic requires the field.
 fn apply_max_tokens(body: &mut Value) {
     if body.get("max_tokens").is_none() {
         if let Some(mct) = body.get("max_completion_tokens").cloned() {
             body["max_tokens"] = mct;
         } else {
-            body["max_tokens"] = json!(DEFAULT_MAX_TOKENS);
+            let catalog_limit = body
+                .get("model")
+                .and_then(Value::as_str)
+                .and_then(crate::cost::model_info)
+                .and_then(|info| info.max_output_tokens);
+            body["max_tokens"] = json!(catalog_limit.unwrap_or(DEFAULT_MAX_TOKENS));
         }
     }
     body.as_object_mut().map(|o| o.remove("max_completion_tokens"));
@@ -195,12 +200,35 @@ fn apply_reasoning_effort(body: &mut Value) {
     }
 }
 
-/// Emulate `response_format` with a JSON instruction prepended to `system`.
+/// Translate supported JSON schemas natively and emulate other formats with a system instruction.
 fn apply_response_format(body: &mut Value) {
     let Some(response_format) = body.as_object_mut().and_then(|o| o.remove("response_format")) else {
         return;
     };
     let rf_type = response_format.get("type").and_then(|t| t.as_str()).unwrap_or("");
+    let supports_structured_output = body
+        .get("model")
+        .and_then(Value::as_str)
+        .and_then(crate::cost::model_info)
+        .is_some_and(|info| info.supports_structured_output == Some(true));
+    if rf_type == "json_schema"
+        && supports_structured_output
+        && let Some(schema) = response_format.pointer("/json_schema/schema").cloned()
+    {
+        body["output_config"] = json!({
+            "format": {
+                "type": "json_schema",
+                "schema": schema
+            }
+        });
+        return;
+    }
+    if rf_type == "json_schema" && response_format.pointer("/json_schema/strict").and_then(Value::as_bool) == Some(true)
+    {
+        tracing::warn!(
+            "strict JSON schema output is unavailable for this Anthropic model; falling back to prompt-based formatting"
+        );
+    }
     let instruction = match rf_type {
         "json_object" => {
             json!({"type": "text", "text": "Respond with valid JSON only. Do not include any text outside the JSON object."})
@@ -219,14 +247,14 @@ fn apply_response_format(body: &mut Value) {
         }
         _ => return,
     };
-    prepend_system_instruction(body, instruction);
+    append_system_instruction(body, instruction);
 }
 
-/// Insert `instruction` as the first `system` block, creating `system` when it
+/// Insert `instruction` after caller-provided `system` blocks, creating `system` when it
 /// is absent or not an array.
-fn prepend_system_instruction(body: &mut Value, instruction: Value) {
+fn append_system_instruction(body: &mut Value, instruction: Value) {
     if let Some(system) = body.get_mut("system").and_then(|s| s.as_array_mut()) {
-        system.insert(0, instruction);
+        system.push(instruction);
     } else {
         body["system"] = json!([instruction]);
     }

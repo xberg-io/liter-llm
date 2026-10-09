@@ -6,6 +6,9 @@ from pathlib import Path
 import pytest
 from prepare_go_release_assets import prepare
 
+ROOT = Path(__file__).resolve().parents[2]
+PUBLISH_WORKFLOW = ROOT / ".github" / "workflows" / "publish.yaml"
+
 
 def test_alias_preserves_archive_and_writes_installer_checksum(tmp_path: Path) -> None:
     """The installer alias must contain exactly the published native payload."""
@@ -37,3 +40,19 @@ def test_conflicting_existing_alias_is_not_overwritten(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="differs"):
         prepare(tmp_path, "liter-llm", "2.0.0")
     assert alias.read_bytes() == b"existing"
+
+
+def test_publish_workflow_builds_both_musl_go_assets() -> None:
+    workflow = PUBLISH_WORKFLOW.read_text()
+    assert workflow.count("target: x86_64-unknown-linux-musl") == 1
+    assert workflow.count("target: aarch64-unknown-linux-musl") == 1
+    assert "needs.build-go-musl.result == 'success'" in workflow
+    assert '*-linux-x86_64-musl)  lib_dir="linux-x86_64-musl"' in workflow
+    assert '*-linux-aarch64-musl) lib_dir="linux-aarch64-musl"' in workflow
+
+
+def test_go_archives_are_stripped_before_packaging() -> None:
+    workflow = PUBLISH_WORKFLOW.read_text()
+    assert workflow.count("Strip static archive debug symbols") == 2
+    assert workflow.count('archive="target/${TARGET}/release/libliter_llm_ffi.a"') == 2
+    assert workflow.index("Strip static archive debug symbols") < workflow.index("Package Go FFI")

@@ -8245,42 +8245,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return LiterLlmError_ServiceUnavailable(
           message: dco_decode_String(raw[1]),
           status: dco_decode_i_64(raw[2]),
+          retryAfter: dco_decode_i_64(raw[3]),
         );
       case 8:
         return LiterLlmError_Timeout();
       case 9:
-        return LiterLlmError_Streaming(message: dco_decode_String(raw[1]));
+        return LiterLlmError_Network(message: dco_decode_String(raw[1]));
       case 10:
+        return LiterLlmError_Streaming(message: dco_decode_String(raw[1]));
+      case 11:
         return LiterLlmError_EndpointNotSupported(
           endpoint: dco_decode_String(raw[1]),
           provider: dco_decode_String(raw[2]),
         );
-      case 11:
+      case 12:
         return LiterLlmError_InvalidHeader(
           name: dco_decode_String(raw[1]),
           reason: dco_decode_String(raw[2]),
         );
-      case 12:
-        return LiterLlmError_Serialization(field0: dco_decode_String(raw[1]));
       case 13:
+        return LiterLlmError_Serialization(field0: dco_decode_String(raw[1]));
+      case 14:
         return LiterLlmError_BudgetExceeded(
           message: dco_decode_String(raw[1]),
           model: dco_decode_String(raw[2]),
         );
-      case 14:
-        return LiterLlmError_HookRejected(message: dco_decode_String(raw[1]));
       case 15:
-        return LiterLlmError_InternalError(message: dco_decode_String(raw[1]));
+        return LiterLlmError_HookRejected(message: dco_decode_String(raw[1]));
       case 16:
+        return LiterLlmError_InternalError(message: dco_decode_String(raw[1]));
+      case 17:
         return LiterLlmError_OutboundForbidden(
           url: dco_decode_String(raw[1]),
           reason: dco_decode_String(raw[2]),
         );
-      case 17:
+      case 18:
         return LiterLlmError_IdempotencyConflict(
           key: dco_decode_String(raw[1]),
         );
-      case 18:
+      case 19:
         return LiterLlmError_IdempotencyInFlight(
           key: dco_decode_String(raw[1]),
         );
@@ -11504,53 +11507,58 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 7:
         var var_message = sse_decode_String(deserializer);
         var var_status = sse_decode_i_64(deserializer);
+        var var_retryAfter = sse_decode_i_64(deserializer);
         return LiterLlmError_ServiceUnavailable(
           message: var_message,
           status: var_status,
+          retryAfter: var_retryAfter,
         );
       case 8:
         return LiterLlmError_Timeout();
       case 9:
         var var_message = sse_decode_String(deserializer);
-        return LiterLlmError_Streaming(message: var_message);
+        return LiterLlmError_Network(message: var_message);
       case 10:
+        var var_message = sse_decode_String(deserializer);
+        return LiterLlmError_Streaming(message: var_message);
+      case 11:
         var var_endpoint = sse_decode_String(deserializer);
         var var_provider = sse_decode_String(deserializer);
         return LiterLlmError_EndpointNotSupported(
           endpoint: var_endpoint,
           provider: var_provider,
         );
-      case 11:
+      case 12:
         var var_name = sse_decode_String(deserializer);
         var var_reason = sse_decode_String(deserializer);
         return LiterLlmError_InvalidHeader(name: var_name, reason: var_reason);
-      case 12:
+      case 13:
         var var_field0 = sse_decode_String(deserializer);
         return LiterLlmError_Serialization(field0: var_field0);
-      case 13:
+      case 14:
         var var_message = sse_decode_String(deserializer);
         var var_model = sse_decode_String(deserializer);
         return LiterLlmError_BudgetExceeded(
           message: var_message,
           model: var_model,
         );
-      case 14:
-        var var_message = sse_decode_String(deserializer);
-        return LiterLlmError_HookRejected(message: var_message);
       case 15:
         var var_message = sse_decode_String(deserializer);
-        return LiterLlmError_InternalError(message: var_message);
+        return LiterLlmError_HookRejected(message: var_message);
       case 16:
+        var var_message = sse_decode_String(deserializer);
+        return LiterLlmError_InternalError(message: var_message);
+      case 17:
         var var_url = sse_decode_String(deserializer);
         var var_reason = sse_decode_String(deserializer);
         return LiterLlmError_OutboundForbidden(
           url: var_url,
           reason: var_reason,
         );
-      case 17:
+      case 18:
         var var_key = sse_decode_String(deserializer);
         return LiterLlmError_IdempotencyConflict(key: var_key);
-      case 18:
+      case 19:
         var var_key = sse_decode_String(deserializer);
         return LiterLlmError_IdempotencyInFlight(key: var_key);
       default:
@@ -14983,54 +14991,59 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case LiterLlmError_ServiceUnavailable(
         message: final message,
         status: final status,
+        retryAfter: final retryAfter,
       ):
         sse_encode_i_32(7, serializer);
         sse_encode_String(message, serializer);
         sse_encode_i_64(status, serializer);
+        sse_encode_i_64(retryAfter, serializer);
       case LiterLlmError_Timeout():
         sse_encode_i_32(8, serializer);
-      case LiterLlmError_Streaming(message: final message):
+      case LiterLlmError_Network(message: final message):
         sse_encode_i_32(9, serializer);
+        sse_encode_String(message, serializer);
+      case LiterLlmError_Streaming(message: final message):
+        sse_encode_i_32(10, serializer);
         sse_encode_String(message, serializer);
       case LiterLlmError_EndpointNotSupported(
         endpoint: final endpoint,
         provider: final provider,
       ):
-        sse_encode_i_32(10, serializer);
+        sse_encode_i_32(11, serializer);
         sse_encode_String(endpoint, serializer);
         sse_encode_String(provider, serializer);
       case LiterLlmError_InvalidHeader(name: final name, reason: final reason):
-        sse_encode_i_32(11, serializer);
+        sse_encode_i_32(12, serializer);
         sse_encode_String(name, serializer);
         sse_encode_String(reason, serializer);
       case LiterLlmError_Serialization(field0: final field0):
-        sse_encode_i_32(12, serializer);
+        sse_encode_i_32(13, serializer);
         sse_encode_String(field0, serializer);
       case LiterLlmError_BudgetExceeded(
         message: final message,
         model: final model,
       ):
-        sse_encode_i_32(13, serializer);
+        sse_encode_i_32(14, serializer);
         sse_encode_String(message, serializer);
         sse_encode_String(model, serializer);
       case LiterLlmError_HookRejected(message: final message):
-        sse_encode_i_32(14, serializer);
+        sse_encode_i_32(15, serializer);
         sse_encode_String(message, serializer);
       case LiterLlmError_InternalError(message: final message):
-        sse_encode_i_32(15, serializer);
+        sse_encode_i_32(16, serializer);
         sse_encode_String(message, serializer);
       case LiterLlmError_OutboundForbidden(
         url: final url,
         reason: final reason,
       ):
-        sse_encode_i_32(16, serializer);
+        sse_encode_i_32(17, serializer);
         sse_encode_String(url, serializer);
         sse_encode_String(reason, serializer);
       case LiterLlmError_IdempotencyConflict(key: final key):
-        sse_encode_i_32(17, serializer);
+        sse_encode_i_32(18, serializer);
         sse_encode_String(key, serializer);
       case LiterLlmError_IdempotencyInFlight(key: final key):
-        sse_encode_i_32(18, serializer);
+        sse_encode_i_32(19, serializer);
         sse_encode_String(key, serializer);
     }
   }

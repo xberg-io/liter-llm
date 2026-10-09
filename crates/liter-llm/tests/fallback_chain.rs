@@ -65,6 +65,7 @@ fn transient_err() -> LiterLlmError {
     LiterLlmError::ServiceUnavailable {
         message: "503".into(),
         status: 503,
+        retry_after: None,
     }
 }
 

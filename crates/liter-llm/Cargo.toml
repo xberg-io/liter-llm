@@ -118,6 +118,8 @@ futures-util = { workspace = true, optional = true }
 gcp_auth = { workspace = true, optional = true }
 gloo-timers = { version = "0.4", features = ["futures"], optional = true }
 hex.workspace = true
+http.workspace = true
+httpdate.workspace = true
 jsonwebtoken = { workspace = true, optional = true }
 memchr = { workspace = true, optional = true }
 opendal = { workspace = true, optional = true }

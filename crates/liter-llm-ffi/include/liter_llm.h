@@ -744,6 +744,7 @@ enum LITERLLMAlefFfiErrorCode
   LiterLlmLiterLlmErrorServerError = 106,
   LiterLlmLiterLlmErrorServiceUnavailable = 107,
   LiterLlmLiterLlmErrorTimeout = 108,
+  LiterLlmLiterLlmErrorNetwork = 109,
   LiterLlmLiterLlmErrorStreaming = 110,
   LiterLlmLiterLlmErrorEndpointNotSupported = 111,
   LiterLlmLiterLlmErrorInvalidHeader = 112,

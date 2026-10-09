@@ -55,6 +55,31 @@ fn vertex_embedding_rejects_multimodal_input() {
 }
 
 #[test]
+fn gemini_embedding_preserves_batch_order_and_dimensions() {
+    let mut body = json!({
+        "model": "gemini-embedding-001",
+        "input": ["first", "second", "third"],
+        "dimensions": 768
+    });
+    transform_gemini_embed_request(&mut body).expect("text batch should be accepted");
+    let requests = body["requests"].as_array().expect("batch requests must be emitted");
+    assert_eq!(requests.len(), 3);
+    assert_eq!(requests[0]["content"]["parts"][0]["text"], "first");
+    assert_eq!(requests[1]["content"]["parts"][0]["text"], "second");
+    assert_eq!(requests[2]["content"]["parts"][0]["text"], "third");
+    assert_eq!(requests[0]["model"], "models/gemini-embedding-001");
+    assert_eq!(requests[0]["outputDimensionality"], 768);
+}
+
+#[test]
+fn vertex_embedding_preserves_every_batch_input() {
+    let mut body = json!({"input": ["first", "second", "third"]});
+    transform_vertex_embed_request(&mut body).expect("text batch should be accepted");
+    assert_eq!(body["instances"].as_array().map(Vec::len), Some(3));
+    assert_eq!(body["instances"][2]["content"], "third");
+}
+
+#[test]
 fn base_url_constructed_from_project_and_location() {
     let p = provider();
     assert_eq!(

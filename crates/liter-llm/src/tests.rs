@@ -1354,6 +1354,37 @@ mod error_tests {
         assert!(matches!(err, LiterLlmError::RateLimited { .. }));
     }
 
+    #[test]
+    fn insufficient_quota_is_not_transient_rate_limit() {
+        let err = LiterLlmError::from_status(
+            429,
+            r#"{"error":{"message":"quota exhausted","code":"insufficient_quota"}}"#,
+            Some(std::time::Duration::from_secs(7)),
+        );
+        assert!(matches!(err, LiterLlmError::BudgetExceeded { .. }));
+        assert!(!err.is_transient());
+    }
+
+    #[test]
+    fn provider_context_overflow_messages_are_classified() {
+        for message in [
+            "prompt is too long: 250000 tokens > 200000 maximum",
+            "input token count exceeds the maximum allowed tokens",
+        ] {
+            let body = format!(r#"{{"error":{{"message":"{message}"}}}}"#);
+            assert!(matches!(
+                LiterLlmError::from_status(400, &body, None),
+                LiterLlmError::ContextWindowExceeded { .. }
+            ));
+        }
+    }
+
+    #[test]
+    fn service_unavailable_exposes_retry_after() {
+        let err = LiterLlmError::from_status(503, "unavailable", Some(std::time::Duration::from_secs(3)));
+        assert_eq!(err.retry_after(), Some(std::time::Duration::from_secs(3)));
+    }
+
     /// The parsed `Retry-After` delay must be readable through an accessor.
     ///
     /// It reached the Rust core correctly but had no getter, so every generated
@@ -1503,7 +1534,7 @@ mod error_tests {
         drop(listener);
         let client = reqwest::Client::new();
         let err = client.get(&url).send().await.expect_err("connection refused");
-        assert!(matches!(LiterLlmError::from(err), LiterLlmError::Network(_)));
+        assert!(matches!(LiterLlmError::from(err), LiterLlmError::Network { .. }));
     }
 }
 
