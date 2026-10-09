@@ -24,14 +24,16 @@
 //! by design (see its doc comment) and never reflects this overlay.
 
 use std::collections::HashMap;
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock};
 use std::time::SystemTime;
 
 use arc_swap::ArcSwapOption;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
-use super::{ModelPricing, registry_from_catalog_str};
+use super::{CatalogInfo, ModelPricing, catalog_info_from_str, registry_from_catalog_str};
 
 /// Default source for [`refresh_catalog`]: the rolling `model-catalog`
 /// release asset published by this repository.
@@ -57,6 +59,7 @@ const FETCH_TIMEOUT_SECS: u64 = 30;
 /// installed) always remains available; this is what makes runtime refresh
 /// air-gap-safe.
 static OVERLAY: LazyLock<ArcSwapOption<HashMap<String, ModelPricing>>> = LazyLock::new(|| ArcSwapOption::from(None));
+static OVERLAY_INFO: LazyLock<ArcSwapOption<CatalogInfo>> = LazyLock::new(|| ArcSwapOption::from(None));
 
 /// Read the current overlay registry, if one has been installed.
 ///
@@ -65,6 +68,10 @@ static OVERLAY: LazyLock<ArcSwapOption<HashMap<String, ModelPricing>>> = LazyLoc
 /// across `.await` points or blocking a concurrent install.
 pub(crate) fn overlay_registry() -> Option<Arc<HashMap<String, ModelPricing>>> {
     OVERLAY.load_full()
+}
+
+pub(crate) fn overlay_catalog_info() -> Option<CatalogInfo> {
+    OVERLAY_INFO.load_full().map(|info| (*info).clone())
 }
 
 /// Plain-data configuration for [`refresh_catalog`].
@@ -85,7 +92,7 @@ pub struct CatalogRefreshConfig {
     /// refetch is attempted, in seconds.
     pub ttl_seconds: u64,
     /// Filesystem path for the on-disk cache. `None` uses a default path
-    /// under `std::env::temp_dir()`.
+    /// under the current user's platform cache directory.
     pub cache_path: Option<String>,
 }
 
@@ -166,6 +173,12 @@ pub enum CatalogRefreshError {
         /// stays losslessly representable across every language binding.
         message: String,
     },
+    /// Catalog bytes did not match the published SHA-256 checksum.
+    #[error("catalog integrity check failed: {message}")]
+    Integrity {
+        /// Human-readable checksum failure detail.
+        message: String,
+    },
 }
 
 /// Install the overlay registry from a raw catalog JSON string, bypassing
@@ -183,7 +196,10 @@ pub enum CatalogRefreshError {
 /// call.
 pub fn install_catalog_overlay_from_str(catalog_json: &str) -> Result<(), CatalogRefreshError> {
     let registry = registry_from_catalog_str(catalog_json).map_err(|message| CatalogRefreshError::Parse { message })?;
+    let info =
+        catalog_info_from_str(catalog_json, "overlay").map_err(|message| CatalogRefreshError::Parse { message })?;
     OVERLAY.store(Some(Arc::new(registry)));
+    OVERLAY_INFO.store(Some(Arc::new(info)));
     Ok(())
 }
 
@@ -195,11 +211,86 @@ pub fn install_catalog_overlay_from_str(catalog_json: &str) -> Result<(), Catalo
 /// usable by long-running processes that want to abandon a runtime refresh.
 pub fn clear_catalog_overlay() {
     OVERLAY.store(None);
+    OVERLAY_INFO.store(None);
 }
 
-/// Default on-disk cache path: `<temp_dir>/liter-llm/catalog.json`.
+/// Default on-disk cache path in the current user's platform cache directory.
 fn default_cache_path() -> PathBuf {
-    std::env::temp_dir().join(CACHE_DIR_NAME).join(CACHE_FILE_NAME)
+    #[cfg(target_os = "macos")]
+    let root = std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .map(|home| home.join("Library").join("Caches"));
+    #[cfg(target_os = "windows")]
+    let root = std::env::var_os("LOCALAPPDATA").map(PathBuf::from);
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    let root = std::env::var_os("XDG_CACHE_HOME").map(PathBuf::from).or_else(|| {
+        std::env::var_os("HOME")
+            .map(PathBuf::from)
+            .map(|home| home.join(".cache"))
+    });
+
+    root.unwrap_or_else(|| PathBuf::from(".cache"))
+        .join(CACHE_DIR_NAME)
+        .join(CACHE_FILE_NAME)
+}
+
+fn checksum_path(cache_path: &Path) -> PathBuf {
+    let mut path = cache_path.as_os_str().to_owned();
+    path.push(".sha256");
+    PathBuf::from(path)
+}
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    hex::encode(Sha256::digest(bytes))
+}
+
+fn parse_checksum(raw: &str) -> Result<&str, CatalogRefreshError> {
+    let checksum = raw.split_whitespace().next().unwrap_or_default();
+    if checksum.len() != 64 || !checksum.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err(CatalogRefreshError::Integrity {
+            message: "published checksum is not a 64-character SHA-256 value".to_string(),
+        });
+    }
+    Ok(checksum)
+}
+
+fn verify_checksum(bytes: &[u8], checksum_raw: &str) -> Result<(), CatalogRefreshError> {
+    let expected = parse_checksum(checksum_raw)?;
+    let actual = sha256_hex(bytes);
+    if actual.eq_ignore_ascii_case(expected) {
+        Ok(())
+    } else {
+        Err(CatalogRefreshError::Integrity {
+            message: format!("expected {expected}, computed {actual}"),
+        })
+    }
+}
+
+fn write_private_file(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    if let Some(parent) = path.parent() {
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::{DirBuilderExt as _, PermissionsExt as _};
+            let mut builder = std::fs::DirBuilder::new();
+            builder.recursive(true).mode(0o700).create(parent)?;
+            std::fs::set_permissions(parent, std::fs::Permissions::from_mode(0o700))?;
+        }
+        #[cfg(not(unix))]
+        std::fs::create_dir_all(parent)?;
+    }
+
+    let temporary = path.with_extension(format!("tmp-{}", std::process::id()));
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create(true).truncate(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt as _;
+        options.mode(0o600);
+    }
+    let mut file = options.open(&temporary)?;
+    file.write_all(bytes)?;
+    file.sync_all()?;
+    std::fs::rename(temporary, path)
 }
 
 /// Resolve the effective cache path for `config`.
@@ -266,12 +357,23 @@ pub async fn refresh_catalog(config: &CatalogRefreshConfig) -> Result<RefreshOut
 /// [`refresh_catalog`]'s cache-hit path: read, parse, and install the
 /// overlay from an already-fresh cache file.
 fn refresh_from_cache(cache_path: &Path) -> Result<RefreshOutcome, CatalogRefreshError> {
-    let raw = std::fs::read_to_string(cache_path).map_err(|source| CatalogRefreshError::Cache {
+    let raw = std::fs::read(cache_path).map_err(|source| CatalogRefreshError::Cache {
         path: cache_path.display().to_string(),
         message: source.to_string(),
     })?;
-    let registry = registry_from_catalog_str(&raw).map_err(|message| CatalogRefreshError::Parse { message })?;
+    let checksum_file = checksum_path(cache_path);
+    let checksum = std::fs::read_to_string(&checksum_file).map_err(|source| CatalogRefreshError::Cache {
+        path: checksum_file.display().to_string(),
+        message: source.to_string(),
+    })?;
+    verify_checksum(&raw, &checksum)?;
+    let raw = std::str::from_utf8(&raw).map_err(|error| CatalogRefreshError::Parse {
+        message: error.to_string(),
+    })?;
+    let registry = registry_from_catalog_str(raw).map_err(|message| CatalogRefreshError::Parse { message })?;
+    let info = catalog_info_from_str(raw, "overlay").map_err(|message| CatalogRefreshError::Parse { message })?;
     OVERLAY.store(Some(Arc::new(registry)));
+    OVERLAY_INFO.store(Some(Arc::new(info)));
     Ok(RefreshOutcome::FromCache)
 }
 
@@ -313,25 +415,42 @@ async fn refresh_from_network(
         .build()
         .map_err(|e| fetch_err(e.to_string()))?;
 
+    let checksum_url = format!("{}.sha256", url.as_str());
+    crate::provider::validate_outbound_url(&checksum_url)
+        .await
+        .map_err(|error| fetch_err(error.to_string()))?;
     let response = client.get(url).send().await.map_err(|e| fetch_err(e.to_string()))?;
     let response = response.error_for_status().map_err(|e| fetch_err(e.to_string()))?;
     let raw = response.text().await.map_err(|e| fetch_err(e.to_string()))?;
+    let checksum_response = client
+        .get(&checksum_url)
+        .send()
+        .await
+        .map_err(|e| fetch_err(e.to_string()))?;
+    let checksum = checksum_response
+        .error_for_status()
+        .map_err(|e| fetch_err(e.to_string()))?
+        .text()
+        .await
+        .map_err(|e| fetch_err(e.to_string()))?;
+    verify_checksum(raw.as_bytes(), &checksum)?;
 
     let registry = registry_from_catalog_str(&raw).map_err(|message| CatalogRefreshError::Parse { message })?;
+    let info = catalog_info_from_str(&raw, "overlay").map_err(|message| CatalogRefreshError::Parse { message })?;
 
     // ~keep Best-effort cache write: a failure here must not fail the refresh —
     // ~keep the overlay install below is the operation that matters, and it is
     // ~keep performed either way.
-    if let Some(parent) = cache_path.parent()
-        && let Err(error) = std::fs::create_dir_all(parent)
-    {
-        tracing::warn!(%error, path = %parent.display(), "failed to create catalog cache directory");
-    }
-    if let Err(error) = std::fs::write(cache_path, &raw) {
+    if let Err(error) = write_private_file(cache_path, raw.as_bytes()) {
         tracing::warn!(%error, path = %cache_path.display(), "failed to write catalog cache file");
+    }
+    let checksum_path = checksum_path(cache_path);
+    if let Err(error) = write_private_file(&checksum_path, checksum.as_bytes()) {
+        tracing::warn!(%error, path = %checksum_path.display(), "failed to write catalog checksum file");
     }
 
     OVERLAY.store(Some(Arc::new(registry)));
+    OVERLAY_INFO.store(Some(Arc::new(info)));
     Ok(RefreshOutcome::Fetched)
 }
 

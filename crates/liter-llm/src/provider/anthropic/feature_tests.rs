@@ -388,6 +388,8 @@ fn transform_response_cache_tokens_counted_in_prompt() {
     assert_eq!(body["usage"]["prompt_tokens"], 175u64);
     assert_eq!(body["usage"]["completion_tokens"], 10u64);
     assert_eq!(body["usage"]["total_tokens"], 185u64);
+    assert_eq!(body["usage"]["prompt_tokens_details"]["cached_tokens"], 25u64);
+    assert_eq!(body["usage"]["prompt_tokens_details"]["cache_creation_tokens"], 50u64);
 }
 
 #[test]
@@ -506,6 +508,9 @@ fn parse_stream_event_message_start_cache_tokens_in_usage() {
         .expect("expected chunk");
     let usage = chunk.usage.expect("usage should be present");
     assert_eq!(usage.prompt_tokens, 175);
+    let details = usage.prompt_tokens_details.expect("cache details should be present");
+    assert_eq!(details.cached_tokens, 25);
+    assert_eq!(details.cache_creation_tokens, 50);
 }
 
 #[test]

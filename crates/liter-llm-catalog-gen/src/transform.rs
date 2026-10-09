@@ -67,7 +67,7 @@ pub struct CatalogLimit {
     /// Maximum input/prompt tokens, when narrower than `context`.
     pub input: Option<u64>,
     /// Maximum output/completion tokens.
-    pub output: u64,
+    pub output: Option<u64>,
 }
 
 /// Supported input/output content modalities, as lowercase strings (`"text"`,
@@ -186,7 +186,7 @@ fn transform_model(model: &Model) -> CatalogModel {
         limit: CatalogLimit {
             context: limit_u64(model.limit.context),
             input: model.limit.input.map(limit_u64),
-            output: limit_u64(model.limit.output),
+            output: (!is_embedding_model(model)).then(|| limit_u64(model.limit.output)),
         },
         modalities: CatalogModalities {
             input: model
@@ -204,7 +204,7 @@ fn transform_model(model: &Model) -> CatalogModel {
                 .map(str::to_string)
                 .collect(),
         },
-        mode: infer_mode(&model.modalities),
+        mode: infer_mode(&model.id, model.family.as_deref(), &model.modalities),
         capabilities: CatalogCapabilities {
             vision: model.modalities.input.contains(&Modality::Image),
             function_calling: model.tool_call,
@@ -308,14 +308,26 @@ fn shape_str(shape: ProviderShape) -> &'static str {
 /// [`Modality`] enum (mirroring `schema.ts` exactly —
 /// text/audio/image/video/pdf) has no `embedding` variant; embedding models
 /// simply fall through to the final "no match" `None`.
-fn infer_mode(modalities: &crate::schema::Modalities) -> Option<String> {
+fn is_embedding_model(model: &Model) -> bool {
+    is_embedding_id(&model.id, model.family.as_deref())
+}
+
+fn is_embedding_id(id: &str, family: Option<&str>) -> bool {
+    id.to_ascii_lowercase().contains("embed")
+        || family.is_some_and(|family| family.to_ascii_lowercase().contains("embed"))
+}
+
+fn infer_mode(id: &str, family: Option<&str>, modalities: &crate::schema::Modalities) -> Option<String> {
+    if is_embedding_id(id, family) {
+        return Some("embedding".to_string());
+    }
     if modalities.output.contains(&Modality::Image) {
         return Some("image_generation".to_string());
     }
     if modalities.output.contains(&Modality::Audio) {
         return Some("audio_speech".to_string());
     }
-    if modalities.input.contains(&Modality::Audio) && modalities.output == [Modality::Text] {
+    if modalities.input == [Modality::Audio] && modalities.output == [Modality::Text] {
         return Some("audio_transcription".to_string());
     }
     if modalities.output.contains(&Modality::Text) {
@@ -339,43 +351,71 @@ mod tests {
     #[test]
     fn should_infer_chat_mode_from_text_output() {
         let modalities = modalities(&[Modality::Text], &[Modality::Text]);
-        assert_eq!(infer_mode(&modalities), Some("chat".to_string()));
+        assert_eq!(infer_mode("chat-model", None, &modalities), Some("chat".to_string()));
     }
 
     #[test]
     fn should_infer_image_generation_mode_when_output_contains_image() {
         let modalities = modalities(&[Modality::Text], &[Modality::Image, Modality::Text]);
-        assert_eq!(infer_mode(&modalities), Some("image_generation".to_string()));
+        assert_eq!(
+            infer_mode("image-model", None, &modalities),
+            Some("image_generation".to_string())
+        );
     }
 
     #[test]
     fn should_prefer_image_generation_over_audio_speech_when_both_present() {
         let modalities = modalities(&[Modality::Text], &[Modality::Image, Modality::Audio]);
-        assert_eq!(infer_mode(&modalities), Some("image_generation".to_string()));
+        assert_eq!(
+            infer_mode("image-model", None, &modalities),
+            Some("image_generation".to_string())
+        );
     }
 
     #[test]
     fn should_infer_audio_speech_mode_when_output_contains_audio_without_image() {
         let modalities = modalities(&[Modality::Text], &[Modality::Audio, Modality::Text]);
-        assert_eq!(infer_mode(&modalities), Some("audio_speech".to_string()));
+        assert_eq!(
+            infer_mode("speech-model", None, &modalities),
+            Some("audio_speech".to_string())
+        );
     }
 
     #[test]
     fn should_infer_audio_transcription_mode_for_audio_in_text_out() {
         let modalities = modalities(&[Modality::Audio], &[Modality::Text]);
-        assert_eq!(infer_mode(&modalities), Some("audio_transcription".to_string()));
+        assert_eq!(
+            infer_mode("transcribe-model", None, &modalities),
+            Some("audio_transcription".to_string())
+        );
     }
 
     #[test]
     fn should_not_infer_audio_transcription_when_text_output_has_extra_modalities() {
         let modalities = modalities(&[Modality::Audio], &[Modality::Text, Modality::Pdf]);
-        assert_eq!(infer_mode(&modalities), Some("chat".to_string()));
+        assert_eq!(
+            infer_mode("multimodal-model", None, &modalities),
+            Some("chat".to_string())
+        );
+    }
+
+    #[test]
+    fn should_infer_embedding_mode_from_model_identity() {
+        let modalities = modalities(&[Modality::Text], &[Modality::Text]);
+        assert_eq!(
+            infer_mode("text-embedding-3-small", None, &modalities),
+            Some("embedding".to_string())
+        );
+        assert_eq!(
+            infer_mode("custom-model", Some("embed-v1"), &modalities),
+            Some("embedding".to_string())
+        );
     }
 
     #[test]
     fn should_omit_mode_when_no_heuristic_branch_matches() {
         let modalities = modalities(&[Modality::Text], &[]);
-        assert_eq!(infer_mode(&modalities), None);
+        assert_eq!(infer_mode("unknown-model", None, &modalities), None);
     }
 
     #[test]
@@ -394,6 +434,7 @@ mod tests {
             "free-model".to_string(),
             crate::schema::Model {
                 id: "free-model".to_string(),
+                canonical_model_id: None,
                 name: "Free Model".to_string(),
                 description: "no cost".to_string(),
                 family: None,

@@ -37,6 +37,8 @@ const PRIMARY_PROVIDERS: [&str; 3] = ["anthropic", "google", "openai"];
 /// panicking the process (mirrors the pattern used in `provider/mod.rs`).
 static PRICING: LazyLock<std::result::Result<HashMap<String, ModelPricing>, String>> =
     LazyLock::new(|| registry_from_catalog_str(CATALOG_JSON));
+static EMBEDDED_CATALOG_INFO: LazyLock<std::result::Result<CatalogInfo, String>> =
+    LazyLock::new(|| catalog_info_from_str(CATALOG_JSON, "embedded"));
 
 /// Access the flattened pricing registry, returning `None` if the embedded
 /// catalog JSON was invalid.
@@ -51,9 +53,38 @@ fn registry() -> Option<&'static HashMap<String, ModelPricing>> {
 /// and `$schema_version` metadata fields (not needed at runtime).
 #[derive(Debug, Deserialize)]
 struct CatalogFile {
+    #[serde(rename = "$provenance")]
+    provenance: CatalogProvenance,
+    #[serde(rename = "$schema_version")]
+    schema_version: u64,
     /// Providers keyed by provider id, in deterministic (sorted) order so
     /// that bare-name collisions resolve consistently.
     providers: BTreeMap<String, CatalogProviderRow>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CatalogProvenance {
+    source: String,
+    source_sha256: String,
+    fetched: String,
+    library_version: String,
+}
+
+/// Provenance for the active model catalog.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CatalogInfo {
+    /// Upstream catalog source.
+    pub source: String,
+    /// SHA-256 of the upstream source payload.
+    pub source_sha256: String,
+    /// Date the upstream source was fetched.
+    pub fetched: String,
+    /// Library version recorded when the catalog was generated.
+    pub library_version: String,
+    /// Catalog schema version.
+    pub schema_version: u64,
+    /// Active catalog origin: `"embedded"` or `"overlay"`.
+    pub origin: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -117,7 +148,7 @@ struct CatalogLimitRow {
     context: u64,
     #[serde(default)]
     input: Option<u64>,
-    output: u64,
+    output: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -183,7 +214,7 @@ fn flatten_model(model: &CatalogModelRow) -> ModelPricing {
         output_cost_per_reasoning_token,
         max_tokens: Some(model.limit.context),
         max_input_tokens: Some(model.limit.input.unwrap_or(model.limit.context)),
-        max_output_tokens: Some(model.limit.output),
+        max_output_tokens: model.limit.output,
         mode: model.mode.clone(),
         supports_vision: Some(model.capabilities.vision),
         supports_function_calling: Some(model.capabilities.function_calling),
@@ -224,6 +255,18 @@ fn registry_from_catalog_str(catalog_json: &str) -> std::result::Result<HashMap<
     }
 
     Ok(registry)
+}
+
+fn catalog_info_from_str(catalog_json: &str, origin: &str) -> std::result::Result<CatalogInfo, String> {
+    let catalog: CatalogFile = serde_json::from_str(catalog_json).map_err(|e| e.to_string())?;
+    Ok(CatalogInfo {
+        source: catalog.provenance.source,
+        source_sha256: catalog.provenance.source_sha256,
+        fetched: catalog.provenance.fetched,
+        library_version: catalog.provenance.library_version,
+        schema_version: catalog.schema_version,
+        origin: origin.to_owned(),
+    })
 }
 
 /// Per-token pricing for a single model (USD per token).
@@ -350,6 +393,10 @@ pub struct PricingTier {
 /// boundary — see [`model_info`].
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ModelInfo {
+    /// Catalog key that supplied this metadata.
+    pub matched_key: String,
+    /// Whether the requested model key matched the catalog exactly.
+    pub exact: bool,
     /// Cost in USD per input (prompt) token.
     pub input_cost_per_token: f64,
     /// Cost in USD per output (completion) token.
@@ -432,6 +479,8 @@ impl From<&PricingTier> for ModelTier {
 impl From<&ModelPricing> for ModelInfo {
     fn from(pricing: &ModelPricing) -> Self {
         ModelInfo {
+            matched_key: String::new(),
+            exact: false,
             input_cost_per_token: pricing.input_cost_per_token,
             output_cost_per_token: pricing.output_cost_per_token,
             cache_read_input_token_cost: pricing.cache_read_input_token_cost,
@@ -504,7 +553,28 @@ pub fn completion_cost_with_cache(
     cached_tokens: u64,
     completion_tokens: u64,
 ) -> Option<f64> {
-    with_active_registry(|reg| compute_cost_in(reg, model, prompt_tokens, cached_tokens, completion_tokens))
+    completion_cost_with_cache_details(model, prompt_tokens, cached_tokens, 0, completion_tokens)
+}
+
+/// Calculate completion cost including both prompt-cache reads and writes.
+#[must_use]
+pub fn completion_cost_with_cache_details(
+    model: &str,
+    prompt_tokens: u64,
+    cached_tokens: u64,
+    cache_creation_tokens: u64,
+    completion_tokens: u64,
+) -> Option<f64> {
+    with_active_registry(|reg| {
+        compute_cost_in(
+            reg,
+            model,
+            prompt_tokens,
+            cached_tokens,
+            cache_creation_tokens,
+            completion_tokens,
+        )
+    })
 }
 
 /// [`completion_cost_with_cache`], factored to operate over an explicit
@@ -515,10 +585,17 @@ fn compute_cost_in(
     model: &str,
     prompt_tokens: u64,
     cached_tokens: u64,
+    cache_creation_tokens: u64,
     completion_tokens: u64,
 ) -> Option<f64> {
-    let pricing = lookup_in(reg, model)?;
-    Some(compute_cost(pricing, prompt_tokens, cached_tokens, completion_tokens))
+    let (_, pricing) = lookup_in(reg, model)?;
+    Some(compute_cost(
+        pricing,
+        prompt_tokens,
+        cached_tokens,
+        cache_creation_tokens,
+        completion_tokens,
+    ))
 }
 
 /// Select the applicable pricing tier for a given prompt/context token
@@ -535,9 +612,16 @@ fn select_tier(pricing: &ModelPricing, prompt_tokens: u64) -> Option<&PricingTie
 
 /// Compute the USD cost of a completion from an already-resolved
 /// [`ModelPricing`] row, applying tier-aware rate selection.
-fn compute_cost(pricing: &ModelPricing, prompt_tokens: u64, cached_tokens: u64, completion_tokens: u64) -> f64 {
+fn compute_cost(
+    pricing: &ModelPricing,
+    prompt_tokens: u64,
+    cached_tokens: u64,
+    cache_creation_tokens: u64,
+    completion_tokens: u64,
+) -> f64 {
     let cached = cached_tokens.min(prompt_tokens);
-    let uncached = prompt_tokens - cached;
+    let created = cache_creation_tokens.min(prompt_tokens - cached);
+    let uncached = prompt_tokens - cached - created;
     let tier = select_tier(pricing, prompt_tokens);
     let input_rate = tier.map_or(pricing.input_cost_per_token, |t| t.input_cost_per_token);
     let output_rate = tier.map_or(pricing.output_cost_per_token, |t| t.output_cost_per_token);
@@ -545,7 +629,14 @@ fn compute_cost(pricing: &ModelPricing, prompt_tokens: u64, cached_tokens: u64, 
         .and_then(|t| t.cache_read_input_token_cost)
         .or(pricing.cache_read_input_token_cost)
         .unwrap_or(input_rate);
-    (uncached as f64) * input_rate + (cached as f64) * cache_rate + (completion_tokens as f64) * output_rate
+    let cache_creation_rate = tier
+        .and_then(|t| t.cache_creation_input_token_cost)
+        .or(pricing.cache_creation_input_token_cost)
+        .unwrap_or(input_rate);
+    (uncached as f64) * input_rate
+        + (cached as f64) * cache_rate
+        + (created as f64) * cache_creation_rate
+        + (completion_tokens as f64) * output_rate
 }
 
 /// Resolve pricing for a model name, trying progressively shorter prefixes
@@ -559,26 +650,48 @@ fn compute_cost(pricing: &ModelPricing, prompt_tokens: u64, cached_tokens: u64, 
 /// `gpt-4-0613` will try `gpt-4-0613`, then `gpt-4`, then `gpt`.  The first
 /// match wins.
 fn lookup(model: &str) -> Option<&'static ModelPricing> {
-    lookup_in(registry()?, model)
+    lookup_in(registry()?, model).map(|(_, pricing)| pricing)
 }
 
 /// [`lookup`], factored to resolve against an explicit registry rather than
 /// the embedded [`PRICING`] table. Shared by the embedded-only `lookup` and
 /// the overlay-aware [`compute_cost_in`] / [`model_info_in`] paths.
-fn lookup_in<'a>(models: &'a HashMap<String, ModelPricing>, model: &str) -> Option<&'a ModelPricing> {
-    if let Some(p) = models.get(model) {
-        return Some(p);
+fn lookup_in<'a>(models: &'a HashMap<String, ModelPricing>, model: &str) -> Option<(&'a str, &'a ModelPricing)> {
+    if let Some((key, pricing)) = models.get_key_value(model) {
+        return Some((key.as_str(), pricing));
     }
 
-    let mut candidate = model;
-    while let Some(pos) = candidate.rfind(['-', '.']) {
-        candidate = &candidate[..pos];
-        if let Some(p) = models.get(candidate) {
-            return Some(p);
-        }
+    let candidate = fallback_model_key(model)?;
+    models
+        .get_key_value(candidate)
+        .map(|(key, pricing)| (key.as_str(), pricing))
+}
+
+fn fallback_model_key(model: &str) -> Option<&str> {
+    let separator = model.rfind(['-', '.'])?;
+    let suffix = &model[separator + 1..];
+    let base = &model[..separator];
+    let is_numeric_revision = suffix.len() >= 3 && suffix.bytes().all(|byte| byte.is_ascii_digit());
+    let is_version = suffix
+        .strip_prefix('v')
+        .is_some_and(|version| !version.is_empty() && version.bytes().all(|byte| byte.is_ascii_digit()));
+    if suffix == "latest" || is_numeric_revision || is_version {
+        return Some(base);
     }
 
-    None
+    let date_start = model.len().checked_sub(11)?;
+    let date_separator = model.as_bytes().get(date_start)?;
+    let date = &model[date_start + 1..];
+    let is_date = matches!(date_separator, b'-' | b'.')
+        && date.len() == 10
+        && date.bytes().enumerate().all(|(index, byte)| {
+            if matches!(index, 4 | 7) {
+                byte == b'-'
+            } else {
+                byte.is_ascii_digit()
+            }
+        });
+    is_date.then_some(&model[..date_start])
 }
 
 /// Look up the per-token pricing for a model.
@@ -621,9 +734,31 @@ pub fn model_info(model: &str) -> Option<ModelInfo> {
     with_active_registry(|reg| model_info_in(reg, model))
 }
 
+/// Look up model metadata only when the requested catalog key exists exactly.
+#[must_use]
+pub fn exact_model_info(model: &str) -> Option<ModelInfo> {
+    with_active_registry(|reg| {
+        let pricing = reg.get(model)?;
+        let mut info = ModelInfo::from(pricing);
+        info.matched_key = model.to_owned();
+        info.exact = true;
+        Some(info)
+    })
+}
+
+/// Return provenance for the active runtime or embedded model catalog.
+#[must_use]
+pub fn catalog_info() -> Option<CatalogInfo> {
+    refresh::overlay_catalog_info().or_else(|| EMBEDDED_CATALOG_INFO.as_ref().ok().cloned())
+}
+
 /// [`model_info`], factored to operate over an explicit registry.
 fn model_info_in(reg: &HashMap<String, ModelPricing>, model: &str) -> Option<ModelInfo> {
-    lookup_in(reg, model).map(ModelInfo::from)
+    let (matched_key, pricing) = lookup_in(reg, model)?;
+    let mut info = ModelInfo::from(pricing);
+    info.matched_key = matched_key.to_owned();
+    info.exact = matched_key == model;
+    Some(info)
 }
 
 /// Resolve the registry that [`completion_cost`], [`completion_cost_with_cache`],
@@ -637,9 +772,11 @@ fn model_info_in(reg: &HashMap<String, ModelPricing>, model: &str) -> Option<Mod
 /// functional. Runtime refresh is off by default
 /// ([`CatalogRefreshConfig::default`] has `enabled: false`), so absent an
 /// explicit, successful refresh this is always the embedded table.
-fn with_active_registry<T>(f: impl FnOnce(&HashMap<String, ModelPricing>) -> Option<T>) -> Option<T> {
-    if let Some(overlay) = refresh::overlay_registry() {
-        return f(&overlay);
+fn with_active_registry<T>(mut f: impl FnMut(&HashMap<String, ModelPricing>) -> Option<T>) -> Option<T> {
+    if let Some(overlay) = refresh::overlay_registry()
+        && let Some(value) = f(&overlay)
+    {
+        return Some(value);
     }
     f(registry()?)
 }

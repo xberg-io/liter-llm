@@ -107,6 +107,10 @@ typedef struct LITERLLMCacheBackend LITERLLMCacheBackend;
  */
 typedef struct LITERLLMCacheConfig LITERLLMCacheConfig;
 /**
+ * Provenance for the active model catalog.
+ */
+typedef struct LITERLLMCatalogInfo LITERLLMCatalogInfo;
+/**
  * Plain-data configuration for `refresh_catalog`.
  *
  * Deliberately FFI/binding-friendly: no `Duration` or `PathBuf`, just
@@ -1682,6 +1686,81 @@ LITERLLMAlefHandle literllm_cache_config_backend(LITERLLMAlefHandle handle);
  */
 LITERLLMAlefHandle literllm_cache_config_default(void);
 #endif
+
+/**
+ * Create a `CatalogInfo` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_catalog_info_free`.
+ */
+LITERLLMAlefHandle literllm_catalog_info_from_json(const char *json);
+
+/**
+ * Serialize a `CatalogInfo` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_catalog_info_to_json(LITERLLMAlefHandle handle);
+
+/**
+ * Free a `CatalogInfo` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void literllm_catalog_info_free(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `source` field from a `CatalogInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_catalog_info_source(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `source_sha256` field from a `CatalogInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_catalog_info_source_sha256(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `fetched` field from a `CatalogInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_catalog_info_fetched(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `library_version` field from a `CatalogInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_catalog_info_library_version(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `schema_version` field from a `CatalogInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_catalog_info_schema_version(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `origin` field from a `CatalogInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_catalog_info_origin(LITERLLMAlefHandle handle);
 
 /**
  * Create a `CatalogRefreshConfig` from a JSON string. Returns null on failure.
@@ -5368,6 +5447,22 @@ char *literllm_model_info_to_json(LITERLLMAlefHandle handle);
 void literllm_model_info_free(LITERLLMAlefHandle handle);
 
 /**
+ * Get the `matched_key` field from a `ModelInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_model_info_matched_key(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `exact` field from a `ModelInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_model_info_exact(LITERLLMAlefHandle handle);
+
+/**
  * Get the `input_cost_per_token` field from a `ModelInfo`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
@@ -6564,6 +6659,13 @@ void literllm_prompt_tokens_details_free(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 uint64_t literllm_prompt_tokens_details_cached_tokens(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `cache_creation_tokens` field from a `PromptTokensDetails`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_prompt_tokens_details_cache_creation_tokens(LITERLLMAlefHandle handle);
 
 /**
  * Get the `audio_tokens` field from a `PromptTokensDetails`.
@@ -9282,6 +9384,13 @@ uintptr_t literllm_all_providers_len(void);
 LITERLLMAlefHandle literllm_capabilities(const char *provider_name);
 
 /**
+ * Return provenance for the active runtime or embedded model catalog.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMAlefHandle literllm_catalog_info(void);
+
+/**
  * Assert that `current_len + incoming` does not exceed `limit`.
  *
  * Call this before appending `incoming` bytes to any buffer that must
@@ -9402,6 +9511,33 @@ int32_t literllm_completion_cost_with_cache_has_result(const char *model,
                                                        uint64_t prompt_tokens,
                                                        uint64_t cached_tokens,
                                                        uint64_t completion_tokens);
+
+/**
+ * Calculate completion cost including both prompt-cache reads and writes.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+double literllm_completion_cost_with_cache_details(const char *model,
+                                                   uint64_t prompt_tokens,
+                                                   uint64_t cached_tokens,
+                                                   uint64_t cache_creation_tokens,
+                                                   uint64_t completion_tokens);
+
+/**
+ * Report whether `completion_cost_with_cache_details` returned `Some`.
+ *
+ * `literllm_completion_cost_with_cache_details` cannot distinguish a `None` result from a legitimate
+ * zero-valued `Some` at the C ABI boundary. Call this function first: `1` means the sibling getter's
+ * return value is meaningful, `0` means the result was absent and the getter's sentinel must be
+ * ignored, `-1` reports an invalid handle or a call error (see `literllm_last_error_code`).
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+int32_t literllm_completion_cost_with_cache_details_has_result(const char *model,
+                                                               uint64_t prompt_tokens,
+                                                               uint64_t cached_tokens,
+                                                               uint64_t cache_creation_tokens,
+                                                               uint64_t completion_tokens);
 
 /**
  * Return the set of complex provider names.
@@ -9583,6 +9719,13 @@ uintptr_t literllm_encode_data_url_len(const uint8_t *_bytes,
  */
 void literllm_ensure_crypto_provider(void);
 #endif
+
+/**
+ * Look up model metadata only when the requested catalog key exists exactly.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMAlefHandle literllm_exact_model_info(const char *model);
 
 /**
  * Install the overlay registry from a raw catalog JSON string, bypassing

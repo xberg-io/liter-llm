@@ -38,7 +38,7 @@ pub(super) fn transform_response(body: &mut Value) -> Result<()> {
     let stop_reason = body.get("stop_reason").and_then(|v| v.as_str()).unwrap_or("end_turn");
     let finish_reason = map_stop_reason(stop_reason);
 
-    let (prompt_tokens, output_tokens) = usage_token_counts(body);
+    let usage = usage_token_counts(body);
 
     let message = assistant_message(text_content.as_deref(), tool_calls, reasoning_content);
 
@@ -53,9 +53,14 @@ pub(super) fn transform_response(body: &mut Value) -> Result<()> {
             "finish_reason": finish_reason
         }],
         "usage": {
-            "prompt_tokens": prompt_tokens,
-            "completion_tokens": output_tokens,
-            "total_tokens": prompt_tokens + output_tokens
+            "prompt_tokens": usage.prompt_tokens,
+            "completion_tokens": usage.output_tokens,
+            "total_tokens": usage.prompt_tokens + usage.output_tokens,
+            "prompt_tokens_details": {
+                "cached_tokens": usage.cache_read_tokens,
+                "cache_creation_tokens": usage.cache_creation_tokens,
+                "audio_tokens": 0
+            }
         }
     });
 
@@ -99,7 +104,14 @@ fn tool_calls_from_blocks(blocks: &[Value]) -> Vec<Value> {
 
 /// `(prompt_tokens, completion_tokens)` from Anthropic `usage`. Prompt tokens
 /// include cache-creation and cache-read input tokens.
-fn usage_token_counts(body: &Value) -> (u64, u64) {
+struct AnthropicUsage {
+    prompt_tokens: u64,
+    output_tokens: u64,
+    cache_read_tokens: u64,
+    cache_creation_tokens: u64,
+}
+
+fn usage_token_counts(body: &Value) -> AnthropicUsage {
     let input_tokens = body
         .pointer("/usage/input_tokens")
         .and_then(|v| v.as_u64())
@@ -117,7 +129,12 @@ fn usage_token_counts(body: &Value) -> (u64, u64) {
         .and_then(|v| v.as_u64())
         .unwrap_or(0);
     let prompt_tokens = input_tokens + cache_creation_tokens + cache_read_tokens;
-    (prompt_tokens, output_tokens)
+    AnthropicUsage {
+        prompt_tokens,
+        output_tokens,
+        cache_read_tokens,
+        cache_creation_tokens,
+    }
 }
 
 /// Build the OpenAI `assistant` message from the extracted parts.

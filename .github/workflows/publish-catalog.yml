@@ -36,10 +36,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          cd /tmp
+          sha256sum catalog.json > catalog.json.sha256
           if gh release view model-catalog >/dev/null 2>&1; then
-            gh release upload model-catalog /tmp/catalog.json --clobber
+            gh release upload model-catalog catalog.json catalog.json.sha256 --clobber
           else
-            gh release create model-catalog /tmp/catalog.json \
+            gh release create model-catalog catalog.json catalog.json.sha256 \
               --title "Model Catalog (rolling)" \
               --notes "Rolling release publishing the latest \`catalog.json\` from models.dev. Always points at the current commit on \`main\`. Download: https://github.com/${{ github.repository }}/releases/download/model-catalog/catalog.json" \
               --prerelease

@@ -112,6 +112,91 @@ fn unique_cache_path(suffix: &str) -> String {
 /// Best-effort cleanup of a test cache file; a missing file is not an error.
 fn remove_cache_file(path: &str) {
     let _ = std::fs::remove_file(path);
+    let _ = std::fs::remove_file(format!("{path}.sha256"));
+}
+
+fn partial_overlay_fixture() -> String {
+    format!(
+        r#"{{
+            "$provenance": {{
+                "source": "test/source.json",
+                "source_sha256": "{}",
+                "fetched": "2026-10-09",
+                "library_version": "2.2.0"
+            }},
+            "$schema_version": 1,
+            "providers": {{
+                "{MARKER_PROVIDER}": {{
+                    "models": {{
+                        "{MARKER_MODEL}": {{
+                            "pricing": {{
+                                "input_cost_per_token": {MARKER_INPUT_COST},
+                                "output_cost_per_token": {MARKER_OUTPUT_COST}
+                            }},
+                            "limit": {{ "context": 128000, "output": 16384 }},
+                            "mode": "chat",
+                            "capabilities": {{
+                                "vision": false, "function_calling": false, "reasoning": false,
+                                "structured_output": false, "audio_input": false, "audio_output": false,
+                                "prompt_caching": false
+                            }}
+                        }}
+                    }}
+                }}
+            }}
+        }}"#,
+        "0".repeat(64)
+    )
+}
+
+#[tokio::test]
+async fn partial_overlay_layers_over_embedded_catalog_and_reports_provenance() {
+    let _guard = OVERLAY_TEST_LOCK.lock().await;
+    clear_catalog_overlay();
+    install_catalog_overlay_from_str(&partial_overlay_fixture()).expect("partial overlay must install");
+
+    assert!(model_info(&marker_key()).is_some(), "overlay marker must resolve");
+    assert!(
+        model_info("gpt-4").is_some(),
+        "missing overlay entry must fall back to embedded catalog"
+    );
+    let info = catalog_info().expect("active catalog provenance must be available");
+    assert_eq!(info.origin, "overlay");
+    assert_eq!(info.source, "test/source.json");
+
+    clear_catalog_overlay();
+    assert_eq!(
+        catalog_info().expect("embedded provenance must be available").origin,
+        "embedded"
+    );
+}
+
+#[tokio::test]
+async fn fresh_cache_with_wrong_checksum_is_rejected() {
+    let _guard = OVERLAY_TEST_LOCK.lock().await;
+    clear_catalog_overlay();
+    let cache_path = unique_cache_path("wrong-checksum");
+    remove_cache_file(&cache_path);
+    let fixture = partial_overlay_fixture();
+    std::fs::write(&cache_path, fixture).expect("cache fixture must be writable");
+    std::fs::write(
+        format!("{cache_path}.sha256"),
+        format!("{}  catalog.json\n", "f".repeat(64)),
+    )
+    .expect("checksum fixture must be writable");
+    let config = CatalogRefreshConfig {
+        enabled: true,
+        source_url: DEFAULT_CATALOG_URL.to_string(),
+        ttl_seconds: u64::MAX,
+        cache_path: Some(cache_path.clone()),
+    };
+
+    assert!(matches!(
+        refresh_catalog(&config).await,
+        Err(CatalogRefreshError::Integrity { .. })
+    ));
+    assert!(super::refresh::overlay_registry().is_none());
+    remove_cache_file(&cache_path);
 }
 
 /// Proves the embedded-only baseline: with runtime refresh disabled via

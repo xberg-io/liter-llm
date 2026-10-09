@@ -123,6 +123,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_box_autoadd_bool(dynamic raw);
 
   @protected
+  CatalogInfo dco_decode_box_autoadd_catalog_info(dynamic raw);
+
+  @protected
   CatalogRefreshConfig dco_decode_box_autoadd_catalog_refresh_config(
     dynamic raw,
   );
@@ -298,6 +301,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CacheConfig dco_decode_cache_config(dynamic raw);
+
+  @protected
+  CatalogInfo dco_decode_catalog_info(dynamic raw);
 
   @protected
   CatalogRefreshConfig dco_decode_catalog_refresh_config(dynamic raw);
@@ -643,6 +649,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
+  CatalogInfo? dco_decode_opt_box_autoadd_catalog_info(dynamic raw);
 
   @protected
   CompletionTokensDetails? dco_decode_opt_box_autoadd_completion_tokens_details(
@@ -1027,6 +1036,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
+  CatalogInfo sse_decode_box_autoadd_catalog_info(SseDeserializer deserializer);
+
+  @protected
   CatalogRefreshConfig sse_decode_box_autoadd_catalog_refresh_config(
     SseDeserializer deserializer,
   );
@@ -1268,6 +1280,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CacheConfig sse_decode_cache_config(SseDeserializer deserializer);
+
+  @protected
+  CatalogInfo sse_decode_catalog_info(SseDeserializer deserializer);
 
   @protected
   CatalogRefreshConfig sse_decode_catalog_refresh_config(
@@ -1703,6 +1718,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  CatalogInfo? sse_decode_opt_box_autoadd_catalog_info(
+    SseDeserializer deserializer,
+  );
 
   @protected
   CompletionTokensDetails? sse_decode_opt_box_autoadd_completion_tokens_details(
@@ -2178,6 +2198,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_catalog_info(
+    CatalogInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_catalog_refresh_config(
     CatalogRefreshConfig self,
     SseSerializer serializer,
@@ -2485,6 +2511,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_cache_config(CacheConfig self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_catalog_info(CatalogInfo self, SseSerializer serializer);
 
   @protected
   void sse_encode_catalog_refresh_config(
@@ -3046,6 +3075,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_catalog_info(
+    CatalogInfo? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_completion_tokens_details(

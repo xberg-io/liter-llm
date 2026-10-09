@@ -224,7 +224,9 @@ fn limit_field(model: &CatalogModel) -> String {
     if let Some(input) = model.limit.input {
         fields.push(format!("            \"input\": {input}"));
     }
-    fields.push(format!("            \"output\": {}", model.limit.output));
+    if let Some(output) = model.limit.output {
+        fields.push(format!("            \"output\": {output}"));
+    }
 
     let mut out = String::from("          \"limit\": {\n");
     out.push_str(&fields.join(",\n"));

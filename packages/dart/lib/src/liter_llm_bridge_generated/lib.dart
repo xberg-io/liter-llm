@@ -10,7 +10,7 @@ part 'lib.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `try_convert_assistant_content_from_core`, `try_convert_assistant_part_from_core`, `try_convert_auth_header_format_from_core`, `try_convert_auth_type_from_core`, `try_convert_batch_status_from_core`, `try_convert_cache_backend_from_core`, `try_convert_content_part_from_core`, `try_convert_embedding_content_part_from_core`, `try_convert_embedding_format_from_core`, `try_convert_embedding_input_from_core`, `try_convert_enforcement_from_core`, `try_convert_file_purpose_from_core`, `try_convert_finish_reason_from_core`, `try_convert_image_detail_from_core`, `try_convert_message_from_core`, `try_convert_modality_from_core`, `try_convert_moderation_input_from_core`, `try_convert_ocr_document_from_core`, `try_convert_reasoning_effort_from_core`, `try_convert_refresh_outcome_from_core`, `try_convert_rerank_document_from_core`, `try_convert_response_format_from_core`, `try_convert_stop_sequence_from_core`, `try_convert_stream_format_from_core`, `try_convert_tool_choice_from_core`, `try_convert_tool_choice_mode_from_core`, `try_convert_tool_type_from_core`, `try_convert_user_content_from_core`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `IntentPrototype`, `SingleflightResult`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -174,6 +174,21 @@ Future<double?> completionCostWithCache({
   completionTokens: completionTokens,
 );
 
+/// Calculate completion cost including both prompt-cache reads and writes.
+Future<double?> completionCostWithCacheDetails({
+  required String model,
+  required PlatformInt64 promptTokens,
+  required PlatformInt64 cachedTokens,
+  required PlatformInt64 cacheCreationTokens,
+  required PlatformInt64 completionTokens,
+}) => RustLib.instance.api.crateCompletionCostWithCacheDetails(
+  model: model,
+  promptTokens: promptTokens,
+  cachedTokens: cachedTokens,
+  cacheCreationTokens: cacheCreationTokens,
+  completionTokens: completionTokens,
+);
+
 /// Look up FFI-friendly pricing and capability metadata for a model.
 ///
 /// Returns `null` if the model is not present in the active pricing
@@ -186,6 +201,13 @@ Future<double?> completionCostWithCache({
 /// `model_pricing` for the embedded-only alternative.
 Future<ModelInfo?> modelInfo({required String model}) =>
     RustLib.instance.api.crateModelInfo(model: model);
+
+/// Look up model metadata only when the requested catalog key exists exactly.
+Future<ModelInfo?> exactModelInfo({required String model}) =>
+    RustLib.instance.api.crateExactModelInfo(model: model);
+
+/// Return provenance for the active runtime or embedded model catalog.
+Future<CatalogInfo?> catalogInfo() => RustLib.instance.api.crateCatalogInfo();
 
 /// Install the overlay registry from a raw catalog JSON string, bypassing
 /// the network and disk cache entirely.
@@ -633,6 +655,9 @@ Future<ProviderConfig> createProviderConfigFromJson({required String json}) =>
 
 Future<AuthConfig> createAuthConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateAuthConfigFromJson(json: json);
+
+Future<CatalogInfo> createCatalogInfoFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateCatalogInfoFromJson(json: json);
 
 Future<ModelInfo> createModelInfoFromJson({required String json}) =>
     RustLib.instance.api.crateCreateModelInfoFromJson(json: json);
@@ -1339,6 +1364,57 @@ class CacheConfig {
           backend == other.backend;
 }
 
+/// Provenance for the active model catalog.
+class CatalogInfo {
+  /// Upstream catalog source.
+  final String source;
+
+  /// SHA-256 of the upstream source payload.
+  final String sourceSha256;
+
+  /// Date the upstream source was fetched.
+  final String fetched;
+
+  /// Library version recorded when the catalog was generated.
+  final String libraryVersion;
+
+  /// Catalog schema version.
+  final PlatformInt64 schemaVersion;
+
+  /// Active catalog origin: `"embedded"` or `"overlay"`.
+  final String origin;
+
+  const CatalogInfo({
+    required this.source,
+    required this.sourceSha256,
+    required this.fetched,
+    required this.libraryVersion,
+    required this.schemaVersion,
+    required this.origin,
+  });
+
+  @override
+  int get hashCode =>
+      source.hashCode ^
+      sourceSha256.hashCode ^
+      fetched.hashCode ^
+      libraryVersion.hashCode ^
+      schemaVersion.hashCode ^
+      origin.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CatalogInfo &&
+          runtimeType == other.runtimeType &&
+          source == other.source &&
+          sourceSha256 == other.sourceSha256 &&
+          fetched == other.fetched &&
+          libraryVersion == other.libraryVersion &&
+          schemaVersion == other.schemaVersion &&
+          origin == other.origin;
+}
+
 /// Plain-data configuration for [`refresh_catalog`].
 ///
 /// Deliberately FFI/binding-friendly: no `Duration` or `PathBuf`, just
@@ -1359,7 +1435,7 @@ class CatalogRefreshConfig {
   final PlatformInt64 ttlSeconds;
 
   /// Filesystem path for the on-disk cache. `None` uses a default path
-  /// under `std::env::temp_dir()`.
+  /// under the current user's platform cache directory.
   final String? cachePath;
 
   const CatalogRefreshConfig({
@@ -1421,6 +1497,10 @@ sealed class CatalogRefreshError with _$CatalogRefreshError {
     required String path,
     required String message,
   }) = CatalogRefreshError_Cache;
+
+  /// Catalog bytes did not match the published SHA-256 checksum.
+  const factory CatalogRefreshError.integrity({required String message}) =
+      CatalogRefreshError_Integrity;
 }
 
 /// A streamed chunk of a chat completion response.
@@ -3409,6 +3489,12 @@ enum Modality {
 /// `ModelInfo` is an owned plain-data DTO safe to hand across the FFI
 /// boundary — see [`model_info`].
 class ModelInfo {
+  /// Catalog key that supplied this metadata.
+  final String matchedKey;
+
+  /// Whether the requested model key matched the catalog exactly.
+  final bool exact;
+
   /// Cost in USD per input (prompt) token.
   final double inputCostPerToken;
 
@@ -3468,6 +3554,8 @@ class ModelInfo {
   final List<ModelTier> tiers;
 
   const ModelInfo({
+    required this.matchedKey,
+    required this.exact,
     required this.inputCostPerToken,
     required this.outputCostPerToken,
     this.cacheReadInputTokenCost,
@@ -3491,6 +3579,8 @@ class ModelInfo {
 
   @override
   int get hashCode =>
+      matchedKey.hashCode ^
+      exact.hashCode ^
       inputCostPerToken.hashCode ^
       outputCostPerToken.hashCode ^
       cacheReadInputTokenCost.hashCode ^
@@ -3516,6 +3606,8 @@ class ModelInfo {
       identical(this, other) ||
       other is ModelInfo &&
           runtimeType == other.runtimeType &&
+          matchedKey == other.matchedKey &&
+          exact == other.exact &&
           inputCostPerToken == other.inputCostPerToken &&
           outputCostPerToken == other.outputCostPerToken &&
           cacheReadInputTokenCost == other.cacheReadInputTokenCost &&
@@ -4104,16 +4196,23 @@ class PromptTokensDetails {
   /// Cached tokens present in the prompt. Defaults to 0 when absent.
   final PlatformInt64 cachedTokens;
 
+  /// Tokens written to the provider prompt cache. Defaults to 0 when absent.
+  final PlatformInt64 cacheCreationTokens;
+
   /// Audio input tokens present in the prompt. Defaults to 0 when absent.
   final PlatformInt64 audioTokens;
 
   const PromptTokensDetails({
     required this.cachedTokens,
+    required this.cacheCreationTokens,
     required this.audioTokens,
   });
 
   @override
-  int get hashCode => cachedTokens.hashCode ^ audioTokens.hashCode;
+  int get hashCode =>
+      cachedTokens.hashCode ^
+      cacheCreationTokens.hashCode ^
+      audioTokens.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -4121,6 +4220,7 @@ class PromptTokensDetails {
       other is PromptTokensDetails &&
           runtimeType == other.runtimeType &&
           cachedTokens == other.cachedTokens &&
+          cacheCreationTokens == other.cacheCreationTokens &&
           audioTokens == other.audioTokens;
 }
 

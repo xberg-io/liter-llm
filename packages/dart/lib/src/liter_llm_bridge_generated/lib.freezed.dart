@@ -1380,7 +1380,7 @@ extension CatalogRefreshErrorPatterns on CatalogRefreshError {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( CatalogRefreshError_Disabled value)?  disabled,TResult Function( CatalogRefreshError_InsecureUrl value)?  insecureUrl,TResult Function( CatalogRefreshError_Fetch value)?  fetch,TResult Function( CatalogRefreshError_Parse value)?  parse,TResult Function( CatalogRefreshError_Cache value)?  cache,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( CatalogRefreshError_Disabled value)?  disabled,TResult Function( CatalogRefreshError_InsecureUrl value)?  insecureUrl,TResult Function( CatalogRefreshError_Fetch value)?  fetch,TResult Function( CatalogRefreshError_Parse value)?  parse,TResult Function( CatalogRefreshError_Cache value)?  cache,TResult Function( CatalogRefreshError_Integrity value)?  integrity,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case CatalogRefreshError_Disabled() when disabled != null:
@@ -1388,7 +1388,8 @@ return disabled(_that);case CatalogRefreshError_InsecureUrl() when insecureUrl !
 return insecureUrl(_that);case CatalogRefreshError_Fetch() when fetch != null:
 return fetch(_that);case CatalogRefreshError_Parse() when parse != null:
 return parse(_that);case CatalogRefreshError_Cache() when cache != null:
-return cache(_that);case _:
+return cache(_that);case CatalogRefreshError_Integrity() when integrity != null:
+return integrity(_that);case _:
   return orElse();
 
 }
@@ -1406,7 +1407,7 @@ return cache(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( CatalogRefreshError_Disabled value)  disabled,required TResult Function( CatalogRefreshError_InsecureUrl value)  insecureUrl,required TResult Function( CatalogRefreshError_Fetch value)  fetch,required TResult Function( CatalogRefreshError_Parse value)  parse,required TResult Function( CatalogRefreshError_Cache value)  cache,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( CatalogRefreshError_Disabled value)  disabled,required TResult Function( CatalogRefreshError_InsecureUrl value)  insecureUrl,required TResult Function( CatalogRefreshError_Fetch value)  fetch,required TResult Function( CatalogRefreshError_Parse value)  parse,required TResult Function( CatalogRefreshError_Cache value)  cache,required TResult Function( CatalogRefreshError_Integrity value)  integrity,}){
 final _that = this;
 switch (_that) {
 case CatalogRefreshError_Disabled():
@@ -1414,7 +1415,8 @@ return disabled(_that);case CatalogRefreshError_InsecureUrl():
 return insecureUrl(_that);case CatalogRefreshError_Fetch():
 return fetch(_that);case CatalogRefreshError_Parse():
 return parse(_that);case CatalogRefreshError_Cache():
-return cache(_that);}
+return cache(_that);case CatalogRefreshError_Integrity():
+return integrity(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1428,7 +1430,7 @@ return cache(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( CatalogRefreshError_Disabled value)?  disabled,TResult? Function( CatalogRefreshError_InsecureUrl value)?  insecureUrl,TResult? Function( CatalogRefreshError_Fetch value)?  fetch,TResult? Function( CatalogRefreshError_Parse value)?  parse,TResult? Function( CatalogRefreshError_Cache value)?  cache,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( CatalogRefreshError_Disabled value)?  disabled,TResult? Function( CatalogRefreshError_InsecureUrl value)?  insecureUrl,TResult? Function( CatalogRefreshError_Fetch value)?  fetch,TResult? Function( CatalogRefreshError_Parse value)?  parse,TResult? Function( CatalogRefreshError_Cache value)?  cache,TResult? Function( CatalogRefreshError_Integrity value)?  integrity,}){
 final _that = this;
 switch (_that) {
 case CatalogRefreshError_Disabled() when disabled != null:
@@ -1436,7 +1438,8 @@ return disabled(_that);case CatalogRefreshError_InsecureUrl() when insecureUrl !
 return insecureUrl(_that);case CatalogRefreshError_Fetch() when fetch != null:
 return fetch(_that);case CatalogRefreshError_Parse() when parse != null:
 return parse(_that);case CatalogRefreshError_Cache() when cache != null:
-return cache(_that);case _:
+return cache(_that);case CatalogRefreshError_Integrity() when integrity != null:
+return integrity(_that);case _:
   return null;
 
 }
@@ -1453,14 +1456,15 @@ return cache(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  disabled,TResult Function( String url)?  insecureUrl,TResult Function( String url,  String message)?  fetch,TResult Function( String message)?  parse,TResult Function( String path,  String message)?  cache,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  disabled,TResult Function( String url)?  insecureUrl,TResult Function( String url,  String message)?  fetch,TResult Function( String message)?  parse,TResult Function( String path,  String message)?  cache,TResult Function( String message)?  integrity,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case CatalogRefreshError_Disabled() when disabled != null:
 return disabled();case CatalogRefreshError_InsecureUrl() when insecureUrl != null:
 return insecureUrl(_that.url);case CatalogRefreshError_Fetch() when fetch != null:
 return fetch(_that.url,_that.message);case CatalogRefreshError_Parse() when parse != null:
 return parse(_that.message);case CatalogRefreshError_Cache() when cache != null:
-return cache(_that.path,_that.message);case _:
+return cache(_that.path,_that.message);case CatalogRefreshError_Integrity() when integrity != null:
+return integrity(_that.message);case _:
   return orElse();
 
 }
@@ -1478,14 +1482,15 @@ return cache(_that.path,_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  disabled,required TResult Function( String url)  insecureUrl,required TResult Function( String url,  String message)  fetch,required TResult Function( String message)  parse,required TResult Function( String path,  String message)  cache,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  disabled,required TResult Function( String url)  insecureUrl,required TResult Function( String url,  String message)  fetch,required TResult Function( String message)  parse,required TResult Function( String path,  String message)  cache,required TResult Function( String message)  integrity,}) {final _that = this;
 switch (_that) {
 case CatalogRefreshError_Disabled():
 return disabled();case CatalogRefreshError_InsecureUrl():
 return insecureUrl(_that.url);case CatalogRefreshError_Fetch():
 return fetch(_that.url,_that.message);case CatalogRefreshError_Parse():
 return parse(_that.message);case CatalogRefreshError_Cache():
-return cache(_that.path,_that.message);}
+return cache(_that.path,_that.message);case CatalogRefreshError_Integrity():
+return integrity(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1499,14 +1504,15 @@ return cache(_that.path,_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  disabled,TResult? Function( String url)?  insecureUrl,TResult? Function( String url,  String message)?  fetch,TResult? Function( String message)?  parse,TResult? Function( String path,  String message)?  cache,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  disabled,TResult? Function( String url)?  insecureUrl,TResult? Function( String url,  String message)?  fetch,TResult? Function( String message)?  parse,TResult? Function( String path,  String message)?  cache,TResult? Function( String message)?  integrity,}) {final _that = this;
 switch (_that) {
 case CatalogRefreshError_Disabled() when disabled != null:
 return disabled();case CatalogRefreshError_InsecureUrl() when insecureUrl != null:
 return insecureUrl(_that.url);case CatalogRefreshError_Fetch() when fetch != null:
 return fetch(_that.url,_that.message);case CatalogRefreshError_Parse() when parse != null:
 return parse(_that.message);case CatalogRefreshError_Cache() when cache != null:
-return cache(_that.path,_that.message);case _:
+return cache(_that.path,_that.message);case CatalogRefreshError_Integrity() when integrity != null:
+return integrity(_that.message);case _:
   return null;
 
 }
@@ -1815,6 +1821,74 @@ class _$CatalogRefreshError_CacheCopyWithImpl<$Res>
   return _then(CatalogRefreshError_Cache(
 path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as String,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class CatalogRefreshError_Integrity extends CatalogRefreshError {
+  const CatalogRefreshError_Integrity({required this.message}): super._();
+
+
+ final  String message;
+
+/// Create a copy of CatalogRefreshError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CatalogRefreshError_IntegrityCopyWith<CatalogRefreshError_Integrity> get copyWith => _$CatalogRefreshError_IntegrityCopyWithImpl<CatalogRefreshError_Integrity>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is CatalogRefreshError_Integrity&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'CatalogRefreshError.integrity(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CatalogRefreshError_IntegrityCopyWith<$Res> implements $CatalogRefreshErrorCopyWith<$Res> {
+  factory $CatalogRefreshError_IntegrityCopyWith(CatalogRefreshError_Integrity value, $Res Function(CatalogRefreshError_Integrity) _then) = _$CatalogRefreshError_IntegrityCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$CatalogRefreshError_IntegrityCopyWithImpl<$Res>
+    implements $CatalogRefreshError_IntegrityCopyWith<$Res> {
+  _$CatalogRefreshError_IntegrityCopyWithImpl(this._self, this._then);
+
+  final CatalogRefreshError_Integrity _self;
+  final $Res Function(CatalogRefreshError_Integrity) _then;
+
+/// Create a copy of CatalogRefreshError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(CatalogRefreshError_Integrity(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

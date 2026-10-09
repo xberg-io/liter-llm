@@ -1350,6 +1350,9 @@ pub struct PromptTokensDetails {
     /// Cached tokens present in the prompt. Defaults to 0 when absent.
     #[serde(default)]
     pub cached_tokens: u64,
+    /// Tokens written to the provider prompt cache. Defaults to 0 when absent.
+    #[serde(default)]
+    pub cache_creation_tokens: u64,
     /// Audio input tokens present in the prompt. Defaults to 0 when absent.
     #[serde(default)]
     pub audio_tokens: u64,

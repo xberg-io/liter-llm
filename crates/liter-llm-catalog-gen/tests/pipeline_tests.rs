@@ -116,7 +116,7 @@ fn should_transform_a_plain_chat_model_exactly() {
         limit: CatalogLimit {
             context: 128_000,
             input: Some(120_000),
-            output: 8_000,
+            output: Some(8_000),
         },
         modalities: CatalogModalities {
             input: vec!["text".to_string()],
@@ -164,7 +164,7 @@ fn should_transform_a_cost_only_model_with_identity_fields_and_no_mode() {
         limit: CatalogLimit {
             context: 4_096,
             input: None,
-            output: 4_096,
+            output: Some(4_096),
         },
         modalities: CatalogModalities {
             input: vec!["text".to_string()],
@@ -203,7 +203,7 @@ fn should_omit_pricing_entirely_for_a_model_with_no_cost() {
         limit: CatalogLimit {
             context: 8_192,
             input: None,
-            output: 8_192,
+            output: Some(8_192),
         },
         modalities: CatalogModalities {
             input: vec!["text".to_string()],
@@ -261,7 +261,7 @@ fn should_transform_tiered_pricing_and_ignore_context_over_200k() {
     assert!(record.capabilities.attachment, "attachment: true upstream");
     assert_eq!(record.limit.context, 400_000);
     assert_eq!(record.limit.input, Some(272_000));
-    assert_eq!(record.limit.output, 128_000);
+    assert_eq!(record.limit.output, Some(128_000));
 
     let expected_tier = CatalogPricingTier {
         min_context_tokens: 200_000,

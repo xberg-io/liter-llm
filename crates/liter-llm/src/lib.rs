@@ -100,7 +100,10 @@ pub use tower::{
     GuardrailStage, NoOpEmbeddingProvider, SystemPromptAwareStrategy, TenantScopedStrategy, VectorMatch, VectorStore,
 };
 // ~keep Re-export provider helpers that are public API while the module stays pub(crate).
-pub use cost::{ModelInfo, ModelTier, completion_cost, completion_cost_with_cache, model_info};
+pub use cost::{
+    CatalogInfo, ModelInfo, ModelTier, catalog_info, completion_cost, completion_cost_with_cache,
+    completion_cost_with_cache_details, exact_model_info, model_info,
+};
 // ~keep Runtime catalog refresh surface. Always compiled so it reaches every
 // ~keep binding; refresh is a runtime toggle (off by default), and the network
 // ~keep fetch degrades to a clean error on builds without `native-http`.

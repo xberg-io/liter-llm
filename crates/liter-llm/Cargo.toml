@@ -82,10 +82,23 @@ full = [
   "opendal-cache",
 ]
 
-etcd-key-resolver = ["dep:etcd-client", "dep:hex", "dep:sha2"]
+etcd-key-resolver = ["dep:etcd-client"]
 
 # ~keep Default remains native HTTP only so downstream `cargo build` avoids heavy deps.
 default = ["native-http"]
+
+# ~keep Non-Windows uses rustls + ring to avoid aws-lc-sys as the bundled TLS provider.
+# ~keep The workspace reqwest base is TLS-agnostic; this layer supplies TLS.
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+opendal-http-transport-reqwest = { workspace = true, optional = true, features = ["rustls-no-provider"] }
+reqwest = { workspace = true, optional = true, features = ["rustls-no-provider"] }
+rustls = { workspace = true, optional = true }
+
+# ~keep Windows uses SChannel via native-tls to avoid aws-lc-sys MSVC build failures.
+# ~keep rustls is intentionally not pulled in on Windows.
+[target.'cfg(target_os = "windows")'.dependencies]
+opendal-http-transport-reqwest = { workspace = true, optional = true, features = ["native-tls"] }
+reqwest = { workspace = true, optional = true, features = ["native-tls"] }
 
 [dependencies]
 ahash = { workspace = true }
@@ -104,7 +117,7 @@ futures-core = { workspace = true }
 futures-util = { workspace = true, optional = true }
 gcp_auth = { workspace = true, optional = true }
 gloo-timers = { version = "0.4", features = ["futures"], optional = true }
-hex = { workspace = true, optional = true }
+hex.workspace = true
 jsonwebtoken = { workspace = true, optional = true }
 memchr = { workspace = true, optional = true }
 opendal = { workspace = true, optional = true }
@@ -121,7 +134,7 @@ rust_decimal = { workspace = true }
 secrecy = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-sha2 = { workspace = true, optional = true }
+sha2.workspace = true
 thiserror = { workspace = true }
 tokenizers = { workspace = true, optional = true }
 tokio = { workspace = true, features = ["time", "rt", "macros"], optional = true }
@@ -134,19 +147,6 @@ tracing-opentelemetry = { workspace = true, optional = true }
 url = { workspace = true }
 utoipa = { workspace = true, optional = true }
 web-time = { version = "1", optional = true }
-
-# ~keep Non-Windows uses rustls + ring to avoid aws-lc-sys as the bundled TLS provider.
-# ~keep The workspace reqwest base is TLS-agnostic; this layer supplies TLS.
-[target.'cfg(not(target_os = "windows"))'.dependencies]
-opendal-http-transport-reqwest = { workspace = true, optional = true, features = ["rustls-no-provider"] }
-reqwest = { workspace = true, optional = true, features = ["rustls-no-provider"] }
-rustls = { workspace = true, optional = true }
-
-# ~keep Windows uses SChannel via native-tls to avoid aws-lc-sys MSVC build failures.
-# ~keep rustls is intentionally not pulled in on Windows.
-[target.'cfg(target_os = "windows")'.dependencies]
-opendal-http-transport-reqwest = { workspace = true, optional = true, features = ["native-tls"] }
-reqwest = { workspace = true, optional = true, features = ["native-tls"] }
 
 [dev-dependencies]
 ctor = "1.0"

@@ -66,6 +66,9 @@ pub struct Provider {
 pub struct Model {
     /// Model id, duplicated from the map key upstream.
     pub id: String,
+    /// Canonical identifier when this entry is an alias of another model.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub canonical_model_id: Option<String>,
     /// Human-readable model name.
     pub name: String,
     /// Model description.

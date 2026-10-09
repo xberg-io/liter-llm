@@ -69,7 +69,11 @@ fn message_start_chunk(event: &Value) -> ChatCompletionChunk {
             prompt_tokens,
             completion_tokens: 0,
             total_tokens: prompt_tokens,
-            prompt_tokens_details: None,
+            prompt_tokens_details: Some(crate::types::PromptTokensDetails {
+                cached_tokens: cache_read,
+                cache_creation_tokens: cache_creation,
+                audio_tokens: 0,
+            }),
             completion_tokens_details: None,
         })
     } else {
