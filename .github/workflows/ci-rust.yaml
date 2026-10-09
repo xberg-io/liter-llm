@@ -84,6 +84,12 @@ jobs:
           use-sccache: "true"
           components: rustfmt, clippy, llvm-tools-preview
 
+      # ~keep setup-rust installs protobuf-compiler without recommended packages on Linux. The
+      # etcd-client build needs the well-known .proto files supplied by libprotobuf-dev.
+      - name: Install protobuf includes (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y --no-install-recommends libprotobuf-dev
+
       - name: Setup PHP (required by ext-php-rs build script)
         uses: xberg-io/actions/setup-php@v1
 
