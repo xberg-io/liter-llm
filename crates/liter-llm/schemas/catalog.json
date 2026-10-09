@@ -1,9 +1,9 @@
 {
   "$provenance": {
     "source": "models.dev/api.json",
-    "source_sha256": "31cd8dd78d79706d444bb7f781f0edda422e8ce098fc4da66d154b4848850654",
+    "source_sha256": "bff90ff7c01492595a4ed4c2bd6dc3eb4f4cf680ff42b289ba74030441280082",
     "fetched": "2026-10-09",
-    "library_version": "2.2.0"
+    "library_version": "2.2.1"
   },
   "$schema_version": 1,
   "providers": {
@@ -47468,8 +47468,8 @@
           "id": "qwen3-coder-30b-a3b-instruct",
           "name": "Qwen3-Coder 30B-A3B Instruct",
           "pricing": {
-            "input_cost_per_token": 0.000000067,
-            "output_cost_per_token": 0.000000245,
+            "input_cost_per_token": 0.000000179,
+            "output_cost_per_token": 0.000000697,
             "cache_read_input_token_cost": 0.000000014
           },
           "limit": {
@@ -67417,38 +67417,6 @@
           "family": "Hy",
           "release_date": "2026-08-28",
           "last_updated": "2026-08-28"
-        },
-        "tencent/step-5-preview": {
-          "id": "tencent/step-5-preview",
-          "name": "Step 5 Preview (Tencent)",
-          "pricing": {
-            "input_cost_per_token": 0.000001,
-            "output_cost_per_token": 0.0000027,
-            "cache_read_input_token_cost": 0.00000005
-          },
-          "limit": {
-            "context": 1000000,
-            "input": 1000000,
-            "output": 1000000
-          },
-          "modalities": {
-            "input": ["text"],
-            "output": ["text"]
-          },
-          "mode": "chat",
-          "capabilities": {
-            "vision": false,
-            "function_calling": false,
-            "reasoning": true,
-            "structured_output": false,
-            "audio_input": false,
-            "audio_output": false,
-            "prompt_caching": true,
-            "attachment": false,
-            "open_weights": false
-          },
-          "release_date": "2026-09-16",
-          "last_updated": "2026-09-20"
         },
         "tensorx/deepseek/deepseek-v4-flash-0731": {
           "id": "tensorx/deepseek/deepseek-v4-flash-0731",
@@ -104254,7 +104222,7 @@
             "vision": false,
             "function_calling": true,
             "reasoning": true,
-            "structured_output": true,
+            "structured_output": false,
             "audio_input": false,
             "audio_output": false,
             "prompt_caching": true,
@@ -104331,7 +104299,7 @@
         },
         "inclusionai/ling-3.1-flash": {
           "id": "inclusionai/ling-3.1-flash",
-          "name": "inclusionAI: Ling 3.1 Flash (new)",
+          "name": "inclusionAI: Ling 3.1 Flash",
           "pricing": {
             "input_cost_per_token": 0.0,
             "output_cost_per_token": 0.0
@@ -106215,9 +106183,9 @@
           "id": "moonshotai/kimi-k2.6",
           "name": "Kimi K2.6",
           "pricing": {
-            "input_cost_per_token": 0.000000465,
+            "input_cost_per_token": 0.0000004357,
             "output_cost_per_token": 0.00000245,
-            "cache_read_input_token_cost": 0.0000000975
+            "cache_read_input_token_cost": 0.0000001205
           },
           "limit": {
             "context": 262144,
@@ -113567,9 +113535,9 @@
           "id": "~deepseek/deepseek-pro-latest",
           "name": "DeepSeek: DeepSeek Pro Latest",
           "pricing": {
-            "input_cost_per_token": 0.000000198,
+            "input_cost_per_token": 0.0000001282,
             "output_cost_per_token": 0.000008,
-            "cache_read_input_token_cost": 0.0000002
+            "cache_read_input_token_cost": 0.00000013
           },
           "limit": {
             "context": 1048576,
@@ -113599,9 +113567,9 @@
           "id": "~deepseek/deepseek-v4-flash-latest",
           "name": "DeepSeek: DeepSeek V4 Flash Latest",
           "pricing": {
-            "input_cost_per_token": 0.00000000368,
-            "output_cost_per_token": 0.000000134075,
-            "cache_read_input_token_cost": 0.00000000368
+            "input_cost_per_token": 0.0000000144,
+            "output_cost_per_token": 0.00000003408,
+            "cache_read_input_token_cost": 0.0000000096
           },
           "limit": {
             "context": 1048576,
@@ -113928,7 +113896,7 @@
           "name": "Z.ai: GLM Flash Latest",
           "pricing": {
             "input_cost_per_token": 0.000000032,
-            "output_cost_per_token": 0.000001428579,
+            "output_cost_per_token": 0.000000326813,
             "cache_read_input_token_cost": 0.00000002
           },
           "limit": {
@@ -135242,7 +135210,8 @@
           "pricing": {
             "input_cost_per_token": 0.000001,
             "output_cost_per_token": 0.000005,
-            "cache_read_input_token_cost": 0.0000001
+            "cache_read_input_token_cost": 0.0000001,
+            "cache_creation_input_token_cost": 0.00000125
           },
           "limit": {
             "context": 200000,
@@ -135275,7 +135244,8 @@
           "pricing": {
             "input_cost_per_token": 0.000005,
             "output_cost_per_token": 0.000025,
-            "cache_read_input_token_cost": 0.0000005
+            "cache_read_input_token_cost": 0.0000005,
+            "cache_creation_input_token_cost": 0.00000625
           },
           "limit": {
             "context": 200000,
@@ -135308,7 +135278,8 @@
           "pricing": {
             "input_cost_per_token": 0.000005,
             "output_cost_per_token": 0.000025,
-            "cache_read_input_token_cost": 0.0000005
+            "cache_read_input_token_cost": 0.0000005,
+            "cache_creation_input_token_cost": 0.00000625
           },
           "limit": {
             "context": 1000000,
@@ -135341,7 +135312,8 @@
           "pricing": {
             "input_cost_per_token": 0.000005,
             "output_cost_per_token": 0.000025,
-            "cache_read_input_token_cost": 0.0000005
+            "cache_read_input_token_cost": 0.0000005,
+            "cache_creation_input_token_cost": 0.00000625
           },
           "limit": {
             "context": 1000000,
@@ -135374,7 +135346,8 @@
           "pricing": {
             "input_cost_per_token": 0.000003,
             "output_cost_per_token": 0.000015,
-            "cache_read_input_token_cost": 0.0000003
+            "cache_read_input_token_cost": 0.0000003,
+            "cache_creation_input_token_cost": 0.00000375
           },
           "limit": {
             "context": 200000,
@@ -135407,7 +135380,8 @@
           "pricing": {
             "input_cost_per_token": 0.000003,
             "output_cost_per_token": 0.000015,
-            "cache_read_input_token_cost": 0.0000003
+            "cache_read_input_token_cost": 0.0000003,
+            "cache_creation_input_token_cost": 0.00000375
           },
           "limit": {
             "context": 1000000,
@@ -156228,9 +156202,9 @@
           "id": "deepseek/deepseek-v4-flash-vision-exp",
           "name": "DeepSeek V4 Flash Vision Exp",
           "pricing": {
-            "input_cost_per_token": 0.00000044,
-            "output_cost_per_token": 0.00000132,
-            "cache_read_input_token_cost": 0.000000014
+            "input_cost_per_token": 0.00000022,
+            "output_cost_per_token": 0.00000066,
+            "cache_read_input_token_cost": 0.000000007
           },
           "limit": {
             "context": 1048576,
@@ -197198,9 +197172,9 @@
           "id": "deepseek/deepseek-v4-flash-0731",
           "name": "DeepSeek V4 Flash 0731",
           "pricing": {
-            "input_cost_per_token": 0.0000000046,
+            "input_cost_per_token": 0.000000018,
             "output_cost_per_token": 0.00000128,
-            "cache_read_input_token_cost": 0.0000000046
+            "cache_read_input_token_cost": 0.000000018
           },
           "limit": {
             "context": 1048576,
@@ -197263,9 +197237,9 @@
           "id": "deepseek/deepseek-v4-pro",
           "name": "DeepSeek V4 Pro",
           "pricing": {
-            "input_cost_per_token": 0.00000095526,
-            "output_cost_per_token": 0.00000191052,
-            "cache_read_input_token_cost": 0.000000079605
+            "input_cost_per_token": 0.0000002871,
+            "output_cost_per_token": 0.0000005742,
+            "cache_read_input_token_cost": 0.000000023925
           },
           "limit": {
             "context": 1048576,
@@ -197296,9 +197270,9 @@
           "id": "deepseek/deepseek-v4-pro-0813",
           "name": "DeepSeek V4 Pro 0813",
           "pricing": {
-            "input_cost_per_token": 0.00000132,
-            "output_cost_per_token": 0.00000396,
-            "cache_read_input_token_cost": 0.000000044
+            "input_cost_per_token": 0.00000066,
+            "output_cost_per_token": 0.00000198,
+            "cache_read_input_token_cost": 0.000000022
           },
           "limit": {
             "context": 1048576,
@@ -198698,7 +198672,7 @@
             "vision": false,
             "function_calling": true,
             "reasoning": true,
-            "structured_output": true,
+            "structured_output": false,
             "audio_input": false,
             "audio_output": false,
             "prompt_caching": true,
@@ -200512,9 +200486,9 @@
           "id": "moonshotai/kimi-k2.6",
           "name": "Kimi K2.6",
           "pricing": {
-            "input_cost_per_token": 0.000000465,
+            "input_cost_per_token": 0.0000004357,
             "output_cost_per_token": 0.00000245,
-            "cache_read_input_token_cost": 0.0000000975
+            "cache_read_input_token_cost": 0.0000001205
           },
           "limit": {
             "context": 262144,
@@ -200580,7 +200554,7 @@
           "pricing": {
             "input_cost_per_token": 0.0000005,
             "output_cost_per_token": 0.000012,
-            "cache_read_input_token_cost": 0.00000035
+            "cache_read_input_token_cost": 0.0000003
           },
           "limit": {
             "context": 1048576,
@@ -207712,9 +207686,9 @@
           "id": "z-ai/glm-5.2",
           "name": "GLM-5.2",
           "pricing": {
-            "input_cost_per_token": 0.000000084,
-            "output_cost_per_token": 0.000008,
-            "cache_read_input_token_cost": 0.000000083
+            "input_cost_per_token": 0.00000006,
+            "output_cost_per_token": 0.000006,
+            "cache_read_input_token_cost": 0.000000059
           },
           "limit": {
             "context": 1048576,
@@ -207744,9 +207718,9 @@
           "id": "z-ai/glm-5.3",
           "name": "GLM-5.3",
           "pricing": {
-            "input_cost_per_token": 0.000000039,
-            "output_cost_per_token": 0.000007,
-            "cache_read_input_token_cost": 0.000000038
+            "input_cost_per_token": 0.00000004,
+            "output_cost_per_token": 0.0000036,
+            "cache_read_input_token_cost": 0.000000039
           },
           "limit": {
             "context": 1048576,
@@ -208078,9 +208052,9 @@
           "id": "~deepseek/deepseek-pro-latest",
           "name": "DeepSeek Pro Latest",
           "pricing": {
-            "input_cost_per_token": 0.000000198,
+            "input_cost_per_token": 0.0000001282,
             "output_cost_per_token": 0.000008,
-            "cache_read_input_token_cost": 0.0000002
+            "cache_read_input_token_cost": 0.00000013
           },
           "limit": {
             "context": 1048576,
@@ -208110,9 +208084,9 @@
           "id": "~deepseek/deepseek-v4-flash-latest",
           "name": "DeepSeek V4 Flash Latest",
           "pricing": {
-            "input_cost_per_token": 0.00000000368,
-            "output_cost_per_token": 0.000000134075,
-            "cache_read_input_token_cost": 0.00000000368
+            "input_cost_per_token": 0.0000000144,
+            "output_cost_per_token": 0.00000003408,
+            "cache_read_input_token_cost": 0.0000000096
           },
           "limit": {
             "context": 1048576,
@@ -208497,7 +208471,7 @@
           "name": "GLM Flash Latest",
           "pricing": {
             "input_cost_per_token": 0.000000032,
-            "output_cost_per_token": 0.000001428579,
+            "output_cost_per_token": 0.000000326813,
             "cache_read_input_token_cost": 0.00000002
           },
           "limit": {
