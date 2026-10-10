@@ -970,11 +970,13 @@ jobs:
       - name: Install alef
         uses: xberg-io/actions/install-alef@v1
       - name: Build FFI
-        shell: bash
-        # ~keep `--lang go` builds the FFI crate as Go's dependency, which is what makes
-        # alef record cargo's native-static-libs into the Go tarball (#247); the
-        # cdylib/staticlib it leaves in target/ also feed the C FFI staging below.
-        run: alef publish build --lang go --target ${{ matrix.target }}
+        id: ffi
+        uses: xberg-io/actions/build-rust-ffi@v1
+        with:
+          crate-name: liter-llm-ffi
+          target: ${{ matrix.target }}
+          require-static: "true"
+          additional-flags: "--locked"
       - name: Strip static archive debug symbols
         if: runner.os == 'Linux'
         shell: bash
@@ -991,9 +993,11 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
           RID: ${{ matrix.rid }}
+          NATIVE_STATIC_LIBS: ${{ steps.ffi.outputs.native-static-libs-path }}
         run: |
           mkdir -p "ffi-staging/${RID}"
           find "target/${TARGET}/release" -maxdepth 1 -type f \( -name '*.so' -o -name '*.dylib' -o -name '*.dll' -o -name '*.a' -o -name '*.dll.lib' \) -name '*liter_llm_ffi*' -exec cp {} "ffi-staging/${RID}/" \;
+          cp "$NATIVE_STATIC_LIBS" "ffi-staging/${RID}/native-static-libs.txt"
           # Stage the canonical cbindgen-generated C header. build.rs writes
           # it to include/liter_llm.h; fail hard rather than silently falling
           # back to a stale top-level header (which previously shipped an
@@ -1011,6 +1015,8 @@ jobs:
           TARGET: ${{ matrix.target }}
           LABEL: ${{ matrix.label }}
           VERSION: ${{ needs.prepare.outputs.version }}
+          STATIC_LIBRARY: ${{ steps.ffi.outputs.static-library-path }}
+          NATIVE_STATIC_LIBS: ${{ steps.ffi.outputs.native-static-libs-path }}
         run: |
           declare -A triple_map=(
             ["linux-x86_64"]="x86_64-unknown-linux-gnu"
@@ -1027,6 +1033,8 @@ jobs:
             \( -name '*.so' -o -name '*.dylib' -o -name '*.dll' -o -name '*.dll.lib' \) \
             -name '*liter_llm_ffi*' \
             -exec cp {} "$STAGE_DIR/lib/" \;
+          cp "$STATIC_LIBRARY" "$STAGE_DIR/lib/"
+          cp "$NATIVE_STATIC_LIBS" "$STAGE_DIR/lib/native-static-libs.txt"
           if [ -f crates/liter-llm-ffi/include/liter_llm.h ]; then
             cp crates/liter-llm-ffi/include/liter_llm.h "$STAGE_DIR/include/"
           else
