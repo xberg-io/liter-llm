@@ -43,7 +43,7 @@ function httpGetBuffer(url, { headers = {} } = {}, maxRedirects = 5) {
       reject(new Error("too many redirects"));
       return;
     }
-    if (!/^https:\/\//i.test(url)) {
+    if (!/^https:\/\//iu.test(url)) {
       reject(new Error(`refusing non-https URL: ${url}`));
       return;
     }
@@ -51,7 +51,7 @@ function httpGetBuffer(url, { headers = {} } = {}, maxRedirects = 5) {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume();
         const next = res.headers.location;
-        if (!/^https:\/\//i.test(next)) {
+        if (!/^https:\/\//iu.test(next)) {
           return reject(new Error(`refusing non-https redirect to: ${next}`));
         }
         return httpGetBuffer(next, { headers }, maxRedirects - 1).then(resolve, reject);
@@ -138,7 +138,7 @@ async function resolveRelease() {
   try {
     release = await httpGetJson(apiUrl);
   } catch (err) {
-    if (pinned && /HTTP 404/.test(err.message)) {
+    if (pinned && /HTTP 404/u.test(err.message)) {
       throw new Error(`release tag '${pinned}' not found`, { cause: err });
     }
     throw err;
@@ -163,12 +163,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BIN_DIR = path.join(__dirname, "bin");
 
 function expectedDigest(text, assetName) {
-  for (const raw of text.split(/\r?\n/)) {
+  for (const raw of text.split(/\r?\n/u)) {
     const line = raw.trim();
     if (!line) continue;
-    const parts = line.split(/\s+/);
+    const parts = line.split(/\s+/u);
     if (parts.length < 2) continue;
-    const name = parts[parts.length - 1].replace(/^\*/, "");
+    const name = parts.at(-1).replace(/^\*/u, "");
     if (name === assetName) return parts[0].toLowerCase();
   }
   return null;
@@ -197,10 +197,10 @@ async function verifyOrWarn(archiveBuf, archiveName, checksums) {
 }
 
 function isUnsafeEntry(name) {
-  const entry = String(name).replace(/\\/g, "/").trim();
+  const entry = String(name).replaceAll("\\", "/").trim();
   if (!entry) return false;
   if (entry.startsWith("/")) return true;
-  if (/^[a-zA-Z]:/.test(entry)) return true;
+  if (/^[a-zA-Z]:/u.test(entry)) return true;
   if (entry.startsWith("//")) return true;
   return entry.split("/").some((part) => part === "..");
 }
@@ -213,7 +213,7 @@ function listTarEntries(archivePath) {
   }
   return result.stdout
     .toString()
-    .split(/\r?\n/)
+    .split(/\r?\n/u)
     .map((s) => s.trim())
     .filter(Boolean);
 }
@@ -237,7 +237,7 @@ function listZipEntries(archivePath) {
       encoding: "utf8",
     });
     return out
-      .split(/\r?\n/)
+      .split(/\r?\n/u)
       .map((s) => s.trim())
       .filter(Boolean);
   }
@@ -248,7 +248,7 @@ function listZipEntries(archivePath) {
   }
   return result.stdout
     .toString()
-    .split(/\r?\n/)
+    .split(/\r?\n/u)
     .map((s) => s.trim())
     .filter(Boolean);
 }

@@ -15,6 +15,6 @@
  * Pass subprocess arguments as an array. Never interpolate external input into
  * a shell command.
  */
-const LiterLlmPlugin = async () => ({});
+const LiterLlmPlugin = () => ({});
 
 export default LiterLlmPlugin;

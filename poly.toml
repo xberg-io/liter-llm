@@ -365,7 +365,6 @@ root = "packages/elixir"
   "eqeqeq",
   "no-inline-comments",
   "no-negated-condition",
-  "require-unicode-regexp",
   "unicorn/consistent-function-scoping",
   "unicorn/escape-case",
   "unicorn/explicit-length-check",
@@ -377,7 +376,6 @@ root = "packages/elixir"
   "unicorn/no-typeof-undefined",
   "unicorn/no-useless-undefined",
   "unicorn/prefer-add-event-listener",
-  "unicorn/prefer-at",
   "unicorn/prefer-code-point",
   "unicorn/prefer-dom-node-append",
   "unicorn/prefer-dom-node-remove",
@@ -386,7 +384,6 @@ root = "packages/elixir"
   "unicorn/prefer-number-coercion",
   "unicorn/prefer-query-selector",
   "unicorn/prefer-single-call",
-  "unicorn/prefer-string-replace-all",
   "unicorn/prefer-string-slice",
   "unicorn/prefer-top-level-await",
   "unicorn/prefer-type-error",
@@ -410,7 +407,6 @@ root = "packages/elixir"
 "**/test/**/*" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 "**/test_*.py" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 "**/tests/**/*" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
-"plugin/.ai-rulez/opencode/index.js" = ["require-await"]
 ".github/workflows/publish.yaml" = ["file-too-long"]
 "CHANGELOG.md" = ["file-too-long"]
 "alef.toml" = ["file-too-long"]

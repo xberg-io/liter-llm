@@ -1,6 +1,6 @@
 // AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-// Content-Hash: blake3:1ad3d813d05d2ed27d81f6e6848ad8cf124882181d5f4d5ca2e62e81d7bbc91c
-// Source-Hash: blake3:08d1b547eeb7749df4ddf38c0cb5caba2dd24acd39ee5e68886582db666c5662
+// Content-Hash: blake3:864d6c9a7cda07ab38a0f5d3e8cd5dd20ff22cfa1136469e1b5b294433f4b819
+// Source-Hash: blake3:ecc30cd7ec476fdf505195b8629dee299496c411b71c7cf341af18e2b1780a46
 // Schema-Version: v1
 
 /**
@@ -20,6 +20,6 @@
  * Pass subprocess arguments as an array. Never interpolate external input into
  * a shell command.
  */
-const LiterLlmPlugin = async () => ({});
+const LiterLlmPlugin = () => ({});
 
 export default LiterLlmPlugin;
