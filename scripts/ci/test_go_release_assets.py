@@ -4,6 +4,7 @@ import hashlib
 from pathlib import Path
 
 import pytest
+from check_native_library_size import validate_library_size
 from prepare_go_release_assets import prepare
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -60,7 +61,32 @@ def test_go_archives_are_stripped_before_packaging() -> None:
     assert 'strip -S "$archive"' not in workflow
 
 
+def test_go_shared_libraries_strip_debug_info_and_enforce_size_budget() -> None:
+    workflow = PUBLISH_WORKFLOW.read_text()
+    assert "CARGO_PROFILE_RELEASE_STRIP: debuginfo" in workflow
+    assert "Verify shared Go FFI library size budget" in workflow
+    assert 'check_native_library_size.py "$SHARED_LIBRARY" --max-mib 40' in workflow
+    assert workflow.index("CARGO_PROFILE_RELEASE_STRIP: debuginfo") < workflow.index("Package Go FFI")
+
+
+def test_native_library_size_budget_checks_exactly_one_real_file(tmp_path: Path) -> None:
+    library = tmp_path / "libliter_llm_ffi.dylib"
+    library.write_bytes(b"x" * 32)
+    assert validate_library_size(library, max_bytes=32) == 32
+
+    library.write_bytes(b"x" * 33)
+    with pytest.raises(ValueError, match="exceeds the 32-byte budget"):
+        validate_library_size(library, max_bytes=32)
+
+    with pytest.raises(FileNotFoundError):
+        validate_library_size(tmp_path / "missing.dylib", max_bytes=32)
+
+
 def test_tagged_release_uploads_catalog_checksum() -> None:
     workflow = PUBLISH_WORKFLOW.read_text()
+    assert "GH_REPO: ${{ github.repository }}" in workflow
+    assert 'CATALOG_DIR="${RUNNER_TEMP:?}"' in workflow
     assert "sha256sum catalog.json > catalog.json.sha256" in workflow
-    assert 'gh release upload "$TAG" catalog.json catalog.json.sha256 --clobber' in workflow
+    assert (
+        'gh release upload "$TAG" "$CATALOG_DIR/catalog.json" "$CATALOG_DIR/catalog.json.sha256" --clobber' in workflow
+    )

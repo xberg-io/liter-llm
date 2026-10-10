@@ -51,6 +51,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  GH_REPO: ${{ github.repository }}
 
 jobs:
   prepare:
@@ -173,14 +174,17 @@ jobs:
           TAG: ${{ steps.meta.outputs.tag }}
           TARGET_SHA: ${{ steps.meta.outputs.target_sha }}
         run: |
+          CATALOG_DIR="${RUNNER_TEMP:?}"
           jq \
             --arg commit "$TARGET_SHA" \
             --arg tag "$TAG" \
             '.["$provenance"].generated_by_commit = $commit | .["$provenance"].release_tag = $tag' \
-            schemas/catalog.json > /tmp/catalog.json
-          cd /tmp
-          sha256sum catalog.json > catalog.json.sha256
-          gh release upload "$TAG" catalog.json catalog.json.sha256 --clobber
+            schemas/catalog.json > "$CATALOG_DIR/catalog.json"
+          (
+            cd "$CATALOG_DIR"
+            sha256sum catalog.json > catalog.json.sha256
+          )
+          gh release upload "$TAG" "$CATALOG_DIR/catalog.json" "$CATALOG_DIR/catalog.json.sha256" --clobber
         shell: bash
 
   # ~keep Every job that publishes to a registry or uploads a release asset must gate on
@@ -972,6 +976,8 @@ jobs:
       - name: Build FFI
         id: ffi
         uses: xberg-io/actions/build-rust-ffi@v1
+        env:
+          CARGO_PROFILE_RELEASE_STRIP: debuginfo
         with:
           crate-name: liter-llm-ffi
           target: ${{ matrix.target }}
@@ -986,6 +992,11 @@ jobs:
           archive="target/${TARGET}/release/libliter_llm_ffi.a"
           test -f "$archive"
           strip -g "$archive"
+      - name: Verify shared Go FFI library size budget
+        shell: bash
+        env:
+          SHARED_LIBRARY: ${{ steps.ffi.outputs.shared-library-path }}
+        run: python3 scripts/ci/check_native_library_size.py "$SHARED_LIBRARY" --max-mib 40
       - name: Package Go FFI
         shell: bash
         run: alef publish package --lang go --target ${{ matrix.target }} -o go-ffi-dist
