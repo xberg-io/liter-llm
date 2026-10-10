@@ -6,7 +6,7 @@ description: Use when streaming tokens incrementally from an LLM via liter-llm o
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 Content-Hash: blake3:13410510899be94ef40712ffcb27a284ef4ac4977b6e45b38b014d60e913f995
-Source-Hash: blake3:ecc30cd7ec476fdf505195b8629dee299496c411b71c7cf341af18e2b1780a46
+Source-Hash: blake3:3cb955aedbbbd51d9b5f60a411d90b9386534c5f14bf20a056bef60f7dace49e
 Schema-Version: v1
 -->
 

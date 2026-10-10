@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.3] - 2026-10-10
+
+Reliable Go publication, smaller bundled native libraries, and static C distribution artifacts.
+Generated with Alef 0.107.12.
+
+### Fixed
+
+- Release catalog uploads retain explicit GitHub repository context, so the prepare gate no longer
+  blocks every downstream package and Go module-tag job after staging files outside the checkout
+  (#281).
+- Go FFI shared libraries strip release debug information and enforce a 40 MiB size budget before
+  packaging, preventing oversized native binaries from entering the module bundle (#282).
+
+### Changed
+
+- C FFI release archives include the static library and its native linker metadata through the
+  shared `xberg-io/actions/build-rust-ffi` action.
+- Removed repository-wide JavaScript lint exemptions for Unicode regexes, array indexing, and
+  string replacement, plus the obsolete async-plugin exemption.
+
 ## [2.2.2] - 2026-10-09
 
 Security, provider correctness, bounded Go clients, truthful catalog pricing, and repaired release
