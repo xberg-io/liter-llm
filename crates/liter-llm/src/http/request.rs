@@ -946,7 +946,7 @@ mod tests {
 
     #[tokio::test]
     #[serial(outbound_policy)]
-    async fn post_multipart_preserves_redirect_policy_error_classification() {
+    async fn post_multipart_returns_redirect_response_without_following() {
         set_outbound_policy(OutboundPolicy::Off);
         let (source_address, source) = one_shot_server(
             "HTTP/1.1 302 Found\r\nLocation: http://169.254.169.254/token\r\nContent-Length: 0\r\n\r\n".to_owned(),
@@ -967,8 +967,8 @@ mod tests {
 
         source.join().expect("multipart source server");
         assert!(
-            matches!(result, Err(LiterLlmError::OutboundForbidden { .. })),
-            "multipart redirect policy errors must remain non-transient: {result:?}"
+            matches!(result, Err(LiterLlmError::ServerError { status: 302, .. })),
+            "authenticated multipart clients must surface redirects without following them: {result:?}"
         );
     }
 }

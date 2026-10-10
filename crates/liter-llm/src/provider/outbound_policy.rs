@@ -1238,7 +1238,7 @@ mod tests {
     #[tokio::test]
     #[serial(outbound_policy)]
     #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
-    async fn allowlisted_private_origin_still_rejects_cross_origin_redirect() {
+    async fn allowlisted_private_origin_never_follows_cross_origin_redirect() {
         let target = OneShotServer::start("HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n{}".to_string());
         let target_url = format!("http://localhost:{}/done", target.address.port());
         let source = OneShotServer::start(format!(
@@ -1254,7 +1254,7 @@ mod tests {
             .expect("guarded client");
         let result = crate::http::request::get_json_raw(&client, &source_url, None, &[], 0).await;
         set_outbound_policy(OutboundPolicy::Off);
-        assert!(matches!(result, Err(LiterLlmError::OutboundForbidden { .. })));
+        assert!(matches!(result, Err(LiterLlmError::ServerError { status: 302, .. })));
         assert!(source.finish(), "allowed private source must receive the request");
         assert!(!target.finish(), "different-origin target must not receive the request");
     }
