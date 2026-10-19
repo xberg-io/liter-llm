@@ -342,13 +342,23 @@ async fn budget_service_records_cost_for_streamed_response() {
     );
 }
 
+/// Abandoned streams settle on a spawned drain task; wait for it without sleeping.
+async fn wait_for_global_spend(state: &BudgetState) {
+    tokio::time::timeout(std::time::Duration::from_secs(2), async {
+        while state.global_spend() <= 0.0 {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .expect("abandoned stream spend must settle");
+}
+
 /// Spend must still be recorded when the caller abandons the stream.
 ///
 /// Accounting is settle-only, and settlement used to happen exclusively in
 /// the stream's terminal poll — so a client that started a stream and
-/// dropped it consumed real provider tokens (the whole completion is
-/// generated and buffered before the caller sees a byte) while the ledger
-/// stayed at zero.  Repeating that in a loop is unmetered usage.
+/// dropped it consumed real provider tokens while the ledger stayed at zero.
+/// Repeating that in a loop is unmetered usage.
 #[tokio::test]
 async fn abandoned_stream_still_records_spend() {
     use futures_util::StreamExt as _;
@@ -376,6 +386,7 @@ async fn abandoned_stream_still_records_spend() {
     // ~keep Take one chunk and walk away — the usage-bearing final chunk is never polled.
     let _ = stream.next().await;
     drop(stream);
+    wait_for_global_spend(&state).await;
 
     assert!(
         state.global_spend() > 0.0,
@@ -411,6 +422,7 @@ async fn stream_dropped_without_a_single_poll_records_spend() {
     };
 
     drop(stream);
+    wait_for_global_spend(&state).await;
 
     assert!(
         state.global_spend() > 0.0,

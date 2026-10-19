@@ -305,3 +305,19 @@ Use `liter-llm api --config ./liter-llm-proxy.toml --watch` to reload a local fi
 ## Validation
 
 The parser sets `deny_unknown_fields` on every struct. Any typo or unsupported field raises an `invalid TOML config` error with the line and column. Fix the typo and restart, or run with `--watch` so the proxy reloads the corrected file or etcd value.
+
+To validate a config without starting the proxy, for example in CI, a pre-deploy gate or a container init step, run:
+
+```bash
+liter-llm config-check --config ./liter-llm-proxy.toml
+```
+
+It parses the file with the same rules the proxy applies at startup, including environment variable interpolation and the `[security]` outbound policy, prints one JSON line and exits non-zero when the config is invalid or unreadable:
+
+```json
+{"valid": true}
+{"valid": false, "code": "invalid_config", "message": "invalid TOML config: TOML parse error at line 3, column 1"}
+{"valid": false, "code": "read_failed", "message": "entity not found"}
+```
+
+Only the first line of an error is reported, so config values such as inline keys are never echoed.

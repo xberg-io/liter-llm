@@ -299,7 +299,8 @@ pub struct Choice {
 }
 
 /// Serialize an [`AssistantMessage`] with the `role: "assistant"` discriminator
-/// that OpenAI's response schema requires on `choices[].message`.
+/// and the always-present, nullable `refusal` key that OpenAI's response schema
+/// requires on `choices[].message`.
 fn serialize_assistant_message_with_role<S>(message: &AssistantMessage, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
@@ -309,11 +310,18 @@ where
         role: &'static str,
         #[serde(flatten)]
         message: &'a AssistantMessage,
+        // ~keep `AssistantMessage` omits a `None` refusal so request history
+        // stays acceptable to strict providers (#292). `Some(None)` restores the
+        // key as `null` here; a present refusal is already emitted by the flatten,
+        // so this field is skipped then to avoid a duplicate key.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        refusal: Option<Option<()>>,
     }
 
     WithRole {
         role: "assistant",
         message,
+        refusal: message.refusal.is_none().then_some(None),
     }
     .serialize(serializer)
 }
@@ -427,6 +435,39 @@ pub struct StreamFunctionCall {
 mod tests {
     use super::*;
     use crate::types::common::PromptTokensDetails;
+
+    #[test]
+    fn choice_message_always_carries_role_and_refusal_keys() {
+        let choice = Choice {
+            message: AssistantMessage {
+                content: Some(crate::types::common::AssistantContent::Text("ok".into())),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let value = serde_json::to_value(&choice).expect("must serialise");
+        assert_eq!(value["message"]["role"], "assistant");
+        assert!(
+            value["message"].get("refusal").is_some_and(serde_json::Value::is_null),
+            "OpenAI's response schema requires a null refusal key: {value}"
+        );
+
+        let refused = Choice {
+            message: AssistantMessage {
+                refusal: Some("no".into()),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&refused).expect("must serialise");
+        assert_eq!(
+            json.matches("\"refusal\"").count(),
+            1,
+            "refusal must not be duplicated: {json}"
+        );
+        let value: serde_json::Value = serde_json::from_str(&json).expect("valid JSON");
+        assert_eq!(value["message"]["refusal"], "no");
+    }
 
     #[test]
     fn chat_completion_chunk_deserializes_without_id_field() {

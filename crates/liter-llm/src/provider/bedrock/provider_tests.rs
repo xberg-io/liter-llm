@@ -133,6 +133,16 @@ fn parse_stream_event_message_stop() {
 }
 
 #[test]
+fn parse_stream_event_message_stop_without_stop_reason_is_an_error() {
+    let error =
+        parse_bedrock_stream_event("messageStop", "{}").expect_err("a missing stopReason must not pass as end_turn");
+    assert!(
+        matches!(error, crate::error::LiterLlmError::Streaming { .. }),
+        "got {error:?}"
+    );
+}
+
+#[test]
 fn parse_stream_event_metadata_usage() {
     let chunk = parse_bedrock_stream_event("metadata", r#"{"usage":{"inputTokens":42,"outputTokens":10}}"#)
         .expect("parse should not fail")

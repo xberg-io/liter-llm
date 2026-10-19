@@ -77,6 +77,9 @@ pub struct Model {
     /// string rather than the closed upstream enum.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub family: Option<String>,
+    /// Primary model kind, mirrors the optional upstream `ModelType` enum.
+    #[serde(default, rename = "type", skip_serializing_if = "Option::is_none")]
+    pub model_type: Option<ModelType>,
     /// Whether the model accepts file/image attachments.
     pub attachment: bool,
     /// Whether the model supports reasoning.
@@ -134,6 +137,34 @@ pub enum ModelStatus {
     Beta,
     /// No longer recommended for new integrations.
     Deprecated,
+}
+
+/// Primary model kind, mirrors `z.enum(["chat", "image", "video", "embedding",
+/// "reranking", "decision", "transcription", "speech", "realtime"])`.
+///
+/// Kept closed, unlike `family`: the upstream enum is small and stable, so a
+/// new variant is genuine schema drift worth surfacing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ModelType {
+    /// Conversational text generation.
+    Chat,
+    /// Image generation.
+    Image,
+    /// Video generation.
+    Video,
+    /// Vector embeddings.
+    Embedding,
+    /// Document reranking.
+    Reranking,
+    /// Classification or decision models.
+    Decision,
+    /// Speech-to-text.
+    Transcription,
+    /// Text-to-speech.
+    Speech,
+    /// Realtime (bidirectional streaming) sessions.
+    Realtime,
 }
 
 /// `attachment: true | { field: "reasoning_content" | "reasoning_details" }`.

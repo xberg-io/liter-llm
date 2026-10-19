@@ -634,6 +634,88 @@ fn should_reject_an_unknown_field_on_a_model() {
     );
 }
 
+/// A one-model catalog whose model carries `extra` as additional JSON members
+/// (e.g. `"type": "video"`), for exercising optional upstream fields.
+fn catalog_with_model_fields(extra: &str) -> String {
+    format!(
+        r#"{{
+        "poe": {{
+            "id": "poe",
+            "env": ["POE_API_KEY"],
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "Poe",
+            "doc": "https://creator.poe.com/docs",
+            "models": {{
+                "typed-model": {{
+                    "id": "typed-model",
+                    "name": "Typed Model",
+                    "description": "A model declaring an upstream model type.",
+                    "attachment": false,
+                    "reasoning": false,
+                    "tool_call": false,
+                    "release_date": "2024-01-01",
+                    "last_updated": "2024-01-01",
+                    "modalities": {{ "input": ["text"], "output": ["video"] }},
+                    "open_weights": false,
+                    "limit": {{ "context": 8192, "output": 0 }},
+                    "cost": {{ "input": 1.0, "output": 2.0 }}{extra}
+                }}
+            }}
+        }}
+    }}"#
+    )
+}
+
+#[test]
+fn should_accept_every_upstream_model_type() {
+    // ~keep Regression (#289): models.dev added an optional `type` (`ModelType`)
+    // ~keep field, and the strict model schema rejected the whole refresh.
+    use liter_llm_catalog_gen::schema::ModelType;
+
+    let cases = [
+        ("chat", ModelType::Chat),
+        ("image", ModelType::Image),
+        ("video", ModelType::Video),
+        ("embedding", ModelType::Embedding),
+        ("reranking", ModelType::Reranking),
+        ("decision", ModelType::Decision),
+        ("transcription", ModelType::Transcription),
+        ("speech", ModelType::Speech),
+        ("realtime", ModelType::Realtime),
+    ];
+    for (raw, expected) in cases {
+        let catalog = parse_and_validate(&catalog_with_model_fields(&format!(r#", "type": "{raw}""#)))
+            .unwrap_or_else(|e| panic!("model type `{raw}` must be accepted: {e:?}"));
+        assert_eq!(catalog["poe"].models["typed-model"].model_type, Some(expected));
+        let document = transform_catalog(&catalog);
+        model(&document, "poe", "typed-model");
+    }
+}
+
+#[test]
+fn should_accept_a_model_without_a_type() {
+    let catalog = parse_and_validate(&catalog_with_model_fields("")).expect("omitted model type must be accepted");
+    assert_eq!(catalog["poe"].models["typed-model"].model_type, None);
+}
+
+#[test]
+fn should_reject_an_unknown_model_type() {
+    let result = parse_and_validate(&catalog_with_model_fields(r#", "type": "hologram""#));
+    assert!(
+        matches!(result, Err(CatalogGenError::Parse(_))),
+        "an unknown model type must fail parsing, got {result:?}"
+    );
+}
+
+#[test]
+fn should_reject_an_unknown_model_field_alongside_a_valid_type() {
+    let result = parse_and_validate(&catalog_with_model_fields(r#", "type": "video", "kind": "video""#));
+    assert!(
+        matches!(result, Err(CatalogGenError::Parse(_))),
+        "a valid type must not relax unknown-field rejection, got {result:?}"
+    );
+}
+
 #[test]
 fn should_dual_write_identical_content_to_both_output_paths() {
     let temp_root = tempfile::tempdir().expect("must create a temp directory");
