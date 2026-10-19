@@ -512,20 +512,31 @@ pub(crate) trait Provider: Send + Sync {
         // otherwise decode into a valid-looking, content-free chunk and the
         // failure would vanish, leaving callers awaiting content that is never
         // sent.
+        //
+        // ~keep The error kind comes from `LiterLlmError::from_status`, the same
+        // classifier the HTTP path uses, so a rate limit or a context-length
+        // error is the same kind mid-stream as in an HTTP reply. A payload status
+        // outside 400..=599 is not an error status and is ignored; with no usable
+        // status, a rate-limit code or type reads as 429 and anything else as 400.
         if let Ok(value) = serde_json::from_str::<serde_json::Value>(event_data)
             && let Some(error) = value.get("error")
         {
-            let message = error
-                .get("message")
-                .and_then(serde_json::Value::as_str)
-                .unwrap_or("provider returned an error mid-stream")
-                .to_string();
+            let text = |key: &str| error.get(key).and_then(serde_json::Value::as_str);
+            let message = text("message").unwrap_or("provider returned an error mid-stream");
             let status = error
                 .get("status_code")
                 .and_then(serde_json::Value::as_u64)
                 .and_then(|s| u16::try_from(s).ok())
-                .unwrap_or(400);
-            return Err(LiterLlmError::BadRequest { message, status });
+                .filter(|s| (400..=599).contains(s))
+                .unwrap_or_else(|| {
+                    if text("code") == Some("rate_limit_exceeded") || text("type") == Some("rate_limit_error") {
+                        429
+                    } else {
+                        400
+                    }
+                });
+            let body = serde_json::json!({ "error": { "message": message, "code": text("code") } });
+            return Err(LiterLlmError::from_status(status, &body.to_string(), None));
         }
 
         serde_json::from_str::<crate::types::ChatCompletionChunk>(event_data)
