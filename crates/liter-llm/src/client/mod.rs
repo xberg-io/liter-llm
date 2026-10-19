@@ -3306,6 +3306,90 @@ mod build_provider_tests {
         );
     }
 
+    /// A typed `ReasoningEffort::None` must reach the wire as each provider's own "thinking off"
+    /// setting when the request goes through the client, not only when a provider test hands
+    /// `transform_request` a hand-written JSON body.
+    fn reasoning_none_request(model: &str) -> ChatCompletionRequest {
+        ChatCompletionRequest {
+            model: model.into(),
+            messages: vec![crate::types::Message::User(crate::types::UserMessage {
+                content: crate::types::UserContent::Text("Hi".into()),
+                name: None,
+            })],
+            max_tokens: Some(100),
+            reasoning_effort: Some(crate::types::ReasoningEffort::None),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn anthropic_client_request_with_reasoning_effort_none_disables_thinking() {
+        let model = "claude-sonnet-4-20250514";
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
+            .expect("client construction should succeed");
+        let req = reasoning_none_request(model);
+
+        let prepared = client
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .expect("prepare_request should not fail");
+
+        assert_eq!(prepared.body_json["thinking"], serde_json::json!({"type": "disabled"}));
+        assert!(prepared.body_json.get("reasoning_effort").is_none());
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn bedrock_client_request_with_reasoning_effort_none_disables_thinking() {
+        let model = "bedrock/anthropic.claude-sonnet-4-20250514-v1:0";
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
+            .expect("client construction should succeed");
+        let req = reasoning_none_request(model);
+
+        let prepared = client
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["additionalModelRequestFields"]["thinking"],
+            serde_json::json!({"type": "disabled"})
+        );
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_client_request_with_reasoning_effort_none_sets_zero_thinking_budget() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = reasoning_none_request("vertex_ai/gemini-2.5-flash");
+
+        let prepared = client
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["generationConfig"]["thinkingConfig"]["thinkingBudget"],
+            0
+        );
+    }
+
+    #[test]
+    fn google_ai_client_request_with_reasoning_effort_none_sets_zero_thinking_budget() {
+        let model = "gemini/gemini-2.5-flash";
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
+            .expect("client construction should succeed");
+        let req = reasoning_none_request(model);
+
+        let prepared = client
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["generationConfig"]["thinkingConfig"]["thinkingBudget"],
+            0
+        );
+    }
+
     /// Guard against over-correcting: providers whose wire format does carry `stream` must still
     /// get the transport-controlled flag, so the request cannot desync from the response parser.
     #[test]
