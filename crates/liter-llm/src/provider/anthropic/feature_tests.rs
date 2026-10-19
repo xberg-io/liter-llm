@@ -617,6 +617,42 @@ fn transform_request_reasoning_effort_from_extra_body() {
 }
 
 #[test]
+fn transform_request_reasoning_effort_none_disables_thinking() {
+    let mut body = json!({
+        "model": "claude-sonnet-4-20250514",
+        "messages": [{"role": "user", "content": "No thinking"}],
+        "max_tokens": 100,
+        "reasoning_effort": "none"
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert_eq!(body["thinking"]["type"], "disabled");
+    assert!(
+        body["thinking"].get("budget_tokens").is_none(),
+        "a disabled thinking block carries no budget"
+    );
+    assert_eq!(body["max_tokens"], 100, "max_tokens must not be raised for none");
+    assert!(
+        body.get("reasoning_effort").is_none(),
+        "reasoning_effort should be removed"
+    );
+}
+
+#[test]
+fn transform_request_reasoning_effort_none_from_extra_body_disables_thinking() {
+    let mut body = json!({
+        "model": "claude-sonnet-4-20250514",
+        "messages": [{"role": "user", "content": "No thinking"}],
+        "extra_body": {"reasoning_effort": "none"}
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert_eq!(body["thinking"]["type"], "disabled");
+}
+
+#[test]
 fn dynamic_headers_thinking_beta() {
     let body = json!({
         "thinking": {"type": "enabled", "budget_tokens": 4096},

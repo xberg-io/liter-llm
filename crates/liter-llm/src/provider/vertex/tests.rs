@@ -353,6 +353,20 @@ fn transform_request_reasoning_effort_maps_to_thinking_config() {
 }
 
 #[test]
+fn transform_request_reasoning_effort_none_sets_zero_thinking_budget() {
+    let p = provider();
+    let mut body = json!({
+        "messages": [{"role": "user", "content": "hi"}],
+        "reasoning_effort": "none"
+    });
+
+    p.transform_request(&mut body)
+        .expect("transform_request should not fail");
+
+    assert_eq!(body["generationConfig"]["thinkingConfig"]["thinkingBudget"], 0);
+}
+
+#[test]
 fn transform_request_no_reasoning_effort_omits_thinking_config() {
     let p = provider();
     let mut body = json!({

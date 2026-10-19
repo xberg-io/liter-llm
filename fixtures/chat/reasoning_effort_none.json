@@ -1,0 +1,67 @@
+{
+  "id": "reasoning_effort_none",
+  "description": "Chat request with reasoning_effort none, which turns reasoning off instead of being rejected",
+  "docs": {
+    "topic": "chat",
+    "stem": "reasoning-effort-none",
+    "title": "Turn reasoning off",
+    "side_effects": "network"
+  },
+  "category": "chat",
+  "tags": ["chat"],
+  "call": "chat",
+  "input": {
+    "model": "gpt-5.1",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What is 2+2? One word."
+      }
+    ],
+    "reasoning_effort": "none"
+  },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "id": "chatcmpl-reasoning-none001",
+      "object": "chat.completion",
+      "created": 1711000130,
+      "model": "gpt-5.1",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "Four"
+          },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 14,
+        "completion_tokens": 1,
+        "total_tokens": 15
+      }
+    }
+  },
+  "assertions": [
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "count_equals",
+      "field": "choices",
+      "value": 1
+    },
+    {
+      "type": "equals",
+      "field": "choices[0].finish_reason",
+      "value": "stop"
+    },
+    {
+      "type": "equals",
+      "field": "choices[0].message.content",
+      "value": "Four"
+    }
+  ]
+}
