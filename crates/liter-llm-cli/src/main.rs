@@ -60,5 +60,6 @@ async fn run(cli: Cli) -> Result<(), String> {
     match cli.command {
         Command::Api(args) => commands::api::run(args).await,
         Command::Mcp(args) => commands::mcp::run(args).await,
+        Command::ConfigCheck(args) => commands::config_check::run(args),
     }
 }

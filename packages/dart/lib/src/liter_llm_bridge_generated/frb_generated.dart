@@ -274,7 +274,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -2116795518;
+  int get rustContentHash => 1331421837;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -888,11 +888,11 @@ abstract class RustLibApi extends BaseApi {
 
   Future<String> crateLiterLlmErrorErrorType({required LiterLlmError that});
 
-  Future<bool> crateLiterLlmErrorIsTransient({required LiterLlmError that});
-
-  Future<PlatformInt64?> crateLiterLlmErrorRetryAfter({
+  Future<PlatformInt64?> crateLiterLlmErrorGetRetryAfter({
     required LiterLlmError that,
   });
+
+  Future<bool> crateLiterLlmErrorIsTransient({required LiterLlmError that});
 
   Future<PlatformInt64> crateLiterLlmErrorStatusCode({
     required LiterLlmError that,
@@ -6501,7 +6501,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<bool> crateLiterLlmErrorIsTransient({required LiterLlmError that}) {
+  Future<PlatformInt64?> crateLiterLlmErrorGetRetryAfter({
+    required LiterLlmError that,
+  }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -6511,6 +6513,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             generalizedFrbRustBinding,
             serializer,
             funcId: 169,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_box_autoadd_i_64,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateLiterLlmErrorGetRetryAfterConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateLiterLlmErrorGetRetryAfterConstMeta =>
+      const TaskConstMeta(
+        debugName: "liter_llm_error_get_retry_after",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<bool> crateLiterLlmErrorIsTransient({required LiterLlmError that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_liter_llm_error(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 170,
             port: port_,
           );
         },
@@ -6528,39 +6561,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateLiterLlmErrorIsTransientConstMeta =>
       const TaskConstMeta(
         debugName: "liter_llm_error_is_transient",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<PlatformInt64?> crateLiterLlmErrorRetryAfter({
-    required LiterLlmError that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_liter_llm_error(that, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 170,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_opt_box_autoadd_i_64,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateLiterLlmErrorRetryAfterConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateLiterLlmErrorRetryAfterConstMeta =>
-      const TaskConstMeta(
-        debugName: "liter_llm_error_retry_after",
         argNames: ["that"],
       );
 

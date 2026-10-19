@@ -67,6 +67,20 @@ pub struct TransportConfig {
     /// Default: false.
     #[cfg(feature = "http3")]
     pub enable_http3: bool,
+
+    /// Ignore ambient proxy settings (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`
+    /// and the system proxy configuration).
+    ///
+    /// Any active outbound policy already disables proxies, so the guarded
+    /// resolver sees every upstream host. Set this to rule out a machine-level
+    /// proxy as a credential exposure path when the outbound policy is `Off`,
+    /// without changing the process environment.
+    ///
+    /// Redirects need no switch: the authenticated client never follows them,
+    /// so credentials and request bodies cannot be forwarded to another origin.
+    ///
+    /// Default: false.
+    pub disable_proxies: bool,
 }
 
 impl Default for TransportConfig {
@@ -79,6 +93,7 @@ impl Default for TransportConfig {
             dns_cache_ttl: Some(Duration::from_secs(30)),
             #[cfg(feature = "http3")]
             enable_http3: false,
+            disable_proxies: false,
         }
     }
 }
@@ -126,6 +141,12 @@ impl TransportConfig {
         self
     }
 
+    /// Ignore (or honor) ambient proxy settings from the environment.
+    pub fn with_proxies_disabled(mut self, disabled: bool) -> Self {
+        self.disable_proxies = disabled;
+        self
+    }
+
     /// Apply all transport settings to a [`reqwest::ClientBuilder`].
     ///
     /// This method converts transport fields into concrete reqwest builder
@@ -145,6 +166,7 @@ impl TransportConfig {
     /// | `http2_prior_knowledge` | `.http2_prior_knowledge()` (when `true`) |
     /// | `dns_cache_ttl` | `.dns_resolver(...)` during native client construction |
     /// | `enable_http3` | `.http3_prior_knowledge()` (when `true` and `http3` feature is on) |
+    /// | `disable_proxies` | `.no_proxy()` (when `true`) |
     ///
     /// # DNS TTL
     ///
@@ -162,6 +184,12 @@ impl TransportConfig {
 
         let builder = if self.http2_prior_knowledge {
             builder.http2_prior_knowledge()
+        } else {
+            builder
+        };
+
+        let builder = if self.disable_proxies {
+            builder.no_proxy()
         } else {
             builder
         };
@@ -187,6 +215,7 @@ mod tests {
         assert_eq!(cfg.dns_cache_ttl, Some(Duration::from_secs(30)));
         #[cfg(feature = "http3")]
         assert!(!cfg.enable_http3);
+        assert!(!cfg.disable_proxies);
     }
 
     #[test]
@@ -278,5 +307,49 @@ mod tests {
 
         let client = cfg.apply_to_builder(reqwest::Client::builder()).build();
         assert!(client.is_ok(), "reqwest::Client::build() failed with pooling disabled");
+    }
+
+    /// `disable_proxies` must clear every proxy, including ones reqwest would
+    /// pick up from the environment, so requests connect to the origin directly.
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[tokio::test]
+    async fn test_disable_proxies_bypasses_configured_proxy() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        async fn serve_once(listener: tokio::net::TcpListener) {
+            let (mut socket, _) = listener.accept().await.expect("accept");
+            let mut buf = [0u8; 1024];
+            let _ = socket.read(&mut buf).await;
+            let _ = socket
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\nConnection: close\r\n\r\norigin")
+                .await;
+        }
+
+        let origin = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind origin");
+        let origin_url = format!("http://{}/", origin.local_addr().expect("origin address"));
+        let proxy = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind proxy");
+        let proxy_url = format!("http://{}", proxy.local_addr().expect("proxy address"));
+        let proxy_hit = tokio::spawn(async move { proxy.accept().await.is_ok() });
+        let origin_task = tokio::spawn(serve_once(origin));
+
+        let builder = reqwest::Client::builder().proxy(reqwest::Proxy::all(&proxy_url).expect("proxy URL"));
+        let client = TransportConfig::new()
+            .with_proxies_disabled(true)
+            .apply_to_builder(builder)
+            .build()
+            .expect("client builds");
+        let body = client
+            .get(&origin_url)
+            .send()
+            .await
+            .expect("request reaches origin")
+            .text()
+            .await
+            .expect("body");
+
+        assert_eq!(body, "origin");
+        origin_task.await.expect("origin served");
+        assert!(!proxy_hit.is_finished(), "the proxy must not be contacted");
+        proxy_hit.abort();
     }
 }

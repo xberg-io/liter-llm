@@ -10,7 +10,7 @@
     }
   ],
   "name": "@xberg-io/liter-llm-darwin-arm64",
-  "version": "2.2.5",
+  "version": "2.3.0",
   "license": "MIT",
   "repository": {
     "type": "git",

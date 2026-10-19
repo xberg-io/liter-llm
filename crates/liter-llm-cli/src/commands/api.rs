@@ -193,7 +193,7 @@ async fn drain_with_progress_log(coordinator: ShutdownCoordinator, interval: Dur
 }
 
 /// Translate the proxy security config into a [`OutboundPolicy`].
-fn build_outbound_policy(config: &ProxyConfig) -> Result<OutboundPolicy, String> {
+pub(crate) fn build_outbound_policy(config: &ProxyConfig) -> Result<OutboundPolicy, String> {
     let security = &config.security;
     match security.outbound_policy {
         OutboundPolicyKind::Off => Ok(OutboundPolicy::Off),

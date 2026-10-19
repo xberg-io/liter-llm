@@ -876,8 +876,7 @@ mod tests {
     }
 
     /// After a chunk is blocked, no further chunks may be yielded — even if
-    /// the underlying (already fully buffered, see `LlmService` module docs)
-    /// stream still has more items queued up. This proves the chosen
+    /// the underlying stream still has more items queued up. This proves the chosen
     /// mid-stream blocking policy (terminate) actually terminates, rather
     /// than merely erroring on the offending chunk and continuing.
     #[tokio::test]

@@ -16,11 +16,9 @@ tasks:
       - cargo build --manifest-path crates/liter-llm-php/Cargo.toml
 
   test:
-    desc: Run PHP smoke test
-    env:
-      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+    desc: Run the PHP smoke test against the locally built extension (run php:build first)
     cmds:
-      - php examples/php_smoke/convert.php
+      - bash "{{.TASKFILE_DIR}}/../../scripts/php/smoke.sh"
 
   format:
     desc: Format PHP code

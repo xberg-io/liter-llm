@@ -712,7 +712,3 @@ for chunk in client.chat_stream({
 
 </TabItem>
 </Tabs>
-
-:::caution[Tower streaming buffer]
-When Bedrock streaming is routed through the Tower middleware stack (`LlmService`), the entire stream is buffered in memory before chunks are yielded. This is a Tower `Service` trait constraint. For unbuffered Bedrock streaming, call `LlmClient::chat_stream()` directly, bypassing the Tower stack. See [Architecture](/concepts/architecture/) for details.
-:::
