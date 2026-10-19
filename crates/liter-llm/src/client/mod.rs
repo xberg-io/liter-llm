@@ -3341,8 +3341,12 @@ mod build_provider_tests {
     #[serial_test::serial]
     fn bedrock_client_request_with_reasoning_effort_none_disables_thinking() {
         let model = "bedrock/anthropic.claude-sonnet-4-20250514-v1:0";
-        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
-            .expect("client construction should succeed");
+        // Explicit credentials: building a Bedrock client without them reads the environment and
+        // fails on a machine that has no AWS credentials.
+        let config = ClientConfigBuilder::new("test-key")
+            .bedrock_credentials("test-access-key", "test-secret-key", None)
+            .build();
+        let client = DefaultClient::new(config, Some(model)).expect("client construction should succeed");
         let req = reasoning_none_request(model);
 
         let prepared = client
@@ -3368,8 +3372,9 @@ mod build_provider_tests {
             .expect("prepare_request should not fail");
 
         assert_eq!(
-            prepared.body_json["generationConfig"]["thinkingConfig"]["thinkingBudget"],
-            0
+            prepared.body_json["generationConfig"]["thinkingConfig"],
+            serde_json::json!({"thinkingBudget": 0}),
+            "none sends a zero budget and requests no thought parts"
         );
     }
 
@@ -3385,8 +3390,9 @@ mod build_provider_tests {
             .expect("prepare_request should not fail");
 
         assert_eq!(
-            prepared.body_json["generationConfig"]["thinkingConfig"]["thinkingBudget"],
-            0
+            prepared.body_json["generationConfig"]["thinkingConfig"],
+            serde_json::json!({"thinkingBudget": 0}),
+            "none sends a zero budget and requests no thought parts"
         );
     }
 

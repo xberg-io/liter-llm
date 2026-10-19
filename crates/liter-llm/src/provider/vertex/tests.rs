@@ -363,7 +363,11 @@ fn transform_request_reasoning_effort_none_sets_zero_thinking_budget() {
     p.transform_request(&mut body)
         .expect("transform_request should not fail");
 
-    assert_eq!(body["generationConfig"]["thinkingConfig"]["thinkingBudget"], 0);
+    assert_eq!(
+        body["generationConfig"]["thinkingConfig"],
+        json!({"thinkingBudget": 0}),
+        "none sends a zero budget and requests no thought parts"
+    );
 }
 
 #[test]
