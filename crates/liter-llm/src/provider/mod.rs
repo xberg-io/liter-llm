@@ -1300,14 +1300,20 @@ mod tests {
         let err = mid_stream_error(
             r#"{"error":{"message":"too long","type":"invalid_request_error","code":"context_length_exceeded"}}"#,
         );
-        assert!(matches!(err, LiterLlmError::ContextWindowExceeded { .. }), "got: {err:?}");
+        assert!(
+            matches!(err, LiterLlmError::ContextWindowExceeded { .. }),
+            "got: {err:?}"
+        );
     }
 
     /// Revert line: as above, build `BadRequest` directly to make this test fail.
     #[test]
     fn parse_stream_event_classifies_authentication_error_from_status() {
         let err = mid_stream_error(r#"{"error":{"message":"bad key","code":"invalid_api_key","status_code":401}}"#);
-        assert!(matches!(err, LiterLlmError::Authentication { status: 401, .. }), "got: {err:?}");
+        assert!(
+            matches!(err, LiterLlmError::Authentication { status: 401, .. }),
+            "got: {err:?}"
+        );
     }
 
     /// Revert line: remove the `(400..=599)` range check on the payload status in
@@ -1315,7 +1321,10 @@ mod tests {
     #[test]
     fn parse_stream_event_ignores_payload_status_outside_error_range() {
         let err = mid_stream_error(r#"{"error":{"message":"odd","status_code":200}}"#);
-        assert!(matches!(err, LiterLlmError::BadRequest { status: 400, .. }), "got: {err:?}");
+        assert!(
+            matches!(err, LiterLlmError::BadRequest { status: 400, .. }),
+            "got: {err:?}"
+        );
     }
 
     /// Revert line: remove the fallback message in `parse_stream_event` to make this
@@ -1323,7 +1332,10 @@ mod tests {
     #[test]
     fn parse_stream_event_keeps_fallback_message_when_error_has_none() {
         let err = mid_stream_error(r#"{"error":{"code":"rate_limit_exceeded"}}"#);
-        assert!(err.to_string().contains("provider returned an error mid-stream"), "got: {err}");
+        assert!(
+            err.to_string().contains("provider returned an error mid-stream"),
+            "got: {err}"
+        );
     }
 
     /// Revert line: delete `#[serde(default)]` from `ChatCompletionChunk::choices`
