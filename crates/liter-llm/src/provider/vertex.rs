@@ -26,7 +26,7 @@ static TOOL_CALL_COUNTER: AtomicU64 = AtomicU64::new(0);
 /// disables thinking on models that allow it).
 fn reasoning_effort_to_thinking_budget(effort: &str) -> i64 {
     match effort {
-        "minimal" => 0,
+        "none" | "minimal" => 0,
         "low" => 1024,
         "medium" => 4096,
         "high" => 16384,
