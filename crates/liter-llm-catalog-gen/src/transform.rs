@@ -438,6 +438,7 @@ mod tests {
                 name: "Free Model".to_string(),
                 description: "no cost".to_string(),
                 family: None,
+                model_type: None,
                 attachment: false,
                 reasoning: false,
                 reasoning_options: None,

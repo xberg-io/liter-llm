@@ -27,6 +27,14 @@ pub(crate) fn parse_gemini_stream_event(event_data: &str) -> Result<Option<ChatC
         message: format!("failed to parse Gemini SSE data: {e}"),
     })?;
     let has_usage = body.get("usageMetadata").is_some();
+    // ~keep The shared response transform defaults a missing `finishReason` to
+    // `STOP`, which is right for a complete response but would mark every
+    // intermediate stream chunk as final (#295). Only the chunk that carries a
+    // `finishReason`, or a blocked prompt with no candidates, finishes a stream.
+    let is_final = body
+        .get("candidates")
+        .and_then(Value::as_array)
+        .is_none_or(|candidates| candidates.is_empty() || candidates[0].get("finishReason").is_some());
 
     transform_gemini_response(&mut body)?;
 
@@ -54,7 +62,7 @@ pub(crate) fn parse_gemini_stream_event(event_data: &str) -> Result<Option<ChatC
         .unwrap_or("");
 
     let stream_tool_calls = stream_tool_calls(choice);
-    let finish_reason = stream_finish_reason(finish_reason_str);
+    let finish_reason = is_final.then(|| stream_finish_reason(finish_reason_str)).flatten();
     let usage = has_usage
         .then(|| body.get("usage").cloned().unwrap_or(Value::Null))
         .map(serde_json::from_value::<Usage>)

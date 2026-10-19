@@ -71,7 +71,12 @@ async fn send(client: &DefaultClient, mode: Mode) -> Result<()> {
         Mode::Stream => client.chat_stream(request).await?,
         Mode::RawStream => client.chat_stream_raw(request).await?.stream,
     };
-    assert!(stream.next().await.is_none(), "fixture sends an empty event stream");
+    // ~keep The fixture sends no events, so the typed stream reports truncation (#295) while the raw stream just ends.
+    let first = stream.next().await;
+    assert!(
+        matches!(first, None | Some(Err(LiterLlmError::Streaming { .. }))),
+        "fixture sends an empty event stream, got {first:?}"
+    );
     Ok(())
 }
 

@@ -868,8 +868,10 @@ class AssistantMessage {
 
   /// Refusal reason, if the model declined to respond per safety policies.
   ///
-  /// OpenAI's response schema requires this key to be present even when null,
-  /// so it is deliberately not `skip_serializing_if`.
+  /// Omitted when `None`, so assistant turns re-sent as request history do not
+  /// carry a response-only key that strict providers (e.g. Groq) reject (#292).
+  /// OpenAI's response schema requires the key on `choices[].message`, so
+  /// `Choice` serialization restores it as `null`.
   final String? refusal;
 
   /// Deprecated legacy function_call field; retained for API compatibility.
@@ -3191,6 +3193,16 @@ sealed class LiterLlmError with _$LiterLlmError {
   Future<String> errorType() =>
       RustLib.instance.api.crateLiterLlmErrorErrorType(that: this);
 
+  /// Returns the server-advertised retry delay, when the error carries one.
+  ///
+  /// Parsed from the upstream `Retry-After` header on a 429.  Exposed as an
+  /// accessor alongside [`Self::status_code`] and [`Self::error_type`] so the
+  /// generated bindings can surface it: the value reached the Rust core but
+  /// stopped there, leaving every binding consumer to re-derive its own
+  /// backoff from nothing more than the status code.
+  Future<PlatformInt64?> getRetryAfter() =>
+      RustLib.instance.api.crateLiterLlmErrorGetRetryAfter(that: this);
+
   /// Returns `true` for errors that are worth retrying on a different service
   /// or deployment (transient failures).
   ///
@@ -3199,16 +3211,6 @@ sealed class LiterLlmError with _$LiterLlmError {
   /// alternative endpoint.
   Future<bool> isTransient() =>
       RustLib.instance.api.crateLiterLlmErrorIsTransient(that: this);
-
-  /// Returns the server-advertised retry delay, when the error carries one.
-  ///
-  /// Parsed from the upstream `Retry-After` header on a 429.  Exposed as an
-  /// accessor alongside [`Self::status_code`] and [`Self::error_type`] so the
-  /// generated bindings can surface it: the value reached the Rust core but
-  /// stopped there, leaving every binding consumer to re-derive its own
-  /// backoff from nothing more than the status code.
-  Future<PlatformInt64?> retryAfter() =>
-      RustLib.instance.api.crateLiterLlmErrorRetryAfter(that: this);
 
   /// Returns the canonical HTTP status code associated with this error.
   ///
