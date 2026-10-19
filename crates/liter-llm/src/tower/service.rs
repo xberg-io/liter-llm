@@ -1,15 +1,11 @@
-use std::collections::VecDeque;
-use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-use futures_core::Stream;
 use tower::Service;
 
 use super::types::{LlmRequest, LlmRequestKind, LlmResponse};
 use crate::client::{BoxFuture, LlmClient};
 use crate::error::{LiterLlmError, Result};
-use crate::types::ChatCompletionChunk;
 
 /// A thin tower [`Service`] wrapper around any [`LlmClient`] implementation.
 ///
@@ -20,15 +16,10 @@ use crate::types::ChatCompletionChunk;
 ///
 /// # Streaming behaviour
 ///
-/// **Important:** Streaming responses (`ChatStream`) are **fully buffered** in
-/// memory before being yielded to the caller.  This is a consequence of Tower's
-/// `Service` trait requiring `'static` futures — the borrowed stream returned by
-/// [`LlmClient::chat_stream`] cannot outlive the `call` future without unsafe
-/// lifetime extension.  All chunks are collected into a `VecDeque` and then
-/// replayed through a `BoxStream<'static, ...>`.
-///
-/// If you need incremental, unbuffered streaming, use [`LlmClient`] directly
-/// instead of wrapping it in `LlmService`.
+/// The client already returns an owned `'static` stream. Forward it directly:
+/// downstream polling supplies backpressure, and dropping the response closes
+/// the upstream stream. Cancelling `call` before headers drops initialization.
+/// No background task or whole-response buffer is needed.
 #[cfg_attr(alef, alef(skip))]
 pub struct LlmService<C> {
     inner: Arc<C>,
@@ -88,13 +79,8 @@ where
                     Ok(LlmResponse::Chat(resp))
                 }
                 LlmRequestKind::ChatStream(r) => {
-                    // ~keep Buffer chunks to avoid unsoundly extending the borrowed stream lifetime to 'static.
-                    // ~keep Tower middleware cannot express borrowed lifetimes across the Service boundary.
                     let stream = client.chat_stream(r).await?;
-                    let chunks = collect_stream(stream).await?;
-                    let static_stream: crate::client::BoxStream<'static, Result<ChatCompletionChunk>> =
-                        Box::pin(OwnedChunksStream { chunks });
-                    Ok(LlmResponse::ChatStream(static_stream))
+                    Ok(LlmResponse::ChatStream(stream))
                 }
                 LlmRequestKind::Embed(r) => {
                     let resp = client.embed(r).await?;
@@ -137,41 +123,109 @@ where
     }
 }
 
-/// Collect all items from a stream into a `VecDeque`, stopping on the first error.
-async fn collect_stream<'a>(
-    mut stream: crate::client::BoxStream<'a, Result<ChatCompletionChunk>>,
-) -> Result<VecDeque<ChatCompletionChunk>> {
-    let mut chunks = VecDeque::new();
-    loop {
-        let item = std::future::poll_fn(|cx| Pin::as_mut(&mut stream).poll_next(cx)).await;
-        match item {
-            Some(Ok(chunk)) => chunks.push_back(chunk),
-            Some(Err(e)) => return Err(e),
-            None => break,
-        }
+#[cfg(all(test, feature = "native-http"))]
+mod live_stream_tests {
+    use std::time::Duration;
+
+    use futures_util::StreamExt;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
+    use tokio::sync::oneshot;
+    use tokio::time::timeout;
+
+    use super::*;
+    use crate::client::{ClientConfigBuilder, DefaultClient};
+
+    // A real HTTP response deliberately remains unfinished. Whole-response
+    // buffering cannot pass these checks, even if finite mock streams pass.
+    async fn upstream(send_first_chunk: bool) -> (String, oneshot::Receiver<()>, tokio::task::JoinHandle<()>) {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let (seen, request_seen) = oneshot::channel();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = [0_u8; 4096];
+            assert!(socket.read(&mut request).await.unwrap() > 0);
+            if send_first_chunk {
+                socket.write_all(
+                    b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: 99999\r\n\r\ndata: {\"id\":\"first\",\"choices\":[]}\n\n",
+                ).await.unwrap();
+            }
+            let _ = seen.send(());
+            // Cancellation must close the socket even though the provider has
+            // not finished the response (or has not sent headers at all).
+            let _ = socket.read_to_end(&mut Vec::new()).await;
+        });
+        (format!("http://{address}/v1"), request_seen, server)
     }
-    Ok(chunks)
-}
 
-/// A `Stream` that yields items from an owned `VecDeque` in order.
-///
-/// Uses `pop_front` to avoid cloning — each chunk is moved out of the deque
-/// and ownership is transferred to the caller without any copy.
-///
-/// Used to wrap collected streaming chunks so they can be returned as a
-/// `BoxStream<'static, ...>` without any lifetime dependencies.
-struct OwnedChunksStream {
-    chunks: VecDeque<ChatCompletionChunk>,
-}
-
-impl Stream for OwnedChunksStream {
-    type Item = Result<ChatCompletionChunk>;
-
-    fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        Poll::Ready(self.chunks.pop_front().map(Ok))
+    fn service(url: String) -> LlmService<DefaultClient> {
+        let config = ClientConfigBuilder::new("synthetic-key")
+            .base_url(url)
+            .max_retries(0)
+            .build();
+        LlmService::new(DefaultClient::new(config, Some("openai/synthetic-model")).unwrap())
     }
 
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.chunks.len(), Some(self.chunks.len()))
+    fn request() -> LlmRequest {
+        LlmRequest::ChatStream(
+            serde_json::from_value(serde_json::json!({
+                "model": "synthetic-model", "messages": [{"role": "user", "content": "Synthetic fixture"}]
+            }))
+            .unwrap(),
+        )
+    }
+
+    #[tokio::test]
+    async fn returns_first_chunk_before_upstream_finishes_and_drop_closes_socket() {
+        let (url, _seen, server) = upstream(true).await;
+        let response = timeout(Duration::from_secs(2), service(url).call(request()))
+            .await
+            .expect("response must not wait for the whole stream")
+            .unwrap();
+        let LlmResponse::ChatStream(mut stream) = response else {
+            panic!("expected stream")
+        };
+        let first = timeout(Duration::from_secs(2), stream.next())
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap();
+        assert_eq!(first.id, "first");
+        drop(stream);
+        timeout(Duration::from_secs(2), server)
+            .await
+            .expect("drop must close upstream")
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn cancellation_before_headers_closes_upstream() {
+        let (url, seen, server) = upstream(false).await;
+        let caller = tokio::spawn(async move { service(url).call(request()).await });
+        timeout(Duration::from_secs(2), seen).await.unwrap().unwrap();
+        caller.abort();
+        assert!(caller.await.unwrap_err().is_cancelled());
+        timeout(Duration::from_secs(2), server)
+            .await
+            .expect("cancel must close upstream")
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn upstream_failure_after_first_chunk_reaches_consumer() {
+        let (url, _seen, server) = upstream(true).await;
+        let response = timeout(Duration::from_secs(2), service(url).call(request()))
+            .await
+            .unwrap()
+            .unwrap();
+        let LlmResponse::ChatStream(mut stream) = response else {
+            panic!("expected stream")
+        };
+        assert_eq!(stream.next().await.unwrap().unwrap().id, "first");
+        server.abort();
+        let _ = server.await;
+        let next = timeout(Duration::from_secs(2), stream.next()).await.unwrap();
+        assert!(next.expect("truncated response must report failure").is_err());
     }
 }

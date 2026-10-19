@@ -291,9 +291,11 @@ pub struct AssistantMessage {
     pub tool_calls: Option<Vec<ToolCall>>,
     /// Refusal reason, if the model declined to respond per safety policies.
     ///
-    /// OpenAI's response schema requires this key to be present even when null,
-    /// so it is deliberately not `skip_serializing_if`. ~keep
-    #[serde(default)]
+    /// Omitted when `None`, so assistant turns re-sent as request history do not
+    /// carry a response-only key that strict providers (e.g. Groq) reject (#292).
+    /// OpenAI's response schema requires the key on `choices[].message`, so
+    /// [`crate::Choice`] serialization restores it as `null`. ~keep
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub refusal: Option<String>,
     /// Deprecated legacy function_call field; retained for API compatibility.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -880,21 +882,51 @@ mod tests {
         );
     }
 
-    /// `refusal` is serialized even when `None`, because OpenAI's response
-    /// schema requires the key to be present on `choices[].message`. That makes
-    /// it present on request messages too — which is schema-valid, and the
-    /// providers that cannot accept it rebuild the body in their own transform.
+    /// A `None` refusal is omitted from request messages: strict
+    /// OpenAI-compatible providers reject the response-only key in assistant
+    /// history (#292). `Choice` restores it for responses.
     #[test]
     fn message_assistant_with_parts_round_trips() {
         let msg = Message::assistant_with_parts(vec![AssistantPart::Text { text: "ok".into() }]);
         let json = serde_json::to_string(&msg).expect("must serialise");
-        assert_eq!(
-            json,
-            r#"{"role":"assistant","content":[{"type":"text","text":"ok"}],"refusal":null}"#
-        );
+        assert_eq!(json, r#"{"role":"assistant","content":[{"type":"text","text":"ok"}]}"#);
 
         let back: Message = serde_json::from_str(&json).expect("must round-trip");
-        assert_eq!(back, msg, "the explicit null must deserialise back to None");
+        assert_eq!(back, msg);
+
+        let with_null: Message =
+            serde_json::from_str(r#"{"role":"assistant","content":"ok","refusal":null}"#).expect("must parse");
+        assert!(
+            matches!(with_null, Message::Assistant(ref a) if a.refusal.is_none()),
+            "an explicit null from a provider must still deserialise to None"
+        );
+    }
+
+    #[test]
+    fn assistant_history_omits_absent_refusal_but_keeps_present_one() {
+        let request = crate::ChatCompletionRequest {
+            model: "groq/llama-3.3-70b-versatile".into(),
+            messages: vec![
+                Message::user_with_parts(vec![ContentPart::text("hi")]),
+                Message::Assistant(AssistantMessage {
+                    content: Some(AssistantContent::Text("hello".into())),
+                    ..Default::default()
+                }),
+                Message::user_with_parts(vec![ContentPart::text("bye")]),
+            ],
+            ..Default::default()
+        };
+        let value = serde_json::to_value(&request).expect("must serialise");
+        for message in value["messages"].as_array().expect("messages array") {
+            assert!(message.get("refusal").is_none(), "unexpected refusal key in {message}");
+        }
+
+        let refused = Message::Assistant(AssistantMessage {
+            refusal: Some("I cannot help with that.".into()),
+            ..Default::default()
+        });
+        let value = serde_json::to_value(&refused).expect("must serialise");
+        assert_eq!(value["refusal"], "I cannot help with that.");
     }
 
     #[test]

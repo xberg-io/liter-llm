@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.110.13"
+alef_version = "0.111.0"
 languages = [
   "python",
   "node",
@@ -2232,8 +2232,8 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-version = "2.2.5"
-hash = "liter_llm-2.2.5-Jfgk_AR7FjNQG4Xrznb1QGb5Ok1RHe9S-qBaV1eYM_f4"
+version = "2.3.0"
+hash = "liter_llm-2.3.0-Jfgk_AR7FjNQG4Xrznb1QGb5Ok1RHe9S-qBaV1eYM_f4"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "xberg-io/homebrew-tap"

@@ -154,6 +154,7 @@ tasks:
         scripts/ci/test_homebrew_consumer_version.py
         scripts/ci/test_node_public_outputs.py
         scripts/ci/test_go_smoke_test_filter.py
+        scripts/ci/test_php_smoke.py
 
   ci:release-version-forms:
     desc: Resolve canonical package version forms for release validation

@@ -50,20 +50,24 @@ default = []
 arc-swap = { workspace = true }
 axum = { workspace = true }
 clap = { workspace = true }
-liter-llm = { path = "../liter-llm", version = "2.2.5" }
-liter-llm-proxy = { path = "../liter-llm-proxy", version = "2.2.5" }
+liter-llm = { path = "../liter-llm", version = "2.3.0" }
+liter-llm-proxy = { path = "../liter-llm-proxy", version = "2.3.0" }
 mimalloc = { workspace = true, optional = true }
 opentelemetry = { workspace = true, optional = true }
 opentelemetry-otlp = { workspace = true, optional = true }
 opentelemetry_sdk = { workspace = true, optional = true }
 rmcp = { workspace = true }
 secrecy = { workspace = true }
+serde_json = { workspace = true }
 tikv-jemallocator = { workspace = true, optional = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true }
 url = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
 
 [lints]
 workspace = true
