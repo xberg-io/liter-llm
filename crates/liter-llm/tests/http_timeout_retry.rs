@@ -218,3 +218,53 @@ async fn a_connection_closed_without_a_reply_is_still_sent_again() {
     );
     assert_eq!(server.requests.load(Ordering::SeqCst), 2);
 }
+
+#[tokio::test]
+async fn a_rate_limit_reply_is_still_sent_again() {
+    let server = serve(|attempt, stream| {
+        if attempt == 0 {
+            respond(stream, "429 Too Many Requests", r#"{"error":{"message":"slow down"}}"#);
+        } else {
+            respond(stream, "200 OK", REPLY);
+        }
+    });
+    let client = client(&server, Duration::from_secs(5), 1);
+
+    let result = client.chat(request()).await;
+
+    assert!(result.is_ok(), "the retry after a 429 succeeds, got {result:?}");
+    assert_eq!(server.requests.load(Ordering::SeqCst), 2);
+}
+
+#[tokio::test]
+async fn a_refused_connection_is_still_tried_again() {
+    // Nothing listens at first, so the first attempt fails before any request
+    // is sent. A server starts on the same port while the client backs off
+    // (the first back-off is at least 500 ms).
+    let probe = TcpListener::bind("127.0.0.1:0").expect("bind probe");
+    let address = probe.local_addr().expect("probe address");
+    drop(probe);
+    let requests = Arc::new(AtomicUsize::new(0));
+    let counter = Arc::clone(&requests);
+    thread::spawn(move || {
+        thread::sleep(Duration::from_millis(200));
+        let listener = TcpListener::bind(address).expect("bind server on the probe port");
+        let (stream, _) = listener.accept().expect("accept the retried request");
+        read_request(&stream);
+        counter.fetch_add(1, Ordering::SeqCst);
+        respond(stream, "200 OK", REPLY);
+    });
+    let server = Server {
+        base_url: format!("http://{address}"),
+        requests,
+    };
+    let client = client(&server, Duration::from_secs(5), 2);
+
+    let result = client.chat(request()).await;
+
+    assert!(
+        result.is_ok(),
+        "the retry after a refused connection succeeds, got {result:?}"
+    );
+    assert_eq!(server.requests.load(Ordering::SeqCst), 1);
+}
