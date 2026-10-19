@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A request that times out is no longer sent again. Before, one slow reply cost about `timeout_secs * (max_retries + 1)`
+  plus back-off, and the server ran (and billed) the request each time. The caller now gets `LiterLlmError::Timeout`
+  after about `timeout_secs`. A connection that fails or closes without a reply, `429` and `5xx` replies keep their
+  retries (GH#316).
+
 ## [2.3.0] - 2026-10-19
 
 ### Changed
