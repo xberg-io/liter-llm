@@ -3,12 +3,14 @@
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-use tokio::sync::Semaphore;
+use futures_util::Stream;
+use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tower::{Layer, Service, ServiceExt};
 
 use super::types::{LlmRequest, LlmResponse};
-use crate::client::BoxFuture;
+use crate::client::{BoxFuture, BoxStream};
 use crate::error::{LiterLlmError, Result};
+use crate::types::ChatCompletionChunk;
 
 /// Configuration for the global per-client in-flight request limit.
 #[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -90,7 +92,7 @@ where
         let inner = self.inner.clone();
 
         Box::pin(async move {
-            let _permit = match semaphore {
+            let permit = match semaphore {
                 Some(semaphore) => Some(
                     semaphore
                         .acquire_owned()
@@ -101,8 +103,34 @@ where
                 ),
                 None => None,
             };
-            inner.oneshot(req).await
+            let response = inner.oneshot(req).await?;
+            match (response, permit) {
+                (LlmResponse::ChatStream(stream), Some(permit)) => {
+                    Ok(LlmResponse::ChatStream(Box::pin(PermitHoldingStream {
+                        inner: stream,
+                        _permit: permit,
+                    })))
+                }
+                (response, _) => Ok(response),
+            }
         })
+    }
+}
+
+/// Keeps the in-flight permit until the stream finishes or is dropped.
+///
+/// A streaming response is returned as soon as the provider starts answering, so
+/// releasing the permit then would let a client open unbounded live streams. ~keep
+struct PermitHoldingStream {
+    inner: BoxStream<'static, Result<ChatCompletionChunk>>,
+    _permit: OwnedSemaphorePermit,
+}
+
+impl Stream for PermitHoldingStream {
+    type Item = Result<ChatCompletionChunk>;
+
+    fn poll_next(mut self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        self.inner.as_mut().poll_next(cx)
     }
 }
 
@@ -149,6 +177,36 @@ mod tests {
         let _ = futures_util::future::join_all(calls).await;
 
         assert_eq!(peak.load(Ordering::SeqCst), 2);
+    }
+
+    /// A live stream occupies its permit until it is dropped, so a second request
+    /// queues behind it instead of running alongside.
+    #[tokio::test]
+    async fn stream_holds_permit_until_dropped() {
+        let inner = service_fn(|_req: LlmRequest| async {
+            let stream: crate::client::BoxStream<'static, Result<ChatCompletionChunk>> =
+                Box::pin(futures_util::stream::pending());
+            Ok::<_, LiterLlmError>(LlmResponse::ChatStream(stream))
+        });
+        let layer = InFlightLimitLayer::new(InFlightLimitConfig { max_in_flight: Some(1) }).unwrap();
+        let service = layer.layer(inner);
+        let request = || {
+            LlmRequest::Chat(ChatCompletionRequest {
+                model: "gpt-4".into(),
+                ..Default::default()
+            })
+        };
+
+        let first = service.clone().oneshot(request()).await.unwrap();
+        let blocked = tokio::time::timeout(Duration::from_millis(50), service.clone().oneshot(request())).await;
+        assert!(
+            blocked.is_err(),
+            "second request must wait while the first stream is live"
+        );
+
+        drop(first);
+        let second = tokio::time::timeout(Duration::from_millis(500), service.clone().oneshot(request())).await;
+        assert!(second.is_ok(), "dropping the stream must release the permit");
     }
 
     #[test]

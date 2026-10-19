@@ -7,12 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-10-19
+
+### Changed
+
+- Anthropic, Gemini, Vertex AI, Cohere and Bedrock chat streams that end before the provider's final event now yield
+  `LiterLlmError::Streaming` instead of ending like a complete response. OpenAI-compatible streams keep ending
+  cleanly without `[DONE]` (#295).
+- Regenerate bindings with alef 0.111.0: the Python binding moves to pyo3 0.30, and the Dart `LiterLlmError.retryAfter()`
+  accessor is now `getRetryAfter()`.
+
+### Added
+
+- `liter-llm config-check --config <path>` validates a proxy configuration without starting the server, printing one
+  JSON line and exiting non-zero when the config is invalid or unreadable (#294).
+- `TransportConfig::disable_proxies` (`with_proxies_disabled`) makes a client ignore ambient `HTTP(S)_PROXY` and
+  system proxy settings even when the outbound policy is `Off` (#293).
+
 ### Security
 
 - Remove vulnerable ZIP 8.6 dependencies from PHP binding builds.
 
 ### Fixed
 
+- Reject a Bedrock `messageStop` event without `stopReason` instead of reporting it as `end_turn`, and stop reporting
+  intermediate Gemini and Vertex AI stream chunks as finished (#295).
+- Omit an absent assistant `refusal` from request message history, which strict OpenAI-compatible providers such as
+  Groq reject, while completion responses keep the required `refusal: null` key (#292).
+- Replace the `php:test` reference to a nonexistent example with a real local smoke check that loads the built
+  extension in isolation, verifies its version and core classes, and propagates failures (#290).
+- Accept the optional upstream models.dev model `type` field in the catalog generator while still rejecting unknown
+  fields and model types, so scheduled catalog refreshes succeed again (#289).
+- Stream chat completions through `LlmService`, and therefore the proxy, as the provider sends them instead of
+  buffering the whole completion before the first chunk. Abandoned streams still settle spend: a background task
+  drains them to the usage-bearing final chunk, and `Drop` no longer polls the live provider stream.
+- Hold the in-flight request permit for the lifetime of a streaming response, and settle spend with the usage seen so far
+  when the task draining an abandoned stream is cancelled.
 - Validate canonical package versions during release dry runs while preserving genuine prerelease checks.
 - Keep public coding-agent skills synchronized with native plugin resources during version updates.
 

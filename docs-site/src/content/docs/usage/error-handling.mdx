@@ -35,7 +35,7 @@ The 20 variants, their typical cause, and whether the Tower middleware treats th
 | `ServiceUnavailable`    | Provider returned 502, 503, or 504, or a health probe marked the upstream unhealthy.                              | yes        |
 | `Timeout`               | Request exceeded `default_timeout_secs` or the per-model `timeout_secs`.                                          | yes        |
 | `Network`               | Transport-level failure from `reqwest` (connection reset, DNS, TLS). Only present with the `native-http` feature. | yes        |
-| `Streaming`             | UTF-8 decode, CRC mismatch (AWS EventStream), malformed SSE chunk, or buffer overflow during streaming.           | no         |
+| `Streaming`             | UTF-8 decode, CRC mismatch (AWS EventStream), malformed SSE chunk, buffer overflow, or an Anthropic, Gemini, Vertex, Cohere or Bedrock stream that ended before its final event. | no         |
 | `EndpointNotSupported`  | Provider crate does not implement the requested endpoint (e.g. embeddings on an audio-only provider).             | no         |
 | `InvalidHeader`         | A custom header name or value failed HTTP validation.                                                             | no         |
 | `Serialization`         | `serde_json` failed to encode the request or decode the response.                                                 | no         |

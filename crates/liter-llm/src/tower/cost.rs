@@ -21,7 +21,7 @@
 //! ```
 
 use std::pin::Pin;
-use std::task::{Context, Poll, Waker};
+use std::task::{Context, Poll};
 
 use futures_core::Stream;
 use tower::Layer;
@@ -47,10 +47,9 @@ use crate::types::{ChatCompletionChunk, Usage};
 /// (budget enforcement, cost tracking, rate limiting) therefore silently
 /// skip every streamed request.
 ///
-/// [`super::service::LlmService`] fully buffers `ChatStream` responses before
-/// returning them (see its module docs), so wrapping the already-buffered
-/// stream here adds no additional buffering — only a `poll_next` hook that
-/// watches for a `usage` field and fires `on_complete` when the stream ends.
+/// The wrapper adds no buffering: chunks pass through as the provider sends
+/// them, and a `poll_next` hook watches for a `usage` field and fires
+/// `on_complete` when the stream ends.
 ///
 /// `on_complete` runs synchronously inside `poll_next`; callers that need to
 /// perform async work (e.g. writing to a remote [`crate::tower::budget::BudgetLedger`])
@@ -58,18 +57,13 @@ use crate::types::{ChatCompletionChunk, Usage};
 ///
 /// # Caller contract
 ///
-/// The returned stream drains itself in `Drop` (with a no-op waker) so that an
-/// abandoned stream still reports the spend it already incurred. That is only
-/// safe because every current caller wraps [`super::service::LlmService`]'s
-/// fully-buffered stream, whose `poll_next` is a synchronous read off a
-/// `VecDeque` and touches no I/O driver.
-///
-/// Do not compose this over a live provider-backed stream. Polling real HTTP
-/// body I/O from `Drop` can panic when no reactor is running (an aborted task,
-/// a drop during runtime shutdown), and a panic raised while unwinding aborts
-/// the process instead of propagating. `pub(crate)` visibility is what keeps
-/// this contract enforceable — it is a convention, not a type-level guarantee,
-/// so preserve it. ~keep
+/// An abandoned stream still reports the spend it incurred: `Drop` hands the
+/// unfinished stream to a Tokio task that drains it to the usage-bearing final
+/// chunk and then runs `on_complete`. The wrapped stream is a live provider
+/// response, so `Drop` itself never polls it — polling HTTP body I/O there can
+/// panic when no reactor is running (an aborted task, a drop during runtime
+/// shutdown), and a panic raised while unwinding aborts the process. Without a
+/// current runtime, `on_complete` runs immediately with the usage seen so far. ~keep
 pub(crate) fn observe_stream_usage<F>(
     stream: BoxStream<'static, Result<ChatCompletionChunk>>,
     on_complete: F,
@@ -119,10 +113,10 @@ impl Stream for UsageObservingStream {
     }
 }
 
-/// Upper bound on chunks drained in [`UsageObservingStream::drop`].
+/// Upper bound on chunks drained for an abandoned stream.
 ///
 /// Only a stream that is both infinite and always-ready could reach this; the
-/// bound exists so `Drop` cannot spin forever. ~keep
+/// bound exists so the drain task cannot spin forever. ~keep
 const DROP_DRAIN_CHUNK_LIMIT: usize = 100_000;
 
 impl Drop for UsageObservingStream {
@@ -135,30 +129,60 @@ impl Drop for UsageObservingStream {
         // ~keep The caller abandoned the stream, so poll_next never reached its
         // ~keep terminal arm and this request's spend would go unrecorded entirely —
         // ~keep letting a client consume provider tokens for free by repeatedly
-        // ~keep starting streams and dropping them.
-        //
-        // ~keep Usage normally arrives only in the final chunk, but LlmService buffers
-        // ~keep the provider stream before any middleware sees it, so that chunk is
-        // ~keep already in memory here and can be recovered without awaiting: drain
-        // ~keep whatever is immediately ready. A genuinely lazy stream returns Pending
-        // ~keep on the first poll and is left untouched, so this never blocks.
-        let mut context = Context::from_waker(Waker::noop());
-        for _ in 0..DROP_DRAIN_CHUNK_LIMIT {
-            match self.inner.as_mut().poll_next(&mut context) {
-                Poll::Ready(Some(Ok(chunk))) => {
-                    if chunk.usage.is_some() {
-                        self.last_usage = chunk.usage;
-                    }
-                }
-                Poll::Ready(Some(Err(_)) | None) | Poll::Pending => break,
+        // ~keep starting streams and dropping them. Usage normally arrives only in
+        // ~keep the final chunk, so keep reading the provider response on a task.
+        // ~keep Same tokio::runtime::Handle::try_current() convention as hooks.rs's CancellationGuard.
+        let Ok(handle) = tokio::runtime::Handle::try_current() else {
+            if self.last_usage.is_none() {
+                tracing::warn!("no Tokio runtime to drain an abandoned stream; spend not recorded");
             }
-        }
+            on_complete(self.last_usage.take());
+            return;
+        };
+        let inner = std::mem::replace(&mut self.inner, Box::pin(futures_util::stream::empty()));
+        handle.spawn(drain_abandoned_stream(inner, self.last_usage.take(), on_complete));
+    }
+}
 
-        if self.last_usage.is_none() {
-            tracing::warn!("streamed usage unavailable on abandoned stream; spend not recorded");
-        }
+/// Settles spend with the usage seen so far if the drain task is cancelled
+/// (runtime shutdown, aborted task) before it reaches the end of the stream. ~keep
+struct DrainSettlement {
+    last_usage: Option<Usage>,
+    on_complete: Option<Box<dyn FnOnce(Option<Usage>) + Send>>,
+}
 
-        on_complete(self.last_usage.take());
+impl Drop for DrainSettlement {
+    fn drop(&mut self) {
+        if let Some(on_complete) = self.on_complete.take() {
+            on_complete(self.last_usage.take());
+        }
+    }
+}
+
+/// Read an abandoned stream to its end so the final chunk's usage settles spend.
+async fn drain_abandoned_stream(
+    mut inner: BoxStream<'static, Result<ChatCompletionChunk>>,
+    last_usage: Option<Usage>,
+    on_complete: Box<dyn FnOnce(Option<Usage>) + Send>,
+) {
+    let mut settlement = DrainSettlement {
+        last_usage,
+        on_complete: Some(on_complete),
+    };
+
+    for _ in 0..DROP_DRAIN_CHUNK_LIMIT {
+        match std::future::poll_fn(|cx| inner.as_mut().poll_next(cx)).await {
+            Some(Ok(chunk)) => {
+                if chunk.usage.is_some() {
+                    settlement.last_usage = chunk.usage;
+                }
+            }
+            Some(Err(_)) | None => break,
+        }
+    }
+
+    if settlement.last_usage.is_none() {
+        tracing::warn!("streamed usage unavailable on abandoned stream; spend not recorded");
     }
 }
 
@@ -655,5 +679,118 @@ mod tests {
 
         let recorded = observed.lock().expect("test mutex must not be poisoned").clone();
         assert_eq!(recorded, vec![None], "on_complete must fire exactly once, with None");
+    }
+
+    /// A live provider stream whose chunks arrive only when the test sends them.
+    struct ChannelStream(tokio::sync::mpsc::UnboundedReceiver<Result<ChatCompletionChunk>>);
+
+    impl Stream for ChannelStream {
+        type Item = Result<ChatCompletionChunk>;
+        fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+            self.0.poll_recv(cx)
+        }
+    }
+
+    /// A stream abandoned while its provider is still generating must settle
+    /// with the final chunk's usage once that chunk arrives, not when dropped.
+    #[tokio::test]
+    async fn abandoned_live_stream_settles_with_usage_from_later_final_chunk() {
+        use futures_util::StreamExt as _;
+
+        let usage = Usage {
+            prompt_tokens: 100,
+            completion_tokens: 50,
+            total_tokens: 150,
+            prompt_tokens_details: None,
+            completion_tokens_details: None,
+        };
+        let (provider, receiver) = tokio::sync::mpsc::unbounded_channel();
+        let (settled, observed) = tokio::sync::oneshot::channel();
+        let mut wrapped = super::observe_stream_usage(Box::pin(ChannelStream(receiver)), move |u| {
+            let _ = settled.send(u);
+        });
+
+        provider.send(chunk(None)).expect("stream must accept the first chunk");
+        assert!(wrapped.next().await.is_some(), "first chunk must reach the caller");
+        drop(wrapped);
+
+        provider
+            .send(chunk(Some(usage.clone())))
+            .expect("drain task must keep reading the abandoned stream");
+        drop(provider);
+
+        let recorded = tokio::time::timeout(std::time::Duration::from_secs(2), observed)
+            .await
+            .expect("abandoned stream must settle once it ends")
+            .expect("on_complete must run");
+        assert_eq!(recorded, Some(usage), "spend must use the usage from the final chunk");
+    }
+
+    /// If the drain task is cancelled before the stream ends (runtime shutdown),
+    /// the usage seen so far must still settle exactly once.
+    #[test]
+    fn cancelled_drain_settles_with_usage_seen_so_far() {
+        use futures_util::StreamExt as _;
+
+        let usage = Usage {
+            prompt_tokens: 7,
+            completion_tokens: 3,
+            total_tokens: 10,
+            prompt_tokens_details: None,
+            completion_tokens_details: None,
+        };
+        let observed = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let observed_for_cb = std::sync::Arc::clone(&observed);
+
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("test runtime");
+        runtime.block_on(async {
+            let (provider, receiver) = tokio::sync::mpsc::unbounded_channel();
+            let mut wrapped = super::observe_stream_usage(Box::pin(ChannelStream(receiver)), move |u| {
+                observed_for_cb.lock().expect("test mutex must not be poisoned").push(u);
+            });
+            provider.send(chunk(Some(usage.clone()))).expect("first chunk");
+            assert!(wrapped.next().await.is_some());
+            drop(wrapped);
+            tokio::task::yield_now().await;
+            // The sender stays alive, so the drain task never reaches the end of the stream.
+            std::mem::forget(provider);
+        });
+        drop(runtime);
+
+        let recorded = observed.lock().expect("test mutex must not be poisoned").clone();
+        assert_eq!(
+            recorded,
+            vec![Some(usage)],
+            "cancelled drain must settle once with the seen usage"
+        );
+    }
+
+    /// A stream that fails the test if it is ever polled.
+    struct PanicOnPoll;
+
+    impl Stream for PanicOnPoll {
+        type Item = Result<ChatCompletionChunk>;
+        fn poll_next(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+            panic!("an abandoned stream must not be polled from Drop");
+        }
+    }
+
+    /// Without a Tokio runtime, dropping must not touch the provider stream and
+    /// must settle immediately with the usage observed so far.
+    #[test]
+    fn abandoned_stream_without_runtime_settles_without_polling() {
+        let observed = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+        let observed_for_cb = std::sync::Arc::clone(&observed);
+        let wrapped = super::observe_stream_usage(Box::pin(PanicOnPoll), move |u| {
+            observed_for_cb.lock().expect("test mutex must not be poisoned").push(u);
+        });
+
+        drop(wrapped);
+
+        let recorded = observed.lock().expect("test mutex must not be poisoned").clone();
+        assert_eq!(recorded, vec![None], "on_complete must run once, synchronously");
     }
 }

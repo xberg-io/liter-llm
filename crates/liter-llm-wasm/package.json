@@ -10,7 +10,7 @@
     }
   ],
   "name": "@xberg-io/liter-llm-wasm",
-  "version": "2.2.5",
+  "version": "2.3.0",
   "private": false,
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
@@ -58,8 +58,8 @@
     "clean": "rm -rf pkg dist"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^5.0.3",
-    "vitest": "^5.0.3"
+    "@vitest/coverage-v8": "^5.0.5",
+    "vitest": "^5.0.5"
   },
   "packageManager": "pnpm@12.11.2"
 }

@@ -89,6 +89,7 @@
         "name": "GPT Cost Only",
         "description": "A model whose only pricing data is the two base costs.",
         "family": "gpt-4",
+        "type": "chat",
         "knowledge": "2023-04",
         "attachment": false,
         "reasoning": false,

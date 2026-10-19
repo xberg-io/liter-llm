@@ -237,6 +237,92 @@ fn parse_chat_stream_event(
     Ok(Some(chunk))
 }
 
+/// Whether a provider's native chat stream protocol always ends with an event
+/// that carries a finish reason.
+///
+/// Anthropic (`message_delta` with `stop_reason`), Gemini/Vertex
+/// (`finishReason`), Cohere (`message-end`) and Bedrock (`messageStop`) all do,
+/// so a stream from them that ends without one was cut off. OpenAI-compatible
+/// servers are not held to this: some omit `[DONE]` or end with non-standard
+/// metadata events (#155), and a clean EOF there stays a normal end (#295).
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn requires_terminal_chat_chunk(provider: &dyn Provider) -> bool {
+    matches!(provider.name(), "anthropic" | "google_ai" | "vertex_ai" | "cohere")
+        || matches!(provider.stream_format(), provider::StreamFormat::AwsEventStream)
+}
+
+/// Turns a clean end of a chat stream into [`LiterLlmError::Streaming`] when no
+/// chunk carried a finish reason, so a response truncated by a dropped
+/// connection, proxy timeout or upstream crash is not reported as complete.
+///
+/// A stream that already yielded an error is passed through unchanged.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+struct RequireTerminalChunk {
+    inner: BoxStream<'static, Result<ChatCompletionChunk>>,
+    provider: String,
+    finished: bool,
+    errored: bool,
+    ended: bool,
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+impl RequireTerminalChunk {
+    fn wrap(
+        inner: BoxStream<'static, Result<ChatCompletionChunk>>,
+        provider: String,
+    ) -> BoxStream<'static, Result<ChatCompletionChunk>> {
+        Box::pin(Self {
+            inner,
+            provider,
+            finished: false,
+            errored: false,
+            ended: false,
+        })
+    }
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+impl Stream for RequireTerminalChunk {
+    type Item = Result<ChatCompletionChunk>;
+
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        use std::task::Poll;
+
+        if self.ended {
+            return Poll::Ready(None);
+        }
+        match self.inner.as_mut().poll_next(cx) {
+            Poll::Ready(Some(Ok(chunk))) => {
+                if chunk.choices.iter().any(|choice| choice.finish_reason.is_some()) {
+                    self.finished = true;
+                }
+                Poll::Ready(Some(Ok(chunk)))
+            }
+            Poll::Ready(Some(Err(error))) => {
+                self.errored = true;
+                Poll::Ready(Some(Err(error)))
+            }
+            Poll::Ready(None) => {
+                self.ended = true;
+                if self.finished || self.errored {
+                    return Poll::Ready(None);
+                }
+                tracing::warn!(
+                    provider = %self.provider,
+                    "chat stream ended before the provider sent its final event"
+                );
+                Poll::Ready(Some(Err(LiterLlmError::Streaming {
+                    message: format!(
+                        "{} stream ended before its final event; the response is incomplete",
+                        self.provider
+                    ),
+                })))
+            }
+            Poll::Pending => Poll::Pending,
+        }
+    }
+}
+
 /// Shallow-merge a top-level `"extra_body"` key into `body`, OpenAI-Python-SDK
 /// style: `{**body, **extra_body}` — extra_body keys override identically
 /// named top-level keys.
@@ -1237,8 +1323,10 @@ impl LlmClient for DefaultClient {
             )?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
             let auth = auth_header.as_ref().map(str_pair);
+            let require_terminal = requires_terminal_chat_chunk(prepared.provider.as_ref());
+            let provider_name = prepared.provider.name().to_owned();
 
-            match prepared.provider.stream_format() {
+            let stream = match prepared.provider.stream_format() {
                 provider::StreamFormat::Sse => {
                     let provider = Arc::clone(&prepared.provider);
                     let state = std::sync::Mutex::new(ChatStreamState {
@@ -1246,7 +1334,7 @@ impl LlmClient for DefaultClient {
                         ..Default::default()
                     });
                     let parse_event = move |data: &str| parse_chat_stream_event(provider.as_ref(), &state, data);
-                    let stream = http::streaming::post_stream_bounded(
+                    http::streaming::post_stream_bounded(
                         &self.http,
                         http::request::StreamingPost {
                             url: &url,
@@ -1257,11 +1345,10 @@ impl LlmClient for DefaultClient {
                         parse_event,
                         self.response_read_options(),
                     )
-                    .await?;
-                    Ok(stream)
+                    .await?
                 }
                 provider::StreamFormat::AwsEventStream => {
-                    let stream = http::eventstream::post_eventstream_bounded(
+                    http::eventstream::post_eventstream_bounded(
                         &self.http,
                         http::request::StreamingPost {
                             url: &url,
@@ -1272,10 +1359,14 @@ impl LlmClient for DefaultClient {
                         provider::bedrock::parse_bedrock_stream_event,
                         self.response_read_options(),
                     )
-                    .await?;
-                    Ok(stream)
+                    .await?
                 }
-            }
+            };
+            Ok(if require_terminal {
+                RequireTerminalChunk::wrap(stream, provider_name)
+            } else {
+                stream
+            })
         })
     }
 
@@ -2541,6 +2632,69 @@ impl ResponseClient for DefaultClient {
             .await?;
             serde_json::from_value::<ResponseObject>(raw).map_err(LiterLlmError::from)
         })
+    }
+}
+
+#[cfg(all(test, any(feature = "native-http", feature = "wasm-http")))]
+mod stream_termination_tests {
+    use futures_util::StreamExt;
+
+    use super::*;
+    use crate::types::{FinishReason, StreamChoice};
+
+    fn chunk(finish_reason: Option<FinishReason>) -> Result<ChatCompletionChunk> {
+        Ok(ChatCompletionChunk {
+            choices: vec![StreamChoice {
+                finish_reason,
+                ..Default::default()
+            }],
+            ..Default::default()
+        })
+    }
+
+    async fn drain(items: Vec<Result<ChatCompletionChunk>>) -> Vec<Result<ChatCompletionChunk>> {
+        RequireTerminalChunk::wrap(Box::pin(futures_util::stream::iter(items)), "anthropic".into())
+            .collect()
+            .await
+    }
+
+    #[tokio::test]
+    async fn finish_reason_marks_the_stream_complete() {
+        let items = drain(vec![chunk(None), chunk(Some(FinishReason::Stop)), chunk(None)]).await;
+        assert_eq!(items.len(), 3);
+        assert!(items.iter().all(Result::is_ok));
+    }
+
+    #[tokio::test]
+    async fn clean_end_without_finish_reason_is_a_streaming_error() {
+        let items = drain(vec![chunk(None)]).await;
+        assert_eq!(items.len(), 2);
+        assert!(matches!(items[1], Err(LiterLlmError::Streaming { .. })));
+    }
+
+    #[tokio::test]
+    async fn an_error_already_reported_is_not_followed_by_another() {
+        let items = drain(vec![
+            chunk(None),
+            Err(LiterLlmError::Streaming {
+                message: "cut mid-line".into(),
+            }),
+        ])
+        .await;
+        assert_eq!(items.len(), 2);
+    }
+
+    #[test]
+    fn only_first_party_protocols_require_a_final_event() {
+        assert!(requires_terminal_chat_chunk(
+            &provider::anthropic::AnthropicProvider::default()
+        ));
+        assert!(requires_terminal_chat_chunk(&provider::cohere::CohereProvider));
+        assert!(!requires_terminal_chat_chunk(
+            provider::detect_provider("openai/gpt-4o")
+                .expect("OpenAI is a built-in provider")
+                .as_ref()
+        ));
     }
 }
 

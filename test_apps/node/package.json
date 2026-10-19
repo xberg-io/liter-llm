@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "@xberg-io/liter-llm": "2.2.5",
+    "@xberg-io/liter-llm": "2.3.0",
     "vitest": "^5.0.4"
   },
   "packageManager": "pnpm@12.11.2"
