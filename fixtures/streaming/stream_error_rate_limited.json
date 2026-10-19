@@ -1,0 +1,76 @@
+{
+  "id": "stream_error_rate_limited",
+  "description": "Rate-limit error event inside a stream that already returned 200 and two chunks",
+  "docs": {
+    "topic": "streaming",
+    "stem": "stream-error-rate-limited",
+    "title": "Rate-limit error event inside a stream that already returned 200 and two chunks"
+  },
+  "category": "streaming",
+  "tags": ["streaming", "error-handling"],
+  "call": "chat_stream",
+  "input": {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ],
+    "stream": true
+  },
+  "mock_response": {
+    "status": 200,
+    "stream_chunks": [
+      {
+        "id": "chatcmpl-streamerr001",
+        "object": "chat.completion.chunk",
+        "created": 1711000000,
+        "model": "gpt-4",
+        "choices": [
+          {
+            "index": 0,
+            "delta": {
+              "role": "assistant",
+              "content": ""
+            },
+            "finish_reason": null
+          }
+        ]
+      },
+      {
+        "id": "chatcmpl-streamerr001",
+        "object": "chat.completion.chunk",
+        "created": 1711000000,
+        "model": "gpt-4",
+        "choices": [
+          {
+            "index": 0,
+            "delta": {
+              "content": "par"
+            },
+            "finish_reason": null
+          }
+        ]
+      },
+      {
+        "error": {
+          "message": "Rate limit reached, slow down.",
+          "type": "rate_limit_error",
+          "code": "rate_limit_exceeded"
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "type": "error",
+      "value": "RateLimited"
+    },
+    {
+      "type": "equals",
+      "field": "error.status_code",
+      "value": 429
+    }
+  ]
+}

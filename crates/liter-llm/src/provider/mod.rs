@@ -1253,6 +1253,68 @@ mod tests {
         assert!(err.to_string().contains("upstream capacity exceeded"));
     }
 
+    /// Parse a mid-stream error event and return the error it raises.
+    fn mid_stream_error(payload: &str) -> LiterLlmError {
+        OpenAiProvider
+            .parse_stream_event(payload)
+            .expect_err("a mid-stream error object must not decode as a chunk")
+    }
+
+    /// Revert line: in `parse_stream_event`, build `BadRequest` directly instead of
+    /// calling `LiterLlmError::from_status` to make this test fail.
+    #[test]
+    fn parse_stream_event_classifies_rate_limit_error_without_status() {
+        let err = mid_stream_error(
+            r#"{"error":{"message":"slow down","type":"rate_limit_error","code":"rate_limit_exceeded"}}"#,
+        );
+        assert!(matches!(err, LiterLlmError::RateLimited { .. }), "got: {err:?}");
+        assert_eq!(err.status_code(), 429);
+        assert!(err.is_transient());
+        assert!(err.to_string().contains("slow down"));
+    }
+
+    /// Revert line: as above, build `BadRequest` directly to make this test fail.
+    #[test]
+    fn parse_stream_event_classifies_rate_limit_error_with_status() {
+        let err = mid_stream_error(
+            r#"{"error":{"message":"slow down","type":"rate_limit_error","code":"rate_limit_exceeded","status_code":429}}"#,
+        );
+        assert!(matches!(err, LiterLlmError::RateLimited { .. }), "got: {err:?}");
+        assert_eq!(err.status_code(), 429);
+    }
+
+    /// Revert line: as above, build `BadRequest` directly to make this test fail.
+    #[test]
+    fn parse_stream_event_classifies_context_length_error_like_http() {
+        let err = mid_stream_error(
+            r#"{"error":{"message":"too long","type":"invalid_request_error","code":"context_length_exceeded"}}"#,
+        );
+        assert!(matches!(err, LiterLlmError::ContextWindowExceeded { .. }), "got: {err:?}");
+    }
+
+    /// Revert line: as above, build `BadRequest` directly to make this test fail.
+    #[test]
+    fn parse_stream_event_classifies_authentication_error_from_status() {
+        let err = mid_stream_error(r#"{"error":{"message":"bad key","code":"invalid_api_key","status_code":401}}"#);
+        assert!(matches!(err, LiterLlmError::Authentication { status: 401, .. }), "got: {err:?}");
+    }
+
+    /// Revert line: remove the `(400..=599)` range check on the payload status in
+    /// `parse_stream_event` to make this test fail.
+    #[test]
+    fn parse_stream_event_ignores_payload_status_outside_error_range() {
+        let err = mid_stream_error(r#"{"error":{"message":"odd","status_code":200}}"#);
+        assert!(matches!(err, LiterLlmError::BadRequest { status: 400, .. }), "got: {err:?}");
+    }
+
+    /// Revert line: remove the fallback message in `parse_stream_event` to make this
+    /// test fail.
+    #[test]
+    fn parse_stream_event_keeps_fallback_message_when_error_has_none() {
+        let err = mid_stream_error(r#"{"error":{"code":"rate_limit_exceeded"}}"#);
+        assert!(err.to_string().contains("provider returned an error mid-stream"), "got: {err}");
+    }
+
     /// Revert line: delete `#[serde(default)]` from `ChatCompletionChunk::choices`
     /// in `types/chat.rs` to make this test fail.
     #[test]
