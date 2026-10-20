@@ -1502,6 +1502,22 @@ mod tests {
         assert_eq!(err.status_code(), 429);
     }
 
+    /// Revert line: read the error type before the error code in
+    /// `status_for_error_kind` to make this test fail. When the two disagree,
+    /// the code decides.
+    #[test]
+    fn parse_stream_event_prefers_error_code_over_type() {
+        let cases = [
+            (r#""code":"rate_limit_exceeded","type":"invalid_request_error""#, 429),
+            (r#""code":"rate_limit_exceeded","type":"authentication_error""#, 429),
+        ];
+        for (kind, status) in cases {
+            let err = mid_stream_error(&format!(r#"{{"error":{{"message":"x",{kind}}}}}"#));
+            assert!(matches!(err, LiterLlmError::RateLimited { .. }), "{kind}: got {err:?}");
+            assert_eq!(err.status_code(), status, "{kind}");
+        }
+    }
+
     /// Revert line: drop an arm of `status_for_error_kind` to make this test fail.
     /// Each event has no status, and must give the kind that the same body gives
     /// as an HTTP reply at the status `status_for_error_kind` reads from it.
