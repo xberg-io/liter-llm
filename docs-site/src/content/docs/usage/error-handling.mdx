@@ -77,7 +77,8 @@ The built-in HTTP client retries only on transient status codes. From `crates/li
 - Jitter scales each delay to a random value in `[0.5x, 1.0x]` of the capped base to avoid thundering herds.
 - For `429`, the `Retry-After` header takes precedence, capped at `60s`. Integer seconds are parsed; HTTP-date format is logged and falls back to exponential backoff.
 - A connection that fails or closes without a reply is retried with the same back-off.
-- A request that times out is not retried. The server has the request and may still be working on it. The caller gets the `Timeout` error after about `timeout_secs`, and no setting turns the retry back on.
+- A connect timeout is retried with the same back-off, because the server never saw the request. The client waits at most half of `timeout_secs`, and no more than `10s`, for a connection to open.
+- A request that times out after the connection is up is not retried. The server has the request and may still be working on it. The caller gets the `Timeout` error after about `timeout_secs`, and no setting turns the retry back on.
 
 Retries apply to single-endpoint calls. Cross-endpoint failover between models is handled by the separate [Fallback & Routing](/usage/fallback-routing/) layer.
 

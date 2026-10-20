@@ -36,8 +36,9 @@ pub fn should_retry(status: u16, attempt: u32, max_retries: u32, retry_after: Op
 
 /// Determine whether to retry after a transport-level failure (connection
 /// reset, DNS failure, TLS handshake failure) rather than an HTTP status
-/// response. The caller does not ask for a request that timed out: the server
-/// has the request and may still be working on it.
+/// response. The caller does not ask for a request that timed out after the
+/// connection was up: the server has the request and may still be working on
+/// it. A connect timeout is a transport failure and is retried.
 ///
 /// No response was received, so there is no status code or `Retry-After`
 /// header to consult — this always falls back to the same jittered

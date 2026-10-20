@@ -1,7 +1,8 @@
 //! A request that runs out of time is not sent again. The server already has
 //! the request and may still be working on it, so a second try does not help
-//! and the server would run (and bill) the request twice. A connection that
-//! closes without a reply and 5xx replies keep their retries.
+//! and the server would run (and bill) the request twice. A connect timeout
+//! is different: the server never saw the request, so it is sent again. A
+//! connection that closes without a reply and 5xx replies keep their retries.
 
 #![cfg(feature = "native-http")]
 
@@ -267,4 +268,33 @@ async fn a_refused_connection_is_still_tried_again() {
         "the retry after a refused connection succeeds, got {result:?}"
     );
     assert_eq!(server.requests.load(Ordering::SeqCst), 1);
+}
+
+#[tokio::test]
+async fn a_connect_timeout_is_still_tried_again() {
+    // 10.255.255.1 is not routed, so the connection never opens and the connect
+    // timeout (half the request timeout, so 1 s here) fires on every attempt.
+    // Three attempts take at least 3 s; a single attempt takes about 1 s.
+    let server = Server {
+        base_url: "http://10.255.255.1:81".to_owned(),
+        requests: Arc::new(AtomicUsize::new(0)),
+    };
+    let client = client(&server, Duration::from_secs(2), 2);
+
+    let start = Instant::now();
+    let result = client.chat(request()).await;
+    let elapsed = start.elapsed();
+
+    assert!(
+        matches!(result, Err(LiterLlmError::Timeout)),
+        "a connection that never opens ends in a Timeout error, got {result:?}"
+    );
+    assert!(
+        elapsed >= Duration::from_secs(3),
+        "the connect timeout is tried again max_retries times (3 attempts, 1 s each): {elapsed:?}"
+    );
+    assert!(
+        elapsed < Duration::from_secs(9),
+        "the retries stop after max_retries: {elapsed:?}"
+    );
 }
