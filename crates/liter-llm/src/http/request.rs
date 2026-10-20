@@ -241,9 +241,8 @@ mod retry_header_tests {
 /// - Validating the effective request URL against the active outbound policy.
 /// - Parsing the `Retry-After` header before consuming the response body.
 /// - Exponential back-off via `retry::should_retry`, including for
-///   transport-level failures (connection reset, DNS failure, connect timeout)
-///   that never produce a response at all. A request that times out after the
-///   connection is up is not sent again.
+///   transport-level failures (connection reset, DNS failure) that never
+///   produce a response at all. A request that times out is not sent again.
 /// - Reading the error body and mapping it to `LiterLlmError` on final failure.
 ///
 /// On success the **successful** `Response` is returned so the caller can
@@ -272,11 +271,11 @@ where
                 // ~keep A transport-level error means no response was ever received, so it
                 // must go through the same retry budget as a 5xx — otherwise a single
                 // connection reset fails the whole request even though `max_retries > 0`.
-                // A timeout after the connection is up is the exception: the server has the
-                // request and may still be working on it, so sending it again would run (and
-                // bill) it twice and stretch the caller's wait to `timeout * (max_retries + 1)`.
-                // A connect timeout stays retried: the server never saw the request.
-                if (!transport_error.is_timeout() || transport_error.is_connect())
+                // A timeout is the exception: the server may have the request and may still
+                // be working on it, so sending it again would run (and bill) it twice and
+                // stretch the caller's wait to `timeout * (max_retries + 1)`. The client has
+                // one whole-request timeout, so a timeout while connecting is the same error.
+                if !transport_error.is_timeout()
                     && let Some(delay) = retry::should_retry_transport_error(attempt, max_retries)
                 {
                     attempt += 1;

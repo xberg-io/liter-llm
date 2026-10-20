@@ -167,19 +167,6 @@ struct PreparedRequest {
 /// Centralises the four identical `map(|(n, v)| (n.as_str(), v.as_str()))` expressions
 /// that appear wherever we hand headers to the HTTP layer.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-/// Longest wait for a connection to open, however large the request timeout is.
-#[cfg(not(target_arch = "wasm32"))]
-const MAX_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
-
-/// How long the client waits to open a connection: half the request timeout,
-/// at most [`MAX_CONNECT_TIMEOUT`]. The limit is shorter than the request
-/// timeout so that a connect timeout is told apart from a timeout after the
-/// connection is up. The first is retried, the second is not.
-#[cfg(not(target_arch = "wasm32"))]
-fn connect_timeout(request_timeout: Duration) -> Duration {
-    (request_timeout / 2).min(MAX_CONNECT_TIMEOUT)
-}
-
 fn str_pair(pair: &(String, String)) -> (&str, &str) {
     (pair.0.as_str(), pair.1.as_str())
 }
@@ -956,9 +943,7 @@ impl DefaultClient {
             #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
             let builder = crate::provider::configure_outbound_client_builder(builder, config.transport.dns_cache_ttl);
             #[cfg(not(target_arch = "wasm32"))]
-            let builder = builder
-                .timeout(config.timeout)
-                .connect_timeout(connect_timeout(config.timeout));
+            let builder = builder.timeout(config.timeout);
             #[cfg(not(target_arch = "wasm32"))]
             let builder = config.transport.apply_to_builder(builder);
             builder.build().map_err(LiterLlmError::from)?
@@ -3613,21 +3598,5 @@ mod build_provider_tests {
         let details = usage.prompt_tokens_details.expect("cache details");
         assert_eq!(details.cached_tokens, 200);
         assert_eq!(details.cache_creation_tokens, 100);
-    }
-}
-
-#[cfg(all(test, not(target_arch = "wasm32")))]
-mod connect_timeout_tests {
-    use super::*;
-
-    #[test]
-    fn the_connect_timeout_is_half_the_request_timeout() {
-        assert_eq!(connect_timeout(Duration::from_secs(2)), Duration::from_secs(1));
-    }
-
-    #[test]
-    fn the_connect_timeout_stops_at_ten_seconds() {
-        assert_eq!(connect_timeout(Duration::from_secs(60)), Duration::from_secs(10));
-        assert_eq!(connect_timeout(Duration::from_secs(20)), Duration::from_secs(10));
     }
 }
