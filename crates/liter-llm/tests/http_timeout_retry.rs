@@ -268,3 +268,27 @@ async fn a_refused_connection_is_still_tried_again() {
     );
     assert_eq!(server.requests.load(Ordering::SeqCst), 1);
 }
+
+#[tokio::test]
+async fn a_connection_dropped_on_every_attempt_uses_up_the_retries() {
+    // The server closes every connection with no reply. With max_retries 2 the
+    // client sends the first request and two retries, then returns the
+    // transport error. The outer timeout makes a loop that never stops fail
+    // instead of hang.
+    let server = serve(|_, stream| drop(stream));
+    let client = client(&server, Duration::from_secs(5), 2);
+
+    let result = tokio::time::timeout(Duration::from_secs(20), client.chat(request()))
+        .await
+        .expect("the call ends once the retries are used up");
+
+    assert!(
+        matches!(result, Err(LiterLlmError::Network { .. })),
+        "a connection that always closes ends in a Network error, got {result:?}"
+    );
+    assert_eq!(
+        server.requests.load(Ordering::SeqCst),
+        3,
+        "the server receives the first request and two retries"
+    );
+}
