@@ -1450,7 +1450,8 @@ mod tests {
             matches!(err, LiterLlmError::ServerError { status: 599, .. }),
             "got: {err:?}"
         );
-        let err = mid_stream_error(r#"{"error":{"message":"edge","code":"context_length_exceeded","status_code":400}}"#);
+        let err =
+            mid_stream_error(r#"{"error":{"message":"edge","code":"context_length_exceeded","status_code":400}}"#);
         assert!(
             matches!(err, LiterLlmError::ContextWindowExceeded { .. }),
             "got: {err:?}"
@@ -1535,7 +1536,10 @@ mod tests {
     #[test]
     fn parse_stream_event_classifies_insufficient_quota_as_quota_exceeded() {
         let err = mid_stream_error(r#"{"error":{"message":"out of credit","code":"insufficient_quota"}}"#);
-        assert!(matches!(err, LiterLlmError::ProviderQuotaExceeded { .. }), "got: {err:?}");
+        assert!(
+            matches!(err, LiterLlmError::ProviderQuotaExceeded { .. }),
+            "got: {err:?}"
+        );
         assert!(!err.is_transient());
     }
 
@@ -1543,7 +1547,10 @@ mod tests {
     #[test]
     fn parse_stream_event_reads_unknown_error_kind_as_bad_request() {
         let err = mid_stream_error(r#"{"error":{"message":"odd","code":"something_else","type":"other"}}"#);
-        assert!(matches!(err, LiterLlmError::BadRequest { status: 400, .. }), "got: {err:?}");
+        assert!(
+            matches!(err, LiterLlmError::BadRequest { status: 400, .. }),
+            "got: {err:?}"
+        );
     }
 
     /// Revert line: remove the fallback message in `parse_stream_event` to make this
