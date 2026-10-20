@@ -787,6 +787,43 @@ api_key = "sk-b"
         .expect("valid TOML")
     }
 
+    fn config_with_unrouted_model(extra: &str) -> ProxyConfig {
+        ProxyConfig::from_toml_str(&format!(
+            r#"
+[[models]]
+name = "m1"
+provider_model = "snowflake/arctic"
+api_key = "sk-test"
+{extra}
+"#
+        ))
+        .expect("valid TOML")
+    }
+
+    #[test]
+    fn model_for_a_provider_without_route_and_without_base_url_is_refused() {
+        let config = config_with_unrouted_model("");
+        let message = build_client(&config.models[0], &config)
+            .err()
+            .expect("the client must not build");
+        assert!(message.contains("failed to build client for model 'm1'"), "{message}");
+        assert!(
+            message.contains("provider `snowflake` has no built-in route"),
+            "{message}"
+        );
+        let pool_error = ServicePool::from_config(&config, None)
+            .err()
+            .expect("the pool must not build");
+        assert_eq!(pool_error, message);
+    }
+
+    #[test]
+    fn model_for_a_provider_without_route_builds_with_a_base_url() {
+        let config = config_with_unrouted_model("base_url = \"http://127.0.0.1:9/v1\"");
+        build_client(&config.models[0], &config).expect("a base_url lifts the refusal");
+        ServicePool::from_config(&config, None).expect("the pool builds");
+    }
+
     #[test]
     fn build_from_empty_config() {
         let config = ProxyConfig::default();

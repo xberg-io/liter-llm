@@ -26,6 +26,7 @@
     "c/chat/finish-reason-length.md",
     "c/chat/multi-turn-conversation.md",
     "c/chat/parallel-tool-calls.md",
+    "c/chat/reasoning-effort-none.md",
     "c/chat/response-format-json-object.md",
     "c/chat/response-format-json-schema.md",
     "c/chat/seed-parameter.md",
@@ -128,6 +129,7 @@
     "c/proxy/proxy-upstream-500.md",
     "c/rerank/edge-rerank-empty-query.md",
     "c/rerank/edge-rerank-single-doc.md",
+    "c/rerank/edge-rerank-voyage-data-reply.md",
     "c/rerank/error-rerank-auth-401.md",
     "c/rerank/error-rerank-bad-request.md",
     "c/rerank/smoke-rerank-basic.md",
@@ -210,6 +212,7 @@
     "csharp/chat/finish-reason-length.md",
     "csharp/chat/multi-turn-conversation.md",
     "csharp/chat/parallel-tool-calls.md",
+    "csharp/chat/reasoning-effort-none.md",
     "csharp/chat/response-format-json-object.md",
     "csharp/chat/response-format-json-schema.md",
     "csharp/chat/seed-parameter.md",
@@ -312,6 +315,7 @@
     "csharp/proxy/proxy-upstream-500.md",
     "csharp/rerank/edge-rerank-empty-query.md",
     "csharp/rerank/edge-rerank-single-doc.md",
+    "csharp/rerank/edge-rerank-voyage-data-reply.md",
     "csharp/rerank/error-rerank-auth-401.md",
     "csharp/rerank/error-rerank-bad-request.md",
     "csharp/rerank/smoke-rerank-basic.md",
@@ -394,6 +398,7 @@
     "dart/chat/finish-reason-length.md",
     "dart/chat/multi-turn-conversation.md",
     "dart/chat/parallel-tool-calls.md",
+    "dart/chat/reasoning-effort-none.md",
     "dart/chat/response-format-json-object.md",
     "dart/chat/response-format-json-schema.md",
     "dart/chat/seed-parameter.md",
@@ -496,6 +501,7 @@
     "dart/proxy/proxy-upstream-500.md",
     "dart/rerank/edge-rerank-empty-query.md",
     "dart/rerank/edge-rerank-single-doc.md",
+    "dart/rerank/edge-rerank-voyage-data-reply.md",
     "dart/rerank/error-rerank-auth-401.md",
     "dart/rerank/error-rerank-bad-request.md",
     "dart/rerank/smoke-rerank-basic.md",
@@ -578,6 +584,7 @@
     "elixir/chat/finish-reason-length.md",
     "elixir/chat/multi-turn-conversation.md",
     "elixir/chat/parallel-tool-calls.md",
+    "elixir/chat/reasoning-effort-none.md",
     "elixir/chat/response-format-json-object.md",
     "elixir/chat/response-format-json-schema.md",
     "elixir/chat/seed-parameter.md",
@@ -680,6 +687,7 @@
     "elixir/proxy/proxy-upstream-500.md",
     "elixir/rerank/edge-rerank-empty-query.md",
     "elixir/rerank/edge-rerank-single-doc.md",
+    "elixir/rerank/edge-rerank-voyage-data-reply.md",
     "elixir/rerank/error-rerank-auth-401.md",
     "elixir/rerank/error-rerank-bad-request.md",
     "elixir/rerank/smoke-rerank-basic.md",
@@ -762,6 +770,7 @@
     "go/chat/finish-reason-length.md",
     "go/chat/multi-turn-conversation.md",
     "go/chat/parallel-tool-calls.md",
+    "go/chat/reasoning-effort-none.md",
     "go/chat/response-format-json-object.md",
     "go/chat/response-format-json-schema.md",
     "go/chat/seed-parameter.md",
@@ -864,6 +873,7 @@
     "go/proxy/proxy-upstream-500.md",
     "go/rerank/edge-rerank-empty-query.md",
     "go/rerank/edge-rerank-single-doc.md",
+    "go/rerank/edge-rerank-voyage-data-reply.md",
     "go/rerank/error-rerank-auth-401.md",
     "go/rerank/error-rerank-bad-request.md",
     "go/rerank/smoke-rerank-basic.md",
@@ -946,6 +956,7 @@
     "java/chat/finish-reason-length.md",
     "java/chat/multi-turn-conversation.md",
     "java/chat/parallel-tool-calls.md",
+    "java/chat/reasoning-effort-none.md",
     "java/chat/response-format-json-object.md",
     "java/chat/response-format-json-schema.md",
     "java/chat/seed-parameter.md",
@@ -1048,6 +1059,7 @@
     "java/proxy/proxy-upstream-500.md",
     "java/rerank/edge-rerank-empty-query.md",
     "java/rerank/edge-rerank-single-doc.md",
+    "java/rerank/edge-rerank-voyage-data-reply.md",
     "java/rerank/error-rerank-auth-401.md",
     "java/rerank/error-rerank-bad-request.md",
     "java/rerank/smoke-rerank-basic.md",
@@ -1130,6 +1142,7 @@
     "kotlin-android/chat/finish-reason-length.md",
     "kotlin-android/chat/multi-turn-conversation.md",
     "kotlin-android/chat/parallel-tool-calls.md",
+    "kotlin-android/chat/reasoning-effort-none.md",
     "kotlin-android/chat/response-format-json-object.md",
     "kotlin-android/chat/response-format-json-schema.md",
     "kotlin-android/chat/seed-parameter.md",
@@ -1232,6 +1245,7 @@
     "kotlin-android/proxy/proxy-upstream-500.md",
     "kotlin-android/rerank/edge-rerank-empty-query.md",
     "kotlin-android/rerank/edge-rerank-single-doc.md",
+    "kotlin-android/rerank/edge-rerank-voyage-data-reply.md",
     "kotlin-android/rerank/error-rerank-auth-401.md",
     "kotlin-android/rerank/error-rerank-bad-request.md",
     "kotlin-android/rerank/smoke-rerank-basic.md",
@@ -1314,6 +1328,7 @@
     "php/chat/finish-reason-length.md",
     "php/chat/multi-turn-conversation.md",
     "php/chat/parallel-tool-calls.md",
+    "php/chat/reasoning-effort-none.md",
     "php/chat/response-format-json-object.md",
     "php/chat/response-format-json-schema.md",
     "php/chat/seed-parameter.md",
@@ -1416,6 +1431,7 @@
     "php/proxy/proxy-upstream-500.md",
     "php/rerank/edge-rerank-empty-query.md",
     "php/rerank/edge-rerank-single-doc.md",
+    "php/rerank/edge-rerank-voyage-data-reply.md",
     "php/rerank/error-rerank-auth-401.md",
     "php/rerank/error-rerank-bad-request.md",
     "php/rerank/smoke-rerank-basic.md",
@@ -1498,6 +1514,7 @@
     "python/chat/finish-reason-length.md",
     "python/chat/multi-turn-conversation.md",
     "python/chat/parallel-tool-calls.md",
+    "python/chat/reasoning-effort-none.md",
     "python/chat/response-format-json-object.md",
     "python/chat/response-format-json-schema.md",
     "python/chat/seed-parameter.md",
@@ -1600,6 +1617,7 @@
     "python/proxy/proxy-upstream-500.md",
     "python/rerank/edge-rerank-empty-query.md",
     "python/rerank/edge-rerank-single-doc.md",
+    "python/rerank/edge-rerank-voyage-data-reply.md",
     "python/rerank/error-rerank-auth-401.md",
     "python/rerank/error-rerank-bad-request.md",
     "python/rerank/smoke-rerank-basic.md",
@@ -1682,6 +1700,7 @@
     "ruby/chat/finish-reason-length.md",
     "ruby/chat/multi-turn-conversation.md",
     "ruby/chat/parallel-tool-calls.md",
+    "ruby/chat/reasoning-effort-none.md",
     "ruby/chat/response-format-json-object.md",
     "ruby/chat/response-format-json-schema.md",
     "ruby/chat/seed-parameter.md",
@@ -1784,6 +1803,7 @@
     "ruby/proxy/proxy-upstream-500.md",
     "ruby/rerank/edge-rerank-empty-query.md",
     "ruby/rerank/edge-rerank-single-doc.md",
+    "ruby/rerank/edge-rerank-voyage-data-reply.md",
     "ruby/rerank/error-rerank-auth-401.md",
     "ruby/rerank/error-rerank-bad-request.md",
     "ruby/rerank/smoke-rerank-basic.md",
@@ -1866,6 +1886,7 @@
     "rust/chat/finish-reason-length.md",
     "rust/chat/multi-turn-conversation.md",
     "rust/chat/parallel-tool-calls.md",
+    "rust/chat/reasoning-effort-none.md",
     "rust/chat/response-format-json-object.md",
     "rust/chat/response-format-json-schema.md",
     "rust/chat/seed-parameter.md",
@@ -1968,6 +1989,7 @@
     "rust/proxy/proxy-upstream-500.md",
     "rust/rerank/edge-rerank-empty-query.md",
     "rust/rerank/edge-rerank-single-doc.md",
+    "rust/rerank/edge-rerank-voyage-data-reply.md",
     "rust/rerank/error-rerank-auth-401.md",
     "rust/rerank/error-rerank-bad-request.md",
     "rust/rerank/smoke-rerank-basic.md",
@@ -2050,6 +2072,7 @@
     "swift/chat/finish-reason-length.md",
     "swift/chat/multi-turn-conversation.md",
     "swift/chat/parallel-tool-calls.md",
+    "swift/chat/reasoning-effort-none.md",
     "swift/chat/response-format-json-object.md",
     "swift/chat/response-format-json-schema.md",
     "swift/chat/seed-parameter.md",
@@ -2152,6 +2175,7 @@
     "swift/proxy/proxy-upstream-500.md",
     "swift/rerank/edge-rerank-empty-query.md",
     "swift/rerank/edge-rerank-single-doc.md",
+    "swift/rerank/edge-rerank-voyage-data-reply.md",
     "swift/rerank/error-rerank-auth-401.md",
     "swift/rerank/error-rerank-bad-request.md",
     "swift/rerank/smoke-rerank-basic.md",
@@ -2234,6 +2258,7 @@
     "typescript/chat/finish-reason-length.md",
     "typescript/chat/multi-turn-conversation.md",
     "typescript/chat/parallel-tool-calls.md",
+    "typescript/chat/reasoning-effort-none.md",
     "typescript/chat/response-format-json-object.md",
     "typescript/chat/response-format-json-schema.md",
     "typescript/chat/seed-parameter.md",
@@ -2335,6 +2360,7 @@
     "typescript/proxy/proxy-upstream-500.md",
     "typescript/rerank/edge-rerank-empty-query.md",
     "typescript/rerank/edge-rerank-single-doc.md",
+    "typescript/rerank/edge-rerank-voyage-data-reply.md",
     "typescript/rerank/error-rerank-auth-401.md",
     "typescript/rerank/error-rerank-bad-request.md",
     "typescript/rerank/smoke-rerank-basic.md",
@@ -2417,6 +2443,7 @@
     "wasm/chat/finish-reason-length.md",
     "wasm/chat/multi-turn-conversation.md",
     "wasm/chat/parallel-tool-calls.md",
+    "wasm/chat/reasoning-effort-none.md",
     "wasm/chat/response-format-json-object.md",
     "wasm/chat/response-format-json-schema.md",
     "wasm/chat/seed-parameter.md",
@@ -2518,6 +2545,7 @@
     "wasm/proxy/proxy-upstream-500.md",
     "wasm/rerank/edge-rerank-empty-query.md",
     "wasm/rerank/edge-rerank-single-doc.md",
+    "wasm/rerank/edge-rerank-voyage-data-reply.md",
     "wasm/rerank/error-rerank-auth-401.md",
     "wasm/rerank/error-rerank-bad-request.md",
     "wasm/rerank/smoke-rerank-basic.md",
@@ -2600,6 +2628,7 @@
     "zig/chat/finish-reason-length.md",
     "zig/chat/multi-turn-conversation.md",
     "zig/chat/parallel-tool-calls.md",
+    "zig/chat/reasoning-effort-none.md",
     "zig/chat/response-format-json-object.md",
     "zig/chat/response-format-json-schema.md",
     "zig/chat/seed-parameter.md",
@@ -2702,6 +2731,7 @@
     "zig/proxy/proxy-upstream-500.md",
     "zig/rerank/edge-rerank-empty-query.md",
     "zig/rerank/edge-rerank-single-doc.md",
+    "zig/rerank/edge-rerank-voyage-data-reply.md",
     "zig/rerank/error-rerank-auth-401.md",
     "zig/rerank/error-rerank-bad-request.md",
     "zig/rerank/smoke-rerank-basic.md",
@@ -3060,6 +3090,18 @@
       "session": "c",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "c"
+      },
+      "path": "c/chat/reasoning-effort-none.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -4287,6 +4329,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "c"
+      },
+      "path": "c/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "c"
       },
@@ -5268,6 +5322,18 @@
       "session": "csharp",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "csharp"
+      },
+      "path": "csharp/chat/reasoning-effort-none.md",
+      "language": "csharp",
+      "target": "csharp",
+      "session": "csharp",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -6495,6 +6561,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "csharp"
+      },
+      "path": "csharp/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "csharp",
+      "target": "csharp",
+      "session": "csharp",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "csharp"
       },
@@ -7476,6 +7554,18 @@
       "session": "dart",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "dart"
+      },
+      "path": "dart/chat/reasoning-effort-none.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -8703,6 +8793,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "dart"
+      },
+      "path": "dart/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "dart"
       },
@@ -9684,6 +9786,18 @@
       "session": "elixir",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "elixir"
+      },
+      "path": "elixir/chat/reasoning-effort-none.md",
+      "language": "elixir",
+      "target": "elixir",
+      "session": "elixir",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -10911,6 +11025,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "elixir"
+      },
+      "path": "elixir/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "elixir",
+      "target": "elixir",
+      "session": "elixir",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "elixir"
       },
@@ -11892,6 +12018,18 @@
       "session": "go",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "go"
+      },
+      "path": "go/chat/reasoning-effort-none.md",
+      "language": "go",
+      "target": "go",
+      "session": "go",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -13119,6 +13257,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "go"
+      },
+      "path": "go/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "go",
+      "target": "go",
+      "session": "go",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "go"
       },
@@ -14100,6 +14250,18 @@
       "session": "java",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "java"
+      },
+      "path": "java/chat/reasoning-effort-none.md",
+      "language": "java",
+      "target": "java",
+      "session": "java",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -15327,6 +15489,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "java"
+      },
+      "path": "java/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "java",
+      "target": "java",
+      "session": "java",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "java"
       },
@@ -16308,6 +16482,18 @@
       "session": "kotlin_android",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/chat/reasoning-effort-none.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -17535,6 +17721,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "kotlin_android"
       },
@@ -18516,6 +18714,18 @@
       "session": "php",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "php"
+      },
+      "path": "php/chat/reasoning-effort-none.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -19743,6 +19953,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "php"
+      },
+      "path": "php/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "php"
       },
@@ -20724,6 +20946,18 @@
       "session": "python",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "python"
+      },
+      "path": "python/chat/reasoning-effort-none.md",
+      "language": "python",
+      "target": "python",
+      "session": "python",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -21951,6 +22185,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "python"
+      },
+      "path": "python/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "python",
+      "target": "python",
+      "session": "python",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "python"
       },
@@ -22932,6 +23178,18 @@
       "session": "ruby",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "ruby"
+      },
+      "path": "ruby/chat/reasoning-effort-none.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -24159,6 +24417,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "ruby"
+      },
+      "path": "ruby/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "ruby"
       },
@@ -25209,6 +25479,21 @@
         "crate:tokio"
       ],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "rust"
+      },
+      "path": "rust/chat/reasoning-effort-none.md",
+      "language": "rust",
+      "target": "rust",
+      "session": "rust",
+      "requires": [
+        "crate:serde_json",
+        "crate:tokio"
+      ],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -26734,6 +27019,21 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "rust"
+      },
+      "path": "rust/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "rust",
+      "target": "rust",
+      "session": "rust",
+      "requires": [
+        "crate:serde_json",
+        "crate:tokio"
+      ],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "rust"
       },
@@ -27891,6 +28191,18 @@
       "session": "swift",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "swift"
+      },
+      "path": "swift/chat/reasoning-effort-none.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -29118,6 +29430,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "swift"
+      },
+      "path": "swift/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "swift"
       },
@@ -30099,6 +30423,18 @@
       "session": "node",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "node"
+      },
+      "path": "typescript/chat/reasoning-effort-none.md",
+      "language": "typescript",
+      "target": "node",
+      "session": "node",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -31314,6 +31650,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "node"
+      },
+      "path": "typescript/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "typescript",
+      "target": "node",
+      "session": "node",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "node"
       },
@@ -32295,6 +32643,18 @@
       "session": "wasm",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "wasm"
+      },
+      "path": "wasm/chat/reasoning-effort-none.md",
+      "language": "typescript",
+      "target": "wasm",
+      "session": "wasm",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -33510,6 +33870,18 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "wasm"
+      },
+      "path": "wasm/rerank/edge-rerank-voyage-data-reply.md",
+      "language": "typescript",
+      "target": "wasm",
+      "session": "wasm",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "error_rerank_auth_401",
         "language": "wasm"
       },
@@ -34491,6 +34863,18 @@
       "session": "zig",
       "requires": [],
       "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "reasoning_effort_none",
+        "language": "zig"
+      },
+      "path": "zig/chat/reasoning-effort-none.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "network"
     },
     {
       "key": {
@@ -35710,6 +36094,18 @@
         "language": "zig"
       },
       "path": "zig/rerank/edge-rerank-single-doc.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_voyage_data_reply",
+        "language": "zig"
+      },
+      "path": "zig/rerank/edge-rerank-voyage-data-reply.md",
       "language": "zig",
       "target": "zig",
       "session": "zig",
@@ -39403,6 +39799,66 @@
       "language": "zig"
     },
     {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "c"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "go"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "java"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "node"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "php"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "python"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "zig"
+    },
+    {
       "fixture_id": "edge_response_empty_output",
       "language": "c"
     },
@@ -44020,6 +44476,66 @@
     },
     {
       "fixture_id": "rate_limit_429",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "c"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "go"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "java"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "node"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "php"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "python"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
       "language": "zig"
     },
     {
@@ -50685,6 +51201,66 @@
       "language": "zig"
     },
     {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "c"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "go"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "java"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "node"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "php"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "python"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "edge_rerank_voyage_data_reply",
+      "language": "zig"
+    },
+    {
       "fixture_id": "edge_response_empty_output",
       "language": "c"
     },
@@ -55054,6 +55630,66 @@
     },
     {
       "fixture_id": "rate_limit_429",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "c"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "go"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "java"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "node"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "php"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "python"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "reasoning_effort_none",
       "language": "zig"
     },
     {

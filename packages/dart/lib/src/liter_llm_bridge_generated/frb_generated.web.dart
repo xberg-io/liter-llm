@@ -311,6 +311,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CatalogInfo dco_decode_catalog_info(dynamic raw);
 
   @protected
+  CatalogModel dco_decode_catalog_model(dynamic raw);
+
+  @protected
   CatalogRefreshConfig dco_decode_catalog_refresh_config(dynamic raw);
 
   @protected
@@ -461,6 +464,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<BatchObject> dco_decode_list_batch_object(dynamic raw);
+
+  @protected
+  List<CatalogModel> dco_decode_list_catalog_model(dynamic raw);
 
   @protected
   List<ChatCompletionTool> dco_decode_list_chat_completion_tool(dynamic raw);
@@ -1298,6 +1304,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CatalogInfo sse_decode_catalog_info(SseDeserializer deserializer);
 
   @protected
+  CatalogModel sse_decode_catalog_model(SseDeserializer deserializer);
+
+  @protected
   CatalogRefreshConfig sse_decode_catalog_refresh_config(
     SseDeserializer deserializer,
   );
@@ -1482,6 +1491,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<BatchObject> sse_decode_list_batch_object(SseDeserializer deserializer);
+
+  @protected
+  List<CatalogModel> sse_decode_list_catalog_model(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<ChatCompletionTool> sse_decode_list_chat_completion_tool(
@@ -2538,6 +2552,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_catalog_info(CatalogInfo self, SseSerializer serializer);
 
   @protected
+  void sse_encode_catalog_model(CatalogModel self, SseSerializer serializer);
+
+  @protected
   void sse_encode_catalog_refresh_config(
     CatalogRefreshConfig self,
     SseSerializer serializer,
@@ -2780,6 +2797,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_batch_object(
     List<BatchObject> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_catalog_model(
+    List<CatalogModel> self,
     SseSerializer serializer,
   );
 

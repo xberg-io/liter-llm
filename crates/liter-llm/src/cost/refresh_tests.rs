@@ -380,3 +380,232 @@ async fn refresh_with_non_https_url_returns_insecure_url_error() {
     remove_cache_file(&cache_path);
     clear_catalog_overlay();
 }
+
+/// Overlay that re-describes one real embedded model with values the embedded
+/// catalog does not hold, next to the marker model. Every other embedded model
+/// is absent from it, so a listing that keeps them proves the layering.
+fn override_overlay_fixture() -> String {
+    format!(
+        r#"{{
+            "$provenance": {{
+                "source": "test/source.json",
+                "source_sha256": "{}",
+                "fetched": "2026-10-09",
+                "library_version": "2.2.0"
+            }},
+            "$schema_version": 1,
+            "providers": {{
+                "openai": {{
+                    "models": {{
+                        "gpt-4o": {{
+                            "limit": {{ "context": 5 }},
+                            "mode": "image_generation",
+                            "capabilities": {{
+                                "vision": false, "function_calling": false, "reasoning": false,
+                                "structured_output": false, "audio_input": false, "audio_output": false,
+                                "prompt_caching": false
+                            }}
+                        }}
+                    }}
+                }},
+                "{MARKER_PROVIDER}": {{
+                    "models": {{
+                        "{MARKER_MODEL}": {{
+                            "limit": {{ "context": 128000, "output": 16384 }},
+                            "mode": "chat",
+                            "capabilities": {{
+                                "vision": true, "function_calling": false, "reasoning": false,
+                                "structured_output": false, "audio_input": false, "audio_output": false,
+                                "prompt_caching": false
+                            }}
+                        }}
+                    }}
+                }}
+            }}
+        }}"#,
+        "0".repeat(64)
+    )
+}
+
+/// With no overlay installed, the listing reads the embedded catalog: one
+/// entry per `"{provider}/{model}"` key, sorted by key, with the provider and
+/// the mode of each model. The bare aliases that `model_info` also resolves
+/// ("gpt-4o" for "openai/gpt-4o") are not extra entries.
+#[tokio::test]
+async fn list_catalog_models_reads_the_embedded_catalog_without_aliases() {
+    let _guard = OVERLAY_TEST_LOCK.lock().await;
+    clear_catalog_overlay();
+
+    let all = list_catalog_models(None);
+    assert!(
+        all.len() > 100,
+        "the embedded catalog holds many models, got {}",
+        all.len()
+    );
+
+    let gpt4o = all
+        .iter()
+        .find(|m| m.key == "openai/gpt-4o")
+        .expect("openai/gpt-4o must be listed");
+    assert_eq!(gpt4o.provider, "openai");
+    assert_eq!(gpt4o.model, "gpt-4o");
+    assert_eq!(gpt4o.mode.as_deref(), Some("chat"));
+    assert_eq!(gpt4o.max_tokens, model_info("gpt-4o").and_then(|i| i.max_tokens));
+    assert_eq!(gpt4o.supports_vision, Some(true));
+
+    assert!(
+        all.iter().all(|m| m.key == format!("{}/{}", m.provider, m.model)),
+        "every entry key must be the provider and the model joined by a slash"
+    );
+    assert!(
+        !all.iter().any(|m| m.key == "gpt-4o"),
+        "a bare alias must not be listed as a second entry"
+    );
+    assert!(
+        all.windows(2).all(|pair| pair[0].key < pair[1].key),
+        "entries must be sorted by key with no duplicates"
+    );
+    for entry in &all {
+        let info = exact_model_info(&entry.key).unwrap_or_else(|| panic!("{} must resolve exactly", entry.key));
+        assert_eq!(info.mode, entry.mode, "mode of {}", entry.key);
+        assert_eq!(info.max_tokens, entry.max_tokens, "context of {}", entry.key);
+    }
+}
+
+/// Every field of every listed entry equals the same field of the exact model
+/// lookup for its key. The lookup projects the catalog row through its own
+/// code, so a field the listing drops or swaps fails here.
+#[tokio::test]
+async fn list_catalog_models_copies_every_field_of_each_catalog_entry() {
+    let _guard = OVERLAY_TEST_LOCK.lock().await;
+    clear_catalog_overlay();
+
+    let all = list_catalog_models(None);
+    assert!(
+        all.len() > 100,
+        "the embedded catalog holds many models, got {}",
+        all.len()
+    );
+    for entry in &all {
+        let info = exact_model_info(&entry.key).unwrap_or_else(|| panic!("{} must resolve exactly", entry.key));
+        let expected = CatalogModel {
+            key: info.matched_key.clone(),
+            provider: entry.key.split_once('/').map(|(p, _)| p.to_owned()).unwrap_or_default(),
+            model: entry.key.split_once('/').map(|(_, m)| m.to_owned()).unwrap_or_default(),
+            mode: info.mode,
+            max_tokens: info.max_tokens,
+            max_input_tokens: info.max_input_tokens,
+            max_output_tokens: info.max_output_tokens,
+            supports_vision: info.supports_vision,
+            supports_function_calling: info.supports_function_calling,
+            supports_reasoning: info.supports_reasoning,
+            supports_structured_output: info.supports_structured_output,
+            supports_audio_input: info.supports_audio_input,
+            supports_audio_output: info.supports_audio_output,
+            supports_prompt_caching: info.supports_prompt_caching,
+        };
+        assert_eq!(entry, &expected, "every field of {}", entry.key);
+    }
+
+    // ~keep The catalog row of anthropic/claude-haiku-4-5: context 200000, no
+    // ~keep input limit (the context applies), output 64000, mode chat, and
+    // ~keep every ability on except audio input and audio output.
+    let haiku = all
+        .iter()
+        .find(|m| m.key == "anthropic/claude-haiku-4-5")
+        .expect("anthropic/claude-haiku-4-5 must be listed");
+    assert_eq!(
+        haiku,
+        &CatalogModel {
+            key: "anthropic/claude-haiku-4-5".to_owned(),
+            provider: "anthropic".to_owned(),
+            model: "claude-haiku-4-5".to_owned(),
+            mode: Some("chat".to_owned()),
+            max_tokens: Some(200_000),
+            max_input_tokens: Some(200_000),
+            max_output_tokens: Some(64_000),
+            supports_vision: Some(true),
+            supports_function_calling: Some(true),
+            supports_reasoning: Some(true),
+            supports_structured_output: Some(true),
+            supports_audio_input: Some(false),
+            supports_audio_output: Some(false),
+            supports_prompt_caching: Some(true),
+        }
+    );
+}
+
+/// The filter keeps the models of exactly one provider id. A provider that the
+/// catalog does not hold, a different letter case and a prefix of a real id
+/// all return an empty list. An empty provider is no filter.
+#[tokio::test]
+async fn list_catalog_models_filters_by_exact_provider() {
+    let _guard = OVERLAY_TEST_LOCK.lock().await;
+    clear_catalog_overlay();
+
+    let all = list_catalog_models(None);
+    let anthropic = list_catalog_models(Some("anthropic"));
+    assert!(!anthropic.is_empty(), "the catalog holds anthropic models");
+    assert!(anthropic.len() < all.len(), "the filter must remove other providers");
+    assert!(anthropic.iter().all(|m| m.provider == "anthropic"));
+    assert_eq!(
+        anthropic.len(),
+        all.iter().filter(|m| m.provider == "anthropic").count(),
+        "the filter must keep every model of the provider"
+    );
+
+    assert!(list_catalog_models(Some("no-such-provider")).is_empty());
+    assert!(list_catalog_models(Some("Anthropic")).is_empty());
+    assert!(list_catalog_models(Some("anthrop")).is_empty());
+    assert_eq!(
+        list_catalog_models(Some("")),
+        all,
+        "an empty provider keeps every provider"
+    );
+}
+
+/// A refreshed catalog is listed the way `model_info` reads it: its models win
+/// over the embedded entry with the same key, and embedded models it does not
+/// name stay listed. The overlay sets a different mode and context for
+/// "openai/gpt-4o" and omits every other embedded model, so the test fails if
+/// the listing reads only the overlay or only the embedded table.
+#[tokio::test]
+async fn list_catalog_models_layers_the_overlay_over_the_embedded_catalog() {
+    let _guard = OVERLAY_TEST_LOCK.lock().await;
+    clear_catalog_overlay();
+    let embedded_count = list_catalog_models(None).len();
+    let embedded_openai = list_catalog_models(Some("openai")).len();
+    let embedded_anthropic = list_catalog_models(Some("anthropic")).len();
+
+    install_catalog_overlay_from_str(&override_overlay_fixture()).expect("overlay must install");
+    let all = list_catalog_models(None);
+
+    let gpt4o = all
+        .iter()
+        .find(|m| m.key == "openai/gpt-4o")
+        .expect("openai/gpt-4o must stay listed");
+    assert_eq!(
+        gpt4o.mode.as_deref(),
+        Some("image_generation"),
+        "overlay wins on a shared key"
+    );
+    assert_eq!(gpt4o.max_tokens, Some(5));
+    assert_eq!(gpt4o.supports_vision, Some(false));
+
+    assert_eq!(
+        list_catalog_models(Some("anthropic")).len(),
+        embedded_anthropic,
+        "embedded models that the overlay does not name must stay listed"
+    );
+    assert_eq!(all.len(), embedded_count + 1, "only the marker model is new");
+
+    let marker = list_catalog_models(Some(MARKER_PROVIDER));
+    assert_eq!(marker.len(), 1);
+    assert_eq!(marker[0].key, marker_key());
+    assert_eq!(marker[0].supports_vision, Some(true));
+    assert_eq!(list_catalog_models(Some("openai")).len(), embedded_openai);
+
+    clear_catalog_overlay();
+    assert_eq!(list_catalog_models(None).len(), embedded_count);
+    assert!(list_catalog_models(Some(MARKER_PROVIDER)).is_empty());
+}
