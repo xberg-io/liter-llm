@@ -1,0 +1,94 @@
+name: Python Wheels
+
+# ~keep One definition of the Python wheel build. The release (publish.yaml) and the pull-request
+# check (ci-python-wheels.yaml) both call it, so the check builds the wheels exactly as the release
+# does. This workflow has no registry credentials and publishes nothing: it only uploads workflow
+# artifacts, and the PyPI upload is a separate job in publish.yaml.
+on:
+  workflow_call:
+    inputs:
+      checkout_ref:
+        description: "Git ref to build; empty builds the ref of the calling workflow"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Python wheels (${{ matrix.label }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      # ~keep cibuildwheel reads this from the environment of the build step; the composite
+      # action has no input for it. `auto` is the native architecture and is ignored off macOS.
+      CIBW_ARCHS_MACOS: ${{ matrix.cibw_archs_macos }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: linux-x86_64
+            runner: ubuntu-latest
+            cibw_archs_macos: auto
+            wheel_platform: "manylinux.*_x86_64"
+          - label: linux-aarch64
+            runner: ubuntu-24.04-arm
+            cibw_archs_macos: auto
+            wheel_platform: "manylinux.*_aarch64"
+          - label: macos-arm64
+            runner: macos-latest
+            cibw_archs_macos: arm64
+            wheel_platform: "macosx_11_0_arm64"
+            wheel_macho_arch: arm64
+          # ~keep Cross-compiled from the arm64 image on purpose, mirroring build-node-native:
+          # the Intel runners queue for hours and wedged two releases (v1.14.0, v1.15.0).
+          # Apple ships both slices, so x86_64-apple-darwin builds here with only the extra
+          # Rust target below. The wheel is never executed, so no Rosetta is involved.
+          - label: macos-x86_64
+            runner: macos-latest
+            cibw_archs_macos: x86_64
+            wheel_platform: "macosx_11_0_x86_64"
+            wheel_macho_arch: x86_64
+            before_build_macos: pip install maturin uv && source ~/.cargo/env && rustup target add x86_64-apple-darwin
+          - label: windows-x86_64
+            runner: windows-latest
+            cibw_archs_macos: auto
+            wheel_platform: "win_amd64"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.checkout_ref }}
+      - uses: xberg-io/actions/build-python-wheels@v1
+        with:
+          package-dir: packages/python
+          cibw-build: "cp310-*"
+          cibw-skip: "*-musllinux* *-win32 *-manylinux_i686"
+          cibw-environment: 'MATURIN_BUILD_ARGS="--compatibility linux" CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=cc'
+          # ~keep 11.0 is the floor of the arm64 wheel and of the FFI builds (#248). cibuildwheel
+          # defaults an x86_64 build to 10.9, so without it the C objects of the build scripts
+          # take the SDK's minos instead of the target the Rust objects use. The shared library
+          # then has minos 11.0, and the wheel repair step raises the tag from 10.9 to macosx_11_0_x86_64.
+          cibw-environment-macos: 'MATURIN_BUILD_ARGS="" CARGO_BUILD_LOCKED=true MACOSX_DEPLOYMENT_TARGET=11.0'
+          cibw-before-build-macos: ${{ matrix.before_build_macos || 'pip install maturin uv && source ~/.cargo/env' }}
+          # ~keep The action uploads after the build, so the check below would run too late.
+          # Upload here, after the check, under the name the action would have used.
+          upload-artifact: "false"
+      # ~keep A cross-compiled wheel is the one wheel whose name can lie: the platform tag comes
+      # from cibuildwheel and the machine code from cargo. This step fails the leg, before the
+      # upload, when the tag or any Mach-O file in the wheel is not what the leg promises.
+      # WHEEL_MACHO_ARCH is empty on Linux and Windows legs, and the check then reads tags only.
+      # The check exits 2 when a macOS wheel arrives with no architecture, so a lost value fails the leg.
+      - name: Check wheel platform and architecture
+        shell: bash
+        env:
+          WHEEL_PLATFORM: ${{ matrix.wheel_platform }}
+          WHEEL_MACHO_ARCH: ${{ matrix.wheel_macho_arch }}
+        run: python scripts/ci/check_python_wheel.py wheelhouse "$WHEEL_PLATFORM" "$WHEEL_MACHO_ARCH"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: python-wheel-${{ matrix.label }}
+          path: ./wheelhouse/*.whl
+          retention-days: 7
+          if-no-files-found: error

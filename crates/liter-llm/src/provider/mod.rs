@@ -469,6 +469,17 @@ pub(crate) trait Provider: Send + Sync {
         Ok(())
     }
 
+    /// Transform the raw rerank reply before deserialization into `RerankResponse`.
+    ///
+    /// The canonical shape is a top-level `results` array. Providers whose rerank
+    /// reply differs (a different key, a different `document` form) override this
+    /// to reshape it. Rerank replies do not pass through [`Provider::transform_response`]:
+    /// that step reshapes chat replies, and a chat transform applied to a rerank
+    /// reply discards the `results` array. The default is a no-op.
+    fn transform_rerank_response(&self, _body: &mut serde_json::Value) -> Result<()> {
+        Ok(())
+    }
+
     /// Build the full URL for a specific endpoint and model.
     ///
     /// Default: `{base_url}{endpoint_path}`.  Providers like Azure and Bedrock
@@ -606,6 +617,7 @@ pub(crate) mod google_ai;
 pub(crate) mod mistral;
 pub mod outbound_policy;
 pub(crate) mod vertex;
+pub(crate) mod voyage;
 
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
 pub use outbound_policy::configure_outbound_client_builder;
@@ -736,6 +748,22 @@ pub(crate) struct OpenAiCompatibleProvider {
 impl Provider for OpenAiCompatibleProvider {
     fn name(&self) -> &str {
         &self.name
+    }
+
+    /// Read a rerank reply as the provider named by the client's `model_hint` words it.
+    ///
+    /// The `base_url` only says where to send the request. A client built with
+    /// `model_hint = "voyage"` still talks to a Voyage endpoint, whatever model name
+    /// (`rerank-2` or `voyage/rerank-2`) a request carries.
+    fn transform_rerank_response(&self, body: &mut serde_json::Value) -> Result<()> {
+        match self
+            .hint_provider
+            .as_deref()
+            .and_then(|hint| detect_builtin_provider(&format!("{hint}/")))
+        {
+            Some(named) => named.transform_rerank_response(body),
+            None => Ok(()),
+        }
     }
 
     fn base_url(&self) -> &str {
@@ -896,6 +924,73 @@ impl Provider for ConfigDrivenProvider {
     }
 }
 
+/// Find the registry entry named by a `provider/` prefix, by name or alias.
+fn registry_entry_for_prefix<'r>(reg: &'r ProviderRegistry, prefix: &str) -> Option<&'r ProviderEntry> {
+    reg.providers
+        .iter()
+        .find(|e| e.config.name == prefix)
+        .or_else(|| reg.providers.iter().find(|e| e.aliases.iter().any(|a| a == prefix)))
+}
+
+/// A registry entry has a route of its own when it names a `base_url` and is not a
+/// complex provider (complex providers need dedicated auth and request code, matched
+/// by prefix before the registry lookup in [`detect_provider`]).
+fn has_route(reg: &ProviderRegistry, entry: &ProviderEntry) -> bool {
+    entry.config.base_url.is_some() && !reg.complex_providers.contains(&entry.config.name)
+}
+
+/// Like [`detect_provider`], but refuses a model whose `provider/` prefix names a registry
+/// provider that has no route.
+///
+/// Such a model would otherwise fall back to [`OpenAiProvider`], sending another
+/// provider's requests to the OpenAI endpoint. Callers that have no `base_url` use this
+/// instead of [`detect_provider`] and fall back to OpenAI only on `Ok(None)`, which means
+/// the model names no registry provider at all.
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] naming the provider and asking for a `base_url`.
+pub(crate) fn route_model(model: &str) -> Result<Option<Box<dyn Provider>>> {
+    if let Some(provider) = detect_provider(model) {
+        return Ok(Some(provider));
+    }
+    if let Ok(reg) = REGISTRY.as_ref()
+        && let Some(error) = unrouted_provider_error(reg, model)
+    {
+        return Err(error);
+    }
+    Ok(None)
+}
+
+/// Refuse a bare `model_hint` that names a registry provider with no route.
+///
+/// A hint such as `snowflake` is checked like the `snowflake/` prefix of a model. It never
+/// selects a provider: a hint that has a route keeps falling back to [`OpenAiProvider`].
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] naming the provider and asking for a `base_url`.
+pub(crate) fn refuse_unrouted_hint(hint: &str) -> Result<()> {
+    route_model(&format!("{hint}/"))?;
+    Ok(())
+}
+
+/// The refusal for a model whose `provider/` prefix names a registry entry with no route.
+fn unrouted_provider_error(reg: &ProviderRegistry, model: &str) -> Option<LiterLlmError> {
+    let (prefix, _) = model.split_once('/')?;
+    let entry = registry_entry_for_prefix(reg, prefix)?;
+    if has_route(reg, entry) {
+        return None;
+    }
+    Some(LiterLlmError::BadRequest {
+        message: format!(
+            "provider `{}` has no built-in route; set base_url to its endpoint",
+            entry.config.name
+        ),
+        status: 400,
+    })
+}
+
 /// Detect which provider to use based on model name.
 ///
 /// Strategy:
@@ -908,17 +1003,25 @@ impl Provider for ConfigDrivenProvider {
 /// 7. `"provider/"` prefix — look up the prefix in the registry.
 /// 8. Walk all registry entries and check their `model_prefixes`.
 ///
-/// Returns `None` when no built-in provider matches.  The caller should fall
-/// back to a config-specified `base_url` or default to [`OpenAiProvider`].
+/// Returns `None` when no built-in provider matches.  Callers without a `base_url` use
+/// [`route_model`], which refuses a registry provider that has no route before the caller
+/// defaults to [`OpenAiProvider`].
 ///
 /// Complex providers (those listed in `complex_providers` in providers.json)
 /// are excluded from config-driven routing because they require custom
 /// auth/request logic beyond simple bearer tokens.
 pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
-    if let Some(provider) = custom::detect_custom_provider(model) {
-        return Some(provider);
-    }
+    custom::detect_custom_provider(model).or_else(|| detect_builtin_provider(model))
+}
 
+/// Detect the built-in provider that a model name designates, skipping custom providers.
+///
+/// A custom provider decides where a request goes and how it is signed. The wire format
+/// of a reply belongs to the model name, so reply handling asks this function.
+///
+/// Every prefix test here is a case-sensitive `starts_with` (or an exact match on the
+/// registry name), so `Voyage/rerank-2` names no provider.
+pub(crate) fn detect_builtin_provider(model: &str) -> Option<Box<dyn Provider>> {
     let openai = OpenAiProvider;
     if openai.matches_model(model) {
         return Some(Box::new(openai));
@@ -957,6 +1060,10 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
         return Some(Box::new(mistral::MistralProvider));
     }
 
+    if model.starts_with("voyage/") {
+        return Some(Box::new(voyage::VoyageProvider));
+    }
+
     if model.starts_with("github_copilot/") {
         return Some(Box::new(github_copilot::GithubCopilotProvider::from_env()));
     }
@@ -967,13 +1074,8 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
     };
 
     if let Some((prefix, _)) = model.split_once('/')
-        && let Some(entry) = reg
-            .providers
-            .iter()
-            .find(|e| e.config.name == prefix)
-            .or_else(|| reg.providers.iter().find(|e| e.aliases.iter().any(|a| a == prefix)))
-        && entry.config.base_url.is_some()
-        && !reg.complex_providers.contains(&entry.config.name)
+        && let Some(entry) = registry_entry_for_prefix(reg, prefix)
+        && has_route(reg, entry)
     {
         return Some(Box::new(ConfigDrivenProvider::from_entry(entry)));
     }
@@ -1279,5 +1381,197 @@ mod tests {
             .expect("valid chunk must yield Some");
         assert_eq!(chunk.id, "chatcmpl-1");
         assert_eq!(chunk.choices[0].delta.content.as_deref(), Some("hi"));
+    }
+}
+
+#[cfg(test)]
+mod route_model_tests {
+    use super::*;
+
+    /// Registry providers without a route of their own: complex providers that no
+    /// dedicated implementation answers for, and the gateways that need a `base_url`.
+    const UNROUTED: &[&str] = &[
+        "a2a",
+        "amazon_nova",
+        "anthropic_text",
+        "auto_router",
+        "aws_polly",
+        "azure_ai",
+        "azure_text",
+        "baseten",
+        "bedrock_mantle",
+        "black_forest_labs",
+        "chatgpt",
+        "cloudflare",
+        "cursor",
+        "databricks",
+        "dataforseo",
+        "datarobot",
+        "gdc",
+        "gigachat",
+        "heroku",
+        "manus",
+        "nvidia_riva",
+        "oci",
+        "petals",
+        "ragflow",
+        "reducto",
+        "sagemaker",
+        "sagemaker_chat",
+        "sap",
+        "searxng",
+        "snowflake",
+        "soniox",
+        "triton",
+        "watsonx",
+        "watsonx_text",
+    ];
+
+    const GATEWAYS: &[&str] = &[
+        "custom",
+        "custom_openai",
+        "hosted_vllm",
+        "infinity",
+        "litellm_proxy",
+        "openai_like",
+    ];
+
+    fn refusal(model: &str) -> String {
+        match route_model(model) {
+            Err(LiterLlmError::BadRequest { message, status }) => {
+                assert_eq!(status, 400, "{model}: refusal must be a 400");
+                message
+            }
+            Err(other) => panic!("{model}: expected BadRequest, got {other:?}"),
+            Ok(found) => panic!(
+                "{model}: expected a refusal, got provider {:?}",
+                found.map(|p| p.name().to_owned())
+            ),
+        }
+    }
+
+    #[test]
+    fn provider_without_route_is_refused_with_its_name_and_base_url() {
+        for name in UNROUTED.iter().chain(GATEWAYS) {
+            let message = refusal(&format!("{name}/some-model"));
+            assert!(message.contains(&format!("`{name}`")), "{name}: message {message:?}");
+            assert!(message.contains("base_url"), "{name}: message {message:?}");
+        }
+    }
+
+    #[test]
+    fn nested_provider_namespace_is_refused_by_its_first_segment() {
+        let message = refusal("azure_ai/agents/some-agent");
+        assert!(message.contains("`azure_ai`"), "{message:?}");
+    }
+
+    #[test]
+    fn no_registry_provider_falls_through_to_the_default() {
+        let reg = REGISTRY.as_ref().expect("registry should load");
+        let mut checked = 0;
+        for entry in &reg.providers {
+            let names = std::iter::once(entry.config.name.as_str()).chain(entry.aliases.iter().map(String::as_str));
+            for name in names {
+                let model = format!("{name}/some-model");
+                // A provider named by `provider/` either has a route or is refused.
+                // `Ok(None)` is the silent fall back to the OpenAI endpoint.
+                assert!(
+                    !matches!(route_model(&model), Ok(None)),
+                    "{model}: falls through to the default provider"
+                );
+                checked += 1;
+            }
+        }
+        assert!(checked >= reg.providers.len(), "sweep covered {checked} names");
+    }
+
+    #[test]
+    fn providers_with_a_route_keep_routing() {
+        for (model, expected) in [
+            ("gpt-4o", "openai"),
+            ("claude-3-5-sonnet-20241022", "anthropic"),
+            ("anthropic/claude-3-5-sonnet-20241022", "anthropic"),
+            ("ollama/llama3", "ollama"),
+            ("ollama_chat/llama3", "ollama"),
+            ("groq/llama3-70b", "groq"),
+            ("deepseek/deepseek-chat", "deepseek"),
+            ("mistral/mistral-large-latest", "mistral"),
+        ] {
+            let provider = route_model(model)
+                .unwrap_or_else(|e| panic!("{model}: {e}"))
+                .unwrap_or_else(|| panic!("{model}: no provider"));
+            assert_eq!(provider.name(), expected, "{model}");
+        }
+    }
+
+    fn synthetic_registry(providers: serde_json::Value, complex: &[&str]) -> ProviderRegistry {
+        let raw: ProviderRegistryRaw =
+            serde_json::from_value(serde_json::json!({"providers": providers, "complex_providers": complex}))
+                .expect("synthetic registry should parse");
+        ProviderRegistry::from_raw(raw)
+    }
+
+    #[test]
+    fn registry_entry_without_base_url_is_refused_even_when_not_complex() {
+        let reg = synthetic_registry(serde_json::json!([{"name": "plain", "aliases": ["plain_alias"]}]), &[]);
+        for model in ["plain/m", "plain_alias/m"] {
+            match unrouted_provider_error(&reg, model) {
+                Some(LiterLlmError::BadRequest { message, status }) => {
+                    assert_eq!(status, 400, "{model}");
+                    assert!(message.contains("`plain`") && message.contains("base_url"), "{message}");
+                }
+                other => panic!("{model}: expected a refusal, got {other:?}"),
+            }
+        }
+    }
+
+    #[test]
+    fn registry_entry_with_base_url_that_is_not_complex_has_a_route() {
+        let reg = synthetic_registry(
+            serde_json::json!([{"name": "plain", "base_url": "https://plain.example/v1"}]),
+            &[],
+        );
+        assert!(unrouted_provider_error(&reg, "plain/m").is_none());
+    }
+
+    #[test]
+    fn complex_registry_entry_with_base_url_is_refused() {
+        let reg = synthetic_registry(
+            serde_json::json!([{"name": "fancy", "base_url": "https://fancy.example/v1"}]),
+            &["fancy"],
+        );
+        assert!(unrouted_provider_error(&reg, "fancy/m").is_some());
+    }
+
+    #[test]
+    fn prefix_that_names_no_registry_entry_is_not_refused() {
+        let reg = synthetic_registry(serde_json::json!([{"name": "plain"}]), &[]);
+        assert!(unrouted_provider_error(&reg, "other/m").is_none());
+        assert!(unrouted_provider_error(&reg, "no-slash").is_none());
+    }
+
+    #[test]
+    fn bare_hint_is_refused_like_its_prefix() {
+        for hint in ["snowflake", "watsonx", "hosted_vllm"] {
+            match refuse_unrouted_hint(hint) {
+                Err(LiterLlmError::BadRequest { message, .. }) => {
+                    assert!(message.contains(&format!("`{hint}`")), "{message}");
+                }
+                other => panic!("{hint}: expected a refusal, got {other:?}"),
+            }
+        }
+    }
+
+    #[test]
+    fn bare_hint_with_a_route_or_no_registry_entry_is_accepted() {
+        for hint in ["anthropic", "groq", "ollama", "gpt-4o", "some-local-model"] {
+            assert!(refuse_unrouted_hint(hint).is_ok(), "{hint}");
+        }
+    }
+
+    #[test]
+    fn model_that_names_no_registry_provider_is_left_to_the_caller() {
+        assert!(route_model("some-random-model").expect("no refusal").is_none());
+        assert!(route_model("not-a-provider/model").expect("no refusal").is_none());
     }
 }

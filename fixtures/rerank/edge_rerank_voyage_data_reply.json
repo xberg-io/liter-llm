@@ -1,0 +1,60 @@
+{
+  "id": "edge_rerank_voyage_data_reply",
+  "description": "Reranking where the provider lists the scored documents under data instead of results",
+  "docs": {
+    "topic": "rerank",
+    "stem": "edge-rerank-voyage-data-reply",
+    "title": "Reranking where the provider lists the scored documents under data instead of results"
+  },
+  "category": "rerank",
+  "tags": ["edge-case", "rerank"],
+  "call": "rerank",
+  "input": {
+    "model": "voyage/rerank-2",
+    "query": "What is machine learning?",
+    "documents": [
+      "The weather is sunny today.",
+      "Deep learning uses neural networks.",
+      "Machine learning is a subset of AI."
+    ]
+  },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "object": "list",
+      "data": [
+        {
+          "index": 2,
+          "relevance_score": 0.91
+        },
+        {
+          "index": 1,
+          "relevance_score": 0.62
+        },
+        {
+          "index": 0,
+          "relevance_score": 0.04
+        }
+      ],
+      "model": "rerank-2",
+      "usage": {
+        "total_tokens": 24
+      }
+    }
+  },
+  "assertions": [
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "count_equals",
+      "field": "results",
+      "value": 3
+    },
+    {
+      "type": "greater_than",
+      "field": "results[0].relevance_score",
+      "value": 0.9
+    }
+  ]
+}

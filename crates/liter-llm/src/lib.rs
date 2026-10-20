@@ -103,8 +103,8 @@ pub use tower::{
 };
 // ~keep Re-export provider helpers that are public API while the module stays pub(crate).
 pub use cost::{
-    CatalogInfo, ModelInfo, ModelTier, catalog_info, completion_cost, completion_cost_with_cache,
-    completion_cost_with_cache_details, exact_model_info, model_info,
+    CatalogInfo, CatalogModel, ModelInfo, ModelTier, catalog_info, completion_cost, completion_cost_with_cache,
+    completion_cost_with_cache_details, exact_model_info, list_catalog_models, model_info,
 };
 // ~keep Runtime catalog refresh surface. Always compiled so it reaches every
 // ~keep binding; refresh is a runtime toggle (off by default), and the network

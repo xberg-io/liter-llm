@@ -224,10 +224,15 @@ fn generation_config(body: &Value) -> Value {
     // thought parts actually come back (routed to `reasoning_content` in the response).
     if let Some(effort) = body.get("reasoning_effort").and_then(|e| e.as_str()) {
         let thinking_budget = reasoning_effort_to_thinking_budget(effort);
-        gen_config["thinkingConfig"] = json!({
-            "thinkingBudget": thinking_budget,
-            "includeThoughts": true
-        });
+        // ~keep "none" asks for no reasoning, so it requests no thought parts either.
+        gen_config["thinkingConfig"] = if effort == "none" {
+            json!({ "thinkingBudget": thinking_budget })
+        } else {
+            json!({
+                "thinkingBudget": thinking_budget,
+                "includeThoughts": true
+            })
+        };
     }
     gen_config
 }
