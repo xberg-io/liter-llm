@@ -271,12 +271,9 @@ where
                 // ~keep A transport-level error means no response was ever received, so it
                 // must go through the same retry budget as a 5xx — otherwise a single
                 // connection reset fails the whole request even though `max_retries > 0`.
-                // A timeout is the exception: the server may have the request and may still
-                // be working on it, so sending it again would run (and bill) it twice and
-                // stretch the caller's wait to `timeout * (max_retries + 1)`. The client has
-                // one whole-request timeout, so a timeout while connecting is the same error.
-                if !transport_error.is_timeout()
-                    && let Some(delay) = retry::should_retry_transport_error(attempt, max_retries)
+                // A timeout is not retried; `should_retry_transport_error` refuses it.
+                if let Some(delay) =
+                    retry::should_retry_transport_error(transport_error.is_timeout(), attempt, max_retries)
                 {
                     attempt += 1;
                     tracing::warn!(
