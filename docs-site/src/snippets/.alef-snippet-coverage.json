@@ -175,6 +175,7 @@
     "c/streaming/stream-content-policy-error.md",
     "c/streaming/stream-done-signal.md",
     "c/streaming/stream-error-401.md",
+    "c/streaming/stream-error-rate-limited.md",
     "c/streaming/stream-multiple-choices.md",
     "c/streaming/stream-with-tool-calls.md",
     "c/streaming/stream-with-usage.md",
@@ -361,6 +362,7 @@
     "csharp/streaming/stream-content-policy-error.md",
     "csharp/streaming/stream-done-signal.md",
     "csharp/streaming/stream-error-401.md",
+    "csharp/streaming/stream-error-rate-limited.md",
     "csharp/streaming/stream-multiple-choices.md",
     "csharp/streaming/stream-with-tool-calls.md",
     "csharp/streaming/stream-with-usage.md",
@@ -547,6 +549,7 @@
     "dart/streaming/stream-content-policy-error.md",
     "dart/streaming/stream-done-signal.md",
     "dart/streaming/stream-error-401.md",
+    "dart/streaming/stream-error-rate-limited.md",
     "dart/streaming/stream-multiple-choices.md",
     "dart/streaming/stream-with-tool-calls.md",
     "dart/streaming/stream-with-usage.md",
@@ -733,6 +736,7 @@
     "elixir/streaming/stream-content-policy-error.md",
     "elixir/streaming/stream-done-signal.md",
     "elixir/streaming/stream-error-401.md",
+    "elixir/streaming/stream-error-rate-limited.md",
     "elixir/streaming/stream-multiple-choices.md",
     "elixir/streaming/stream-with-tool-calls.md",
     "elixir/streaming/stream-with-usage.md",
@@ -919,6 +923,7 @@
     "go/streaming/stream-content-policy-error.md",
     "go/streaming/stream-done-signal.md",
     "go/streaming/stream-error-401.md",
+    "go/streaming/stream-error-rate-limited.md",
     "go/streaming/stream-multiple-choices.md",
     "go/streaming/stream-with-tool-calls.md",
     "go/streaming/stream-with-usage.md",
@@ -1105,6 +1110,7 @@
     "java/streaming/stream-content-policy-error.md",
     "java/streaming/stream-done-signal.md",
     "java/streaming/stream-error-401.md",
+    "java/streaming/stream-error-rate-limited.md",
     "java/streaming/stream-multiple-choices.md",
     "java/streaming/stream-with-tool-calls.md",
     "java/streaming/stream-with-usage.md",
@@ -1291,6 +1297,7 @@
     "kotlin-android/streaming/stream-content-policy-error.md",
     "kotlin-android/streaming/stream-done-signal.md",
     "kotlin-android/streaming/stream-error-401.md",
+    "kotlin-android/streaming/stream-error-rate-limited.md",
     "kotlin-android/streaming/stream-multiple-choices.md",
     "kotlin-android/streaming/stream-with-tool-calls.md",
     "kotlin-android/streaming/stream-with-usage.md",
@@ -1477,6 +1484,7 @@
     "php/streaming/stream-content-policy-error.md",
     "php/streaming/stream-done-signal.md",
     "php/streaming/stream-error-401.md",
+    "php/streaming/stream-error-rate-limited.md",
     "php/streaming/stream-multiple-choices.md",
     "php/streaming/stream-with-tool-calls.md",
     "php/streaming/stream-with-usage.md",
@@ -1663,6 +1671,7 @@
     "python/streaming/stream-content-policy-error.md",
     "python/streaming/stream-done-signal.md",
     "python/streaming/stream-error-401.md",
+    "python/streaming/stream-error-rate-limited.md",
     "python/streaming/stream-multiple-choices.md",
     "python/streaming/stream-with-tool-calls.md",
     "python/streaming/stream-with-usage.md",
@@ -1849,6 +1858,7 @@
     "ruby/streaming/stream-content-policy-error.md",
     "ruby/streaming/stream-done-signal.md",
     "ruby/streaming/stream-error-401.md",
+    "ruby/streaming/stream-error-rate-limited.md",
     "ruby/streaming/stream-multiple-choices.md",
     "ruby/streaming/stream-with-tool-calls.md",
     "ruby/streaming/stream-with-usage.md",
@@ -2035,6 +2045,7 @@
     "rust/streaming/stream-content-policy-error.md",
     "rust/streaming/stream-done-signal.md",
     "rust/streaming/stream-error-401.md",
+    "rust/streaming/stream-error-rate-limited.md",
     "rust/streaming/stream-multiple-choices.md",
     "rust/streaming/stream-with-tool-calls.md",
     "rust/streaming/stream-with-usage.md",
@@ -2221,6 +2232,7 @@
     "swift/streaming/stream-content-policy-error.md",
     "swift/streaming/stream-done-signal.md",
     "swift/streaming/stream-error-401.md",
+    "swift/streaming/stream-error-rate-limited.md",
     "swift/streaming/stream-multiple-choices.md",
     "swift/streaming/stream-with-tool-calls.md",
     "swift/streaming/stream-with-usage.md",
@@ -2406,6 +2418,7 @@
     "typescript/streaming/stream-content-policy-error.md",
     "typescript/streaming/stream-done-signal.md",
     "typescript/streaming/stream-error-401.md",
+    "typescript/streaming/stream-error-rate-limited.md",
     "typescript/streaming/stream-multiple-choices.md",
     "typescript/streaming/stream-with-tool-calls.md",
     "typescript/streaming/stream-with-usage.md",
@@ -2591,6 +2604,7 @@
     "wasm/streaming/stream-content-policy-error.md",
     "wasm/streaming/stream-done-signal.md",
     "wasm/streaming/stream-error-401.md",
+    "wasm/streaming/stream-error-rate-limited.md",
     "wasm/streaming/stream-multiple-choices.md",
     "wasm/streaming/stream-with-tool-calls.md",
     "wasm/streaming/stream-with-usage.md",
@@ -2777,6 +2791,7 @@
     "zig/streaming/stream-content-policy-error.md",
     "zig/streaming/stream-done-signal.md",
     "zig/streaming/stream-error-401.md",
+    "zig/streaming/stream-error-rate-limited.md",
     "zig/streaming/stream-multiple-choices.md",
     "zig/streaming/stream-with-tool-calls.md",
     "zig/streaming/stream-with-usage.md",
@@ -4873,6 +4888,18 @@
         "language": "c"
       },
       "path": "c/streaming/stream-error-401.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "c"
+      },
+      "path": "c/streaming/stream-error-rate-limited.md",
       "language": "c",
       "target": "c",
       "session": "c",
@@ -7113,6 +7140,18 @@
     },
     {
       "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "csharp"
+      },
+      "path": "csharp/streaming/stream-error-rate-limited.md",
+      "language": "csharp",
+      "target": "csharp",
+      "session": "csharp",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "stream_multiple_choices",
         "language": "csharp"
       },
@@ -9337,6 +9376,18 @@
         "language": "dart"
       },
       "path": "dart/streaming/stream-error-401.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "dart"
+      },
+      "path": "dart/streaming/stream-error-rate-limited.md",
       "language": "dart",
       "target": "dart",
       "session": "dart",
@@ -11577,6 +11628,18 @@
     },
     {
       "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "elixir"
+      },
+      "path": "elixir/streaming/stream-error-rate-limited.md",
+      "language": "elixir",
+      "target": "elixir",
+      "session": "elixir",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "stream_multiple_choices",
         "language": "elixir"
       },
@@ -13801,6 +13864,18 @@
         "language": "go"
       },
       "path": "go/streaming/stream-error-401.md",
+      "language": "go",
+      "target": "go",
+      "session": "go",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "go"
+      },
+      "path": "go/streaming/stream-error-rate-limited.md",
       "language": "go",
       "target": "go",
       "session": "go",
@@ -16041,6 +16116,18 @@
     },
     {
       "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "java"
+      },
+      "path": "java/streaming/stream-error-rate-limited.md",
+      "language": "java",
+      "target": "java",
+      "session": "java",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "stream_multiple_choices",
         "language": "java"
       },
@@ -18265,6 +18352,18 @@
         "language": "kotlin_android"
       },
       "path": "kotlin-android/streaming/stream-error-401.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/streaming/stream-error-rate-limited.md",
       "language": "kotlin",
       "target": "kotlin_android",
       "session": "kotlin_android",
@@ -20505,6 +20604,18 @@
     },
     {
       "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "php"
+      },
+      "path": "php/streaming/stream-error-rate-limited.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "stream_multiple_choices",
         "language": "php"
       },
@@ -22737,6 +22848,18 @@
     },
     {
       "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "python"
+      },
+      "path": "python/streaming/stream-error-rate-limited.md",
+      "language": "python",
+      "target": "python",
+      "session": "python",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "stream_multiple_choices",
         "language": "python"
       },
@@ -24961,6 +25084,18 @@
         "language": "ruby"
       },
       "path": "ruby/streaming/stream-error-401.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "ruby"
+      },
+      "path": "ruby/streaming/stream-error-rate-limited.md",
       "language": "ruby",
       "target": "ruby",
       "session": "ruby",
@@ -27711,6 +27846,22 @@
     },
     {
       "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "rust"
+      },
+      "path": "rust/streaming/stream-error-rate-limited.md",
+      "language": "rust",
+      "target": "rust",
+      "session": "rust",
+      "requires": [
+        "crate:serde_json",
+        "crate:tokio",
+        "crate:tokio-stream"
+      ],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "stream_multiple_choices",
         "language": "rust"
       },
@@ -29982,6 +30133,18 @@
     },
     {
       "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "swift"
+      },
+      "path": "swift/streaming/stream-error-rate-limited.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "stream_multiple_choices",
         "language": "swift"
       },
@@ -32202,6 +32365,18 @@
     },
     {
       "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "node"
+      },
+      "path": "typescript/streaming/stream-error-rate-limited.md",
+      "language": "typescript",
+      "target": "node",
+      "session": "node",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "stream_multiple_choices",
         "language": "node"
       },
@@ -34414,6 +34589,18 @@
         "language": "wasm"
       },
       "path": "wasm/streaming/stream-error-401.md",
+      "language": "typescript",
+      "target": "wasm",
+      "session": "wasm",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "wasm"
+      },
+      "path": "wasm/streaming/stream-error-rate-limited.md",
       "language": "typescript",
       "target": "wasm",
       "session": "wasm",
@@ -36646,6 +36833,18 @@
         "language": "zig"
       },
       "path": "zig/streaming/stream-error-401.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "stream_error_rate_limited",
+        "language": "zig"
+      },
+      "path": "zig/streaming/stream-error-rate-limited.md",
       "language": "zig",
       "target": "zig",
       "session": "zig",
@@ -47596,6 +47795,66 @@
     },
     {
       "fixture_id": "stream_error_401",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "c"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "go"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "java"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "node"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "php"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "python"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
       "language": "zig"
     },
     {
@@ -58750,6 +59009,66 @@
     },
     {
       "fixture_id": "stream_error_401",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "c"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "go"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "java"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "node"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "php"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "python"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "stream_error_rate_limited",
       "language": "zig"
     },
     {
