@@ -22,9 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `reasoning_effort: "none"` is now accepted by the typed `ReasoningEffort` field in every binding and reaches the server as `"none"` on OpenAI-compatible, Azure and Ollama endpoints. Anthropic and Bedrock send `thinking: {type: "disabled"}`, and Vertex AI and Gemini send a thinking budget of 0 (#301).
 - A model for a registry provider that has no route of its own, such as `snowflake/arctic` or `watsonx/ibm-slate`, now fails with an error that names the provider and asks for a `base_url`. Before, a call without `base_url` fell back to the OpenAI endpoint. The gateways that need a `base_url` (`custom`, `custom_openai`, `hosted_vllm`, `infinity`, `litellm_proxy`, `openai_like`) fail the same way when it is missing. A client hint that names such a provider without a `model` prefix, such as `snowflake`, fails the same way when no `base_url` is set. The proxy refuses to start when a `[[models]]` entry names such a provider and has no `base_url`, and `liter-llm api` now exits with that error instead of staying up with no listener. Plain OpenAI models and providers with a route behave as before.
 - Publish an `abi3` Python wheel for Intel macOS (`macosx_11_0_x86_64`), cross-built on the arm64 runner, and fail the build when any wheel's platform tag or machine code is not the one its build leg promises. (#297)
-- A rate-limit, authentication or other error event inside a chat stream that already returned 200 now raises the same
-  error kind as the same body on an HTTP error (for example `RateLimitedError` with status 429), instead of a generic
-  streaming error. A payload status outside 400 to 599 is ignored (#304).
+- A rate-limit, authentication or other error event inside an OpenAI-compatible chat stream that already returned 200
+  now raises the same error kind as the same body on an HTTP error (for example `RateLimitedError` with status 429),
+  instead of a generic bad-request error. A payload status outside 400 to 599 is ignored (#304).
 
 ## [2.3.0] - 2026-10-19
 
