@@ -9392,6 +9392,7 @@ impl SseDecode for crate::ReasoningEffort {
             2 => crate::ReasoningEffort::High,
             3 => crate::ReasoningEffort::Minimal,
             4 => crate::ReasoningEffort::Max,
+            5 => crate::ReasoningEffort::None,
             _ => unreachable!("Invalid variant for ReasoningEffort: {}", inner),
         };
     }
@@ -12084,6 +12085,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::ReasoningEffort> {
             crate::ReasoningEffort::High => 2.into_dart(),
             crate::ReasoningEffort::Minimal => 3.into_dart(),
             crate::ReasoningEffort::Max => 4.into_dart(),
+            crate::ReasoningEffort::None => 5.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -14911,6 +14913,7 @@ impl SseEncode for crate::ReasoningEffort {
                 crate::ReasoningEffort::High => 2,
                 crate::ReasoningEffort::Minimal => 3,
                 crate::ReasoningEffort::Max => 4,
+                crate::ReasoningEffort::None => 5,
                 _ => {
                     unimplemented!("");
                 }
