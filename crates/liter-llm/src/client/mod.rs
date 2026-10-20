@@ -180,22 +180,6 @@ fn connect_timeout(request_timeout: Duration) -> Duration {
     (request_timeout / 2).min(MAX_CONNECT_TIMEOUT)
 }
 
-#[cfg(all(test, not(target_arch = "wasm32")))]
-mod connect_timeout_tests {
-    use super::*;
-
-    #[test]
-    fn the_connect_timeout_is_half_the_request_timeout() {
-        assert_eq!(connect_timeout(Duration::from_secs(2)), Duration::from_secs(1));
-    }
-
-    #[test]
-    fn the_connect_timeout_stops_at_ten_seconds() {
-        assert_eq!(connect_timeout(Duration::from_secs(60)), Duration::from_secs(10));
-        assert_eq!(connect_timeout(Duration::from_secs(20)), Duration::from_secs(10));
-    }
-}
-
 fn str_pair(pair: &(String, String)) -> (&str, &str) {
     (pair.0.as_str(), pair.1.as_str())
 }
@@ -3629,5 +3613,21 @@ mod build_provider_tests {
         let details = usage.prompt_tokens_details.expect("cache details");
         assert_eq!(details.cached_tokens, 200);
         assert_eq!(details.cache_creation_tokens, 100);
+    }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod connect_timeout_tests {
+    use super::*;
+
+    #[test]
+    fn the_connect_timeout_is_half_the_request_timeout() {
+        assert_eq!(connect_timeout(Duration::from_secs(2)), Duration::from_secs(1));
+    }
+
+    #[test]
+    fn the_connect_timeout_stops_at_ten_seconds() {
+        assert_eq!(connect_timeout(Duration::from_secs(60)), Duration::from_secs(10));
+        assert_eq!(connect_timeout(Duration::from_secs(20)), Duration::from_secs(10));
     }
 }
