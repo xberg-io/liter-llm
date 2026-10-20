@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A rate-limit, authentication or other error event inside a chat stream that already returned 200 now raises the same
+  error kind as the same body on an HTTP error (for example `RateLimitedError` with status 429), instead of a generic
+  streaming error. A payload status outside 400 to 599 is ignored (#304).
+
 ## [2.3.0] - 2026-10-19
 
 ### Changed

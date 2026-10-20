@@ -8,6 +8,10 @@
   },
   "category": "streaming",
   "tags": ["streaming", "error-handling"],
+  "skip": {
+    "languages": ["rust"],
+    "reason": "the Rust test asserts the error on the chat_stream call, and a mid-stream error arrives while the stream is read"
+  },
   "call": "chat_stream",
   "input": {
     "model": "gpt-4",
