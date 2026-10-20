@@ -35,14 +35,18 @@ pub fn should_retry(status: u16, attempt: u32, max_retries: u32, retry_after: Op
 }
 
 /// Determine whether to retry after a transport-level failure (connection
-/// reset, DNS failure, TLS handshake failure, request timeout) rather than an
-/// HTTP status response.
+/// reset, DNS failure, TLS handshake failure) rather than an HTTP status
+/// response.
+///
+/// A request that timed out (`timed_out`) is never retried: the server may
+/// have the request and may still be working on it, so a second try would run
+/// it twice and stretch the caller's wait to `timeout * (max_retries + 1)`.
 ///
 /// No response was received, so there is no status code or `Retry-After`
 /// header to consult — this always falls back to the same jittered
 /// exponential backoff used for 5xx / 429 status retries.
-pub fn should_retry_transport_error(attempt: u32, max_retries: u32) -> Option<Duration> {
-    if attempt >= max_retries {
+pub fn should_retry_transport_error(timed_out: bool, attempt: u32, max_retries: u32) -> Option<Duration> {
+    if timed_out || attempt >= max_retries {
         return None;
     }
 
@@ -160,13 +164,26 @@ mod tests {
 
     #[test]
     fn should_retry_transport_error_respects_max_retries() {
-        assert!(should_retry_transport_error(0, 3).is_some());
-        assert!(should_retry_transport_error(2, 3).is_some());
-        assert!(should_retry_transport_error(3, 3).is_none());
+        assert!(should_retry_transport_error(false, 0, 3).is_some());
+        assert!(should_retry_transport_error(false, 2, 3).is_some());
+        assert!(should_retry_transport_error(false, 3, 3).is_none());
     }
 
     #[test]
     fn should_retry_transport_error_none_when_retries_disabled() {
-        assert!(should_retry_transport_error(0, 0).is_none());
+        assert!(should_retry_transport_error(false, 0, 0).is_none());
+    }
+
+    #[test]
+    fn should_retry_transport_error_refuses_a_timeout() {
+        assert!(
+            should_retry_transport_error(true, 0, 3).is_none(),
+            "a timeout is not retried, even with retries left"
+        );
+        assert!(should_retry_transport_error(true, 0, 0).is_none());
+        assert!(
+            should_retry_transport_error(false, 0, 3).is_some(),
+            "the same attempt without a timeout is retried"
+        );
     }
 }

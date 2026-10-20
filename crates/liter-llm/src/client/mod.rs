@@ -823,6 +823,8 @@ pub trait ResponseClient {
 pub struct DefaultClient {
     config: ClientConfig,
     http: reqwest::Client,
+    /// Client for streaming calls: no whole-request deadline, `timeout` limits the gap between reads.
+    http_stream: reqwest::Client,
     /// Provider resolved at construction; shared via Arc so streaming closures
     /// can capture an owned reference without requiring `unsafe`.
     provider: Arc<dyn Provider>,
@@ -936,18 +938,29 @@ impl DefaultClient {
             header_map.insert(name, val);
         }
 
-        let http = {
-            #[cfg(feature = "native-http")]
-            crate::ensure_crypto_provider();
-            let builder = reqwest::Client::builder().default_headers(header_map);
+        #[cfg(feature = "native-http")]
+        crate::ensure_crypto_provider();
+        // ~keep Two clients share one config: `timeout` is a whole-request deadline for calls that
+        // ~keep return one reply, and a limit on the gap between reads for streams. A whole-request
+        // ~keep deadline would end a healthy stream whose total time passes it.
+        let build_http = |stream: bool| -> Result<reqwest::Client> {
+            let builder = reqwest::Client::builder().default_headers(header_map.clone());
             #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
             let builder = crate::provider::configure_outbound_client_builder(builder, config.transport.dns_cache_ttl);
             #[cfg(not(target_arch = "wasm32"))]
-            let builder = builder.timeout(config.timeout);
+            let builder = if stream {
+                builder.read_timeout(config.timeout)
+            } else {
+                builder.timeout(config.timeout)
+            };
+            #[cfg(target_arch = "wasm32")]
+            let _ = stream;
             #[cfg(not(target_arch = "wasm32"))]
             let builder = config.transport.apply_to_builder(builder);
-            builder.build().map_err(LiterLlmError::from)?
+            builder.build().map_err(LiterLlmError::from)
         };
+        let http = build_http(false)?;
+        let http_stream = build_http(true)?;
 
         let cached_auth_header = provider_auth_header(provider.as_ref(), config.api_key.expose_secret());
         let cached_extra_headers = provider
@@ -959,6 +972,7 @@ impl DefaultClient {
         Ok(Self {
             config,
             http,
+            http_stream,
             provider,
             cached_auth_header,
             cached_extra_headers,
@@ -1384,7 +1398,7 @@ impl LlmClient for DefaultClient {
                     });
                     let parse_event = move |data: &str| parse_chat_stream_event(provider.as_ref(), &state, data);
                     http::streaming::post_stream_bounded(
-                        &self.http,
+                        &self.http_stream,
                         http::request::StreamingPost {
                             url: &url,
                             auth_header: auth,
@@ -1398,7 +1412,7 @@ impl LlmClient for DefaultClient {
                 }
                 provider::StreamFormat::AwsEventStream => {
                     http::eventstream::post_eventstream_bounded(
-                        &self.http,
+                        &self.http_stream,
                         http::request::StreamingPost {
                             url: &url,
                             auth_header: auth,
@@ -1816,7 +1830,7 @@ impl LlmClientRaw for DefaultClient {
                     });
                     let parse_event = move |data: &str| parse_chat_stream_event(provider.as_ref(), &state, data);
                     http::streaming::post_stream_bounded(
-                        &self.http,
+                        &self.http_stream,
                         http::request::StreamingPost {
                             url: &url,
                             auth_header: auth,
@@ -1830,7 +1844,7 @@ impl LlmClientRaw for DefaultClient {
                 }
                 provider::StreamFormat::AwsEventStream => {
                     http::eventstream::post_eventstream_bounded(
-                        &self.http,
+                        &self.http_stream,
                         http::request::StreamingPost {
                             url: &url,
                             auth_header: auth,
@@ -2621,7 +2635,7 @@ impl ResponseClient for DefaultClient {
             let auth = auth_header.as_ref().map(str_pair);
 
             http::streaming::post_stream_bounded(
-                &self.http,
+                &self.http_stream,
                 http::request::StreamingPost {
                     url: &url,
                     auth_header: auth,

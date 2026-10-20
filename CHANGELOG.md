@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A model for a registry provider that has no route of its own, such as `snowflake/arctic` or `watsonx/ibm-slate`, now fails with an error that names the provider and asks for a `base_url`. Before, a call without `base_url` fell back to the OpenAI endpoint. The gateways that need a `base_url` (`custom`, `custom_openai`, `hosted_vllm`, `infinity`, `litellm_proxy`, `openai_like`) fail the same way when it is missing. A client hint that names such a provider without a `model` prefix, such as `snowflake`, fails the same way when no `base_url` is set. The proxy refuses to start when a `[[models]]` entry names such a provider and has no `base_url`, and `liter-llm api` now exits with that error instead of staying up with no listener. Plain OpenAI models and providers with a route behave as before.
 - Publish an `abi3` Python wheel for Intel macOS (`macosx_11_0_x86_64`), cross-built on the arm64 runner, and fail the build when any wheel's platform tag or machine code is not the one its build leg promises. (#297)
 - An error event inside an OpenAI-compatible chat stream that already returned 200 now raises the same error kind as the same body on an HTTP error, for example `RateLimitedError` with status 429. An event with no `status_code` takes its status from the error `code` or `type`. The event's `retry_after` is not read yet (#304).
+- A request that times out is no longer sent again. Before, one slow reply cost about `timeout_secs * (max_retries + 1)` plus back-off, and the server ran (and billed) the request each time. The caller now gets `LiterLlmError::Timeout` after about `timeout_secs`. Any timeout is sent once, including a timeout while the client opens the connection. A connection that fails or closes without a reply, `429` and `5xx` replies keep their retries (#316).
 
 ## [2.3.0] - 2026-10-19
 
@@ -47,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Limit a stream by the silence between chunks instead of its total time. `timeout_secs` (60 s by default) now ends a stream only when no data arrives for that long, so a long answer that keeps sending chunks completes. A call that returns one reply keeps the whole-request limit. A stalled stream still fails with the timeout error. (#314)
 - Reject a Bedrock `messageStop` event without `stopReason` instead of reporting it as `end_turn`, and stop reporting
   intermediate Gemini and Vertex AI stream chunks as finished (#295).
 - Omit an absent assistant `refusal` from request message history, which strict OpenAI-compatible providers such as

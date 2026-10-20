@@ -36,6 +36,10 @@ pub struct ClientConfig {
     /// (`"openai"` strips `openai/gpt-4o-mini` to `gpt-4o-mini`).
     pub base_url: Option<String>,
     /// Request timeout.
+    ///
+    /// A call that returns one reply fails when the whole request takes longer than this. A stream
+    /// fails when no data arrives for this long, so a stream can run for any total time while chunks
+    /// keep arriving.
     pub timeout: Duration,
     /// Maximum number of retries on 429 / 5xx responses.
     pub max_retries: u32,
@@ -305,6 +309,9 @@ impl ClientConfigBuilder {
     }
 
     /// Set the per-request timeout (default: 60 s).
+    ///
+    /// For a stream this is the longest silence allowed between two chunks, not a limit on the
+    /// total time of the stream.
     pub fn timeout(mut self, timeout: Duration) -> Self {
         self.config.timeout = timeout;
         self
