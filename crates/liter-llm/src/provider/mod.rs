@@ -1469,6 +1469,7 @@ mod tests {
                 matches!(&err, LiterLlmError::BadRequest { status: got, .. } if *got == status),
                 "status {status}, got: {err:?}"
             );
+            assert!(err.to_string().contains("odd"), "status {status}, got: {err}");
         }
     }
 
