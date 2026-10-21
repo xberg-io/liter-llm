@@ -1163,6 +1163,36 @@ mod tests {
     use super::*;
     use serde_json::json;
 
+    struct RenamingProvider;
+
+    impl Provider for RenamingProvider {
+        fn name(&self) -> &str {
+            "renaming"
+        }
+        fn base_url(&self) -> &str {
+            "https://example.invalid"
+        }
+        fn auth_header<'a>(&'a self, _api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
+            None
+        }
+        fn matches_model(&self, _model: &str) -> bool {
+            false
+        }
+        fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
+            body["renamed"] = json!(true);
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn transform_embedding_request_runs_transform_request_by_default() {
+        let mut body = json!({"model": "m", "input": "x"});
+        RenamingProvider
+            .transform_embedding_request(&mut body)
+            .expect("the default hook should not fail");
+        assert_eq!(body["renamed"], true);
+    }
+
     /// Revert line: delete the `if value < min || value > max { ... }` check inside
     /// `validate_sampling_param_range` (or make it always return `Ok(())`) to make
     /// this test fail.
