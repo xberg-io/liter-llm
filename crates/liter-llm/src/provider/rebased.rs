@@ -44,9 +44,9 @@ impl Provider for BaseUrlOverride {
     fn auth_header<'a>(&'a self, api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
         // A provider that needs no key at its own host (Ollama, LM Studio) sends the key as a
         // bearer token at a `base_url`, where a gateway can ask for it.
-        self.inner.auth_header(api_key).or_else(|| {
-            Some((Cow::Borrowed("Authorization"), Cow::Owned(format!("Bearer {api_key}"))))
-        })
+        self.inner
+            .auth_header(api_key)
+            .or_else(|| Some((Cow::Borrowed("Authorization"), Cow::Owned(format!("Bearer {api_key}")))))
     }
 
     fn extra_headers(&self) -> &'static [(&'static str, &'static str)] {
