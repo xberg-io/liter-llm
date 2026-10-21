@@ -1257,7 +1257,7 @@ async fn vertex_image_generate_posts_to_the_imagen_predict_path() {
             prompt: "a cat".into(),
             model: Some(IMAGEN_MODEL.into()),
             n: Some(2),
-            size: Some("1792x1024".into()),
+            size: Some("1920x1080".into()),
             ..Default::default()
         })
         .await
