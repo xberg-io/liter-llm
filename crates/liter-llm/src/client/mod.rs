@@ -3107,28 +3107,28 @@ mod build_provider_tests {
     }
 
     /// Revert line: route the hint through `provider::route_hint` when a `base_url` is set,
-    /// and the custom provider that claims `jina/` takes the hint at the `base_url`.
+    /// and the custom provider that claims `deepinfra/` takes the hint at the `base_url`.
     #[test]
     #[serial_test::serial(outbound_policy)]
     fn a_custom_provider_does_not_take_a_hint_at_a_base_url() {
         crate::provider::custom::register_custom_provider(crate::provider::custom::CustomProviderConfig {
-            name: "jina-through-gateway".into(),
+            name: "deepinfra-through-gateway".into(),
             base_url: "https://gateway.example.com/v1".into(),
             auth_header: crate::provider::custom::AuthHeaderFormat::Bearer,
-            model_prefixes: vec!["jina/".into()],
+            model_prefixes: vec!["deepinfra/".into()],
         })
         .expect("registration should succeed");
         let based_config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:8080/v1")
             .build();
-        let based = build_provider(&based_config, Some("jina")).map(|built| built.provider.name().to_owned());
-        let plain = build_provider(&ClientConfigBuilder::new("test-key").build(), Some("jina"))
+        let based = build_provider(&based_config, Some("deepinfra")).map(|built| built.provider.name().to_owned());
+        let plain = build_provider(&ClientConfigBuilder::new("test-key").build(), Some("deepinfra"))
             .map(|built| built.provider.name().to_owned());
-        crate::provider::custom::unregister_custom_provider("jina-through-gateway")
+        crate::provider::custom::unregister_custom_provider("deepinfra-through-gateway")
             .expect("unregister should succeed");
 
-        assert_eq!(based.expect("provider should build"), "jina");
-        assert_eq!(plain.expect("provider should build"), "jina-through-gateway");
+        assert_eq!(based.expect("provider should build"), "deepinfra");
+        assert_eq!(plain.expect("provider should build"), "deepinfra-through-gateway");
     }
 
     #[test]
