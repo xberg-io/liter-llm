@@ -1660,8 +1660,12 @@ mod tests {
         let call_count = Arc::clone(&client.call_count);
         let mut svc = CacheLayer::with_store_and_config(store, &config).layer(LlmService::new(client));
 
-        svc.call(LlmRequest::Chat(chat_req("ttl-hit-store-model"))).await.unwrap();
-        svc.call(LlmRequest::Chat(chat_req("ttl-hit-store-model"))).await.unwrap();
+        svc.call(LlmRequest::Chat(chat_req("ttl-hit-store-model")))
+            .await
+            .unwrap();
+        svc.call(LlmRequest::Chat(chat_req("ttl-hit-store-model")))
+            .await
+            .unwrap();
         assert_eq!(
             call_count.load(Ordering::SeqCst),
             1,
