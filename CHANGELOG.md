@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Regenerate bindings with alef 0.112.0. The Swift enum case `none` is now `none_` (the serialized value is unchanged).
+  Zig wrappers report native conversion failures through error unions. The Python stub declares the getters of enum
+  wrappers. The PHP and Python bindings keep typed catalog-refresh error payloads. The Rust, Go, Java, PHP and C
+  streaming tests read the stream before they assert a mid-stream error.
+
 ### Added
 
 - `list_catalog_models(provider)` lists the models of the built-in catalog without a network call or an API key, in
