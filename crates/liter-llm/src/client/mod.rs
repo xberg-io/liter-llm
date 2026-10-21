@@ -1286,11 +1286,15 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Bui
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-/// The built-in provider that a hint selects. Bedrock is built from the client config, which
-/// carries its region and credentials.
+/// The provider that a hint selects. Bedrock is built from the client config, which
+/// carries its region and credentials. With a `base_url`, only a built-in provider answers:
+/// a custom provider brings its own host, and the `base_url` names the host here.
 fn route_hint(config: &ClientConfig, hint: &str) -> Result<Option<Box<dyn Provider>>> {
     if names_bedrock(hint) {
         return Ok(Some(Box::new(build_bedrock_provider_config(config))));
+    }
+    if config.base_url.is_some() {
+        return provider::route_builtin_hint(hint);
     }
     provider::route_hint(hint)
 }
@@ -3100,6 +3104,31 @@ mod build_provider_tests {
             .resolve_provider_for_model("anthropic/claude-sonnet-4")
             .expect("provider resolves");
         assert_eq!(provider.name(), "anthropic");
+    }
+
+    /// Revert line: route the hint through `provider::route_hint` when a `base_url` is set,
+    /// and the custom provider that claims `jina/` takes the hint at the `base_url`.
+    #[test]
+    #[serial_test::serial(outbound_policy)]
+    fn a_custom_provider_does_not_take_a_hint_at_a_base_url() {
+        crate::provider::custom::register_custom_provider(crate::provider::custom::CustomProviderConfig {
+            name: "jina-through-gateway".into(),
+            base_url: "https://gateway.example.com/v1".into(),
+            auth_header: crate::provider::custom::AuthHeaderFormat::Bearer,
+            model_prefixes: vec!["jina/".into()],
+        })
+        .expect("registration should succeed");
+        let based_config = ClientConfigBuilder::new("test-key")
+            .base_url("http://localhost:8080/v1")
+            .build();
+        let based = build_provider(&based_config, Some("jina")).map(|built| built.provider.name().to_owned());
+        let plain = build_provider(&ClientConfigBuilder::new("test-key").build(), Some("jina"))
+            .map(|built| built.provider.name().to_owned());
+        crate::provider::custom::unregister_custom_provider("jina-through-gateway")
+            .expect("unregister should succeed");
+
+        assert_eq!(based.expect("provider should build"), "jina");
+        assert_eq!(plain.expect("provider should build"), "jina-through-gateway");
     }
 
     #[test]

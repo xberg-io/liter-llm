@@ -995,7 +995,21 @@ fn has_route(reg: &ProviderRegistry, entry: &ProviderEntry) -> bool {
 ///
 /// Returns [`LiterLlmError::BadRequest`] naming the provider and asking for a `base_url`.
 pub(crate) fn route_model(model: &str) -> Result<Option<Box<dyn Provider>>> {
-    if let Some(provider) = detect_provider(model) {
+    route_detected(model, detect_provider(model))
+}
+
+/// Like [`route_model`], but skips custom providers: only a built-in provider is selected.
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] naming the provider and asking for a `base_url`.
+fn route_builtin_model(model: &str) -> Result<Option<Box<dyn Provider>>> {
+    route_detected(model, detect_builtin_provider(model))
+}
+
+/// `detected`, or the refusal for a model whose prefix names a registry provider with no route.
+fn route_detected(model: &str, detected: Option<Box<dyn Provider>>) -> Result<Option<Box<dyn Provider>>> {
+    if let Some(provider) = detected {
         return Ok(Some(provider));
     }
     if let Ok(reg) = REGISTRY.as_ref()
@@ -1016,15 +1030,36 @@ pub(crate) fn route_model(model: &str) -> Result<Option<Box<dyn Provider>>> {
 /// # Errors
 ///
 /// Returns [`LiterLlmError::BadRequest`] when the hint names a registry provider that has no
-/// route of its own. A caller with a `base_url` treats that as "no built-in provider".
+/// route of its own.
 pub(crate) fn route_hint(hint: &str) -> Result<Option<Box<dyn Provider>>> {
-    if let Some(provider) = route_model(hint)? {
+    route_hint_with(hint, route_model)
+}
+
+/// Like [`route_hint`], but selects only a built-in provider.
+///
+/// A client with a `base_url` uses this: the `base_url` names the host, and the hint names
+/// only the wire format. A custom provider brings its own host, so it never answers a hint there.
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] when the hint names a registry provider that has no
+/// route of its own. A caller with a `base_url` treats that as "no built-in provider".
+pub(crate) fn route_builtin_hint(hint: &str) -> Result<Option<Box<dyn Provider>>> {
+    route_hint_with(hint, route_builtin_model)
+}
+
+/// The hint read as a model name first, then a bare hint read as the `hint/` prefix.
+fn route_hint_with(
+    hint: &str,
+    route: fn(&str) -> Result<Option<Box<dyn Provider>>>,
+) -> Result<Option<Box<dyn Provider>>> {
+    if let Some(provider) = route(hint)? {
         return Ok(Some(provider));
     }
     if hint.contains('/') {
         return Ok(None);
     }
-    route_model(&format!("{hint}/"))
+    route(&format!("{hint}/"))
 }
 
 /// Send `provider` to `base_url`: the provider keeps its request body, its paths and its
