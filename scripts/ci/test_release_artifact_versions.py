@@ -6,12 +6,15 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import tomllib
 import yaml
 from prepare_go_release_assets import prepare
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/publish.yaml"
 SHA = "3fa1947f35968d15eeef7e3056c7f3c7563e4a14"
+CANONICAL = tomllib.loads((ROOT / "Cargo.toml").read_text())["workspace"]["package"]["version"]
+DRY_RUN_VERSION = f"{CANONICAL}-dryrun-{SHA[:7]}"
 
 
 def workflow_jobs() -> dict:
@@ -87,16 +90,16 @@ def go_expected_version(forms: dict[str, str], version: str) -> str:
 
 
 def test_synthesized_dry_run_validates_current_hermes_manifest(tmp_path: Path) -> None:
-    forms = version_forms(tmp_path, "2.2.5-dryrun-3fa1947")
-    result = run_hermes_guard(tmp_path, forms["pypi_version"], "2.2.5")
+    forms = version_forms(tmp_path, DRY_RUN_VERSION)
+    result = run_hermes_guard(tmp_path, forms["pypi_version"], CANONICAL)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "matches the release at 2.2.5" in result.stdout
+    assert f"matches the release at {CANONICAL}" in result.stdout
 
 
 def test_synthesized_dry_run_matches_actual_go_archive_name(tmp_path: Path) -> None:
-    version = "2.2.5-dryrun-3fa1947"
+    version = DRY_RUN_VERSION
     forms = version_forms(tmp_path, version)
-    archive = tmp_path / "liter-llm-go-v2.2.5-linux-x86_64-musl.tar.gz"
+    archive = tmp_path / f"liter-llm-go-v{CANONICAL}-linux-x86_64-musl.tar.gz"
     archive.write_bytes(b"synthetic opaque native payload")
     prepare(tmp_path, "liter-llm", go_expected_version(forms, version))
     alias = tmp_path / "liter-llm-go-linux-x86_64-musl.tar.gz"
@@ -128,26 +131,26 @@ def test_real_tag_versions_preserve_ecosystem_spelling(
     [
         {"steps.meta.outputs.dry_run": "false"},
         {"steps.meta.outputs.is_tag": "false"},
-        {"inputs.tag || github.event.client_payload.tag": "v2.2.5-dryrun-3fa1947"},
+        {"inputs.tag || github.event.client_payload.tag": f"v{DRY_RUN_VERSION}"},
         {"steps.meta.outputs.target_sha": "a" * 40},
         {"steps.meta.outputs.tag": "v2.2.5-custom"},
     ],
 )
 def test_arbitrary_ref_or_explicit_tag_is_not_normalized(tmp_path: Path, overrides: dict[str, str]) -> None:
-    version = "2.2.5-dryrun-3fa1947"
+    version = DRY_RUN_VERSION
     forms = version_forms(tmp_path, version, **overrides)
     assert forms["artifact_version"] == version
 
 
 def test_stale_hermes_manifest_still_fails_synthesized_dry_run(tmp_path: Path) -> None:
-    forms = version_forms(tmp_path, "2.2.5-dryrun-3fa1947")
+    forms = version_forms(tmp_path, DRY_RUN_VERSION)
     result = run_hermes_guard(tmp_path, forms["pypi_version"], "2.2.4")
     assert result.returncode == 1
-    assert "declares 2.2.4 but the release is 2.2.5" in result.stdout
+    assert f"declares 2.2.4 but the release is {CANONICAL}" in result.stdout
 
 
 def test_wrong_go_archive_version_still_fails_synthesized_dry_run(tmp_path: Path) -> None:
-    version = "2.2.5-dryrun-3fa1947"
+    version = DRY_RUN_VERSION
     forms = version_forms(tmp_path, version)
     (tmp_path / "liter-llm-go-v2.2.4-linux-x86_64-musl.tar.gz").write_bytes(b"old opaque payload")
     with pytest.raises(ValueError, match="No Go release archives"):
