@@ -2118,6 +2118,23 @@ mod route_model_tests {
     }
 
     #[test]
+    fn provider_without_auth_sends_the_key_as_bearer_at_a_base_url() {
+        let local = route_hint("ollama").expect("no refusal").expect("ollama is built in");
+        assert!(local.auth_header("k").is_none(), "ollama sends no key at its own host");
+        let rebased = on_base_url(local, "http://gateway.test/v1");
+        let (name, value) = rebased.auth_header("k").expect("a key at a base_url is sent");
+        assert_eq!((name.as_ref(), value.as_ref()), ("Authorization", "Bearer k"));
+    }
+
+    #[test]
+    fn provider_with_auth_keeps_its_header_at_a_base_url() {
+        let provider = route_hint("cohere").expect("no refusal").expect("cohere is built in");
+        let rebased = on_base_url(provider, "http://gateway.test/v1");
+        let (name, value) = rebased.auth_header("k").expect("cohere sends a key");
+        assert_eq!((name.as_ref(), value.as_ref()), ("Authorization", "Bearer k"));
+    }
+
+    #[test]
     fn model_that_names_no_registry_provider_is_left_to_the_caller() {
         assert!(route_model("some-random-model").expect("no refusal").is_none());
         assert!(route_model("not-a-provider/model").expect("no refusal").is_none());
