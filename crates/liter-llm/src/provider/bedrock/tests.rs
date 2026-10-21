@@ -392,8 +392,143 @@ fn build_url_other_path() {
     // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
     unsafe { std::env::remove_var("BEDROCK_CROSS_REGION") };
     let p = provider();
-    let url = p.build_url("/models", "any-model");
-    assert_eq!(url, "https://bedrock-runtime.us-east-1.amazonaws.com/models");
+    let url = p.build_url("/files", "any-model");
+    assert_eq!(url, "https://bedrock-runtime.us-east-1.amazonaws.com/files");
+}
+
+#[test]
+#[serial]
+fn build_url_list_models_uses_the_bedrock_control_plane_host() {
+    let p = provider();
+    assert_eq!(
+        p.build_url(p.models_path(), ""),
+        "https://bedrock.us-east-1.amazonaws.com/foundation-models"
+    );
+}
+
+#[test]
+#[serial]
+fn build_url_rerank_uses_the_bedrock_agent_runtime_host() {
+    let p = provider();
+    assert_eq!(
+        p.build_url(p.rerank_path(), "amazon.rerank-v1:0"),
+        "https://bedrock-agent-runtime.us-east-1.amazonaws.com/rerank"
+    );
+}
+
+#[test]
+#[serial]
+fn build_url_rerank_and_list_models_follow_the_region_dns_suffix() {
+    let china = BedrockProvider::new("cn-north-1");
+    assert_eq!(
+        china.build_url("/rerank", "m"),
+        "https://bedrock-agent-runtime.cn-north-1.amazonaws.com.cn/rerank"
+    );
+    assert_eq!(
+        china.build_url("/models", ""),
+        "https://bedrock.cn-north-1.amazonaws.com.cn/foundation-models"
+    );
+}
+
+#[test]
+#[serial]
+fn base_url_override_moves_only_the_runtime_host() {
+    let p = provider().with_base_url("http://127.0.0.1:9000/");
+    assert_eq!(
+        p.build_url("/chat/completions", "m"),
+        "http://127.0.0.1:9000/model/m/converse"
+    );
+    assert_eq!(
+        p.build_url("/rerank", "m"),
+        "https://bedrock-agent-runtime.us-east-1.amazonaws.com/rerank"
+    );
+    assert_eq!(
+        p.build_url("/models", ""),
+        "https://bedrock.us-east-1.amazonaws.com/foundation-models"
+    );
+}
+
+#[test]
+#[serial]
+fn transform_request_builds_the_bedrock_rerank_body() {
+    let p = provider();
+    let mut body = json!({
+        "model": "amazon.rerank-v1:0",
+        "query": "which is a fruit",
+        "documents": ["apple", {"text": "hammer"}],
+        "top_n": 1
+    });
+    p.transform_request(&mut body).unwrap();
+    assert_eq!(
+        body,
+        json!({
+            "queries": [{"type": "TEXT", "textQuery": {"text": "which is a fruit"}}],
+            "sources": [
+                {"type": "INLINE", "inlineDocumentSource": {"type": "TEXT", "textDocument": {"text": "apple"}}},
+                {"type": "INLINE", "inlineDocumentSource": {"type": "TEXT", "textDocument": {"text": "hammer"}}}
+            ],
+            "rerankingConfiguration": {
+                "type": "BEDROCK_RERANKING_MODEL",
+                "bedrockRerankingConfiguration": {
+                    "modelConfiguration": {
+                        "modelArn": "arn:aws:bedrock:us-east-1::foundation-model/amazon.rerank-v1:0"
+                    },
+                    "numberOfResults": 1
+                }
+            }
+        })
+    );
+}
+
+#[test]
+#[serial]
+fn transform_request_leaves_out_the_result_count_without_top_n() {
+    let p = provider();
+    let mut body = json!({"model": "amazon.rerank-v1:0", "query": "q", "documents": ["a"]});
+    p.transform_request(&mut body).unwrap();
+    assert!(
+        body.pointer("/rerankingConfiguration/bedrockRerankingConfiguration/numberOfResults")
+            .is_none()
+    );
+}
+
+#[test]
+#[serial]
+fn transform_rerank_response_maps_the_bedrock_reply() {
+    let p = provider();
+    let mut body = json!({
+        "results": [
+            {"index": 1, "relevanceScore": 0.9, "document": {"type": "TEXT", "textDocument": {"text": "apple"}}},
+            {"index": 0, "relevanceScore": 0.1}
+        ]
+    });
+    p.transform_rerank_response(&mut body).unwrap();
+    assert_eq!(
+        body,
+        json!({
+            "results": [
+                {"index": 1, "relevance_score": 0.9, "document": {"text": "apple"}},
+                {"index": 0, "relevance_score": 0.1}
+            ]
+        })
+    );
+}
+
+#[test]
+#[serial]
+fn transform_response_maps_foundation_models_to_a_model_list() {
+    let p = provider();
+    let mut body = json!({
+        "modelSummaries": [{"modelId": "amazon.titan-embed-text-v2:0", "providerName": "Amazon", "modelName": "Titan"}]
+    });
+    p.transform_response(&mut body).unwrap();
+    assert_eq!(
+        body,
+        json!({
+            "object": "list",
+            "data": [{"id": "amazon.titan-embed-text-v2:0", "object": "model", "created": 0, "owned_by": "Amazon"}]
+        })
+    );
 }
 
 #[test]

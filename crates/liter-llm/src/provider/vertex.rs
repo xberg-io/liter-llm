@@ -8,6 +8,7 @@ use crate::types::ChatCompletionChunk;
 mod gemini_request;
 mod gemini_response;
 mod gemini_stream;
+mod imagen;
 
 pub(crate) use gemini_request::transform_gemini_request;
 pub(crate) use gemini_response::transform_gemini_response;
@@ -192,6 +193,8 @@ impl Provider for VertexAiProvider {
     ///
     /// Chat completions → `{base}/publishers/google/models/{model}:generateContent`
     /// Embeddings       → `{base}/publishers/google/models/{model}:predict`
+    /// Image generation → `{base}/publishers/google/models/{model}:predict` (Imagen)
+    /// List models      → `{host}/v1beta1/publishers/google/models`
     /// Other paths      → `{base}{endpoint_path}`
     fn build_url(&self, endpoint_path: &str, model: &str) -> String {
         let base = self.base_url();
@@ -201,8 +204,13 @@ impl Provider for VertexAiProvider {
         let base = base.trim_end_matches('/');
         if endpoint_path.contains("chat/completions") {
             format!("{base}/publishers/google/models/{model}:generateContent")
-        } else if endpoint_path.contains("embeddings") {
+        } else if endpoint_path.contains("embeddings") || endpoint_path.contains("images/generations") {
             format!("{base}/publishers/google/models/{model}:predict")
+        } else if endpoint_path == self.models_path() {
+            // ~keep Publisher models are listed per publisher, not per project and location, and
+            // ~keep only the `v1beta1` API has the call. Cut the project scope off the base.
+            let origin = base.split_once("/v1/projects/").map_or(base, |(origin, _)| origin);
+            format!("{origin}/v1beta1/publishers/google/models")
         } else {
             format!("{base}{endpoint_path}")
         }
@@ -211,6 +219,9 @@ impl Provider for VertexAiProvider {
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
         if body.get("input").is_some() && body.get("messages").is_none() {
             return transform_vertex_embed_request(body);
+        }
+        if imagen::is_image_request(body) {
+            return imagen::transform_imagen_request(body);
         }
         transform_gemini_request(body)
     }

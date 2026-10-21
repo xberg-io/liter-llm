@@ -575,3 +575,112 @@ fn transform_response_thought_only_has_null_content() {
     assert!(body["choices"][0]["message"]["content"].is_null());
     assert_eq!(body["choices"][0]["message"]["reasoning_content"], "still thinking...");
 }
+
+#[test]
+fn build_url_image_generations_uses_the_imagen_predict_method() {
+    let p = provider();
+    let url = p.build_url("/images/generations", "imagen-3.0-generate-002");
+    assert_eq!(
+        url,
+        "https://us-central1-aiplatform.googleapis.com/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+    );
+}
+
+#[test]
+fn build_url_list_models_uses_the_publisher_model_listing() {
+    let p = provider();
+    assert_eq!(
+        p.build_url("/models", ""),
+        "https://us-central1-aiplatform.googleapis.com/v1beta1/publishers/google/models"
+    );
+}
+
+#[test]
+fn build_url_list_models_keeps_the_host_of_a_base_url_override() {
+    let scoped = VertexAiProvider::with_base_url("https://proxy.example/v1/projects/p/locations/l/");
+    assert_eq!(
+        scoped.build_url("/models", ""),
+        "https://proxy.example/v1beta1/publishers/google/models"
+    );
+    let bare = VertexAiProvider::with_base_url("http://127.0.0.1:9000");
+    assert_eq!(
+        bare.build_url("/models", ""),
+        "http://127.0.0.1:9000/v1beta1/publishers/google/models"
+    );
+}
+
+#[test]
+fn transform_request_builds_the_imagen_body() {
+    let mut body = json!({"model": "imagen-3.0-generate-002", "prompt": "a cat", "n": 3, "size": "1024x1024"});
+    provider().transform_request(&mut body).unwrap();
+    assert_eq!(
+        body,
+        json!({
+            "instances": [{"prompt": "a cat"}],
+            "parameters": {"sampleCount": 3, "aspectRatio": "1:1"}
+        })
+    );
+}
+
+#[test]
+fn transform_request_imagen_maps_each_supported_aspect_ratio() {
+    for (size, ratio) in [
+        ("1024x1024", "1:1"),
+        ("768x1024", "3:4"),
+        ("1024x768", "4:3"),
+        ("1080x1920", "9:16"),
+        ("1920x1080", "16:9"),
+    ] {
+        let mut body = json!({"prompt": "p", "size": size});
+        provider().transform_request(&mut body).unwrap();
+        assert_eq!(body["parameters"]["aspectRatio"], ratio, "{size}");
+    }
+}
+
+#[test]
+fn transform_request_imagen_rejects_a_size_without_an_aspect_ratio_and_a_url_format() {
+    for body in [
+        json!({"prompt": "p", "size": "1000x300"}),
+        json!({"prompt": "p", "size": "large"}),
+        json!({"prompt": "p", "response_format": "url"}),
+    ] {
+        let mut body = body;
+        assert!(provider().transform_request(&mut body).is_err());
+    }
+}
+
+#[test]
+fn transform_response_maps_imagen_predictions_to_images() {
+    let mut body = json!({
+        "predictions": [
+            {"bytesBase64Encoded": "aGk=", "mimeType": "image/png", "prompt": "a tabby cat"},
+            {"raiFilteredReason": "blocked"}
+        ]
+    });
+    provider().transform_response(&mut body).unwrap();
+    let data = body["data"].as_array().unwrap();
+    assert_eq!(data.len(), 1);
+    assert_eq!(data[0]["b64_json"], "aGk=");
+    assert_eq!(data[0]["revised_prompt"], "a tabby cat");
+    assert!(body["created"].as_u64().unwrap() > 0);
+}
+
+#[test]
+fn transform_response_still_maps_embedding_predictions() {
+    let mut body = json!({"predictions": [{"embeddings": {"values": [0.5, 0.25]}}]});
+    provider().transform_response(&mut body).unwrap();
+    assert_eq!(body["data"][0]["embedding"], json!([0.5, 0.25]));
+}
+
+#[test]
+fn transform_response_maps_publisher_models_to_a_model_list() {
+    let mut body = json!({"publisherModels": [{"name": "publishers/google/models/gemini-2.0-flash"}]});
+    provider().transform_response(&mut body).unwrap();
+    assert_eq!(
+        body,
+        json!({
+            "object": "list",
+            "data": [{"id": "gemini-2.0-flash", "object": "model", "created": 0, "owned_by": "google"}]
+        })
+    );
+}
