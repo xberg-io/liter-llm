@@ -10,7 +10,7 @@
   "tags": ["streaming", "error-handling"],
   "skip": {
     "languages": ["elixir", "swift"],
-    "reason": "the generated Elixir and Swift tests expect the chat_stream call itself to fail, but the call returns a stream and the mid-stream error arrives when the stream is read"
+    "reason": "the generated Elixir and Swift tests expect the chat_stream call itself to fail, but the call returns a stream and the mid-stream error arrives when the stream is read (xberg-io/alef#618)"
   },
   "call": "chat_stream",
   "input": {

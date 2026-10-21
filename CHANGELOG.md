@@ -9,10 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Regenerate bindings with alef 0.112.0. The Swift enum case `none` is now `none_` (the serialized value is unchanged).
-  Zig wrappers report native conversion failures through error unions. The Python stub declares the getters of enum
-  wrappers. The PHP and Python bindings keep typed catalog-refresh error payloads. The Rust, Go, Java, PHP and C
-  streaming tests read the stream before they assert a mid-stream error.
+- Regenerate bindings with alef 0.112.0. The Rust, Go, Java, PHP and C streaming tests read the stream before they
+  assert a mid-stream error.
+- Swift: the enum case `none` is now `none_` (the serialized value is unchanged).
+- Zig: wrappers report native conversion failures through error unions.
+- Python: getters of untagged enums return the payload of the matching variant. The stub declares them.
+- Python: error classes carry attributes, such as `message` and `status`.
+- PHP: errors are typed exception classes (29 classes under `LiterLlmError` and `CatalogRefreshError`).
+- Dart: errors are typed values, and `retryAfter` and `model` are nullable.
+- Java: builder setters of optional primitive fields take `Long` and have a `long` overload, so the signature changes.
+- Elixir: specs name struct types instead of `map()`.
+- Ruby: an optional string argument of the wrong type raises instead of becoming an empty string.
 
 ### Added
 
