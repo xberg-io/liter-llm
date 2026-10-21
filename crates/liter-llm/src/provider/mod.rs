@@ -338,13 +338,17 @@ fn u16_field(value: &serde_json::Value) -> Option<u16> {
 }
 
 /// The payload `status_code` of an error event, if it fits a `u16`. The error
-/// object is read first, then the top level of the event. The value is a number
-/// or a string that holds a number. A value that does not read is skipped.
+/// object is read first, as a number or a string that holds a number, and its
+/// value is kept as is, even outside the error range. The top level of the event
+/// is the fallback and counts only as an error status (400 to 599), because the
+/// top level is not part of any documented error shape.
 pub(crate) fn status_code_field(event: &serde_json::Value) -> Option<u16> {
-    [event.pointer("/error/status_code"), event.get("status_code")]
-        .into_iter()
-        .flatten()
-        .find_map(u16_field)
+    event.pointer("/error/status_code").and_then(u16_field).or_else(|| {
+        event
+            .get("status_code")
+            .and_then(u16_field)
+            .filter(|s| (400..=599).contains(s))
+    })
 }
 
 /// The HTTP status of a Google error object (Gemini and Vertex AI). The numeric
@@ -1553,6 +1557,27 @@ mod tests {
         }
         let err = mid_stream_error(r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":1e12}}"#);
         assert_eq!(err.retry_after(), Some(Duration::from_secs(1_000_000_000_000)));
+    }
+
+    /// The top-level `status_code` of the OpenAI-compatible stream path counts only as an
+    /// error status, and the error object wins over it.
+    /// Revert line: remove the `filter` on the top-level value in `status_code_field` to
+    /// make this test fail.
+    #[test]
+    fn parse_stream_event_top_level_status_code_edge_inputs() {
+        let cases = [
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error"},"status_code":200}"#,
+                429,
+            ),
+            (r#"{"error":{"message":"x"},"status_code":503}"#, 503),
+            (r#"{"error":{"message":"x","status_code":"429"}}"#, 429),
+            (r#"{"error":{"message":"x","status_code":401},"status_code":503}"#, 401),
+        ];
+        for (payload, status) in cases {
+            let err = mid_stream_error(payload);
+            assert_eq!(err.status_code(), status, "{payload}: {err:?}");
+        }
     }
 
     /// Revert line: remove the `billing_error`, `request_too_large` and `timeout_error`
