@@ -1,0 +1,58 @@
+{
+  "id": "edge_rerank_nvidia_nim_reply",
+  "description": "Reranking where NVIDIA NIM lists the scored documents under rankings with a logit",
+  "docs": {
+    "topic": "rerank",
+    "stem": "edge-rerank-nvidia-nim-reply",
+    "title": "Reranking where NVIDIA NIM lists the scored documents under rankings with a logit"
+  },
+  "category": "rerank",
+  "tags": [
+    "edge-case",
+    "rerank"
+  ],
+  "call": "rerank",
+  "input": {
+    "model": "nvidia_nim/nv-rerankqa",
+    "query": "What is machine learning?",
+    "documents": [
+      "The weather is sunny today.",
+      "Deep learning uses neural networks.",
+      "Machine learning is a subset of AI."
+    ]
+  },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "rankings": [
+        {
+          "index": 2,
+          "logit": 0.91
+        },
+        {
+          "index": 1,
+          "logit": 0.62
+        },
+        {
+          "index": 0,
+          "logit": 0.04
+        }
+      ]
+    }
+  },
+  "assertions": [
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "count_equals",
+      "field": "results",
+      "value": 3
+    },
+    {
+      "type": "greater_than",
+      "field": "results[0].relevance_score",
+      "value": 0.9
+    }
+  ]
+}
