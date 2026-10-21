@@ -108,6 +108,11 @@ fn dns_suffix_for_region(region: &str) -> &'static str {
     }
 }
 
+/// The runtime base URL of a region: `https://bedrock-runtime.{region}.{dns_suffix}`.
+fn runtime_url_for_region(region: &str) -> String {
+    format!("https://bedrock-runtime.{region}.{}", dns_suffix_for_region(region))
+}
+
 /// Percent-encode a model ID for use in a URL path segment.
 ///
 /// Bedrock model IDs can contain colons and slashes that must be encoded.
@@ -193,10 +198,9 @@ impl BedrockProvider {
             .ok()
             .filter(|v| !v.is_empty())
             .map(|v| v.trim_end_matches('/').to_string());
-        let base_url = custom_base_url.clone().unwrap_or_else(|| {
-            let dns_suffix = dns_suffix_for_region(&region);
-            format!("https://bedrock-runtime.{region}.{dns_suffix}")
-        });
+        let base_url = custom_base_url
+            .clone()
+            .unwrap_or_else(|| runtime_url_for_region(&region));
         let cross_region_prefix = if custom_base_url.is_some() {
             None
         } else {
@@ -276,7 +280,7 @@ impl BedrockProvider {
 
     /// Override the Bedrock runtime base URL while retaining native request transforms.
     ///
-    /// Rerank and list models are served by other hosts, which keep their region-derived URLs.
+    /// The override moves every call, rerank and list models included.
     #[must_use]
     pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
         self.base_url = base_url.into().trim_end_matches('/').to_owned();
@@ -302,14 +306,16 @@ impl BedrockProvider {
 
     /// The base URL of a Bedrock service other than the runtime, derived from the region.
     ///
-    /// Rerank is served by `bedrock-agent-runtime` and list models by `bedrock`. A `base_url`
-    /// override names the runtime host only, so these hosts never follow it.
-    fn service_url(&self, service: &str) -> String {
-        format!(
-            "https://{service}.{}.{}",
-            self.region,
-            dns_suffix_for_region(&self.region)
-        )
+    /// Rerank is served by `bedrock-agent-runtime` and list models by `bedrock`. With a
+    /// `base_url` override, one host serves every call, and this returns `None`.
+    fn service_url(&self, service: &str) -> Option<String> {
+        (self.base_url == runtime_url_for_region(&self.region)).then(|| {
+            format!(
+                "https://{service}.{}.{}",
+                self.region,
+                dns_suffix_for_region(&self.region)
+            )
+        })
     }
 
     /// Return the AWS region this provider is configured for.
@@ -451,6 +457,9 @@ impl Provider for BedrockProvider {
     ///
     /// Chat completions map to `/model/{encoded_model}/converse`.
     /// Embeddings map to `/model/{encoded_model}/invoke`.
+    /// Rerank maps to `https://bedrock-agent-runtime.{region}.{dns_suffix}/rerank` and list models
+    /// to `https://bedrock.{region}.{dns_suffix}/foundation-models`. With a `base_url` override,
+    /// both stay on the override, like every other path.
     /// All other paths are passed through unchanged.
     ///
     /// When the `BEDROCK_CROSS_REGION` environment variable is set, the
@@ -466,10 +475,14 @@ impl Provider for BedrockProvider {
             format!("{base}/model/{encoded_model}/converse")
         } else if endpoint_path.contains("embeddings") {
             format!("{base}/model/{encoded_model}/invoke")
-        } else if endpoint_path == self.rerank_path() {
-            format!("{}/rerank", self.service_url("bedrock-agent-runtime"))
-        } else if endpoint_path == self.models_path() {
-            format!("{}/foundation-models", self.service_url("bedrock"))
+        } else if endpoint_path == self.rerank_path()
+            && let Some(host) = self.service_url("bedrock-agent-runtime")
+        {
+            format!("{host}/rerank")
+        } else if endpoint_path == self.models_path()
+            && let Some(host) = self.service_url("bedrock")
+        {
+            format!("{host}/foundation-models")
         } else {
             format!("{base}{endpoint_path}")
         }

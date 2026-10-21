@@ -41,6 +41,14 @@ fn aspect_ratio_for_size(size: &str) -> Result<String> {
     }
 }
 
+/// The OpenAI image fields that Imagen has no equivalent for and the request sets.
+fn dropped_fields(body: &Value) -> Vec<&'static str> {
+    ["quality", "style", "user"]
+        .into_iter()
+        .filter(|field| body.get(*field).is_some())
+        .collect()
+}
+
 /// Transform an OpenAI image generation request to the Imagen `:predict` format.
 ///
 /// OpenAI: `{"model": "...", "prompt": "a cat", "n": 2, "size": "1024x1024"}`
@@ -62,26 +70,28 @@ pub(super) fn transform_imagen_request(body: &mut Value) -> Result<()> {
     if let Some(size) = body.get("size").and_then(Value::as_str) {
         parameters.insert("aspectRatio".into(), json!(aspect_ratio_for_size(size)?));
     }
-    for field in ["quality", "style", "user"] {
-        if body.get(field).is_some() {
-            tracing::warn!("image request set `{field}`, which has no Imagen equivalent and was dropped");
-        }
+    for field in dropped_fields(body) {
+        tracing::warn!("image request set `{field}`, which has no Imagen equivalent and was dropped");
     }
 
     *body = json!({"instances": [{"prompt": prompt}], "parameters": parameters});
     Ok(())
 }
 
-/// Whether a reply is an Imagen `:predict` reply: predictions that carry image bytes.
+/// Whether a reply is an Imagen `:predict` reply: a prediction carries image bytes, or the
+/// safety filter removed it and left a `raiFilteredReason`.
 pub(super) fn is_image_response(body: &Value) -> bool {
-    body.get("predictions")
-        .and_then(Value::as_array)
-        .is_some_and(|predictions| predictions.iter().any(|p| p.get("bytesBase64Encoded").is_some()))
+    body.get("predictions").and_then(Value::as_array).is_some_and(|predictions| {
+        predictions
+            .iter()
+            .any(|p| p.get("bytesBase64Encoded").is_some() || p.get("raiFilteredReason").is_some())
+    })
 }
 
 /// Transform an Imagen `:predict` reply to the OpenAI image response.
 ///
-/// A prediction that the safety filter removed has no image bytes and is skipped.
+/// A prediction that the safety filter removed has no image bytes and is skipped, so a reply
+/// that the filter removed in full has no images.
 pub(super) fn transform_imagen_response(body: &Value) -> Value {
     let data: Vec<Value> = body
         .get("predictions")

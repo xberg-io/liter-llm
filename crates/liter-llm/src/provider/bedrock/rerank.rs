@@ -15,9 +15,53 @@ fn document_text(document: &Value) -> Option<&str> {
         .or_else(|| document.get("text").and_then(Value::as_str))
 }
 
+/// The AWS partition of a region: `aws-cn` for `cn-` regions, `aws-us-gov` for `us-gov-` regions.
+fn partition_for_region(region: &str) -> &'static str {
+    if region.starts_with("cn-") {
+        "aws-cn"
+    } else if region.starts_with("us-gov-") {
+        "aws-us-gov"
+    } else {
+        "aws"
+    }
+}
+
+/// The cross-region inference profile prefixes of a model id.
+const INFERENCE_PROFILE_PREFIXES: [&str; 3] = ["us.", "eu.", "apac."];
+
+/// The ARN that names the reranking model in a `Rerank` call.
+///
+/// A model that is already an ARN is used as given. A model id names a foundation model in the
+/// region of the client. An inference profile id has no ARN without an account id, so it is
+/// refused: pass the inference profile ARN as the model.
+fn model_arn(model: &str, region: &str) -> Result<String> {
+    let model = model.trim();
+    if model.is_empty() {
+        return Err(LiterLlmError::BadRequest {
+            message: "Bedrock rerank needs a model".into(),
+            status: 400,
+        });
+    }
+    if model.starts_with("arn:") {
+        return Ok(model.to_owned());
+    }
+    if INFERENCE_PROFILE_PREFIXES.iter().any(|prefix| model.starts_with(prefix)) {
+        return Err(LiterLlmError::BadRequest {
+            message: format!(
+                "Bedrock rerank takes a foundation model id or an ARN, and `{model}` is an inference profile id; pass the ARN of the inference profile"
+            ),
+            status: 400,
+        });
+    }
+    Ok(format!(
+        "arn:{}:bedrock:{region}::foundation-model/{model}",
+        partition_for_region(region)
+    ))
+}
+
 /// Transform an OpenAI-shaped rerank request to the Bedrock `Rerank` format.
 ///
-/// The model is named by a foundation model ARN in the region of the client.
+/// The model is named by a foundation model ARN in the region of the client, or by the ARN given.
 pub(super) fn transform_rerank_request(body: &mut Value, region: &str) -> Result<()> {
     let model = body.get("model").and_then(Value::as_str).unwrap_or_default();
     let query = body.get("query").and_then(Value::as_str).unwrap_or_default();
@@ -26,6 +70,8 @@ pub(super) fn transform_rerank_request(body: &mut Value, region: &str) -> Result
         .and_then(Value::as_array)
         .cloned()
         .unwrap_or_default();
+
+    let model_arn = model_arn(model, region)?;
 
     let sources = documents
         .iter()
@@ -42,7 +88,7 @@ pub(super) fn transform_rerank_request(body: &mut Value, region: &str) -> Result
         .collect::<Result<Vec<_>>>()?;
 
     let mut configuration = json!({
-        "modelConfiguration": {"modelArn": format!("arn:aws:bedrock:{region}::foundation-model/{model}")}
+        "modelConfiguration": {"modelArn": model_arn}
     });
     if let Some(top_n) = body.get("top_n").and_then(Value::as_u64) {
         configuration["numberOfResults"] = json!(top_n);
