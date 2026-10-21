@@ -623,6 +623,36 @@ fn parse_stream_event_error_returns_err() {
     assert!(err.to_string().contains("Overloaded"));
 }
 
+/// Revert line: make the `error` arm of `parse_stream_event` in `anthropic/stream.rs`
+/// build `LiterLlmError::Streaming` again to make this test fail.
+#[test]
+fn parse_stream_event_error_event_has_the_http_error_kind() {
+    use std::time::Duration;
+    let cases = [
+        (r#""type":"overloaded_error""#, 529),
+        (r#""type":"rate_limit_error""#, 429),
+        (r#""type":"authentication_error""#, 401),
+        (r#""type":"permission_error""#, 403),
+        (r#""type":"not_found_error""#, 404),
+        (r#""type":"api_error""#, 500),
+    ];
+    for (kind, status) in cases {
+        let event = format!(r#"{{"type":"error","error":{{{kind},"message":"boom"}}}}"#);
+        let err = provider().parse_stream_event(&event).unwrap_err();
+        let http = crate::error::LiterLlmError::from_status(status, r#"{"error":{"message":"boom"}}"#, None);
+        assert_eq!(
+            std::mem::discriminant(&err),
+            std::mem::discriminant(&http),
+            "{kind}: stream gave {err:?}, HTTP {status} gives {http:?}"
+        );
+        assert_eq!(err.status_code(), status, "{kind}");
+        assert!(err.to_string().contains("boom"), "{kind}: {err}");
+    }
+    let event = r#"{"type":"error","error":{"type":"rate_limit_error","message":"x","retry_after":9}}"#;
+    let err = provider().parse_stream_event(event).unwrap_err();
+    assert_eq!(err.retry_after(), Some(Duration::from_secs(9)));
+}
+
 #[test]
 fn parse_stream_event_ping_returns_none() {
     let event = r#"{"type":"ping"}"#;

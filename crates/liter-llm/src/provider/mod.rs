@@ -325,6 +325,50 @@ fn status_for_error_kind(code: Option<&str>, kind: Option<&str>) -> u16 {
     }
 }
 
+/// The payload `status_code` of an error event, if it fits a `u16`.
+fn status_code_field(event: &serde_json::Value) -> Option<u16> {
+    event
+        .pointer("/error/status_code")
+        .and_then(serde_json::Value::as_u64)
+        .and_then(|s| u16::try_from(s).ok())
+}
+
+/// The `retry_after` of an error event, in seconds, read from the error object
+/// or from the top level of the event. A negative, non-finite or absent value
+/// gives `None`.
+fn retry_after_field(event: &serde_json::Value) -> Option<std::time::Duration> {
+    let seconds = event
+        .pointer("/error/retry_after")
+        .or_else(|| event.get("retry_after"))
+        .and_then(serde_json::Value::as_f64)?;
+    std::time::Duration::try_from_secs_f64(seconds).ok()
+}
+
+/// Build the error for an error event inside a stream, or `None` when the event
+/// carries no `error` object. Every provider's stream parser calls this, so an
+/// error event is the same kind mid-stream as the same body in an HTTP reply.
+///
+/// `status` is the HTTP status the provider put in the payload. With `None`, the
+/// error code or type gives one (see `status_for_error_kind`).
+pub(crate) fn stream_error_event(event: &serde_json::Value, status: Option<u16>) -> Option<LiterLlmError> {
+    let error = event.get("error")?;
+    let text = |key: &str| error.get(key).and_then(serde_json::Value::as_str);
+    let message = text("message").unwrap_or("provider returned an error mid-stream");
+    let status = status.unwrap_or_else(|| status_for_error_kind(text("code"), text("type")));
+    if !(400..=599).contains(&status) {
+        return Some(LiterLlmError::BadRequest {
+            message: message.to_string(),
+            status,
+        });
+    }
+    let body = serde_json::json!({ "error": { "message": message, "code": text("code") } });
+    Some(LiterLlmError::from_status(
+        status,
+        &body.to_string(),
+        retry_after_field(event),
+    ))
+}
+
 /// A provider defines how to reach an LLM API endpoint.
 pub(crate) trait Provider: Send + Sync {
     /// Validate provider configuration at construction time.
@@ -553,23 +597,9 @@ pub(crate) trait Provider: Send + Sync {
         // range keeps its raw number in a bad-request error. With no usable status,
         // `status_for_error_kind` reads one from the error code or type.
         if let Ok(value) = serde_json::from_str::<serde_json::Value>(event_data)
-            && let Some(error) = value.get("error")
+            && let Some(err) = stream_error_event(&value, status_code_field(&value))
         {
-            let text = |key: &str| error.get(key).and_then(serde_json::Value::as_str);
-            let message = text("message").unwrap_or("provider returned an error mid-stream");
-            let status = error
-                .get("status_code")
-                .and_then(serde_json::Value::as_u64)
-                .and_then(|s| u16::try_from(s).ok())
-                .unwrap_or_else(|| status_for_error_kind(text("code"), text("type")));
-            if !(400..=599).contains(&status) {
-                return Err(LiterLlmError::BadRequest {
-                    message: message.to_string(),
-                    status,
-                });
-            }
-            let body = serde_json::json!({ "error": { "message": message, "code": text("code") } });
-            return Err(LiterLlmError::from_status(status, &body.to_string(), None));
+            return Err(err);
         }
 
         serde_json::from_str::<crate::types::ChatCompletionChunk>(event_data)
@@ -1393,6 +1423,58 @@ mod tests {
         OpenAiProvider
             .parse_stream_event(payload)
             .expect_err("a mid-stream error object must not decode as a chunk")
+    }
+
+    /// Revert line: drop the `retry_after_field` argument of `from_status` in
+    /// `stream_error_event` to make this test fail. The delay is read from the error
+    /// object, then from the top level of the event.
+    #[test]
+    fn parse_stream_event_reads_retry_after_from_error_event() {
+        use std::time::Duration;
+        let cases = [
+            (
+                r#"{"error":{"message":"slow down","type":"rate_limit_error","retry_after":7}}"#,
+                Some(Duration::from_secs(7)),
+            ),
+            (
+                r#"{"error":{"message":"slow down","type":"rate_limit_error"},"retry_after":3}"#,
+                Some(Duration::from_secs(3)),
+            ),
+            (
+                r#"{"error":{"message":"slow down","type":"rate_limit_error","retry_after":1.5}}"#,
+                Some(Duration::from_millis(1500)),
+            ),
+            // The error object wins over the top level.
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":7},"retry_after":3}"#,
+                Some(Duration::from_secs(7)),
+            ),
+            (r#"{"error":{"message":"x","type":"rate_limit_error"}}"#, None),
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":-4}}"#,
+                None,
+            ),
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":"soon"}}"#,
+                None,
+            ),
+        ];
+        for (payload, want) in cases {
+            let err = mid_stream_error(payload);
+            assert!(
+                matches!(err, LiterLlmError::RateLimited { .. }),
+                "{payload}: got {err:?}"
+            );
+            assert_eq!(err.retry_after(), want, "{payload}");
+        }
+    }
+
+    /// An overloaded error event keeps its delay too: the 529 kind carries `retry_after`.
+    #[test]
+    fn parse_stream_event_reads_retry_after_on_overloaded_event() {
+        let err = mid_stream_error(r#"{"error":{"message":"busy","type":"overloaded_error","retry_after":2}}"#);
+        assert!(matches!(err, LiterLlmError::ServiceUnavailable { .. }), "got: {err:?}");
+        assert_eq!(err.retry_after(), Some(std::time::Duration::from_secs(2)));
     }
 
     /// Revert line: in `parse_stream_event`, build `BadRequest` directly instead of

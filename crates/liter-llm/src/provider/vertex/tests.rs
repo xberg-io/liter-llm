@@ -575,3 +575,45 @@ fn transform_response_thought_only_has_null_content() {
     assert!(body["choices"][0]["message"]["content"].is_null());
     assert_eq!(body["choices"][0]["message"]["reasoning_content"], "still thinking...");
 }
+
+/// Revert line: remove the `stream_error_event` call from `parse_gemini_stream_event`
+/// to make this test fail (the event then decodes as an empty chunk).
+#[test]
+fn gemini_stream_error_event_raises_the_http_error_kind() {
+    let cases = [
+        (r#"{"code":429,"message":"quota","status":"RESOURCE_EXHAUSTED"}"#, 429),
+        (r#"{"code":503,"message":"down","status":"UNAVAILABLE"}"#, 503),
+        (r#"{"code":401,"message":"bad key","status":"UNAUTHENTICATED"}"#, 401),
+        (r#"{"code":400,"message":"bad input","status":"INVALID_ARGUMENT"}"#, 400),
+    ];
+    for (error, status) in cases {
+        let event = format!(r#"{{"error":{error}}}"#);
+        let err = provider().parse_stream_event(&event).unwrap_err();
+        let http = crate::error::LiterLlmError::from_status(status, &event, None);
+        assert_eq!(
+            std::mem::discriminant(&err),
+            std::mem::discriminant(&http),
+            "{error}: stream gave {err:?}, HTTP {status} gives {http:?}"
+        );
+        assert_eq!(err.status_code(), status, "{error}");
+    }
+}
+
+#[test]
+fn gemini_stream_error_event_keeps_message_and_retry_after() {
+    let event = r#"{"error":{"code":429,"message":"quota gone","status":"RESOURCE_EXHAUSTED","retry_after":11}}"#;
+    let err = provider().parse_stream_event(event).unwrap_err();
+    assert!(
+        matches!(err, crate::error::LiterLlmError::RateLimited { .. }),
+        "got: {err:?}"
+    );
+    assert!(err.to_string().contains("quota gone"), "got: {err}");
+    assert_eq!(err.retry_after(), Some(std::time::Duration::from_secs(11)));
+}
+
+#[test]
+fn gemini_stream_chunk_without_error_still_parses() {
+    let event = r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hi"}]}}]}"#;
+    let chunk = provider().parse_stream_event(event).unwrap().expect("a chunk");
+    assert_eq!(chunk.choices[0].delta.content.as_deref(), Some("Hi"));
+}
