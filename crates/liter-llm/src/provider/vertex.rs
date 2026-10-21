@@ -291,7 +291,10 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
 /// Transform an OpenAI embedding request to Vertex AI `:predict` format.
 ///
 /// OpenAI: `{"model": "...", "input": "text"}`
-/// Vertex: `{"instances": [{"content": "text"}]}`
+/// Vertex: `{"instances": [{"content": "text"}], "parameters": {"outputDimensionality": N}}`
+///
+/// `parameters` is present only when the caller sets `dimensions`. The caller's
+/// `extra_body` stays on the rebuilt body so the client can merge it.
 fn transform_vertex_embed_request(body: &mut serde_json::Value) -> Result<()> {
     use crate::error::LiterLlmError;
     use serde_json::json;
@@ -314,7 +317,16 @@ fn transform_vertex_embed_request(body: &mut serde_json::Value) -> Result<()> {
     };
 
     let instances: Vec<_> = texts.into_iter().map(|text| json!({"content": text})).collect();
-    *body = json!({"instances": instances});
+    let dimensions = body.get("dimensions").and_then(serde_json::Value::as_u64);
+    let extra_body = body.get_mut("extra_body").map(serde_json::Value::take);
+    let mut new_body = json!({"instances": instances});
+    if let Some(dimensions) = dimensions {
+        new_body["parameters"] = json!({"outputDimensionality": dimensions});
+    }
+    if let Some(extra_body) = extra_body {
+        new_body["extra_body"] = extra_body;
+    }
+    *body = new_body;
     Ok(())
 }
 

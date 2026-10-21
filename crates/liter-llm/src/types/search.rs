@@ -19,6 +19,10 @@ pub struct SearchRequest {
     /// Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub country: Option<String>,
+    /// Provider-specific parameters merged into the request body, as chat's
+    /// `extra_body` is. Keys here override identically named fields.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extra_body: Option<serde_json::Value>,
 }
 
 /// A search response.
