@@ -1081,7 +1081,7 @@ pub(crate) fn detect_builtin_provider(model: &str) -> Option<Box<dyn Provider>> 
         return Some(Box::new(bedrock::BedrockProvider::from_env()));
     }
 
-    if model.starts_with("command-") || model.starts_with("cohere/") {
+    if cohere::CohereProvider.matches_model(model) {
         return Some(Box::new(cohere::CohereProvider));
     }
 

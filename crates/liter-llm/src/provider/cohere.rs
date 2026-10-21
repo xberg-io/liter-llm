@@ -13,6 +13,9 @@ use crate::types::{
 /// Differences from the OpenAI-compatible baseline:
 /// - Chat endpoint is `/chat` instead of `/chat/completions`.
 /// - Rerank endpoint is `/rerank` instead of the default path.
+/// - Embed endpoint is `/embed` (v2), with a native body (`texts`, `input_type`,
+///   `embedding_types`) and a native reply (`embeddings.float`).
+/// - List models is `GET /v1/models`, which has no v2 form, with a `models` reply.
 /// - `stream_options` is an OpenAI-specific field and must be stripped; `stream` is kept (Cohere v2 requires it).
 /// - The non-streaming `/chat` response has **no `choices` wrapper**: `id`, `finish_reason`,
 ///   `message`, and `usage` are top-level fields (verified against Cohere's v2 API reference).
@@ -47,7 +50,10 @@ impl Provider for CohereProvider {
     }
 
     fn matches_model(&self, model: &str) -> bool {
-        model.starts_with("command-r") || model.starts_with("command-") || model.starts_with("cohere/")
+        model.starts_with("command-r")
+            || model.starts_with("command-")
+            || model.starts_with(EMBED_MODEL_PREFIX)
+            || model.starts_with("cohere/")
     }
 
     fn strip_model_prefix<'m>(&self, model: &'m str) -> &'m str {
@@ -59,9 +65,31 @@ impl Provider for CohereProvider {
         "/chat"
     }
 
+    /// Cohere embeds at `/embed` on the v2 base.
+    fn embeddings_path(&self) -> &str {
+        "/embed"
+    }
+
+    /// Cohere lists models at `/models`. The path exists on v1 only: [`Self::build_url`]
+    /// moves this one path off the v2 base.
+    fn models_path(&self) -> &str {
+        "/models"
+    }
+
     /// Cohere uses `/rerank` at the v2 base.
     fn rerank_path(&self) -> &str {
         "/rerank"
+    }
+
+    /// Build the URL for an endpoint. Every path is relative to the v2 base, except the model
+    /// list, which Cohere serves at `/v1/models` and not under `/v2`.
+    fn build_url(&self, endpoint_path: &str, _model: &str) -> String {
+        let base = if endpoint_path == self.models_path() {
+            MODELS_BASE_URL
+        } else {
+            self.base_url()
+        };
+        format!("{base}{endpoint_path}")
     }
 
     /// Strip transport-level parameters that Cohere does not accept in the body, and
@@ -87,7 +115,14 @@ impl Provider for CohereProvider {
     /// written. Note the minimum is `0.01`, not `0.0`: `top_p: 0.0` is legal for
     /// OpenAI (and documented as legal by this crate's own `ChatCompletionRequest`)
     /// but must be rejected here rather than silently coerced to `0.01`.
+    ///
+    /// An embedding body (`input` present, no `messages`) is rebuilt into Cohere's embed
+    /// body instead: see [`transform_embed_request`].
     fn transform_request(&self, body: &mut Value) -> Result<()> {
+        if body.get("input").is_some() && body.get("messages").is_none() {
+            return transform_embed_request(body);
+        }
+
         super::validate_sampling_param_range(body, "top_p", "Cohere", 0.01, 0.99)?;
 
         if let Some(obj) = body.as_object_mut() {
@@ -147,8 +182,24 @@ impl Provider for CohereProvider {
     /// previous implementation assumed the response was already `choices`-wrapped,
     /// which meant every real non-streaming Cohere response failed
     /// deserialization with a missing `choices` field.
+    ///
+    /// This step runs on the reply of every endpoint except rerank, so it rebuilds a reply
+    /// only when the reply is the one it knows: an embed reply (`embeddings`) becomes an
+    /// embeddings list, a model list (`models`) becomes an OpenAI model list, and a chat
+    /// reply (`message` or `finish_reason`) becomes `choices`. Any other reply is left
+    /// as it is, so a reply that is not a chat reply keeps all its fields.
     fn transform_response(&self, body: &mut Value) -> Result<()> {
         use serde_json::json;
+
+        if body.get("embeddings").is_some() {
+            return transform_embed_response(body);
+        }
+        if body.get("models").is_some() {
+            return transform_models_response(body);
+        }
+        if body.get("message").is_none() && body.get("finish_reason").is_none() {
+            return Ok(());
+        }
 
         let id = body.get("id").cloned().unwrap_or_else(|| Value::String(String::new()));
 
@@ -225,6 +276,156 @@ impl Provider for CohereProvider {
 
         Ok(())
     }
+}
+
+/// The model name prefix of Cohere embed models, such as `embed-english-v3.0`.
+const EMBED_MODEL_PREFIX: &str = "embed-";
+
+/// Base URL of the Cohere list-models endpoint, which has no v2 form.
+const MODELS_BASE_URL: &str = "https://api.cohere.com/v1";
+
+/// `input_type` sent with every embed request.
+///
+/// Cohere's v3 and later embed models require this field, and `EmbeddingRequest` has no
+/// field to map it from. `search_document` is the indexing-side value, the same default as
+/// the Bedrock Cohere embed adapter. A caller that embeds queries gets `search_query`
+/// through a provider-options passthrough, which this default does not replace.
+const EMBED_DEFAULT_INPUT_TYPE: &str = "search_document";
+
+/// Rebuild an OpenAI-style embedding body into Cohere's `POST /v2/embed` body.
+///
+/// Text input becomes `texts`. Multimodal input becomes one entry of `inputs`, with `text`
+/// and `image_url` content parts (an `image_base64` part sends its data URL as `image_url`).
+/// `dimensions` becomes `output_dimension`. The body always asks for `embedding_types:
+/// ["float"]`, so the reply holds float vectors whatever `encoding_format` says. `user` has
+/// no Cohere field and is dropped.
+fn transform_embed_request(body: &mut Value) -> Result<()> {
+    use serde_json::json;
+
+    let model = body.get("model").cloned().unwrap_or(Value::Null);
+    let input = body.get("input").cloned().unwrap_or(Value::Null);
+
+    let mut out = json!({
+        "model": model,
+        "input_type": EMBED_DEFAULT_INPUT_TYPE,
+        "embedding_types": ["float"],
+    });
+
+    match input {
+        Value::String(text) => out["texts"] = json!([text]),
+        Value::Array(items) if items.iter().all(Value::is_string) => out["texts"] = Value::Array(items),
+        Value::Array(parts) => {
+            let content = parts.iter().map(embed_content_part).collect::<Result<Vec<Value>>>()?;
+            out["inputs"] = json!([{ "content": content }]);
+        }
+        _ => {
+            return Err(LiterLlmError::BadRequest {
+                message: "Cohere embeddings take a string, a list of strings or a list of content parts as input"
+                    .into(),
+                status: 400,
+            });
+        }
+    }
+
+    if let Some(dimensions) = body.get("dimensions").filter(|d| !d.is_null()) {
+        out["output_dimension"] = dimensions.clone();
+    }
+
+    *body = out;
+    Ok(())
+}
+
+/// Convert one multimodal embedding part to a Cohere `inputs[].content[]` entry.
+fn embed_content_part(part: &Value) -> Result<Value> {
+    use serde_json::json;
+
+    match part.get("type").and_then(Value::as_str) {
+        Some("text") => Ok(json!({"type": "text", "text": part.get("text").cloned().unwrap_or(Value::Null)})),
+        Some("image_url") => {
+            let url = part.pointer("/image_url/url").cloned().unwrap_or(Value::Null);
+            Ok(json!({"type": "image_url", "image_url": {"url": url}}))
+        }
+        Some("image_base64") => {
+            let url = part.get("image_base64").cloned().unwrap_or(Value::Null);
+            Ok(json!({"type": "image_url", "image_url": {"url": url}}))
+        }
+        _ => Err(LiterLlmError::BadRequest {
+            message: "unsupported embedding content part for Cohere: use `text`, `image_url` or `image_base64`".into(),
+            status: 400,
+        }),
+    }
+}
+
+/// Rebuild a Cohere embed reply (`embeddings.float`) into an OpenAI embeddings list.
+///
+/// Usage comes from `meta.billed_units.input_tokens`. A reply without `embeddings.float` is
+/// an error: the request asks for float vectors, so a reply without them is not a usable
+/// reply and must not become an empty list.
+fn transform_embed_response(body: &mut Value) -> Result<()> {
+    use serde_json::json;
+
+    let vectors = body
+        .pointer("/embeddings/float")
+        .and_then(Value::as_array)
+        .ok_or_else(|| LiterLlmError::ServerError {
+            message: "Cohere embed reply has no `embeddings.float` list".into(),
+            status: 502,
+        })?;
+
+    let data: Vec<Value> = vectors
+        .iter()
+        .enumerate()
+        .map(|(index, embedding)| json!({"object": "embedding", "embedding": embedding, "index": index}))
+        .collect();
+
+    let input_tokens = body
+        .pointer("/meta/billed_units/input_tokens")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+
+    *body = json!({
+        "object": "list",
+        "data": data,
+        "model": "",
+        "usage": {
+            "prompt_tokens": input_tokens,
+            "completion_tokens": 0,
+            "total_tokens": input_tokens
+        }
+    });
+    Ok(())
+}
+
+/// Rebuild a Cohere model list (`models[].name`) into an OpenAI model list.
+///
+/// The list holds the first page that Cohere returns: `next_page_token` is not followed.
+fn transform_models_response(body: &mut Value) -> Result<()> {
+    use serde_json::json;
+
+    let models = body
+        .get("models")
+        .and_then(Value::as_array)
+        .ok_or_else(|| LiterLlmError::ServerError {
+            message: "Cohere model list has no `models` array".into(),
+            status: 502,
+        })?;
+
+    let data = models
+        .iter()
+        .map(|model| {
+            let name = model
+                .get("name")
+                .and_then(Value::as_str)
+                .ok_or_else(|| LiterLlmError::ServerError {
+                    message: "Cohere model list holds a model with no `name`".into(),
+                    status: 502,
+                })?;
+            Ok(json!({"id": name, "object": "model", "created": 0, "owned_by": "cohere"}))
+        })
+        .collect::<Result<Vec<Value>>>()?;
+
+    *body = json!({"object": "list", "data": data});
+    Ok(())
 }
 
 fn cohere_message_start_chunk(event: &Value) -> ChatCompletionChunk {
@@ -925,5 +1126,241 @@ mod tests {
             .expect("should return Some");
 
         assert_eq!(chunk.choices[0].delta.role.as_deref(), Some("assistant"));
+    }
+
+    // Embed and model-list tests. The shapes follow Cohere's public API reference:
+    // `POST /v2/embed` (`texts`, `inputs`, `images`, `input_type`, `embedding_types`,
+    // `output_dimension`, reply `embeddings.<type>`) and `GET /v1/models` (reply
+    // `models[].name`, `next_page_token`).
+
+    /// Serialize a typed request the way `prepare_request` does, then run the provider step.
+    fn prepared_embed_body(req: &crate::types::EmbeddingRequest) -> Value {
+        let mut body = serde_json::to_value(req).expect("request serializes");
+        body["model"] = json!(CohereProvider.strip_model_prefix(&req.model));
+        CohereProvider
+            .transform_request(&mut body)
+            .expect("embed request transforms");
+        body
+    }
+
+    fn embed_request(model: &str, input: crate::types::EmbeddingInput) -> crate::types::EmbeddingRequest {
+        crate::types::EmbeddingRequest {
+            model: model.into(),
+            input,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_cohere_embeddings_path_is_embed() {
+        assert_eq!(CohereProvider.embeddings_path(), "/embed");
+        assert_eq!(
+            CohereProvider.build_url(CohereProvider.embeddings_path(), "embed-english-v3.0"),
+            "https://api.cohere.com/v2/embed"
+        );
+    }
+
+    #[test]
+    fn test_cohere_models_url_is_v1_models() {
+        assert_eq!(
+            CohereProvider.build_url(CohereProvider.models_path(), ""),
+            "https://api.cohere.com/v1/models"
+        );
+    }
+
+    #[test]
+    fn test_cohere_other_urls_stay_on_the_v2_base() {
+        assert_eq!(
+            CohereProvider.build_url(CohereProvider.chat_completions_path(), "command-r"),
+            "https://api.cohere.com/v2/chat"
+        );
+        assert_eq!(
+            CohereProvider.build_url(CohereProvider.rerank_path(), "rerank-v3.5"),
+            "https://api.cohere.com/v2/rerank"
+        );
+    }
+
+    #[test]
+    fn test_cohere_embed_request_single_text() {
+        let req = embed_request(
+            "cohere/embed-english-v3.0",
+            crate::types::EmbeddingInput::Single("alpha".into()),
+        );
+        assert_eq!(
+            prepared_embed_body(&req),
+            json!({
+                "model": "embed-english-v3.0",
+                "texts": ["alpha"],
+                "input_type": "search_document",
+                "embedding_types": ["float"],
+            })
+        );
+    }
+
+    #[test]
+    fn test_cohere_embed_request_many_texts_keep_their_order() {
+        let req = embed_request(
+            "embed-english-v3.0",
+            crate::types::EmbeddingInput::Multiple(vec!["one".into(), "two".into(), "three".into()]),
+        );
+        let body = prepared_embed_body(&req);
+        assert_eq!(body["texts"], json!(["one", "two", "three"]));
+        assert!(body.get("input").is_none(), "the OpenAI `input` key must not be sent");
+    }
+
+    #[test]
+    fn test_cohere_embed_request_maps_dimensions_and_drops_user_and_encoding_format() {
+        let mut req = embed_request("embed-v4.0", crate::types::EmbeddingInput::Single("alpha".into()));
+        req.dimensions = Some(512);
+        req.user = Some("someone".into());
+        req.encoding_format = Some(crate::types::EmbeddingFormat::Base64);
+        let body = prepared_embed_body(&req);
+        assert_eq!(body["output_dimension"], 512);
+        assert!(body.get("dimensions").is_none());
+        assert!(body.get("user").is_none());
+        assert!(body.get("encoding_format").is_none());
+        assert_eq!(body["embedding_types"], json!(["float"]));
+    }
+
+    #[test]
+    fn test_cohere_embed_request_multimodal_input_becomes_one_inputs_entry() {
+        use crate::types::EmbeddingContentPart as Part;
+        let req = embed_request(
+            "embed-v4.0",
+            crate::types::EmbeddingInput::Multimodal(vec![
+                Part::text("a red bicycle"),
+                Part::image_url("https://example.com/bicycle.png"),
+                Part::image_base64("data:image/png;base64,aW1hZ2U="),
+            ]),
+        );
+        let body = prepared_embed_body(&req);
+        assert_eq!(
+            body["inputs"],
+            json!([{"content": [
+                {"type": "text", "text": "a red bicycle"},
+                {"type": "image_url", "image_url": {"url": "https://example.com/bicycle.png"}},
+                {"type": "image_url", "image_url": {"url": "data:image/png;base64,aW1hZ2U="}},
+            ]}])
+        );
+        assert!(body.get("texts").is_none());
+        assert_eq!(body["input_type"], "search_document");
+    }
+
+    #[test]
+    fn test_cohere_embed_request_rejects_an_unknown_content_part() {
+        let mut body = json!({"model": "embed-v4.0", "input": [{"type": "audio", "audio": "x"}]});
+        let err = CohereProvider
+            .transform_request(&mut body)
+            .expect_err("an audio part has no Cohere embed form");
+        assert_eq!(err.status_code(), 400);
+    }
+
+    #[test]
+    fn test_cohere_chat_request_is_not_taken_for_an_embed_request() {
+        let mut body = json!({
+            "model": "command-r",
+            "messages": [{"role": "user", "content": "hi"}],
+            "top_p": 0.5,
+            "stream_options": {"include_usage": true},
+        });
+        CohereProvider
+            .transform_request(&mut body)
+            .expect("chat request transforms");
+        assert_eq!(body["messages"][0]["content"], "hi");
+        assert_eq!(body["p"], 0.5);
+        assert!(body.get("texts").is_none());
+        assert!(body.get("input_type").is_none());
+    }
+
+    fn cohere_embed_reply() -> Value {
+        json!({
+            "id": "emb-1",
+            "embeddings": {"float": [[0.1, 0.2], [0.3, 0.4]]},
+            "texts": ["alpha", "beta"],
+            "response_type": "embeddings_by_type",
+            "meta": {"api_version": {"version": "2"}, "billed_units": {"input_tokens": 7}}
+        })
+    }
+
+    #[test]
+    fn test_cohere_embed_reply_becomes_an_embeddings_list() {
+        let mut body = cohere_embed_reply();
+        CohereProvider
+            .transform_response(&mut body)
+            .expect("embed reply transforms");
+        let parsed: crate::types::EmbeddingResponse =
+            serde_json::from_value(body).expect("the result must deserialize as an embedding response");
+        assert_eq!(parsed.data.len(), 2);
+        assert_eq!(parsed.data[0].index, 0);
+        assert_eq!(parsed.data[1].index, 1);
+        assert_eq!(parsed.data[1].embedding, vec![0.3_f32, 0.4_f32]);
+        let usage = parsed.usage.expect("usage is read from billed units");
+        assert_eq!(usage.prompt_tokens, 7);
+        assert_eq!(usage.total_tokens, 7);
+    }
+
+    #[test]
+    fn test_cohere_embed_reply_without_float_vectors_is_an_error() {
+        let mut body = json!({"id": "emb-1", "embeddings": {"int8": [[1, 2]]}});
+        let err = CohereProvider
+            .transform_response(&mut body)
+            .expect_err("a reply without embeddings.float is not usable");
+        assert_eq!(err.status_code(), 502);
+    }
+
+    #[test]
+    fn test_cohere_models_reply_becomes_a_models_list() {
+        let mut body = json!({
+            "models": [
+                {"name": "command-r", "endpoints": ["chat"], "context_length": 128000},
+                {"name": "embed-english-v3.0", "endpoints": ["embed"]}
+            ],
+            "next_page_token": ""
+        });
+        CohereProvider
+            .transform_response(&mut body)
+            .expect("models reply transforms");
+        let parsed: crate::types::ModelsListResponse =
+            serde_json::from_value(body).expect("the result must deserialize as a models list");
+        let ids: Vec<&str> = parsed.data.iter().map(|m| m.id.as_str()).collect();
+        assert_eq!(ids, vec!["command-r", "embed-english-v3.0"]);
+        assert_eq!(parsed.object, "list");
+    }
+
+    #[test]
+    fn test_cohere_models_reply_with_a_nameless_model_is_an_error() {
+        let mut body = json!({"models": [{"endpoints": ["chat"]}]});
+        let err = CohereProvider
+            .transform_response(&mut body)
+            .expect_err("a model without a name cannot be listed");
+        assert_eq!(err.status_code(), 502);
+    }
+
+    #[test]
+    fn test_cohere_transform_response_keeps_a_reply_that_is_not_a_chat_reply() {
+        // A moderation, search or OCR reply is not a chat reply. The chat rebuild used to
+        // replace every reply with an empty chat completion and drop all of its fields.
+        let original = json!({
+            "id": "r1",
+            "results": [{"index": 2, "relevance_score": 0.9}],
+            "meta": {"billed_units": {"search_units": 1}}
+        });
+        let mut body = original.clone();
+        CohereProvider
+            .transform_response(&mut body)
+            .expect("transform should succeed");
+        assert_eq!(body, original);
+    }
+
+    #[test]
+    fn test_cohere_embed_model_names_route_to_the_native_provider() {
+        let provider = CohereProvider;
+        assert!(provider.matches_model("embed-english-v3.0"));
+        assert!(provider.matches_model("cohere/embed-multilingual-v3.0"));
+        for model in ["embed-english-v3.0", "cohere/embed-english-v3.0"] {
+            let routed = crate::provider::detect_builtin_provider(model).expect("a provider is found");
+            assert_eq!(routed.name(), "cohere", "{model}");
+            assert_eq!(routed.embeddings_path(), "/embed", "{model}");
+        }
     }
 }
