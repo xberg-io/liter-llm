@@ -1070,6 +1070,9 @@ impl DefaultClient {
     /// path (e.g. `|p| p.chat_completions_path()`), ensuring the path comes
     /// from the correct provider when per-request routing overrides the default.
     ///
+    /// `endpoint` names the kind of call, so a provider that has no route for it is refused
+    /// before any request is built.
+    ///
     /// `stream` is inserted into the body **before** `transform_request` runs,
     /// so providers can inspect the final body state in one pass.
     fn prepare_request(
@@ -1077,6 +1080,7 @@ impl DefaultClient {
         serializable: &impl serde::Serialize,
         endpoint_fn: impl FnOnce(&dyn Provider) -> &str,
         model: &str,
+        endpoint: provider::Endpoint,
         stream: Option<bool>,
     ) -> Result<PreparedRequest> {
         if model.is_empty() {
@@ -1087,6 +1091,10 @@ impl DefaultClient {
         }
 
         let prov = self.resolve_provider_for_model(model)?;
+        // ~keep A base_url override names the endpoint itself, so only the registry's own routes are refused.
+        if self.config.effective_base_url().is_none() {
+            provider::refuse_unrouted_endpoint(prov.name(), endpoint)?;
+        }
         let bare_model = prov.strip_model_prefix(model).to_owned();
         // ~keep Providers such as Azure and Bedrock embed model/deployment identifiers in URLs.
         let endpoint_path = endpoint_fn(prov.as_ref());
@@ -1323,7 +1331,7 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             // ~keep Pass stream=false so providers can transform non-streaming chat correctly.
-            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))?;
+            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(false))?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1365,7 +1373,7 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             // ~keep Prepare first for validation/transforms, then override with provider stream URL.
-            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))?;
+            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(true))?;
 
             // ~keep Streaming endpoints can differ from non-streaming provider URLs.
             let bare_model = prepared.provider.strip_model_prefix(&req.model);
@@ -1440,7 +1448,7 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             // ~keep Embeddings have no stream flag; passing None prevents inserting one.
-            let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, provider::Endpoint::Embedding, None)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1504,7 +1512,7 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             let model = req.model.as_deref().unwrap_or_default();
-            let prepared = self.prepare_request(&req, |p| p.image_generations_path(), model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.image_generations_path(), model, provider::Endpoint::Image, None)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1540,7 +1548,7 @@ impl LlmClient for DefaultClient {
             return managed.speech(req);
         }
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.audio_speech_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.audio_speech_path(), &req.model, provider::Endpoint::Audio, None)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1574,7 +1582,7 @@ impl LlmClient for DefaultClient {
             return managed.transcribe(req);
         }
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.audio_transcriptions_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.audio_transcriptions_path(), &req.model, provider::Endpoint::Audio, None)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1611,7 +1619,7 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             let model = req.model.as_deref().unwrap_or_default();
-            let prepared = self.prepare_request(&req, |p| p.moderations_path(), model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.moderations_path(), model, provider::Endpoint::Moderation, None)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1647,7 +1655,7 @@ impl LlmClient for DefaultClient {
             return managed.rerank(req);
         }
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.rerank_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.rerank_path(), &req.model, provider::Endpoint::Rerank, None)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1683,7 +1691,7 @@ impl LlmClient for DefaultClient {
             return managed.search(req);
         }
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.search_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.search_path(), &req.model, provider::Endpoint::Search, None)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1719,7 +1727,7 @@ impl LlmClient for DefaultClient {
             return managed.ocr(req);
         }
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.ocr_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.ocr_path(), &req.model, provider::Endpoint::Ocr, None)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1754,7 +1762,7 @@ impl LlmClient for DefaultClient {
 impl LlmClientRaw for DefaultClient {
     fn chat_raw(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<RawExchange<ChatCompletionResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))?;
+            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(false))?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -1799,7 +1807,7 @@ impl LlmClientRaw for DefaultClient {
         req: ChatCompletionRequest,
     ) -> BoxFuture<'_, Result<RawStreamExchange<BoxStream<'static, Result<ChatCompletionChunk>>>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))?;
+            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(true))?;
             let raw_request = prepared.body_json.clone();
 
             let bare_model = prepared.provider.strip_model_prefix(&req.model);
@@ -1864,7 +1872,7 @@ impl LlmClientRaw for DefaultClient {
 
     fn embed_raw(&self, req: EmbeddingRequest) -> BoxFuture<'_, Result<RawExchange<EmbeddingResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, provider::Endpoint::Embedding, None)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -1906,7 +1914,7 @@ impl LlmClientRaw for DefaultClient {
     fn image_generate_raw(&self, req: CreateImageRequest) -> BoxFuture<'_, Result<RawExchange<ImagesResponse>>> {
         Box::pin(async move {
             let model = req.model.as_deref().unwrap_or_default();
-            let prepared = self.prepare_request(&req, |p| p.image_generations_path(), model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.image_generations_path(), model, provider::Endpoint::Image, None)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -1950,7 +1958,7 @@ impl LlmClientRaw for DefaultClient {
         req: CreateTranscriptionRequest,
     ) -> BoxFuture<'_, Result<RawExchange<TranscriptionResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.audio_transcriptions_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.audio_transcriptions_path(), &req.model, provider::Endpoint::Audio, None)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -1992,7 +2000,7 @@ impl LlmClientRaw for DefaultClient {
     fn moderate_raw(&self, req: ModerationRequest) -> BoxFuture<'_, Result<RawExchange<ModerationResponse>>> {
         Box::pin(async move {
             let model = req.model.as_deref().unwrap_or_default();
-            let prepared = self.prepare_request(&req, |p| p.moderations_path(), model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.moderations_path(), model, provider::Endpoint::Moderation, None)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -2033,7 +2041,7 @@ impl LlmClientRaw for DefaultClient {
 
     fn rerank_raw(&self, req: RerankRequest) -> BoxFuture<'_, Result<RawExchange<RerankResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.rerank_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.rerank_path(), &req.model, provider::Endpoint::Rerank, None)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -2074,7 +2082,7 @@ impl LlmClientRaw for DefaultClient {
 
     fn search_raw(&self, req: SearchRequest) -> BoxFuture<'_, Result<RawExchange<SearchResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.search_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.search_path(), &req.model, provider::Endpoint::Search, None)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -2115,7 +2123,7 @@ impl LlmClientRaw for DefaultClient {
 
     fn ocr_raw(&self, req: OcrRequest) -> BoxFuture<'_, Result<RawExchange<OcrResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.ocr_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.ocr_path(), &req.model, provider::Endpoint::Ocr, None)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -2999,7 +3007,7 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(false))
             .expect("prepare_request should not fail");
 
         assert!(
@@ -3025,7 +3033,7 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(true))
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3047,7 +3055,7 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(false))
             .expect("prepare_request should not fail");
 
         assert!(
@@ -3075,7 +3083,7 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(false))
             .expect("prepare_request should not fail");
 
         assert!(
@@ -3365,7 +3373,7 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(false))
             .expect("prepare_request should not fail");
 
         assert!(
@@ -3390,7 +3398,7 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(true))
             .expect("prepare_request should not fail");
 
         assert!(
@@ -3424,7 +3432,7 @@ mod build_provider_tests {
         let req = reasoning_none_request(model);
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(false))
             .expect("prepare_request should not fail");
 
         assert_eq!(prepared.body_json["thinking"], serde_json::json!({"type": "disabled"}));
@@ -3444,7 +3452,7 @@ mod build_provider_tests {
         let req = reasoning_none_request(model);
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(false))
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3462,7 +3470,7 @@ mod build_provider_tests {
         let req = reasoning_none_request("vertex_ai/gemini-2.5-flash");
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(false))
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3480,7 +3488,7 @@ mod build_provider_tests {
         let req = reasoning_none_request(model);
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(false))
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3504,7 +3512,7 @@ mod build_provider_tests {
 
         for streaming in [false, true] {
             let prepared = client
-                .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(streaming))
+                .prepare_request(&req, |p| p.chat_completions_path(), &req.model, provider::Endpoint::Chat, Some(streaming))
                 .expect("prepare_request should not fail");
             assert_eq!(
                 prepared.body_json["stream"], streaming,
@@ -3535,6 +3543,7 @@ mod build_provider_tests {
                 &req,
                 |provider| provider.chat_completions_path(),
                 &req.model,
+                provider::Endpoint::Chat,
                 Some(true),
             )
             .expect("prepare_request should not fail");
@@ -3556,6 +3565,7 @@ mod build_provider_tests {
                 &req,
                 |provider| provider.chat_completions_path(),
                 &req.model,
+                provider::Endpoint::Chat,
                 Some(false),
             )
             .expect("prepare_request should not fail");
@@ -3580,6 +3590,7 @@ mod build_provider_tests {
                 &req,
                 |provider| provider.chat_completions_path(),
                 &req.model,
+                provider::Endpoint::Chat,
                 Some(false),
             )
             .expect("prepare_request should not fail");

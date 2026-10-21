@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 use liter_llm::client::config::ClientConfigBuilder;
-use liter_llm::client::{DefaultClient, LlmClient, ResponseClient};
+use liter_llm::client::{DefaultClient, LlmClient, LlmClientRaw, ResponseClient};
 use liter_llm::error::LiterLlmError;
 use serial_test::serial;
 
@@ -541,4 +541,176 @@ async fn responses_for_a_provider_without_route_reach_the_base_url() {
     let seen = target.seen();
     assert_eq!(seen.len(), 2, "create and stream each reach the base_url, saw {seen:?}");
     assert!(seen.iter().all(|l| l.starts_with("POST ")), "saw {seen:?}");
+}
+
+/// Providers whose chat endpoint is routed but whose search endpoint is a native API.
+const NO_SEARCH_ROUTE: [&str; 8] = [
+    "brave",
+    "perplexity",
+    "exa_ai",
+    "firecrawl",
+    "linkup",
+    "parallel_ai",
+    "google_pse",
+    "duckduckgo",
+];
+
+fn assert_endpoint_refused(outcome: &liter_llm::Result<()>, provider: &str, endpoint: &str, call: &str) {
+    match outcome {
+        Err(LiterLlmError::BadRequest { message, status }) => {
+            assert_eq!(*status, 400, "{call} for {provider}");
+            assert!(
+                message.contains(&format!("`{provider}`"))
+                    && message.contains("no built-in route")
+                    && message.contains(endpoint)
+                    && message.contains("base_url"),
+                "{call} for {provider}: {message}"
+            );
+        }
+        other => panic!("{call} for {provider}: expected a refusal, got {other:?}"),
+    }
+}
+
+async fn search_calls(client: &DefaultClient, model: &str) -> Vec<(&'static str, liter_llm::Result<()>)> {
+    let req = serde_json::json!({"model": model, "query": "q"});
+    vec![
+        ("search", client.search(request(req.clone())).await.map(drop)),
+        ("search_raw", client.search_raw(request(req)).await.map(drop)),
+    ]
+}
+
+async fn audio_calls(client: &DefaultClient, model: &str) -> Vec<(&'static str, liter_llm::Result<()>)> {
+    let speech = serde_json::json!({"model": model, "input": "hi", "voice": "alloy"});
+    let transcription = serde_json::json!({"model": model, "file": "AAAA"});
+    vec![
+        ("speech", client.speech(request(speech)).await.map(drop)),
+        (
+            "transcribe",
+            client.transcribe(request(transcription.clone())).await.map(drop),
+        ),
+        (
+            "transcribe_raw",
+            client.transcribe_raw(request(transcription)).await.map(drop),
+        ),
+    ]
+}
+
+async fn image_calls(client: &DefaultClient, model: &str) -> Vec<(&'static str, liter_llm::Result<()>)> {
+    let req = serde_json::json!({"model": model, "prompt": "a cat"});
+    vec![
+        ("image_generate", client.image_generate(request(req.clone())).await.map(drop)),
+        ("image_generate_raw", client.image_generate_raw(request(req)).await.map(drop)),
+    ]
+}
+
+#[tokio::test]
+#[serial]
+async fn search_without_a_route_sends_nothing() {
+    let proxy = ProxyGuard::install();
+    let client = client(None, None).expect("client");
+    for provider in NO_SEARCH_ROUTE {
+        for (call, outcome) in search_calls(&client, &format!("{provider}/some-model")).await {
+            assert_endpoint_refused(&outcome, provider, "search", call);
+        }
+    }
+    assert_eq!(proxy.spy.seen(), Vec::<String>::new(), "no request may leave the process");
+}
+
+#[tokio::test]
+#[serial]
+async fn audio_without_a_route_sends_nothing() {
+    let proxy = ProxyGuard::install();
+    let client = client(None, None).expect("client");
+    for (call, outcome) in audio_calls(&client, "edenai/some-model").await {
+        assert_endpoint_refused(&outcome, "edenai", "audio", call);
+    }
+    assert_eq!(proxy.spy.seen(), Vec::<String>::new(), "no request may leave the process");
+}
+
+#[tokio::test]
+#[serial]
+async fn image_without_a_route_sends_nothing() {
+    let proxy = ProxyGuard::install();
+    let client = client(None, None).expect("client");
+    for provider in ["edenai", "modelscope"] {
+        for (call, outcome) in image_calls(&client, &format!("{provider}/some-model")).await {
+            assert_endpoint_refused(&outcome, provider, "image", call);
+        }
+    }
+    assert_eq!(proxy.spy.seen(), Vec::<String>::new(), "no request may leave the process");
+}
+
+#[tokio::test]
+#[serial]
+async fn a_client_pinned_to_the_provider_refuses_the_endpoint_for_a_bare_model() {
+    let proxy = ProxyGuard::install();
+    let client = client(None, Some("brave/brave")).expect("client");
+    for (call, outcome) in search_calls(&client, "web-search").await {
+        assert_endpoint_refused(&outcome, "brave", "search", call);
+    }
+    assert!(proxy.spy.seen().is_empty());
+}
+
+#[tokio::test]
+#[serial]
+async fn the_chat_endpoint_of_a_provider_with_a_refused_endpoint_still_sends() {
+    let proxy = ProxyGuard::install();
+    let client = client(None, None).expect("client");
+    let mut expected = 0;
+    for (provider, host) in [
+        ("brave", "api.search.brave.com"),
+        ("perplexity", "api.perplexity.ai"),
+        ("edenai", "api.edenai.run"),
+        ("modelscope", "api-inference.modelscope.cn"),
+    ] {
+        let chat = client
+            .chat(request(serde_json::json!({
+                "model": format!("{provider}/some-model"),
+                "messages": [{"role": "user", "content": "hi"}]
+            })))
+            .await;
+        assert!(
+            !matches!(&chat, Err(LiterLlmError::BadRequest { message, .. }) if message.contains("no built-in route")),
+            "{provider}: chat is not refused: {chat:?}"
+        );
+        expected += 1;
+        let seen = proxy.spy.seen();
+        assert_eq!(seen.len(), expected, "{provider}: the chat request reaches the network, saw {seen:?}");
+        assert!(seen[expected - 1].contains(host), "{provider}: saw {seen:?}");
+    }
+}
+
+#[tokio::test]
+#[serial]
+async fn the_embedding_endpoint_of_edenai_still_sends() {
+    let proxy = ProxyGuard::install();
+    let client = client(None, None).expect("client");
+    let embedded = client
+        .embed(request(serde_json::json!({"model": "edenai/some-model", "input": "hi"})))
+        .await;
+    assert!(
+        !matches!(&embedded, Err(LiterLlmError::BadRequest { message, .. }) if message.contains("no built-in route")),
+        "{embedded:?}"
+    );
+    assert_eq!(proxy.spy.seen().len(), 1, "the embedding request reaches the network");
+}
+
+#[tokio::test]
+#[serial]
+async fn a_base_url_lifts_the_endpoint_refusal() {
+    let target = Spy::start(Some("{}"));
+    let client = client(Some(&target.url), None).expect("client");
+    let outcomes = [
+        search_calls(&client, "brave/some-model").await,
+        audio_calls(&client, "edenai/some-model").await,
+        image_calls(&client, "modelscope/some-model").await,
+    ]
+    .concat();
+    for (call, outcome) in &outcomes {
+        assert!(
+            !matches!(outcome, Err(LiterLlmError::BadRequest { message, .. }) if message.contains("no built-in route")),
+            "{call}: a base_url lifts the refusal: {outcome:?}"
+        );
+    }
+    assert_eq!(target.seen().len(), outcomes.len(), "every call reaches the base_url");
 }
