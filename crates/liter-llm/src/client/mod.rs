@@ -1244,6 +1244,16 @@ fn transform_rerank_request(resolved: &dyn Provider, model: &str, body: &mut ser
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// The rerank path for `model`, chosen as for the request and the reply: the `provider/`
+/// prefix of the model, else the provider the request resolved to.
+fn rerank_endpoint<'a>(resolved: &'a dyn Provider, model: &str) -> &'a str {
+    match rerank_wire_provider(model) {
+        Some(named) => provider::rerank_shape::rerank_path_of(named.name()),
+        None => resolved.rerank_path(),
+    }
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
 /// The built-in provider that the `provider/` prefix of a rerank model names.
 fn rerank_wire_provider(model: &str) -> Option<Box<dyn Provider>> {
     // ~keep Only the `provider/` prefix names a provider here. A bare model such as `rerank-2` can
@@ -1683,7 +1693,7 @@ impl LlmClient for DefaultClient {
         Box::pin(async move {
             let prepared = self.prepare_request_with(
                 &req,
-                |p| p.rerank_path(),
+                |p| rerank_endpoint(p, &req.model),
                 &req.model,
                 None,
                 |resolved, body| transform_rerank_request(resolved, &req.model, body),
@@ -2075,7 +2085,7 @@ impl LlmClientRaw for DefaultClient {
         Box::pin(async move {
             let prepared = self.prepare_request_with(
                 &req,
-                |p| p.rerank_path(),
+                |p| rerank_endpoint(p, &req.model),
                 &req.model,
                 None,
                 |resolved, body| transform_rerank_request(resolved, &req.model, body),

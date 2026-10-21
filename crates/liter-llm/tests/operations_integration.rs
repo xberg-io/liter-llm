@@ -1407,7 +1407,10 @@ fn object_document_request(model: &str) -> RerankRequest {
 
 #[tokio::test]
 async fn rerank_nim_request_goes_to_ranking_with_query_and_passages() {
-    let mock = rerank_mock_for("nvidia_nim", serde_json::json!({"rankings": [{"index": 1, "logit": 0.5}]}));
+    let mock = rerank_mock_for(
+        "nvidia_nim",
+        serde_json::json!({"rankings": [{"index": 1, "logit": 0.5}]}),
+    );
     let client = hinted_client(&mock, "nvidia_nim");
 
     client
@@ -1429,7 +1432,10 @@ async fn rerank_nim_request_goes_to_ranking_with_query_and_passages() {
 
 #[tokio::test]
 async fn rerank_nim_request_follows_the_model_prefix_of_a_client_with_no_hint() {
-    let mock = rerank_mock_for("nvidia_nim", serde_json::json!({"rankings": [{"index": 1, "logit": 0.5}]}));
+    let mock = rerank_mock_for(
+        "nvidia_nim",
+        serde_json::json!({"rankings": [{"index": 1, "logit": 0.5}]}),
+    );
     let client = build_client(&mock);
 
     client
@@ -1438,12 +1444,18 @@ async fn rerank_nim_request_follows_the_model_prefix_of_a_client_with_no_hint() 
         .expect("reply parses");
 
     assert_eq!(mock.requests()[0].path, "/ranking");
-    assert_eq!(first_request_body(&mock)["passages"][1], serde_json::json!({"text": "b"}));
+    assert_eq!(
+        first_request_body(&mock)["passages"][1],
+        serde_json::json!({"text": "b"})
+    );
 }
 
 #[tokio::test]
 async fn rerank_nim_request_follows_a_client_that_names_nim_as_hint() {
-    let mock = rerank_mock_for("nvidia_nim", serde_json::json!({"rankings": [{"index": 1, "logit": 0.5}]}));
+    let mock = rerank_mock_for(
+        "nvidia_nim",
+        serde_json::json!({"rankings": [{"index": 1, "logit": 0.5}]}),
+    );
     let client = hinted_client(&mock, "nvidia_nim");
 
     client
