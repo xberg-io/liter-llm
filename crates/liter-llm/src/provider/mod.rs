@@ -2056,7 +2056,9 @@ mod route_model_tests {
                 Some(LiterLlmError::BadRequest { message, status }) => {
                     assert_eq!(status, 400);
                     assert!(
-                        message.contains("`mixed`") && message.contains(endpoint.as_str()) && message.contains("base_url"),
+                        message.contains("`mixed`")
+                            && message.contains(endpoint.as_str())
+                            && message.contains("base_url"),
                         "{message}"
                     );
                 }
@@ -2064,7 +2066,10 @@ mod route_model_tests {
             }
         }
         for endpoint in [Endpoint::Chat, Endpoint::Image, Endpoint::Embedding] {
-            assert!(unrouted_endpoint_error(&reg, "mixed", endpoint).is_none(), "{endpoint:?}");
+            assert!(
+                unrouted_endpoint_error(&reg, "mixed", endpoint).is_none(),
+                "{endpoint:?}"
+            );
         }
         assert!(unrouted_endpoint_error(&reg, "other", Endpoint::Search).is_none());
     }
@@ -2097,7 +2102,10 @@ mod route_model_tests {
             ("modelscope", Endpoint::Chat),
             ("openai", Endpoint::Search),
         ] {
-            assert!(refuse_unrouted_endpoint(provider, endpoint).is_ok(), "{provider} {endpoint:?}");
+            assert!(
+                refuse_unrouted_endpoint(provider, endpoint).is_ok(),
+                "{provider} {endpoint:?}"
+            );
         }
     }
 

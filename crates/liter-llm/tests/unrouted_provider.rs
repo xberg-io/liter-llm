@@ -598,8 +598,14 @@ async fn audio_calls(client: &DefaultClient, model: &str) -> Vec<(&'static str, 
 async fn image_calls(client: &DefaultClient, model: &str) -> Vec<(&'static str, liter_llm::Result<()>)> {
     let req = serde_json::json!({"model": model, "prompt": "a cat"});
     vec![
-        ("image_generate", client.image_generate(request(req.clone())).await.map(drop)),
-        ("image_generate_raw", client.image_generate_raw(request(req)).await.map(drop)),
+        (
+            "image_generate",
+            client.image_generate(request(req.clone())).await.map(drop),
+        ),
+        (
+            "image_generate_raw",
+            client.image_generate_raw(request(req)).await.map(drop),
+        ),
     ]
 }
 
@@ -613,7 +619,11 @@ async fn search_without_a_route_sends_nothing() {
             assert_endpoint_refused(&outcome, provider, "search", call);
         }
     }
-    assert_eq!(proxy.spy.seen(), Vec::<String>::new(), "no request may leave the process");
+    assert_eq!(
+        proxy.spy.seen(),
+        Vec::<String>::new(),
+        "no request may leave the process"
+    );
 }
 
 #[tokio::test]
@@ -624,7 +634,11 @@ async fn audio_without_a_route_sends_nothing() {
     for (call, outcome) in audio_calls(&client, "edenai/some-model").await {
         assert_endpoint_refused(&outcome, "edenai", "audio", call);
     }
-    assert_eq!(proxy.spy.seen(), Vec::<String>::new(), "no request may leave the process");
+    assert_eq!(
+        proxy.spy.seen(),
+        Vec::<String>::new(),
+        "no request may leave the process"
+    );
 }
 
 #[tokio::test]
@@ -637,7 +651,11 @@ async fn image_without_a_route_sends_nothing() {
             assert_endpoint_refused(&outcome, provider, "image", call);
         }
     }
-    assert_eq!(proxy.spy.seen(), Vec::<String>::new(), "no request may leave the process");
+    assert_eq!(
+        proxy.spy.seen(),
+        Vec::<String>::new(),
+        "no request may leave the process"
+    );
 }
 
 #[tokio::test]
@@ -675,7 +693,11 @@ async fn the_chat_endpoint_of_a_provider_with_a_refused_endpoint_still_sends() {
         );
         expected += 1;
         let seen = proxy.spy.seen();
-        assert_eq!(seen.len(), expected, "{provider}: the chat request reaches the network, saw {seen:?}");
+        assert_eq!(
+            seen.len(),
+            expected,
+            "{provider}: the chat request reaches the network, saw {seen:?}"
+        );
         assert!(seen[expected - 1].contains(host), "{provider}: saw {seen:?}");
     }
 }
@@ -686,7 +708,9 @@ async fn the_embedding_endpoint_of_edenai_still_sends() {
     let proxy = ProxyGuard::install();
     let client = client(None, None).expect("client");
     let embedded = client
-        .embed(request(serde_json::json!({"model": "edenai/some-model", "input": "hi"})))
+        .embed(request(
+            serde_json::json!({"model": "edenai/some-model", "input": "hi"}),
+        ))
         .await;
     assert!(
         !matches!(&embedded, Err(LiterLlmError::BadRequest { message, .. }) if message.contains("no built-in route")),
