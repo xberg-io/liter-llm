@@ -272,7 +272,7 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
         .and_then(serde_json::Value::as_str)
         .unwrap_or_default();
     let dimensions = body.get("dimensions").and_then(serde_json::Value::as_u64);
-    let requests: Vec<_> = texts
+    let mut requests: Vec<_> = texts
         .into_iter()
         .map(|text| {
             let mut request = json!({
@@ -286,7 +286,6 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
         })
         .collect();
 
-    let mut requests = requests;
     match body.get_mut("extra_body").map(serde_json::Value::take) {
         Some(serde_json::Value::Object(fields)) => {
             // `taskType`, `title` and `outputDimensionality` belong to each embed
