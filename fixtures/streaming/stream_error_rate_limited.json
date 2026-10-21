@@ -8,6 +8,10 @@
   },
   "category": "streaming",
   "tags": ["streaming", "error-handling"],
+  "skip": {
+    "languages": ["elixir", "swift"],
+    "reason": "the generated Elixir and Swift tests expect the chat_stream call itself to fail, but the call returns a stream and the mid-stream error arrives when the stream is read"
+  },
   "call": "chat_stream",
   "input": {
     "model": "gpt-4",
