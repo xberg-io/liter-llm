@@ -41,14 +41,6 @@ fn aspect_ratio_for_size(size: &str) -> Result<String> {
     }
 }
 
-/// The OpenAI image fields that Imagen has no equivalent for and the request sets.
-pub(super) fn dropped_fields(body: &Value) -> Vec<&'static str> {
-    ["quality", "style", "user"]
-        .into_iter()
-        .filter(|field| body.get(*field).is_some())
-        .collect()
-}
-
 /// Transform an OpenAI image generation request to the Imagen `:predict` format.
 ///
 /// OpenAI: `{"model": "...", "prompt": "a cat", "n": 2, "size": "1024x1024"}`
@@ -70,8 +62,10 @@ pub(super) fn transform_imagen_request(body: &mut Value) -> Result<()> {
     if let Some(size) = body.get("size").and_then(Value::as_str) {
         parameters.insert("aspectRatio".into(), json!(aspect_ratio_for_size(size)?));
     }
-    for field in dropped_fields(body) {
-        tracing::warn!("image request set `{field}`, which has no Imagen equivalent and was dropped");
+    for field in ["quality", "style", "user"] {
+        if body.get(field).is_some() {
+            tracing::warn!("image request set `{field}`, which has no Imagen equivalent and was dropped");
+        }
     }
 
     *body = json!({"instances": [{"prompt": prompt}], "parameters": parameters});

@@ -705,10 +705,49 @@ fn transform_response_of_predictions_that_the_filter_removed_has_no_images() {
     assert!(body["created"].as_u64().unwrap() > 0);
 }
 
+/// Collects the messages of the warnings that a closure logs.
+struct WarningLog(std::sync::Arc<std::sync::Mutex<Vec<String>>>);
+
+impl tracing::field::Visit for WarningLog {
+    fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+        if field.name() == "message" {
+            self.0.lock().unwrap().push(format!("{value:?}"));
+        }
+    }
+}
+
+struct WarningSubscriber(std::sync::Arc<std::sync::Mutex<Vec<String>>>);
+
+impl tracing::Subscriber for WarningSubscriber {
+    fn enabled(&self, _: &tracing::Metadata<'_>) -> bool {
+        true
+    }
+    fn new_span(&self, _: &tracing::span::Attributes<'_>) -> tracing::span::Id {
+        tracing::span::Id::from_u64(1)
+    }
+    fn record(&self, _: &tracing::span::Id, _: &tracing::span::Record<'_>) {}
+    fn record_follows_from(&self, _: &tracing::span::Id, _: &tracing::span::Id) {}
+    fn event(&self, event: &tracing::Event<'_>) {
+        if *event.metadata().level() == tracing::Level::WARN {
+            event.record(&mut WarningLog(self.0.clone()));
+        }
+    }
+    fn enter(&self, _: &tracing::span::Id) {}
+    fn exit(&self, _: &tracing::span::Id) {}
+}
+
 #[test]
-fn imagen_request_names_the_fields_it_drops() {
-    let body = json!({"prompt": "p", "quality": "hd", "user": "u", "n": 1});
-    assert_eq!(imagen::dropped_fields(&body), ["quality", "user"]);
+fn imagen_request_warns_for_each_field_it_drops() {
+    let warnings = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let mut body = json!({"prompt": "p", "quality": "hd", "user": "u", "n": 1});
+    tracing::subscriber::with_default(WarningSubscriber(warnings.clone()), || {
+        provider().transform_request(&mut body).unwrap();
+    });
+    let warnings = warnings.lock().unwrap();
+    assert_eq!(warnings.len(), 2, "{warnings:?}");
+    assert!(warnings[0].contains("`quality`"), "{warnings:?}");
+    assert!(warnings[1].contains("`user`"), "{warnings:?}");
+    assert!(body["parameters"].get("quality").is_none());
 }
 
 #[test]
