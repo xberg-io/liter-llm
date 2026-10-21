@@ -326,7 +326,7 @@ fn status_for_error_kind(code: Option<&str>, kind: Option<&str>) -> u16 {
 }
 
 /// The payload `status_code` of an error event, if it fits a `u16`.
-fn status_code_field(event: &serde_json::Value) -> Option<u16> {
+pub(crate) fn status_code_field(event: &serde_json::Value) -> Option<u16> {
     event
         .pointer("/error/status_code")
         .and_then(serde_json::Value::as_u64)

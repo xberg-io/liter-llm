@@ -125,6 +125,17 @@ impl Provider for CohereProvider {
 
         let event_type = v.get("type").and_then(|t| t.as_str()).unwrap_or("");
 
+        // ~keep An error event is either `{"error": {...}}` or a flat
+        // `{"type": "error", "message": ...}`. Both go through the shared classifier,
+        // so the error kind matches the same body in an HTTP reply.
+        let wrapped = (v.get("error").is_none() && event_type == "error").then(|| serde_json::json!({ "error": &v }));
+        let error_event = wrapped.as_ref().unwrap_or(&v);
+        if let Some(err) =
+            crate::provider::stream_error_event(error_event, crate::provider::status_code_field(error_event))
+        {
+            return Err(err);
+        }
+
         Ok(match event_type {
             "message-start" => Some(cohere_message_start_chunk(&v)),
             "content-delta" => Some(cohere_content_delta_chunk(&v)),

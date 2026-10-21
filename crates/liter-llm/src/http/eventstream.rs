@@ -362,9 +362,7 @@ where
     if message_type == "exception" {
         let payload = &frame[headers_end..total_length - 4];
         let payload_str = std::str::from_utf8(payload).unwrap_or("<binary>");
-        return Err(LiterLlmError::Streaming {
-            message: format!("Bedrock EventStream exception ({event_type}): {payload_str}"),
-        });
+        return Err(crate::provider::bedrock::exception_error(event_type, payload_str));
     }
 
     if message_type != "event" {
