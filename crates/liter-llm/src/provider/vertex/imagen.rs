@@ -108,7 +108,10 @@ pub(super) fn transform_publisher_models(models: &[Value]) -> Value {
         .iter()
         .map(|model| {
             let name = model.get("name").and_then(Value::as_str).unwrap_or("");
-            let (publisher, id) = match name.strip_prefix("publishers/").and_then(|rest| rest.split_once("/models/")) {
+            let (publisher, id) = match name
+                .strip_prefix("publishers/")
+                .and_then(|rest| rest.split_once("/models/"))
+            {
                 Some((publisher, id)) => (publisher, id),
                 None => ("google", name),
             };

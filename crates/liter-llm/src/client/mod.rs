@@ -2922,7 +2922,10 @@ mod build_provider_tests {
         let provider = build_provider(&ClientConfigBuilder::new("k").build(), None).expect("provider should build");
         let mut body = serde_json::json!({"results": [{"index": 1, "relevanceScore": 0.9}]});
         transform_rerank_reply(provider.as_ref(), "bedrock/amazon.rerank-v1:0", &mut body).unwrap();
-        assert_eq!(body, serde_json::json!({"results": [{"index": 1, "relevance_score": 0.9}]}));
+        assert_eq!(
+            body,
+            serde_json::json!({"results": [{"index": 1, "relevance_score": 0.9}]})
+        );
     }
 
     #[test]

@@ -10,7 +10,9 @@ pub(super) fn is_rerank_request(body: &Value) -> bool {
 }
 
 fn document_text(document: &Value) -> Option<&str> {
-    document.as_str().or_else(|| document.get("text").and_then(Value::as_str))
+    document
+        .as_str()
+        .or_else(|| document.get("text").and_then(Value::as_str))
 }
 
 /// Transform an OpenAI-shaped rerank request to the Bedrock `Rerank` format.
@@ -19,7 +21,11 @@ fn document_text(document: &Value) -> Option<&str> {
 pub(super) fn transform_rerank_request(body: &mut Value, region: &str) -> Result<()> {
     let model = body.get("model").and_then(Value::as_str).unwrap_or_default();
     let query = body.get("query").and_then(Value::as_str).unwrap_or_default();
-    let documents = body.get("documents").and_then(Value::as_array).cloned().unwrap_or_default();
+    let documents = body
+        .get("documents")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
 
     let sources = documents
         .iter()
