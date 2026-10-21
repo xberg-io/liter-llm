@@ -5796,6 +5796,7 @@ const _: fn() = || {
         let _: String = ClientOptions.api_key;
         let _: Option<String> = ClientOptions.base_url;
         let _: Option<i64> = ClientOptions.timeout_secs;
+        let _: Option<i64> = ClientOptions.connect_timeout_secs;
         let _: Option<i64> = ClientOptions.max_retries;
         let _: Option<i64> = ClientOptions.max_response_bytes;
         let _: Option<String> = ClientOptions.model_hint;
@@ -6105,6 +6106,7 @@ const _: fn() = || {
         let _: Option<String> = LlmConfig.api_key;
         let _: Option<String> = LlmConfig.base_url;
         let _: Option<i64> = LlmConfig.timeout_secs;
+        let _: Option<i64> = LlmConfig.connect_timeout_secs;
         let _: Option<i64> = LlmConfig.max_retries;
         let _: Option<f64> = LlmConfig.temperature;
         let _: Option<i64> = LlmConfig.max_tokens;
@@ -7182,6 +7184,7 @@ impl SseDecode for crate::ClientOptions {
         let mut var_apiKey = <String>::sse_decode(deserializer);
         let mut var_baseUrl = <Option<String>>::sse_decode(deserializer);
         let mut var_timeoutSecs = <Option<i64>>::sse_decode(deserializer);
+        let mut var_connectTimeoutSecs = <Option<i64>>::sse_decode(deserializer);
         let mut var_maxRetries = <Option<i64>>::sse_decode(deserializer);
         let mut var_maxResponseBytes = <Option<i64>>::sse_decode(deserializer);
         let mut var_modelHint = <Option<String>>::sse_decode(deserializer);
@@ -7189,6 +7192,7 @@ impl SseDecode for crate::ClientOptions {
             api_key: var_apiKey,
             base_url: var_baseUrl,
             timeout_secs: var_timeoutSecs,
+            connect_timeout_secs: var_connectTimeoutSecs,
             max_retries: var_maxRetries,
             max_response_bytes: var_maxResponseBytes,
             model_hint: var_modelHint,
@@ -8358,6 +8362,7 @@ impl SseDecode for crate::LlmConfig {
         let mut var_apiKey = <Option<String>>::sse_decode(deserializer);
         let mut var_baseUrl = <Option<String>>::sse_decode(deserializer);
         let mut var_timeoutSecs = <Option<i64>>::sse_decode(deserializer);
+        let mut var_connectTimeoutSecs = <Option<i64>>::sse_decode(deserializer);
         let mut var_maxRetries = <Option<i64>>::sse_decode(deserializer);
         let mut var_temperature = <Option<f64>>::sse_decode(deserializer);
         let mut var_maxTokens = <Option<i64>>::sse_decode(deserializer);
@@ -8378,6 +8383,7 @@ impl SseDecode for crate::LlmConfig {
             api_key: var_apiKey,
             base_url: var_baseUrl,
             timeout_secs: var_timeoutSecs,
+            connect_timeout_secs: var_connectTimeoutSecs,
             max_retries: var_maxRetries,
             temperature: var_temperature,
             max_tokens: var_maxTokens,
@@ -10764,6 +10770,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::ClientOptions> {
             self.0.api_key.into_into_dart().into_dart(),
             self.0.base_url.into_into_dart().into_dart(),
             self.0.timeout_secs.into_into_dart().into_dart(),
+            self.0.connect_timeout_secs.into_into_dart().into_dart(),
             self.0.max_retries.into_into_dart().into_dart(),
             self.0.max_response_bytes.into_into_dart().into_dart(),
             self.0.model_hint.into_into_dart().into_dart(),
@@ -11565,6 +11572,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::LlmConfig> {
             self.0.api_key.into_into_dart().into_dart(),
             self.0.base_url.into_into_dart().into_dart(),
             self.0.timeout_secs.into_into_dart().into_dart(),
+            self.0.connect_timeout_secs.into_into_dart().into_dart(),
             self.0.max_retries.into_into_dart().into_dart(),
             self.0.temperature.into_into_dart().into_dart(),
             self.0.max_tokens.into_into_dart().into_dart(),
@@ -13171,6 +13179,7 @@ impl SseEncode for crate::ClientOptions {
         <String>::sse_encode(self.api_key, serializer);
         <Option<String>>::sse_encode(self.base_url, serializer);
         <Option<i64>>::sse_encode(self.timeout_secs, serializer);
+        <Option<i64>>::sse_encode(self.connect_timeout_secs, serializer);
         <Option<i64>>::sse_encode(self.max_retries, serializer);
         <Option<i64>>::sse_encode(self.max_response_bytes, serializer);
         <Option<String>>::sse_encode(self.model_hint, serializer);
@@ -14099,6 +14108,7 @@ impl SseEncode for crate::LlmConfig {
         <Option<String>>::sse_encode(self.api_key, serializer);
         <Option<String>>::sse_encode(self.base_url, serializer);
         <Option<i64>>::sse_encode(self.timeout_secs, serializer);
+        <Option<i64>>::sse_encode(self.connect_timeout_secs, serializer);
         <Option<i64>>::sse_encode(self.max_retries, serializer);
         <Option<f64>>::sse_encode(self.temperature, serializer);
         <Option<i64>>::sse_encode(self.max_tokens, serializer);
