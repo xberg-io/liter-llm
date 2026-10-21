@@ -558,7 +558,7 @@ A search request.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `model` | `str` | — | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
+| `model` | `str` | — | The model/provider to use (e.g. `"brave/web-search"`). |
 | `query` | `str` | — | The search query string. |
 | `max_results` | `int \| None` | `None` | Maximum number of results to return. |
 | `search_domain_filter` | `list\[str\] \| None` | `[]` | Domain filter — restrict results to specific domains. |

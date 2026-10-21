@@ -353,12 +353,11 @@ async fn client_hinted_at_a_provider_without_route_is_refused_at_construction() 
 }
 
 /// Audio, image and search providers whose native APIs are not OpenAI-shaped.
-const NATIVE_API_PROVIDERS: [&str; 9] = [
+const NATIVE_API_PROVIDERS: [&str; 8] = [
     "elevenlabs",
     "deepgram",
     "stability",
     "tavily",
-    "brave",
     "fal_ai",
     "runwayml",
     "assemblyai",
@@ -379,6 +378,39 @@ async fn native_api_provider_without_base_url_sends_nothing_on_any_endpoint() {
         Vec::<String>::new(),
         "no request may leave the process"
     );
+}
+
+#[tokio::test]
+#[serial]
+async fn an_empty_base_url_counts_as_unset() {
+    let proxy = ProxyGuard::install();
+    let client = client(Some(""), None).expect("client");
+    for provider in NATIVE_API_PROVIDERS {
+        let outcomes = call_every_endpoint(&client, &format!("{provider}/some-model")).await;
+        assert_refused(&outcomes, provider);
+    }
+    assert!(proxy.spy.seen().is_empty());
+    match client(Some(""), Some("deepgram/some-model")) {
+        Err(LiterLlmError::BadRequest { message, .. }) => assert!(message.contains("`deepgram`"), "{message}"),
+        other => panic!("expected a refusal, got {:?}", other.map(drop)),
+    }
+}
+
+#[tokio::test]
+#[serial]
+async fn brave_chat_without_a_base_url_is_not_refused() {
+    let proxy = ProxyGuard::install();
+    let client = client(None, None).expect("client");
+    let outcome = client
+        .chat(request(serde_json::json!({
+            "model": "brave/brave",
+            "messages": [{"role": "user", "content": "hi"}]
+        })))
+        .await;
+    if let Err(LiterLlmError::BadRequest { message, .. }) = &outcome {
+        assert!(!message.contains("no built-in route"), "{message}");
+    }
+    assert!(!proxy.spy.seen().is_empty(), "the chat request reaches the network");
 }
 
 #[tokio::test]

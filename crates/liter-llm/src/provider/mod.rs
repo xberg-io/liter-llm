@@ -1628,7 +1628,6 @@ mod route_model_tests {
         "baseten",
         "bedrock_mantle",
         "black_forest_labs",
-        "brave",
         "chatgpt",
         "cloudflare",
         "cursor",
