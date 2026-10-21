@@ -4,7 +4,6 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import 'frb_generated.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
@@ -5164,7 +5163,8 @@ class StreamDelta {
 /// The streaming wire format a provider uses for its response stream.
 ///
 /// Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
-/// a proprietary binary EventStream framing.
+/// a proprietary binary EventStream framing.  Ollama's native API streams
+/// newline-delimited JSON.
 ///
 /// Deserialized from the `streaming_format` JSON field via [`serde`].
 enum StreamFormat {
@@ -5173,6 +5173,9 @@ enum StreamFormat {
 
   /// AWS EventStream binary framing (application/vnd.amazon.eventstream).
   awsEventStream,
+
+  /// Newline-delimited JSON (application/x-ndjson): one JSON object per line.
+  ndjson,
 }
 
 /// Partial function call details in a stream.

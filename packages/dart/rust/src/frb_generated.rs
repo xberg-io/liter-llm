@@ -9716,6 +9716,7 @@ impl SseDecode for crate::StreamFormat {
         return match inner {
             0 => crate::StreamFormat::Sse,
             1 => crate::StreamFormat::AwsEventStream,
+            2 => crate::StreamFormat::Ndjson,
             _ => unreachable!("Invalid variant for StreamFormat: {}", inner),
         };
     }
@@ -12432,6 +12433,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::StreamFormat> {
         match self.0 {
             crate::StreamFormat::Sse => 0.into_dart(),
             crate::StreamFormat::AwsEventStream => 1.into_dart(),
+            crate::StreamFormat::Ndjson => 2.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -15162,6 +15164,7 @@ impl SseEncode for crate::StreamFormat {
             match self {
                 crate::StreamFormat::Sse => 0,
                 crate::StreamFormat::AwsEventStream => 1,
+                crate::StreamFormat::Ndjson => 2,
                 _ => {
                     unimplemented!("");
                 }
