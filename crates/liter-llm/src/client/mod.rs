@@ -331,7 +331,9 @@ impl Stream for RequireTerminalChunk {
 /// Vertex, Bedrock) already strip it inside their own `transform_request`, so by the
 /// time this runs there is nothing left for them to merge; there it only has an
 /// effect for OpenAI-compatible providers, which pass `extra_body` through
-/// unchanged. That caveat is chat-path-only: the Responses path
+/// unchanged. The Bedrock and Vertex embed transforms differ: they rebuild the body
+/// and keep `extra_body` on it, so this merge applies the caller's keys. The Gemini
+/// API embed transform merges them into each embed request itself. The Responses path
 /// ([`response_request_body`]) runs no provider transform at all, so the merged keys
 /// always reach the wire as literal OpenAI Responses fields.
 ///
@@ -3612,5 +3614,351 @@ mod build_provider_tests {
         let details = usage.prompt_tokens_details.expect("cache details");
         assert_eq!(details.cached_tokens, 200);
         assert_eq!(details.cache_creation_tokens, 100);
+    }
+
+    fn embed_request(model: &str, extra_body: Option<serde_json::Value>) -> EmbeddingRequest {
+        EmbeddingRequest {
+            model: model.into(),
+            input: crate::types::EmbeddingInput::Single("what is rust?".into()),
+            extra_body,
+            ..Default::default()
+        }
+    }
+
+    fn bedrock_embed_client(model: &str) -> DefaultClient {
+        let config = ClientConfigBuilder::new("test-key")
+            .bedrock_credentials("test-access-key", "test-secret-key", None)
+            .build();
+        DefaultClient::new(config, Some(model)).expect("client construction should succeed")
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn bedrock_cohere_embed_keeps_search_document_when_the_caller_sets_no_input_type() {
+        let model = "bedrock/cohere.embed-english-v3";
+        let client = bedrock_embed_client(model);
+        let req = embed_request(model, None);
+
+        let prepared = client
+            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .expect("prepare_request should not fail");
+
+        assert_eq!(prepared.body_json["input_type"], "search_document");
+        assert_eq!(prepared.body_json["texts"], serde_json::json!(["what is rust?"]));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn bedrock_cohere_embed_takes_input_type_and_other_fields_from_extra_body() {
+        let model = "bedrock/cohere.embed-english-v3";
+        let client = bedrock_embed_client(model);
+        let req = embed_request(
+            model,
+            Some(serde_json::json!({"input_type": "search_query", "truncate": "END"})),
+        );
+
+        let prepared = client
+            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .expect("prepare_request should not fail");
+
+        assert_eq!(prepared.body_json["input_type"], "search_query");
+        assert_eq!(prepared.body_json["truncate"], "END");
+        assert!(prepared.body_json.get("extra_body").is_none());
+        let sent: serde_json::Value = serde_json::from_slice(&prepared.body_bytes).expect("body bytes are JSON");
+        assert_eq!(sent, prepared.body_json, "the signed bytes carry the merged body");
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn bedrock_titan_embed_takes_extra_body_fields() {
+        let model = "bedrock/amazon.titan-embed-text-v2:0";
+        let client = bedrock_embed_client(model);
+        let req = embed_request(model, Some(serde_json::json!({"normalize": false})));
+
+        let prepared = client
+            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .expect("prepare_request should not fail");
+
+        assert_eq!(prepared.body_json["inputText"], "what is rust?");
+        assert_eq!(prepared.body_json["normalize"], false);
+        assert!(prepared.body_json.get("extra_body").is_none());
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_sends_dimensions_as_output_dimensionality() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = EmbeddingRequest {
+            dimensions: Some(256),
+            ..embed_request("vertex_ai/text-embedding-005", None)
+        };
+
+        let prepared = client
+            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["parameters"],
+            serde_json::json!({"outputDimensionality": 256})
+        );
+        assert_eq!(
+            prepared.body_json["instances"],
+            serde_json::json!([{"content": "what is rust?"}])
+        );
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_without_dimensions_sends_no_parameters() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = embed_request("vertex_ai/text-embedding-005", None);
+
+        let prepared = client
+            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .expect("prepare_request should not fail");
+
+        assert!(prepared.body_json.get("parameters").is_none());
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_takes_extra_body_fields() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = embed_request(
+            "vertex_ai/text-embedding-005",
+            Some(serde_json::json!({"parameters": {"autoTruncate": false}})),
+        );
+
+        let prepared = client
+            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["parameters"],
+            serde_json::json!({"autoTruncate": false})
+        );
+        assert!(prepared.body_json.get("extra_body").is_none());
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_keeps_dimensions_when_extra_body_sets_parameters() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = EmbeddingRequest {
+            dimensions: Some(256),
+            ..embed_request(
+                "vertex_ai/text-embedding-005",
+                Some(serde_json::json!({"parameters": {"autoTruncate": false}})),
+            )
+        };
+
+        let prepared = client
+            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["parameters"],
+            serde_json::json!({"outputDimensionality": 256, "autoTruncate": false})
+        );
+        assert!(prepared.body_json.get("extra_body").is_none());
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_extra_body_parameters_override_the_dimensions_key() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = EmbeddingRequest {
+            dimensions: Some(256),
+            ..embed_request(
+                "vertex_ai/text-embedding-005",
+                Some(serde_json::json!({"parameters": {"outputDimensionality": 512, "autoTruncate": false}})),
+            )
+        };
+
+        let prepared = client
+            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["parameters"],
+            serde_json::json!({"outputDimensionality": 512, "autoTruncate": false})
+        );
+    }
+
+    #[test]
+    fn gemini_api_embed_takes_extra_body_fields_in_each_request() {
+        for model in ["gemini/text-embedding-004", "google_ai/text-embedding-004"] {
+            let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
+                .expect("client construction should succeed");
+            let req = EmbeddingRequest {
+                input: crate::types::EmbeddingInput::Multiple(vec!["one".into(), "two".into()]),
+                dimensions: Some(128),
+                ..embed_request(
+                    model,
+                    Some(serde_json::json!({"taskType": "RETRIEVAL_QUERY", "title": "doc"})),
+                )
+            };
+
+            let prepared = client
+                .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+                .expect("prepare_request should not fail");
+
+            let requests = prepared.body_json["requests"].as_array().expect("requests array");
+            assert_eq!(requests.len(), 2, "{model}");
+            for request in requests {
+                assert_eq!(request["taskType"], "RETRIEVAL_QUERY", "{model}");
+                assert_eq!(request["title"], "doc", "{model}");
+                assert_eq!(request["outputDimensionality"], 128, "{model}");
+            }
+            assert!(prepared.body_json.get("extra_body").is_none(), "{model}");
+            assert!(prepared.body_json.get("taskType").is_none(), "{model}");
+        }
+    }
+
+    /// Every non-chat request type accepts `extra_body` and sends its keys as body fields.
+    #[test]
+    fn non_chat_requests_merge_extra_body_into_the_provider_body() {
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("openai/model"))
+            .expect("client construction should succeed");
+        let extra = Some(serde_json::json!({"provider_option": "value"}));
+        let model = "openai/model";
+
+        let bodies = vec![
+            (
+                "embed",
+                client.prepare_request(
+                    &embed_request(model, extra.clone()),
+                    |p| p.embeddings_path(),
+                    model,
+                    None,
+                ),
+            ),
+            (
+                "rerank",
+                client.prepare_request(
+                    &RerankRequest {
+                        model: model.into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.rerank_path(),
+                    model,
+                    None,
+                ),
+            ),
+            (
+                "image",
+                client.prepare_request(
+                    &CreateImageRequest {
+                        prompt: "a cat".into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.image_generations_path(),
+                    model,
+                    None,
+                ),
+            ),
+            (
+                "speech",
+                client.prepare_request(
+                    &CreateSpeechRequest {
+                        model: model.into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.audio_speech_path(),
+                    model,
+                    None,
+                ),
+            ),
+            (
+                "transcription",
+                client.prepare_request(
+                    &CreateTranscriptionRequest {
+                        model: model.into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.audio_transcriptions_path(),
+                    model,
+                    None,
+                ),
+            ),
+            (
+                "moderation",
+                client.prepare_request(
+                    &ModerationRequest {
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.moderations_path(),
+                    model,
+                    None,
+                ),
+            ),
+            (
+                "search",
+                client.prepare_request(
+                    &SearchRequest {
+                        model: model.into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.search_path(),
+                    model,
+                    None,
+                ),
+            ),
+            (
+                "ocr",
+                client.prepare_request(
+                    &OcrRequest {
+                        model: model.into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.ocr_path(),
+                    model,
+                    None,
+                ),
+            ),
+        ];
+
+        assert_eq!(bodies.len(), 8);
+        for (kind, prepared) in bodies {
+            let prepared = prepared.unwrap_or_else(|e| panic!("{kind}: prepare_request failed: {e}"));
+            assert_eq!(prepared.body_json["provider_option"], "value", "{kind}: key is merged");
+            assert!(
+                prepared.body_json.get("extra_body").is_none(),
+                "{kind}: wrapper is removed"
+            );
+        }
+    }
+
+    #[test]
+    fn non_chat_request_without_extra_body_is_unchanged() {
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("openai/model"))
+            .expect("client construction should succeed");
+        let req = embed_request("openai/model", None);
+
+        let prepared = client
+            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json,
+            serde_json::json!({"model": "model", "input": "what is rust?"})
+        );
     }
 }

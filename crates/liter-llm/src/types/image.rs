@@ -27,6 +27,10 @@ pub struct CreateImageRequest {
     /// User identifier for request tracking.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
+    /// Provider-specific parameters merged into the request body, as chat's
+    /// `extra_body` is. Keys here override identically named fields.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extra_body: Option<serde_json::Value>,
 }
 
 /// Response containing generated images.
