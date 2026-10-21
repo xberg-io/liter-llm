@@ -997,7 +997,7 @@ impl DefaultClient {
     /// the construction-time provider is reused (zero allocation).
     fn resolve_provider_for_model(&self, model: &str) -> Result<Arc<dyn Provider>> {
         // ~keep A base_url override pins the construction-time provider for mock/proxy endpoints.
-        if self.config.base_url.is_some() {
+        if self.config.effective_base_url().is_some() {
             return Ok(Arc::clone(&self.provider));
         }
         // ~keep A hint chose the provider, so a model name without a `provider/` prefix stays on it.
@@ -1024,7 +1024,7 @@ impl DefaultClient {
     /// so a model for another provider is not sent to that provider's endpoint.
     /// Does nothing when a `base_url` is set.
     fn refuse_unrouted_model(&self, model: &str) -> Result<()> {
-        if self.config.base_url.is_none() {
+        if self.config.effective_base_url().is_none() {
             provider::route_model(model)?;
         }
         Ok(())
@@ -1258,7 +1258,7 @@ struct BuiltProvider {
 /// 3. Without a `base_url`, a hint that selects no provider, and no hint, give OpenAI.
 fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<BuiltProvider> {
     let hinted = match model_hint {
-        Some(hint) => match (route_hint(config, hint), &config.base_url) {
+        Some(hint) => match (route_hint(config, hint), config.effective_base_url()) {
             (Ok(routed), _) => routed,
             // ~keep A registry provider with no route of its own is reachable through a `base_url`.
             (Err(_), Some(_)) => None,
@@ -1267,12 +1267,12 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Bui
         None => None,
     };
     let hint_pins_provider = hinted.is_some();
-    let provider: Arc<dyn Provider> = match (hinted, &config.base_url) {
+    let provider: Arc<dyn Provider> = match (hinted, config.effective_base_url()) {
         (Some(routed), Some(base_url)) => Arc::from(provider::on_base_url(routed, base_url)),
         (Some(routed), None) => Arc::from(routed),
         (None, Some(base_url)) => Arc::new(OpenAiCompatibleProvider {
             name: "custom".into(),
-            base_url: base_url.clone(),
+            base_url: base_url.to_owned(),
             env_var: None,
             model_prefixes: vec![],
             hint_provider: model_hint.and_then(provider::hint_provider_name),
@@ -1293,7 +1293,7 @@ fn route_hint(config: &ClientConfig, hint: &str) -> Result<Option<Box<dyn Provid
     if names_bedrock(hint) {
         return Ok(Some(Box::new(build_bedrock_provider_config(config))));
     }
-    if config.base_url.is_some() {
+    if config.effective_base_url().is_some() {
         return provider::route_builtin_hint(hint);
     }
     provider::route_hint(hint)
@@ -3087,6 +3087,30 @@ mod build_provider_tests {
             let url = based.build_url(based.chat_completions_path(), "m");
             assert!(url.starts_with("http://gateway.test/v1"), "hint {hint}: url = {url}");
         }
+    }
+
+    /// Revert line: read `config.base_url` instead of `config.effective_base_url()` in
+    /// `build_provider` and an empty `base_url` rebases the hinted provider onto an empty host.
+    #[test]
+    fn an_empty_base_url_routes_like_an_unset_one() {
+        let plain_config = ClientConfigBuilder::new("test-key").build();
+        let empty_config = ClientConfigBuilder::new("test-key").base_url("").build();
+        for (hint, _) in ROUTED_HINTS {
+            let plain = build_provider(&plain_config, Some(hint))
+                .expect("provider should build")
+                .provider;
+            let empty = build_provider(&empty_config, Some(hint))
+                .expect("provider should build")
+                .provider;
+            assert_eq!(empty.name(), plain.name(), "hint {hint}");
+            assert_eq!(empty.base_url(), plain.base_url(), "hint {hint}");
+            assert_eq!(empty.chat_completions_path(), plain.chat_completions_path(), "hint {hint}");
+        }
+        let client = DefaultClient::new(empty_config, Some("cohere")).expect("client should build");
+        let routed = client
+            .resolve_provider_for_model("voyage/rerank-2")
+            .expect("provider resolves");
+        assert_eq!(routed.name(), "voyage", "an empty base_url pins no provider");
     }
 
     /// Revert line: drop the `hint_pins_provider` early return in `resolve_provider_for_model`
