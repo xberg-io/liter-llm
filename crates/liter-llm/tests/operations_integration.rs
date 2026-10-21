@@ -1421,13 +1421,22 @@ async fn list_models_that_never_ends_its_paging_is_an_error() {
     assert!(err.to_string().contains("did not end"), "unexpected error: {err}");
 }
 
+fn bedrock_client(mock: &MockServer) -> DefaultClient {
+    let config = ClientConfigBuilder::new("unused")
+        .base_url(mock.url())
+        .max_retries(0)
+        .bedrock_credentials("AKIATESTDUMMY", "test-dummy-secret", None)
+        .build();
+    DefaultClient::new(config, Some("bedrock/amazon.rerank-v1:0")).expect("client creation should succeed")
+}
+
 #[tokio::test]
 async fn bedrock_base_url_serves_rerank() {
     let mock = rerank_mock(
         serde_json::json!({"results": [{"index": 2, "relevanceScore": 0.9}, {"index": 0, "relevanceScore": 0.5}]})
             .to_string(),
     );
-    let client = hinted_client(&mock, "bedrock/amazon.rerank-v1:0");
+    let client = bedrock_client(&mock);
 
     let resp = client
         .rerank(rerank_request("bedrock/amazon.rerank-v1:0"))
@@ -1455,7 +1464,7 @@ async fn bedrock_base_url_serves_list_models() {
         })
         .to_string(),
     }]);
-    let client = hinted_client(&mock, "bedrock/amazon.rerank-v1:0");
+    let client = bedrock_client(&mock);
 
     let resp = client
         .list_models()

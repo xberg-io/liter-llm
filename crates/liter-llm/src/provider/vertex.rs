@@ -218,7 +218,10 @@ impl Provider for VertexAiProvider {
 
     /// Vertex pages the publisher model listing with `nextPageToken`; the last page has none.
     fn next_models_page_url(&self, url: &str, page: &serde_json::Value) -> Option<String> {
-        let token = page.get("nextPageToken").and_then(|t| t.as_str()).filter(|t| !t.is_empty())?;
+        let token = page
+            .get("nextPageToken")
+            .and_then(|t| t.as_str())
+            .filter(|t| !t.is_empty())?;
         let without_query = url.split_once('?').map_or(url, |(before, _)| before);
         let token: String = url::form_urlencoded::byte_serialize(token.as_bytes()).collect();
         Some(format!("{without_query}?pageToken={token}"))

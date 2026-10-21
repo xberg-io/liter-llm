@@ -42,7 +42,7 @@ fn aspect_ratio_for_size(size: &str) -> Result<String> {
 }
 
 /// The OpenAI image fields that Imagen has no equivalent for and the request sets.
-fn dropped_fields(body: &Value) -> Vec<&'static str> {
+pub(super) fn dropped_fields(body: &Value) -> Vec<&'static str> {
     ["quality", "style", "user"]
         .into_iter()
         .filter(|field| body.get(*field).is_some())
