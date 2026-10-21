@@ -905,6 +905,36 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn polling_a_checked_stream_after_done_stays_ended() {
+        let body = format!("{CONTENT_EVENT}data: [DONE]\n\n");
+        let mut parser = checked_parser(&body, Some(has_finish_reason));
+        assert!(
+            futures_util::StreamExt::next(&mut parser)
+                .await
+                .expect("the chunk")
+                .is_ok()
+        );
+        assert!(futures_util::StreamExt::next(&mut parser).await.is_none());
+        let again = futures_util::StreamExt::next(&mut parser).await;
+        assert!(again.is_none(), "a poll after the end reports no new error: {again:?}");
+    }
+
+    #[tokio::test]
+    async fn buffer_overflow_on_a_checked_stream_is_reported_once() {
+        let inner = futures_util::stream::iter(vec![
+            Ok::<_, reqwest::Error>(Bytes::from(CONTENT_EVENT.as_bytes().to_vec())),
+            Ok::<_, reqwest::Error>(Bytes::from(vec![b'x'; MAX_BUFFER_BYTES + 1])),
+        ]);
+        let parser: Pin<Box<SseParser<_, _, _>>> =
+            Box::pin(SseParser::new(inner, json_parse, Some(has_finish_reason), None));
+        let items = futures_util::StreamExt::collect::<Vec<_>>(parser).await;
+        assert_eq!(items.len(), 2, "a chunk and the overflow error: {items:?}");
+        assert!(items[0].is_ok());
+        let last = items[1].as_ref().expect_err("the overflow ends the stream");
+        assert!(last.to_string().contains("buffer exceeded"), "unexpected error: {last}");
+    }
+
+    #[tokio::test]
     async fn transport_error_on_a_checked_stream_is_reported_once() {
         let transport_error = reqwest::Client::new()
             .get("not a url")
