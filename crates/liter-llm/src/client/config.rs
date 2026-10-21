@@ -155,6 +155,13 @@ pub struct ClientConfig {
 
 #[cfg_attr(alef, alef(skip))]
 impl ClientConfig {
+    /// The `base_url` override, or `None` when it is unset or an empty string.
+    ///
+    /// An empty string names no endpoint, so it counts as unset.
+    pub(crate) fn effective_base_url(&self) -> Option<&str> {
+        self.base_url.as_deref().filter(|url| !url.is_empty())
+    }
+
     /// Create a config with the given API key and sensible defaults.
     pub fn new(api_key: impl Into<String>) -> Self {
         Self {

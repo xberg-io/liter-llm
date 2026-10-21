@@ -1005,13 +1005,13 @@ impl DefaultClient {
     /// construction-time default, the detected provider is returned.  Otherwise
     /// the construction-time provider is reused (zero allocation).
     fn resolve_provider_for_model(&self, model: &str) -> Result<Arc<dyn Provider>> {
-        if let Some(base_url) = &self.config.base_url {
+        if let Some(base_url) = self.config.effective_base_url() {
             // ~keep The `ollama/` prefix names a wire format, not a host, so it wins over a base_url
             // override: the override then becomes the Ollama server address. Without an override the
             // prefix goes through `detect_provider`, where a registered custom provider wins.
             if provider::ollama::OllamaProvider::owns(model) {
                 return Ok(Arc::new(provider::ollama::OllamaProvider::with_base_url(
-                    base_url.clone(),
+                    base_url.to_owned(),
                 )));
             }
             // ~keep Only a bare model goes to the native API of a client hinted at Ollama. A model
@@ -1026,7 +1026,7 @@ impl DefaultClient {
         // ~keep A base_url override pins the construction-time provider for mock/proxy endpoints. A
         // client hinted at Ollama is pinned to the native API like any other provider: a bare model
         // goes to `/api/chat` whatever the base_url is.
-        if self.config.base_url.is_some() {
+        if self.config.effective_base_url().is_some() {
             return Ok(Arc::clone(&self.provider));
         }
         // ~keep Keep the construction-time provider when it already matches the model.
@@ -1048,7 +1048,7 @@ impl DefaultClient {
     /// so a model for another provider is not sent to that provider's endpoint.
     /// Does nothing when a `base_url` is set.
     fn refuse_unrouted_model(&self, model: &str) -> Result<()> {
-        if self.config.base_url.is_none() {
+        if self.config.effective_base_url().is_none() {
             provider::route_model(model)?;
         }
         Ok(())
@@ -1353,7 +1353,7 @@ fn transform_rerank_reply(resolved: &dyn Provider, model: &str, raw: &mut serde_
 /// 2. `model_hint` -> auto-detect by model name prefix.
 /// 3. Default -> OpenAI.
 fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Arc<dyn Provider>> {
-    if let Some(ref base_url) = config.base_url {
+    if let Some(base_url) = config.effective_base_url().map(str::to_owned) {
         if let Some(model) = model_hint
             && model.starts_with("azure/")
         {
@@ -1429,11 +1429,11 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Arc
 /// hint sends it, with the model name as given. `None` for every other client.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 fn prefixed_model_provider(config: &ClientConfig, model_hint: Option<&str>) -> Option<Arc<dyn Provider>> {
-    let base_url = config.base_url.as_ref()?;
+    let base_url = config.effective_base_url()?;
     model_hint.filter(|hint| provider::ollama::OllamaProvider::names_hint(hint))?;
     Some(Arc::new(OpenAiCompatibleProvider {
         name: "custom".into(),
-        base_url: base_url.clone(),
+        base_url: base_url.to_owned(),
         env_var: None,
         model_prefixes: vec![],
         // ~keep No hint provider: the native provider owns every `ollama/` and `ollama_chat/`
@@ -2928,6 +2928,19 @@ mod build_provider_tests {
         }
         let openai = build_provider(&config, Some("openai")).expect("provider should build");
         assert_eq!(openai.name(), "openai");
+    }
+
+    #[test]
+    fn empty_base_url_on_an_ollama_model_uses_the_default_address() {
+        let config = ClientConfigBuilder::new("test-key").base_url("").build();
+        for hint in [Some("ollama"), Some("ollama/llama3")] {
+            let client = DefaultClient::new(config.clone(), hint).expect("client should build");
+            let p = client
+                .resolve_provider_for_model("ollama/llama3")
+                .expect("provider should resolve");
+            assert_eq!(p.name(), "ollama", "hint {hint:?}");
+            assert_eq!(p.base_url(), "http://localhost:11434", "hint {hint:?}");
+        }
     }
 
     #[test]

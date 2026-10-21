@@ -4925,7 +4925,7 @@ class ResponseUsage {
 
 /// A search request.
 class SearchRequest {
-  /// The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
+  /// The model/provider to use (e.g. `"brave/web-search"`).
   final String model;
 
   /// The search query string.
