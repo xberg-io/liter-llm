@@ -1337,6 +1337,114 @@ options_via = "from_json"
 options_type = "EmbeddingRequest"
 options_via = "from_json"
 
+[crates.e2e.calls.chat_ollama]
+function = "chat"
+path = "/api/chat"
+module = "liter_llm"
+async = true
+
+[[crates.e2e.calls.chat_ollama.args]]
+name = "req"
+field = "input"
+type = "json_object"
+owned = true
+
+[crates.e2e.calls.chat_ollama.overrides.c]
+options_type = "ChatCompletionRequest"
+result_type = "ChatCompletionResponse"
+
+[crates.e2e.calls.chat_ollama.overrides.csharp]
+options_type = "ChatCompletionRequest"
+
+[crates.e2e.calls.chat_ollama.overrides.elixir]
+function = "defaultclient_chat"
+
+[crates.e2e.calls.chat_ollama.overrides.php]
+options_type = "ChatCompletionRequest"
+
+[crates.e2e.calls.chat_ollama.overrides.go]
+client_factory = "CreateClient"
+options_type = "ChatCompletionRequest"
+
+[crates.e2e.calls.chat_ollama.overrides.python]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+from_json_module = "liter_llm._internal_bindings"
+
+[crates.e2e.calls.chat_ollama.overrides.ruby]
+options_type = "ChatCompletionRequest"
+
+[crates.e2e.calls.chat_ollama.overrides.java]
+client_factory = "createClient"
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+enum_fields = { "choices[0].finish_reason" = "FinishReason", "choices[0].message.role" = "Role" }
+
+[crates.e2e.calls.chat_ollama.overrides.wasm]
+options_type = "WasmChatCompletionRequest"
+result_enum_fields = { "choices[0].finish_reason" = "WasmFinishReason" }
+
+[crates.e2e.calls.chat_ollama.overrides.dart]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.chat_ollama.overrides.swift]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.embed_ollama]
+function = "embed"
+path = "/api/embed"
+module = "liter_llm"
+async = true
+
+[[crates.e2e.calls.embed_ollama.args]]
+name = "req"
+field = "input"
+type = "json_object"
+owned = true
+
+[crates.e2e.calls.embed_ollama.overrides.c]
+options_type = "EmbeddingRequest"
+result_type = "EmbeddingResponse"
+
+[crates.e2e.calls.embed_ollama.overrides.csharp]
+options_type = "EmbeddingRequest"
+
+[crates.e2e.calls.embed_ollama.overrides.elixir]
+function = "defaultclient_embed"
+
+[crates.e2e.calls.embed_ollama.overrides.php]
+options_type = "EmbeddingRequest"
+
+[crates.e2e.calls.embed_ollama.overrides.go]
+client_factory = "CreateClient"
+options_type = "EmbeddingRequest"
+
+[crates.e2e.calls.embed_ollama.overrides.python]
+options_type = "EmbeddingRequest"
+options_via = "from_json"
+from_json_module = "liter_llm._internal_bindings"
+
+[crates.e2e.calls.embed_ollama.overrides.ruby]
+options_type = "EmbeddingRequest"
+
+[crates.e2e.calls.embed_ollama.overrides.java]
+client_factory = "createClient"
+options_type = "EmbeddingRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.embed_ollama.overrides.wasm]
+options_type = "WasmEmbeddingRequest"
+
+[crates.e2e.calls.embed_ollama.overrides.dart]
+options_type = "EmbeddingRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.embed_ollama.overrides.swift]
+options_type = "EmbeddingRequest"
+options_via = "from_json"
+
 [crates.e2e.calls.list_models]
 function = "list_models"
 path = "/models"

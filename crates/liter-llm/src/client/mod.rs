@@ -184,6 +184,8 @@ fn provider_auth_header(provider: &dyn Provider, api_key: &str) -> Option<(Strin
 struct ChatStreamState {
     usage: Option<Usage>,
     model: String,
+    /// Tool calls already streamed, so later chunks continue the index numbering.
+    tool_calls_seen: u32,
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -208,6 +210,13 @@ fn parse_chat_stream_event(
         Some(chunk) => chunk,
         None => return Ok(None),
     };
+    if provider.stream_tool_call_indexes_restart() {
+        let mut state = state.lock().map_err(|_| LiterLlmError::InternalError {
+            message: "chat stream state lock poisoned".into(),
+        })?;
+        provider::ollama::number_stream_tool_calls(&mut chunk, &mut state.tool_calls_seen);
+        return Ok(Some(chunk));
+    }
     if !matches!(provider.name(), "anthropic" | "google_ai" | "vertex_ai") {
         return Ok(Some(chunk));
     }
@@ -241,13 +250,18 @@ fn parse_chat_stream_event(
 /// that carries a finish reason.
 ///
 /// Anthropic (`message_delta` with `stop_reason`), Gemini/Vertex
-/// (`finishReason`), Cohere (`message-end`) and Bedrock (`messageStop`) all do,
+/// (`finishReason`), Cohere (`message-end`), Ollama's native API (`done: true`) and
+/// Bedrock (`messageStop`) all do,
 /// so a stream from them that ends without one was cut off. OpenAI-compatible
 /// servers are not held to this: some omit `[DONE]` or end with non-standard
 /// metadata events (#155), and a clean EOF there stays a normal end (#295).
+///
+/// Ollama is found by the capability its native provider declares and Bedrock by its event
+/// stream framing, so a custom provider that borrows either name keeps the lenient rule.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 fn requires_terminal_chat_chunk(provider: &dyn Provider) -> bool {
     matches!(provider.name(), "anthropic" | "google_ai" | "vertex_ai" | "cohere")
+        || provider.stream_has_final_event()
         || matches!(provider.stream_format(), provider::StreamFormat::AwsEventStream)
 }
 
@@ -834,6 +848,9 @@ pub struct DefaultClient {
     /// Pre-computed static extra headers — avoids converting `&'static str` pairs
     /// to `(String, String)` on every request.
     cached_extra_headers: Vec<(String, String)>,
+    /// The OpenAI-compatible endpoint at `base_url` for a model with another provider's
+    /// prefix, on a client whose hint named Ollama. `None` for every other client.
+    prefixed_model_provider: Option<Arc<dyn Provider>>,
     /// Tower middleware stack installed by [`create_client_from_json`](crate::create_client_from_json).
     ///
     /// ~keep The managed client wraps a separate `DefaultClient` whose own `managed` is `None`,
@@ -893,6 +910,7 @@ impl DefaultClient {
         config::validate_response_limit(config.max_response_bytes)?;
         let provider = build_provider(&config, model_hint)?;
         provider.validate()?;
+        let prefixed_model_provider = prefixed_model_provider(&config, model_hint);
 
         #[cfg(not(target_arch = "wasm32"))]
         let mut config = config;
@@ -976,6 +994,7 @@ impl DefaultClient {
             provider,
             cached_auth_header,
             cached_extra_headers,
+            prefixed_model_provider,
             managed: None,
         })
     }
@@ -986,7 +1005,27 @@ impl DefaultClient {
     /// construction-time default, the detected provider is returned.  Otherwise
     /// the construction-time provider is reused (zero allocation).
     fn resolve_provider_for_model(&self, model: &str) -> Result<Arc<dyn Provider>> {
-        // ~keep A base_url override pins the construction-time provider for mock/proxy endpoints.
+        if let Some(base_url) = &self.config.base_url {
+            // ~keep The `ollama/` prefix names a wire format, not a host, so it wins over a base_url
+            // override: the override then becomes the Ollama server address. Without an override the
+            // prefix goes through `detect_provider`, where a registered custom provider wins.
+            if provider::ollama::OllamaProvider::owns(model) {
+                return Ok(Arc::new(provider::ollama::OllamaProvider::with_base_url(
+                    base_url.clone(),
+                )));
+            }
+            // ~keep Only a bare model goes to the native API of a client hinted at Ollama. A model
+            // with another provider's prefix goes to the OpenAI-compatible endpoint at the base_url,
+            // as it did before the native provider existed.
+            if let Some(compatible) = &self.prefixed_model_provider
+                && provider::has_provider_prefix(model)
+            {
+                return Ok(Arc::clone(compatible));
+            }
+        }
+        // ~keep A base_url override pins the construction-time provider for mock/proxy endpoints. A
+        // client hinted at Ollama is pinned to the native API like any other provider: a bare model
+        // goes to `/api/chat` whatever the base_url is.
         if self.config.base_url.is_some() {
             return Ok(Arc::clone(&self.provider));
         }
@@ -1184,6 +1223,85 @@ impl DefaultClient {
         headers.extend(self.provider.dynamic_headers(body_json));
         Ok(headers)
     }
+
+    /// Send a prepared chat request and read the reply as a stream of chunks. `chat_stream` and
+    /// `chat_stream_raw` both use it, so a stream cut before the provider's final event is an
+    /// error on both.
+    async fn send_chat_stream(
+        &self,
+        model: &str,
+        prepared: PreparedRequest,
+    ) -> Result<BoxStream<'static, Result<ChatCompletionChunk>>> {
+        // ~keep Streaming endpoints can differ from non-streaming provider URLs.
+        let bare_model = prepared.provider.strip_model_prefix(model);
+        let url = prepared
+            .provider
+            .build_stream_url(prepared.provider.chat_completions_path(), bare_model);
+
+        let (auth_header, credential) = self
+            .resolve_auth_header_for_provider(prepared.provider.as_ref())
+            .await?;
+        let all_headers = self.all_headers_for_provider(
+            prepared.provider.as_ref(),
+            credential.as_ref(),
+            "POST",
+            &url,
+            &prepared.body_json,
+            &prepared.body_bytes,
+        )?;
+        let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
+        let auth = auth_header.as_ref().map(str_pair);
+        let require_terminal = requires_terminal_chat_chunk(prepared.provider.as_ref());
+        let provider_name = prepared.provider.name().to_owned();
+
+        let stream = match prepared.provider.stream_format() {
+            format @ (provider::StreamFormat::Sse | provider::StreamFormat::Ndjson) => {
+                let framing = match format {
+                    provider::StreamFormat::Ndjson => http::streaming::Framing::Ndjson,
+                    _ => http::streaming::Framing::Sse,
+                };
+                let provider = Arc::clone(&prepared.provider);
+                let state = std::sync::Mutex::new(ChatStreamState {
+                    model: model.to_owned(),
+                    ..Default::default()
+                });
+                let parse_event = move |data: &str| parse_chat_stream_event(provider.as_ref(), &state, data);
+                http::streaming::post_stream_framed(
+                    &self.http_stream,
+                    http::request::StreamingPost {
+                        url: &url,
+                        auth_header: auth,
+                        extra_headers: &extra,
+                        body: prepared.body_bytes,
+                    },
+                    parse_event,
+                    self.response_read_options(),
+                    framing,
+                )
+                .await
+                .map_err(|e| prepared.provider.transform_error(e))?
+            }
+            provider::StreamFormat::AwsEventStream => {
+                http::eventstream::post_eventstream_bounded(
+                    &self.http_stream,
+                    http::request::StreamingPost {
+                        url: &url,
+                        auth_header: auth,
+                        extra_headers: &extra,
+                        body: prepared.body_bytes,
+                    },
+                    provider::bedrock::parse_bedrock_stream_event,
+                    self.response_read_options(),
+                )
+                .await?
+            }
+        };
+        Ok(if require_terminal {
+            RequireTerminalChunk::wrap(stream, provider_name)
+        } else {
+            stream
+        })
+    }
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -1244,6 +1362,13 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Arc
             )));
         }
         if let Some(model) = model_hint
+            && provider::ollama::OllamaProvider::names_hint(model)
+        {
+            return Ok(Arc::new(provider::ollama::OllamaProvider::with_base_url(
+                base_url.clone(),
+            )));
+        }
+        if let Some(model) = model_hint
             && model.starts_with("anthropic/")
         {
             return Ok(Arc::new(provider::anthropic::AnthropicProvider::with_base_url(
@@ -1284,6 +1409,9 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Arc
         if model.starts_with("bedrock/") {
             return Ok(build_bedrock_provider(config));
         }
+        if provider::ollama::OllamaProvider::names_hint(model) {
+            return Ok(Arc::new(provider::ollama::OllamaProvider::default()));
+        }
         if let Some(p) = provider::route_model(model)? {
             return Ok(Arc::from(p));
         }
@@ -1291,6 +1419,27 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Arc
     }
 
     Ok(Arc::new(OpenAiProvider))
+}
+
+/// The provider for a model with another provider's prefix on a client whose hint names Ollama
+/// and whose `base_url` is set.
+///
+/// Only a bare model goes to the native API on such a client. A model such as `openai/m` or
+/// `groq/m` goes to the OpenAI-compatible endpoint at the `base_url`, where a client without the
+/// hint sends it, with the model name as given. `None` for every other client.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn prefixed_model_provider(config: &ClientConfig, model_hint: Option<&str>) -> Option<Arc<dyn Provider>> {
+    let base_url = config.base_url.as_ref()?;
+    model_hint.filter(|hint| provider::ollama::OllamaProvider::names_hint(hint))?;
+    Some(Arc::new(OpenAiCompatibleProvider {
+        name: "custom".into(),
+        base_url: base_url.clone(),
+        env_var: None,
+        model_prefixes: vec![],
+        // ~keep No hint provider: the native provider owns every `ollama/` and `ollama_chat/`
+        // model before this provider sees one, so there is no hint prefix left to strip.
+        hint_provider: None,
+    }))
 }
 
 /// Build a [`provider::bedrock::BedrockProvider`] from `config`, threading
@@ -1347,7 +1496,8 @@ impl LlmClient for DefaultClient {
                 prepared.body_bytes,
                 self.response_read_options(),
             )
-            .await?;
+            .await
+            .map_err(|e| prepared.provider.transform_error(e))?;
             prepared.provider.transform_response(&mut raw)?;
             let mut response = serde_json::from_value::<ChatCompletionResponse>(raw).map_err(LiterLlmError::from)?;
             attribute_chat_model(prepared.provider.as_ref(), &mut response.model, &req.model);
@@ -1367,69 +1517,7 @@ impl LlmClient for DefaultClient {
             // ~keep Prepare first for validation/transforms, then override with provider stream URL.
             let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))?;
 
-            // ~keep Streaming endpoints can differ from non-streaming provider URLs.
-            let bare_model = prepared.provider.strip_model_prefix(&req.model);
-            let url = prepared
-                .provider
-                .build_stream_url(prepared.provider.chat_completions_path(), bare_model);
-
-            let (auth_header, credential) = self
-                .resolve_auth_header_for_provider(prepared.provider.as_ref())
-                .await?;
-            let all_headers = self.all_headers_for_provider(
-                prepared.provider.as_ref(),
-                credential.as_ref(),
-                "POST",
-                &url,
-                &prepared.body_json,
-                &prepared.body_bytes,
-            )?;
-            let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
-            let auth = auth_header.as_ref().map(str_pair);
-            let require_terminal = requires_terminal_chat_chunk(prepared.provider.as_ref());
-            let provider_name = prepared.provider.name().to_owned();
-
-            let stream = match prepared.provider.stream_format() {
-                provider::StreamFormat::Sse => {
-                    let provider = Arc::clone(&prepared.provider);
-                    let state = std::sync::Mutex::new(ChatStreamState {
-                        model: req.model.clone(),
-                        ..Default::default()
-                    });
-                    let parse_event = move |data: &str| parse_chat_stream_event(provider.as_ref(), &state, data);
-                    http::streaming::post_stream_bounded(
-                        &self.http_stream,
-                        http::request::StreamingPost {
-                            url: &url,
-                            auth_header: auth,
-                            extra_headers: &extra,
-                            body: prepared.body_bytes,
-                        },
-                        parse_event,
-                        self.response_read_options(),
-                    )
-                    .await?
-                }
-                provider::StreamFormat::AwsEventStream => {
-                    http::eventstream::post_eventstream_bounded(
-                        &self.http_stream,
-                        http::request::StreamingPost {
-                            url: &url,
-                            auth_header: auth,
-                            extra_headers: &extra,
-                            body: prepared.body_bytes,
-                        },
-                        provider::bedrock::parse_bedrock_stream_event,
-                        self.response_read_options(),
-                    )
-                    .await?
-                }
-            };
-            Ok(if require_terminal {
-                RequireTerminalChunk::wrap(stream, provider_name)
-            } else {
-                stream
-            })
+            self.send_chat_stream(&req.model, prepared).await
         })
     }
 
@@ -1464,7 +1552,8 @@ impl LlmClient for DefaultClient {
                 prepared.body_bytes,
                 self.response_read_options(),
             )
-            .await?;
+            .await
+            .map_err(|e| prepared.provider.transform_error(e))?;
             prepared.provider.transform_response(&mut raw)?;
             serde_json::from_value::<EmbeddingResponse>(raw).map_err(LiterLlmError::from)
         })
@@ -1491,7 +1580,8 @@ impl LlmClient for DefaultClient {
                 self.config.max_retries,
                 self.config.max_response_bytes,
             )
-            .await?;
+            .await
+            .map_err(|e| self.provider.transform_error(e))?;
             self.provider.transform_response(&mut raw)?;
             serde_json::from_value::<ModelsListResponse>(raw).map_err(LiterLlmError::from)
         })
@@ -1779,7 +1869,8 @@ impl LlmClientRaw for DefaultClient {
                 prepared.body_bytes,
                 self.response_read_options(),
             )
-            .await?;
+            .await
+            .map_err(|e| prepared.provider.transform_error(e))?;
 
             let raw_response = Some(raw.clone());
             prepared.provider.transform_response(&mut raw)?;
@@ -1802,62 +1893,7 @@ impl LlmClientRaw for DefaultClient {
             let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))?;
             let raw_request = prepared.body_json.clone();
 
-            let bare_model = prepared.provider.strip_model_prefix(&req.model);
-            let url = prepared
-                .provider
-                .build_stream_url(prepared.provider.chat_completions_path(), bare_model);
-
-            let (auth_header, credential) = self
-                .resolve_auth_header_for_provider(prepared.provider.as_ref())
-                .await?;
-            let all_headers = self.all_headers_for_provider(
-                prepared.provider.as_ref(),
-                credential.as_ref(),
-                "POST",
-                &url,
-                &prepared.body_json,
-                &prepared.body_bytes,
-            )?;
-            let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
-            let auth = auth_header.as_ref().map(str_pair);
-
-            let stream = match prepared.provider.stream_format() {
-                provider::StreamFormat::Sse => {
-                    let provider = Arc::clone(&prepared.provider);
-                    let state = std::sync::Mutex::new(ChatStreamState {
-                        model: req.model.clone(),
-                        ..Default::default()
-                    });
-                    let parse_event = move |data: &str| parse_chat_stream_event(provider.as_ref(), &state, data);
-                    http::streaming::post_stream_bounded(
-                        &self.http_stream,
-                        http::request::StreamingPost {
-                            url: &url,
-                            auth_header: auth,
-                            extra_headers: &extra,
-                            body: prepared.body_bytes,
-                        },
-                        parse_event,
-                        self.response_read_options(),
-                    )
-                    .await?
-                }
-                provider::StreamFormat::AwsEventStream => {
-                    http::eventstream::post_eventstream_bounded(
-                        &self.http_stream,
-                        http::request::StreamingPost {
-                            url: &url,
-                            auth_header: auth,
-                            extra_headers: &extra,
-                            body: prepared.body_bytes,
-                        },
-                        provider::bedrock::parse_bedrock_stream_event,
-                        self.response_read_options(),
-                    )
-                    .await?
-                }
-            };
-
+            let stream = self.send_chat_stream(&req.model, prepared).await?;
             Ok(RawStreamExchange { stream, raw_request })
         })
     }
@@ -1889,7 +1925,8 @@ impl LlmClientRaw for DefaultClient {
                 prepared.body_bytes,
                 self.response_read_options(),
             )
-            .await?;
+            .await
+            .map_err(|e| prepared.provider.transform_error(e))?;
 
             let raw_response = Some(raw.clone());
             prepared.provider.transform_response(&mut raw)?;
@@ -2755,6 +2792,24 @@ mod stream_termination_tests {
             &provider::anthropic::AnthropicProvider::default()
         ));
         assert!(requires_terminal_chat_chunk(&provider::cohere::CohereProvider));
+        assert!(requires_terminal_chat_chunk(
+            &provider::ollama::OllamaProvider::default()
+        ));
+        // ~keep Ollama is found by the capability of its native provider, not by its name: a
+        // custom provider called `ollama` is an OpenAI-compatible server.
+        let named_ollama = OpenAiCompatibleProvider {
+            name: "ollama".into(),
+            base_url: "http://localhost:11434/v1".into(),
+            env_var: None,
+            model_prefixes: vec![],
+            hint_provider: None,
+        };
+        assert!(!requires_terminal_chat_chunk(&named_ollama));
+        assert!(!named_ollama.stream_tool_call_indexes_restart());
+        // ~keep Bedrock is found by its event stream framing, not by its name.
+        let bedrock = provider::bedrock::BedrockProvider::from_config(Some("us-east-1".into()), None, None, None, None);
+        assert_eq!(bedrock.stream_format(), provider::StreamFormat::AwsEventStream);
+        assert!(requires_terminal_chat_chunk(&bedrock));
         assert!(!requires_terminal_chat_chunk(
             provider::detect_provider("openai/gpt-4o")
                 .expect("OpenAI is a built-in provider")
@@ -2860,6 +2915,19 @@ mod build_provider_tests {
             url.starts_with("https://resourceA.cognitiveservices.azure.com/openai/deployments/gpt-5-mini/chat/completions?api-version="),
             "url = {url}"
         );
+    }
+
+    #[test]
+    fn ollama_hint_without_base_url_uses_the_native_provider_at_the_default_address() {
+        let config = ClientConfigBuilder::new("").build();
+        for hint in ["ollama", "ollama_chat", "ollama/llama3"] {
+            let p = build_provider(&config, Some(hint)).expect("provider should build");
+            assert_eq!(p.name(), "ollama", "hint {hint}");
+            assert_eq!(p.base_url(), "http://localhost:11434", "hint {hint}");
+            assert_eq!(p.models_path(), "/api/tags", "hint {hint}");
+        }
+        let openai = build_provider(&config, Some("openai")).expect("provider should build");
+        assert_eq!(openai.name(), "openai");
     }
 
     #[test]

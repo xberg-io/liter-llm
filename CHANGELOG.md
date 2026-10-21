@@ -7,8 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `ollama/` (and its alias `ollama_chat/`) now uses Ollama's own API, `/api/chat` and `/api/embed`, instead of the
+  OpenAI-compatible path. Settings in `extra_body` such as `num_ctx`, `top_k` and `repeat_penalty` reach Ollama as
+  `options`, where Ollama applies them. Chat streams read newline-delimited JSON. The default `base_url` is now
+  `http://localhost:11434`. A `base_url` that ends in `/v1` still works: native calls strip one trailing `/v1` before
+  they append `/api/...`. An Ollama hint always means the native API: a client built with the hint `ollama` or
+  `ollama_chat`, or with a hint that starts with `ollama/` or `ollama_chat/`, sends every bare model to `/api/chat`
+  and `/api/embed` whatever `base_url` is, and its `list_models` reads `/api/tags`, which Ollama serves, instead of
+  `/models`, and sets `created` from `modified_at`. On such a client a model with another provider's prefix, such as
+  `openai/m`, `groq/m` or the name of a registered custom provider, still goes to the OpenAI-compatible endpoint at
+  the `base_url` as given, with the model name as given; a model whose name holds a slash but no provider prefix, such
+  as `hf.co/user/model`, is bare. To reach Ollama's OpenAI-compatible endpoint, use the `openai/` prefix with the
+  Ollama `base_url`. `reasoning_effort` becomes `think`, with `none` sent as `think: false`, and `logprobs` reach
+  Ollama. An `extra_body` key set to `null` is not sent. Fields Ollama has no equivalent for are dropped, as the
+  Anthropic provider does; the Ollama section of the local LLMs page lists them. A reply that only calls tools keeps
+  an empty `content`. Error text of other providers is unchanged (#308).
+- `ollama/` requests that Ollama's API cannot take now fail with `BadRequest` before they are sent (#308):
+  - An `image_url` part with an `http` or `https` URL, or a data URL without `;base64`: send the image as a base64
+    data URL.
+  - A message content part other than `text` and `image_url`: send text and images only.
+  - Tool-call `arguments` in an assistant message that are not valid JSON: send them as a JSON object.
+  - Embedding `input` that is not a string or a list of strings: send the text as strings.
+
 ### Added
 
+- `StreamFormat` has a new `Ndjson` variant for providers that stream newline-delimited JSON (#308).
 - `list_catalog_models(provider)` lists the models of the built-in catalog without a network call or an API key, in
   every binding. Each entry has the full catalog name, the provider, the model, the mode, the token limits and the
   ability flags. The list is sorted by name in byte order and covers an installed catalog refresh. The optional
@@ -17,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- An error reply with a plain-text `error` field, as Ollama sends, now shows that text as the error message instead of
+  the raw JSON body (#308).
+- `chat_stream_raw` now ends in `LiterLlmError::Streaming` when a stream is cut before the provider's final event, as
+  `chat_stream` does. This covers Ollama, Anthropic, Gemini, Vertex AI, Cohere and Bedrock (#308).
 - Parse Voyage rerank replies, which list the scored documents under `data` instead of `results`, so `voyage/` rerank calls return the same `results` as other providers. The reply shape follows the model in the request, and a client that names Voyage as its `model_hint` reads Voyage replies for a bare model such as `rerank-2`. A custom provider that claims the `voyage/` prefix still decides where the request goes, but the reply is read as a Voyage reply. A `results: null` beside a valid `data` array parses from `data`. The `voyage/` prefix is case-sensitive, like every other provider prefix. (#306)
 - Rerank replies no longer pass through the chat transform of the provider that sends the request. This fixes `cohere/` rerank calls, whose replies the Cohere chat transform rebuilt without the `results` array, and any rerank call from a client pinned to a provider with a chat transform. (#306)
 - `reasoning_effort: "none"` is now accepted by the typed `ReasoningEffort` field in every binding and reaches the server as `"none"` on OpenAI-compatible, Azure and Ollama endpoints. Anthropic and Bedrock send `thinking: {type: "disabled"}`, and Vertex AI and Gemini send a thinking budget of 0 (#301).

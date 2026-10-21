@@ -3,9 +3,9 @@
 //! surface truncation as an error; OpenAI-compatible streams stay lenient
 //! because some servers omit `[DONE]` (#155).
 //!
-//! Anthropic and Gemini are exercised end to end here. Cohere and Bedrock are
-//! covered by the unit tests next to the adapter, because a `base_url`
-//! override routes them through the OpenAI-compatible provider.
+//! Anthropic, Gemini and Vertex AI are exercised end to end here. Cohere and
+//! Bedrock are covered by the unit tests next to the adapter, because a
+//! `base_url` override routes them through the OpenAI-compatible provider.
 
 #![cfg(feature = "native-http")]
 
@@ -17,7 +17,7 @@ use std::thread;
 
 use futures_util::StreamExt;
 use liter_llm::LiterLlmError;
-use liter_llm::client::{ClientConfigBuilder, DefaultClient, LlmClient};
+use liter_llm::client::{ClientConfigBuilder, DefaultClient, LlmClient, LlmClientRaw};
 use liter_llm::types::{ChatCompletionChunk, ChatCompletionRequest, FinishReason, Message, UserMessage};
 
 /// Serve one SSE response with `body`, then close the connection.
@@ -112,6 +112,18 @@ async fn anthropic_stream_cut_before_message_delta_is_an_error() {
 }
 
 #[tokio::test]
+async fn anthropic_raw_stream_cut_before_message_delta_is_an_error() {
+    let (client, server) = client(ANTHROPIC_MODEL, sse(&[ANTHROPIC_START, ANTHROPIC_DELTA]));
+    let exchange = client
+        .chat_stream_raw(request(ANTHROPIC_MODEL))
+        .await
+        .expect("raw stream opens");
+    let items = exchange.stream.collect::<Vec<_>>().await;
+    server.join().expect("response server completed");
+    assert_truncated(&items);
+}
+
+#[tokio::test]
 async fn anthropic_stream_with_final_event_completes() {
     let body = sse(&[
         ANTHROPIC_START,
@@ -151,6 +163,23 @@ async fn gemini_stream_with_finish_reason_completes() {
         r#"{"candidates":[{"content":{"role":"model","parts":[{"text":" world"}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":3,"candidatesTokenCount":2}}"#,
     ]);
     assert_complete(&collect(GEMINI_MODEL, body).await);
+}
+
+const VERTEX_MODEL: &str = "vertex_ai/gemini-2.5-flash";
+
+#[tokio::test]
+async fn vertex_stream_cut_before_finish_reason_is_an_error() {
+    let body = sse(&[r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello"}]}}]}"#]);
+    assert_truncated(&collect(VERTEX_MODEL, body).await);
+}
+
+#[tokio::test]
+async fn vertex_stream_with_finish_reason_completes() {
+    let body = sse(&[
+        r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello"}]}}]}"#,
+        r#"{"candidates":[{"content":{"role":"model","parts":[{"text":" world"}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":3,"candidatesTokenCount":2}}"#,
+    ]);
+    assert_complete(&collect(VERTEX_MODEL, body).await);
 }
 
 #[tokio::test]
