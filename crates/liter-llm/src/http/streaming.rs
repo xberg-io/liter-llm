@@ -790,14 +790,20 @@ mod tests {
         chunk.choices.iter().any(|choice| choice.finish_reason.is_some())
     }
 
-    /// Run `body` through a parser, with the end of the stream checked when `is_final` is set.
+    /// A parser over `body`, with the end of the stream checked when `is_final` is set.
+    fn checked_parser(
+        body: &str,
+        is_final: Option<fn(&ChatCompletionChunk) -> bool>,
+    ) -> Pin<Box<dyn Stream<Item = Result<ChatCompletionChunk>>>> {
+        let inner = futures_util::stream::iter(vec![Ok::<_, reqwest::Error>(Bytes::from(body.as_bytes().to_vec()))]);
+        Box::pin(SseParser::new(inner, json_parse, is_final, None))
+    }
+
     async fn drain_checked(
         body: &str,
         is_final: Option<fn(&ChatCompletionChunk) -> bool>,
     ) -> Vec<Result<ChatCompletionChunk>> {
-        let inner = futures_util::stream::iter(vec![Ok::<_, reqwest::Error>(Bytes::from(body.as_bytes().to_vec()))]);
-        let parser: Pin<Box<SseParser<_, _, _>>> = Box::pin(SseParser::new(inner, json_parse, is_final, None));
-        futures_util::StreamExt::collect(parser).await
+        futures_util::StreamExt::collect(checked_parser(body, is_final)).await
     }
 
     fn assert_missing_final_event(last: &Result<ChatCompletionChunk>) {
@@ -843,9 +849,7 @@ mod tests {
 
     #[tokio::test]
     async fn missing_final_event_error_is_reported_once() {
-        let inner = futures_util::stream::iter(vec![Ok::<_, reqwest::Error>(Bytes::from(CONTENT_EVENT.as_bytes().to_vec()))]);
-        let mut parser: Pin<Box<SseParser<_, _, _>>> =
-            Box::pin(SseParser::new(inner, json_parse, Some(has_finish_reason), None));
+        let mut parser = checked_parser(CONTENT_EVENT, Some(has_finish_reason));
         assert!(futures_util::StreamExt::next(&mut parser).await.expect("chunk").is_ok());
         assert_missing_final_event(&futures_util::StreamExt::next(&mut parser).await.expect("error"));
         assert!(futures_util::StreamExt::next(&mut parser).await.is_none());
@@ -863,6 +867,53 @@ mod tests {
             "unexpected item: {:?}",
             items[1]
         );
+    }
+
+    #[tokio::test]
+    async fn mid_event_cut_on_a_checked_stream_is_reported_once_as_truncation() {
+        let body = format!("{CONTENT_EVENT}data: {{\"id\":\"1\",\"choi");
+        let items = drain_checked(&body, Some(has_finish_reason)).await;
+        assert_eq!(items.len(), 2, "a chunk and one truncation error: {items:?}");
+        assert!(items[0].is_ok());
+        match &items[1] {
+            Err(LiterLlmError::Streaming { message }) => {
+                assert!(message.contains("truncated"), "unexpected message: {message}");
+                assert!(!message.contains("final event"), "unexpected message: {message}");
+            }
+            other => panic!("expected the truncation error, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn invalid_utf8_on_a_checked_stream_is_reported_once() {
+        let inner = futures_util::stream::iter(vec![
+            Ok::<_, reqwest::Error>(Bytes::from_static(b"data: ")),
+            Ok::<_, reqwest::Error>(Bytes::from_static(&[0xFF])),
+        ]);
+        let parser: Pin<Box<SseParser<_, _, _>>> =
+            Box::pin(SseParser::new(inner, json_parse, Some(has_finish_reason), None));
+        let items = futures_util::StreamExt::collect::<Vec<_>>(parser).await;
+        assert_eq!(items.len(), 1, "only the UTF-8 error: {items:?}");
+        assert!(matches!(&items[0], Err(LiterLlmError::Streaming { message }) if message.contains("invalid UTF-8")));
+    }
+
+    #[tokio::test]
+    async fn transport_error_on_a_checked_stream_is_reported_once() {
+        let transport_error = reqwest::Client::new()
+            .get("not a url")
+            .build()
+            .expect_err("an invalid URL does not build");
+        let inner = futures_util::stream::iter(vec![
+            Ok::<_, reqwest::Error>(Bytes::from(CONTENT_EVENT.as_bytes().to_vec())),
+            Err(transport_error),
+        ]);
+        let parser: Pin<Box<SseParser<_, _, _>>> =
+            Box::pin(SseParser::new(inner, json_parse, Some(has_finish_reason), None));
+        let items = futures_util::StreamExt::collect::<Vec<_>>(parser).await;
+        assert_eq!(items.len(), 2, "a chunk and the transport error: {items:?}");
+        assert!(items[0].is_ok());
+        let last = items[1].as_ref().expect_err("the transport error ends the stream");
+        assert!(!last.to_string().contains("final event"), "unexpected error: {last}");
     }
 
     #[tokio::test]

@@ -76,6 +76,19 @@ async fn collect(model: &str, body: String) -> Vec<Result<ChatCompletionChunk, L
     items
 }
 
+/// Drain the raw stream of `chat_stream_raw`, which takes the same SSE path.
+async fn collect_raw(model: &str, body: String) -> Vec<Result<ChatCompletionChunk, LiterLlmError>> {
+    let (client, server) = client(model, body);
+    let stream = client
+        .chat_stream_raw(request(model))
+        .await
+        .expect("raw stream opens")
+        .stream;
+    let items = stream.collect::<Vec<_>>().await;
+    server.join().expect("response server completed");
+    items
+}
+
 fn sse(events: &[&str]) -> String {
     events.iter().map(|event| format!("data: {event}\n\n")).collect()
 }
@@ -171,4 +184,9 @@ async fn openai_compatible_stream_with_done_completes() {
 #[tokio::test]
 async fn openai_compatible_stream_with_finish_reason_and_no_done_completes() {
     assert_complete(&collect("openai/gpt-4o", sse(&[OPENAI_CONTENT, OPENAI_FINISH])).await);
+}
+
+#[tokio::test]
+async fn openai_compatible_raw_stream_cut_on_an_event_boundary_is_an_error() {
+    assert_truncated(&collect_raw("openai/gpt-4o", sse(&[OPENAI_CONTENT, OPENAI_CONTENT])).await);
 }
