@@ -2984,6 +2984,92 @@ mod build_provider_tests {
         );
     }
 
+    /// Every hint form that names a provider: the bare name and the `provider/model` form.
+    const ROUTED_HINTS: &[(&str, &str)] = &[
+        ("cohere", "cohere"),
+        ("cohere/command-r-plus", "cohere"),
+        ("mistral", "mistral"),
+        ("mistral/mistral-large-latest", "mistral"),
+        ("voyage", "voyage"),
+        ("anthropic", "anthropic"),
+        ("anthropic/claude-sonnet-4", "anthropic"),
+        ("gemini", "google_ai"),
+        ("gemini/gemini-2.0-flash", "google_ai"),
+        ("google_ai", "google_ai"),
+        ("vertex_ai", "vertex_ai"),
+        ("vertex_ai/gemini-2.0-flash", "vertex_ai"),
+        ("ollama", "ollama"),
+        ("groq", "groq"),
+        ("fireworks_ai", "fireworks_ai"),
+    ];
+
+    /// Revert line: make the `model_hint` branch in `build_provider` read only a
+    /// slash-form hint, or skip the hint when a `base_url` is set, and the bare names
+    /// below route to OpenAI or to the generic provider again.
+    #[test]
+    fn a_bare_hint_and_a_slash_hint_select_the_same_provider() {
+        let config = ClientConfigBuilder::new("test-key").build();
+        for (hint, expected) in ROUTED_HINTS {
+            let provider = build_provider(&config, Some(hint)).expect("provider should build");
+            assert_eq!(provider.name(), *expected, "hint {hint}");
+        }
+    }
+
+    /// Revert line: send a hint with a `base_url` to the generic OpenAI-compatible provider
+    /// (the `return Ok(Arc::new(OpenAiCompatibleProvider { .. }))` branch for every hint) and
+    /// the provider name, the path and the transformed body differ from the no-`base_url` route.
+    #[test]
+    fn base_url_changes_only_the_host_of_the_hinted_route() {
+        let body = || {
+            serde_json::json!({
+                "model": "m",
+                "messages": [{"role": "user", "content": "hi"}],
+                "top_p": 0.5,
+                "max_completion_tokens": 16,
+                "stream": false,
+                "stream_options": {"include_usage": true},
+            })
+        };
+        let plain_config = ClientConfigBuilder::new("test-key").build();
+        let based_config = ClientConfigBuilder::new("test-key")
+            .base_url("http://gateway.test/v1")
+            .build();
+        for (hint, _) in ROUTED_HINTS {
+            let plain = build_provider(&plain_config, Some(hint)).expect("provider should build");
+            let based = build_provider(&based_config, Some(hint)).expect("provider should build");
+            assert_eq!(based.name(), plain.name(), "hint {hint}");
+            assert_eq!(
+                based.chat_completions_path(),
+                plain.chat_completions_path(),
+                "hint {hint}"
+            );
+            let (mut plain_body, mut based_body) = (body(), body());
+            let plain_result = plain.transform_request(&mut plain_body).map_err(|e| e.to_string());
+            let based_result = based.transform_request(&mut based_body).map_err(|e| e.to_string());
+            assert_eq!(based_result, plain_result, "hint {hint}");
+            assert_eq!(based_body, plain_body, "hint {hint}");
+            let url = based.build_url(based.chat_completions_path(), "m");
+            assert!(url.starts_with("http://gateway.test/v1"), "hint {hint}: url = {url}");
+        }
+    }
+
+    /// Revert line: drop the `hint_pins_provider` early return in `resolve_provider_for_model`
+    /// and a bare model name picks its provider by name pattern again (a `gemini-` model
+    /// goes to Google AI Studio under a `vertex_ai` or `groq` hint).
+    #[test]
+    fn a_bare_model_stays_on_the_hinted_provider() {
+        let config = ClientConfigBuilder::new("test-key").build();
+        let client = DefaultClient::new(config, Some("groq")).expect("client should build");
+        for model in ["llama3-8b", "gemini-2.0-flash", "claude-sonnet-4"] {
+            let provider = client.resolve_provider_for_model(model).expect("provider resolves");
+            assert_eq!(provider.name(), "groq", "model {model}");
+        }
+        let provider = client
+            .resolve_provider_for_model("anthropic/claude-sonnet-4")
+            .expect("provider resolves");
+        assert_eq!(provider.name(), "anthropic");
+    }
+
     #[test]
     fn extra_body_object_is_merged_and_overrides_existing_key() {
         let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("gpt-4"))
