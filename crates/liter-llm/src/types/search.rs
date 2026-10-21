@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct SearchRequest {
-    /// The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
+    /// The model/provider to use (e.g. `"brave/web-search"`).
     pub model: String,
     /// The search query string.
     pub query: String,

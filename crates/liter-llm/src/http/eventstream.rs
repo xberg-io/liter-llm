@@ -362,8 +362,23 @@ where
     if message_type == "exception" {
         let payload = &frame[headers_end..total_length - 4];
         let payload_str = std::str::from_utf8(payload).unwrap_or("<binary>");
+        return Err(crate::provider::bedrock::exception_error(event_type, payload_str));
+    }
+
+    if message_type == "error" {
+        let header = |name: &str| {
+            headers
+                .iter()
+                .rev()
+                .find(|h| h.name == name)
+                .map_or("", |h| h.value.as_str())
+        };
         return Err(LiterLlmError::Streaming {
-            message: format!("Bedrock EventStream exception ({event_type}): {payload_str}"),
+            message: format!(
+                "Bedrock EventStream error ({}): {}",
+                header(":error-code"),
+                header(":error-message")
+            ),
         });
     }
 
@@ -411,14 +426,15 @@ fn verify_frame_crcs(frame: &[u8]) -> Result<()> {
     Ok(())
 }
 
-/// The `:event-type` and `:message-type` header values, `""` when absent.
-/// A repeated header takes its last value.
+/// The event type and `:message-type` header values, `""` when absent. An
+/// `exception` frame names its type in `:exception-type`; every other frame
+/// uses `:event-type`. A repeated header takes its last value.
 fn frame_types(headers: &[EventHeader]) -> (&str, &str) {
     let mut event_type = "";
     let mut message_type = "";
     for h in headers {
         match h.name.as_str() {
-            ":event-type" => event_type = &h.value,
+            ":event-type" | ":exception-type" => event_type = &h.value,
             ":message-type" => message_type = &h.value,
             _ => {}
         }
@@ -760,6 +776,89 @@ mod tests {
             }
             other => panic!("expected error, got {other:?}"),
         }
+    }
+
+    /// Revert line: make `decode_frame` build `LiterLlmError::Streaming` for an
+    /// exception frame again to make this test fail. A real exception frame names
+    /// its type in `:exception-type`, not `:event-type`.
+    #[test]
+    fn exception_frame_has_the_http_error_kind() {
+        let cases = [
+            ("throttlingException", 429),
+            ("validationException", 400),
+            ("accessDeniedException", 403),
+            ("resourceNotFoundException", 404),
+            ("internalServerException", 500),
+            ("serviceUnavailableException", 503),
+            ("modelStreamErrorException", 424),
+            ("modelErrorException", 424),
+            ("modelNotReadyException", 429),
+        ];
+        for (exception, status) in cases {
+            let frame = build_frame(
+                &[(":message-type", "exception"), (":exception-type", exception)],
+                br#"{"message":"Rate exceeded"}"#,
+            );
+            let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
+            let err = decode_frame(&frame, &parse).unwrap_err();
+            let http = LiterLlmError::from_status(status, r#"{"error":{"message":"x"}}"#, None);
+            assert_eq!(
+                std::mem::discriminant(&err),
+                std::mem::discriminant(&http),
+                "{exception}: frame gave {err:?}, HTTP {status} gives {http:?}"
+            );
+            assert_eq!(err.status_code(), status, "{exception}");
+            assert!(err.to_string().contains("Rate exceeded"), "{exception}: {err}");
+        }
+    }
+
+    /// Revert line: remove the `modelTimeoutException` arm of `exception_error` to make
+    /// this test fail. HTTP 408 gives `Timeout`, a kind with no message.
+    #[test]
+    fn model_timeout_exception_frame_is_a_timeout() {
+        let frame = build_frame(
+            &[
+                (":message-type", "exception"),
+                (":exception-type", "modelTimeoutException"),
+            ],
+            br#"{"message":"too slow"}"#,
+        );
+        let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
+        let err = decode_frame(&frame, &parse).unwrap_err();
+        assert!(matches!(err, LiterLlmError::Timeout), "got: {err:?}");
+        assert_eq!(err.status_code(), 408);
+    }
+
+    /// Revert line: remove the `message-type` error branch of `decode_frame` to make
+    /// this test fail (the frame is then skipped and the stream ends with no error).
+    #[test]
+    fn error_message_frame_raises_a_streaming_error() {
+        let frame = build_frame(
+            &[
+                (":message-type", "error"),
+                (":error-code", "InternalFailure"),
+                (":error-message", "backend lost"),
+            ],
+            b"",
+        );
+        let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
+        let err = decode_frame(&frame, &parse).unwrap_err();
+        assert!(matches!(err, LiterLlmError::Streaming { .. }), "got: {err:?}");
+        assert!(err.to_string().contains("InternalFailure"), "got: {err}");
+        assert!(err.to_string().contains("backend lost"), "got: {err}");
+    }
+
+    #[test]
+    fn unknown_exception_frame_stays_a_streaming_error() {
+        let frame = build_frame(
+            &[(":message-type", "exception"), (":exception-type", "futureException")],
+            br#"{"message":"odd"}"#,
+        );
+        let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
+        let err = decode_frame(&frame, &parse).unwrap_err();
+        assert!(matches!(err, LiterLlmError::Streaming { .. }), "got: {err:?}");
+        assert!(err.to_string().contains("futureException"), "got: {err}");
+        assert!(err.to_string().contains("odd"), "got: {err}");
     }
 }
 

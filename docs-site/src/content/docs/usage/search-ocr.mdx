@@ -27,7 +27,7 @@ import { Content as Snip_wasm_usage_ocr } from "../../../snippets/wasm/ocr/ocr-u
 
 ## Search
 
-Search the web or documents across 12 providers (Brave, Tavily, Google PSE, etc.):
+Search the web or documents across 12 providers (Brave, Google PSE, etc.):
 
 <Tabs syncKey="lang">
 <TabItem label="Python">
@@ -99,9 +99,7 @@ The registry ships 12 search providers. Browse the full [Providers](/providers/)
 | Provider    | Prefix         |
 | ----------- | -------------- |
 | Brave       | `brave/`       |
-| Tavily      | `tavily/`      |
 | Google PSE  | `google_pse/`  |
-| Serper      | `serper/`      |
 | DuckDuckGo  | `duckduckgo/`  |
 | Exa         | `exa_ai/`      |
 | Firecrawl   | `firecrawl/`   |
@@ -110,6 +108,8 @@ The registry ships 12 search providers. Browse the full [Providers](/providers/)
 | Perplexity  | `perplexity/`  |
 | SearXNG     | `searxng/`     |
 | DataForSEO  | `dataforseo/`  |
+
+`tavily/` and `serper/` have no built-in route yet. A call to either one needs a `base_url` until native routes exist.
 
 ## OCR
 
