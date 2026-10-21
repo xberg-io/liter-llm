@@ -586,6 +586,17 @@ pub(crate) trait Provider: Send + Sync {
         self.transform_request(body)
     }
 
+    /// Transform the raw response JSON of an embedding request before deserialization.
+    ///
+    /// The client calls this, and not [`Self::transform_response`], for the embeddings
+    /// endpoint, after the request body is built. `request_model` is the model of the request.
+    /// The default runs `transform_response` and leaves the reply `model` as the provider sent
+    /// it. A provider whose embed reply has no `model` overrides it.
+    fn transform_embedding_response(&self, body: &mut serde_json::Value, request_model: &str) -> Result<()> {
+        let _ = request_model;
+        self.transform_response(body)
+    }
+
     /// Transform the raw response JSON before deserialization into canonical types.
     ///
     /// Providers returning non-OpenAI formats (Anthropic, Bedrock, Vertex) override
@@ -1264,6 +1275,15 @@ mod tests {
             body["renamed"] = json!(true);
             Ok(())
         }
+    }
+
+    #[test]
+    fn transform_embedding_response_keeps_the_reply_model_by_default() {
+        let mut body = json!({"object": "list", "data": [], "model": ""});
+        RenamingProvider
+            .transform_embedding_response(&mut body, "request-model")
+            .expect("the default hook should not fail");
+        assert_eq!(body["model"], "");
     }
 
     #[test]

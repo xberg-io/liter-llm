@@ -171,18 +171,6 @@ fn str_pair(pair: &(String, String)) -> (&str, &str) {
     (pair.0.as_str(), pair.1.as_str())
 }
 
-/// Set the reply `model` to the request model when the reply carries none or an empty one.
-#[cfg(any(feature = "native-http", feature = "wasm-http"))]
-fn fill_empty_model(reply: &mut serde_json::Value, model: &str) {
-    let missing = reply
-        .get("model")
-        .and_then(serde_json::Value::as_str)
-        .is_none_or(str::is_empty);
-    if missing && let Some(obj) = reply.as_object_mut() {
-        obj.insert("model".into(), serde_json::Value::String(model.to_owned()));
-    }
-}
-
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 fn provider_auth_header(provider: &dyn Provider, api_key: &str) -> Option<(String, String)> {
     (!api_key.is_empty())
@@ -1508,8 +1496,7 @@ impl LlmClient for DefaultClient {
                 self.response_read_options(),
             )
             .await?;
-            prepared.provider.transform_response(&mut raw)?;
-            fill_empty_model(&mut raw, &req.model);
+            prepared.provider.transform_embedding_response(&mut raw, &req.model)?;
             serde_json::from_value::<EmbeddingResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -1936,8 +1923,7 @@ impl LlmClientRaw for DefaultClient {
             .await?;
 
             let raw_response = Some(raw.clone());
-            prepared.provider.transform_response(&mut raw)?;
-            fill_empty_model(&mut raw, &req.model);
+            prepared.provider.transform_embedding_response(&mut raw, &req.model)?;
             let data = serde_json::from_value::<EmbeddingResponse>(raw).map_err(LiterLlmError::from)?;
 
             Ok(RawExchange {
@@ -3097,21 +3083,6 @@ mod build_provider_tests {
             .expect("speech request should prepare");
         assert_eq!(prepared.body_json["voice"], "alloy");
         assert_eq!(prepared.body_json["input"], "hello");
-    }
-
-    #[test]
-    fn fill_empty_model_sets_a_missing_or_empty_model_only() {
-        let mut missing = serde_json::json!({"object": "list"});
-        fill_empty_model(&mut missing, "m");
-        assert_eq!(missing["model"], "m");
-
-        let mut empty = serde_json::json!({"model": ""});
-        fill_empty_model(&mut empty, "m");
-        assert_eq!(empty["model"], "m");
-
-        let mut named = serde_json::json!({"model": "served-model"});
-        fill_empty_model(&mut named, "m");
-        assert_eq!(named["model"], "served-model");
     }
 
     #[test]

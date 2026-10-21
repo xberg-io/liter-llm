@@ -114,7 +114,6 @@ impl Provider for CohereProvider {
     /// written. Note the minimum is `0.01`, not `0.0`: `top_p: 0.0` is legal for
     /// OpenAI (and documented as legal by this crate's own `ChatCompletionRequest`)
     /// but must be rejected here rather than silently coerced to `0.01`.
-    ///
     fn transform_request(&self, body: &mut Value) -> Result<()> {
         super::validate_sampling_param_range(body, "top_p", "Cohere", 0.01, 0.99)?;
 
@@ -133,6 +132,22 @@ impl Provider for CohereProvider {
     /// (moderation, speech, chat) is ever taken for an embedding body.
     fn transform_embedding_request(&self, body: &mut Value) -> Result<()> {
         transform_embed_request(body)
+    }
+
+    /// Rebuild an embed reply like [`Self::transform_response`], then name the model.
+    ///
+    /// A Cohere embed reply carries no `model`, so an empty or missing one takes the model of
+    /// the request. No other provider gets this step.
+    fn transform_embedding_response(&self, body: &mut Value, request_model: &str) -> Result<()> {
+        self.transform_response(body)?;
+        let unnamed = body
+            .get("model")
+            .and_then(Value::as_str)
+            .is_none_or(str::is_empty);
+        if unnamed && let Some(obj) = body.as_object_mut() {
+            obj.insert("model".into(), Value::String(request_model.to_owned()));
+        }
+        Ok(())
     }
 
     /// Parse a Cohere v2 streaming SSE event into a `ChatCompletionChunk`.
@@ -349,6 +364,14 @@ fn transform_embed_request(body: &mut Value) -> Result<()> {
         }
         Value::String(text) => out["texts"] = json!([text]),
         Value::Array(items) if items.iter().all(Value::is_string) => out["texts"] = Value::Array(items),
+        Value::Array(parts) if !parts.iter().all(Value::is_object) => {
+            return Err(LiterLlmError::BadRequest {
+                message: "Cohere embeddings take a list of strings or a list of content parts; \
+                          a list that mixes them, or that holds numbers or token arrays, is not supported"
+                    .into(),
+                status: 400,
+            });
+        }
         Value::Array(parts) => {
             let content = parts.iter().map(embed_content_part).collect::<Result<Vec<Value>>>()?;
             out["inputs"] = json!([{ "content": content }]);
@@ -1376,6 +1399,44 @@ mod tests {
             .transform_embedding_request(&mut body)
             .expect_err("an audio part has no Cohere embed form");
         assert_eq!(err.status_code(), 400);
+    }
+
+    #[test]
+    fn test_cohere_embed_request_rejects_a_mixed_list_and_a_token_array() {
+        for input in [json!(["a", 5]), json!([[1, 2, 3]]), json!(["a", {"type": "text", "text": "b"}])] {
+            let mut body = json!({"model": "embed-v4.0", "input": input});
+            let err = CohereProvider
+                .transform_embedding_request(&mut body)
+                .expect_err("a mixed list or a token array has no Cohere embed form");
+            assert_eq!(err.status_code(), 400);
+            assert!(
+                err.to_string().contains("mixes them"),
+                "the message should name the input problem, got: {err}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_cohere_embed_reply_without_a_model_takes_the_request_model() {
+        for reply in [
+            json!({"embeddings": {"float": [[0.5]]}}),
+            json!({"embeddings": {"float": [[0.5]]}, "model": ""}),
+        ] {
+            let mut body = reply;
+            CohereProvider
+                .transform_embedding_response(&mut body, "embed-v4.0")
+                .expect("a float reply should rebuild");
+            assert_eq!(body["model"], "embed-v4.0");
+        }
+    }
+
+    #[test]
+    fn test_cohere_embed_reply_with_a_model_keeps_it() {
+        let mut body = json!({"embeddings": {"float": [[0.5]]}, "model": "served-model"});
+        CohereProvider
+            .transform_embedding_response(&mut body, "embed-v4.0")
+            .expect("a float reply should rebuild");
+        assert_eq!(body["model"], "served-model");
     }
 
     #[test]

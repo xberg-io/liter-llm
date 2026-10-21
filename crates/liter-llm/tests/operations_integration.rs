@@ -1253,7 +1253,7 @@ fn embedding_request() -> EmbeddingRequest {
 }
 
 #[tokio::test]
-async fn embed_reply_without_a_model_gets_the_request_model() {
+async fn embed_reply_with_an_empty_model_keeps_it_for_an_openai_compatible_provider() {
     let mock = MockServer::start_with_routes(vec![MockRoute {
         method: "POST".into(),
         path_prefix: "/embeddings".into(),
@@ -1264,11 +1264,11 @@ async fn embed_reply_without_a_model_gets_the_request_model() {
 
     let resp = client.embed(embedding_request()).await.expect("embed should succeed");
 
-    assert_eq!(resp.model, "text-embedding-3-small");
+    assert_eq!(resp.model, "");
 }
 
 #[tokio::test]
-async fn embed_raw_reply_without_a_model_gets_the_request_model() {
+async fn embed_raw_reply_with_an_empty_model_keeps_it_for_an_openai_compatible_provider() {
     let mock = MockServer::start_with_routes(vec![MockRoute {
         method: "POST".into(),
         path_prefix: "/embeddings".into(),
@@ -1282,5 +1282,5 @@ async fn embed_raw_reply_without_a_model_gets_the_request_model() {
         .await
         .expect("embed_raw should succeed");
 
-    assert_eq!(resp.data.model, "text-embedding-3-small");
+    assert_eq!(resp.data.model, "");
 }
