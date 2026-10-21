@@ -72,15 +72,15 @@ class ContentAccessorTests(unittest.TestCase):
     def test_plain_reply_gives_text_and_no_parts(self) -> None:
         """A reply whose content is a plain string has .text equal to the string and .parts of None."""
         content = self._content(PLAIN)
-        self.assertEqual(content.text, "hello")
-        self.assertIsNone(content.parts)
+        assert content.text == "hello"
+        assert content.parts is None
 
     def test_parts_reply_gives_parts_and_no_text(self) -> None:
         """A reply whose content is a list of parts has .parts with both parts and .text of None."""
         content = self._content(PARTS)
-        self.assertIsNone(content.text)
-        self.assertIsNotNone(content.parts)
-        self.assertEqual(len(content.parts), 2)
+        assert content.text is None
+        assert content.parts is not None
+        assert len(content.parts) == 2
 
 
 if __name__ == "__main__":
