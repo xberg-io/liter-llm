@@ -3018,7 +3018,7 @@ public typealias RerankResponse = RustBridge.RerankResponse
 public struct RerankResult: Codable, Sendable, Hashable {
     /// Original document index in the input list.
     public let index: UInt32
-    /// Relevance score in `[0, 1]`. Higher indicates more relevant.
+    /// Relevance score. Higher indicates more relevant. Most providers use `[0, 1]`; NVIDIA NIM sends a raw logit.
     public let relevanceScore: Double
     /// Original document content (if `return_documents` was true).
     public let document: RerankResultDocument?

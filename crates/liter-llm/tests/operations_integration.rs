@@ -1238,6 +1238,17 @@ fn rerank_json_mock(body: serde_json::Value) -> MockServer {
     rerank_mock(body.to_string())
 }
 
+/// The route a rerank request for `hint` reaches. NVIDIA NIM serves reranking at `/ranking`.
+fn rerank_mock_for(hint: &str, body: serde_json::Value) -> MockServer {
+    let path = if hint == "nvidia_nim" { "/ranking" } else { "/rerank" };
+    MockServer::start_with_routes(vec![MockRoute {
+        method: "POST".into(),
+        path_prefix: path.into(),
+        status: 200,
+        body: body.to_string(),
+    }])
+}
+
 /// One reply for each provider whose rerank reply is not the `results` shape.
 /// Every reply ranks document 2 first and document 0 second.
 fn foreign_rerank_replies() -> Vec<(&'static str, &'static str, serde_json::Value)> {
@@ -1268,7 +1279,7 @@ fn foreign_rerank_replies() -> Vec<(&'static str, &'static str, serde_json::Valu
 #[tokio::test]
 async fn rerank_reply_of_fireworks_nim_and_tei_parses_into_results() {
     for (hint, model, reply) in foreign_rerank_replies() {
-        let mock = rerank_json_mock(reply);
+        let mock = rerank_mock_for(hint, reply);
         let client = hinted_client(&mock, hint);
 
         let resp = client
@@ -1284,7 +1295,7 @@ async fn rerank_reply_of_fireworks_nim_and_tei_parses_into_results() {
 #[tokio::test]
 async fn rerank_raw_reply_of_fireworks_nim_and_tei_parses_and_keeps_the_raw_reply() {
     for (hint, model, reply) in foreign_rerank_replies() {
-        let mock = rerank_json_mock(reply.clone());
+        let mock = rerank_mock_for(hint, reply.clone());
         let client = hinted_client(&mock, hint);
 
         let exchange = client
@@ -1300,7 +1311,7 @@ async fn rerank_raw_reply_of_fireworks_nim_and_tei_parses_and_keeps_the_raw_repl
 #[tokio::test]
 async fn rerank_nim_logit_becomes_the_relevance_score() {
     let (hint, model, reply) = foreign_rerank_replies().remove(1);
-    let mock = rerank_json_mock(reply);
+    let mock = rerank_mock_for(hint, reply);
     let client = hinted_client(&mock, hint);
 
     let resp = client.rerank(rerank_request(model)).await.expect("NIM reply parses");
@@ -1379,4 +1390,75 @@ async fn rerank_request_to_cohere_keeps_top_n() {
     let body = first_request_body(&mock);
     assert_eq!(body["top_n"], 1);
     assert!(body.get("top_k").is_none());
+}
+
+fn object_document_request(model: &str) -> RerankRequest {
+    RerankRequest {
+        model: model.to_owned(),
+        query: "q".to_owned(),
+        documents: vec![
+            RerankDocument::Text("a".to_owned()),
+            RerankDocument::Object { text: "b".to_owned() },
+        ],
+        top_n: Some(1),
+        return_documents: Some(true),
+    }
+}
+
+#[tokio::test]
+async fn rerank_nim_request_goes_to_ranking_with_query_and_passages() {
+    let mock = rerank_mock_for("nvidia_nim", serde_json::json!({"rankings": [{"index": 1, "logit": 0.5}]}));
+    let client = hinted_client(&mock, "nvidia_nim");
+
+    client
+        .rerank(object_document_request("nvidia_nim/nv-rerankqa"))
+        .await
+        .expect("reply parses");
+
+    let requests = mock.requests();
+    assert_eq!(requests[0].path, "/ranking");
+    assert_eq!(
+        first_request_body(&mock),
+        serde_json::json!({
+            "model": "nv-rerankqa",
+            "query": {"text": "q"},
+            "passages": [{"text": "a"}, {"text": "b"}]
+        })
+    );
+}
+
+#[tokio::test]
+async fn rerank_nim_request_follows_a_client_that_names_nim_as_hint() {
+    let mock = rerank_mock_for("nvidia_nim", serde_json::json!({"rankings": [{"index": 1, "logit": 0.5}]}));
+    let client = hinted_client(&mock, "nvidia_nim");
+
+    client
+        .rerank(object_document_request("nv-rerankqa"))
+        .await
+        .expect("reply parses");
+
+    assert_eq!(mock.requests()[0].path, "/ranking");
+    assert_eq!(first_request_body(&mock)["query"], serde_json::json!({"text": "q"}));
+}
+
+#[tokio::test]
+async fn rerank_tei_request_sends_texts_and_return_text() {
+    let mock = rerank_json_mock(serde_json::json!([{"index": 1, "score": 0.9, "text": "b"}]));
+    let client = hinted_client(&mock, "huggingface");
+
+    let resp = client
+        .rerank(object_document_request("huggingface/bge-reranker"))
+        .await
+        .expect("reply parses");
+
+    assert_eq!(
+        first_request_body(&mock),
+        serde_json::json!({
+            "model": "bge-reranker",
+            "query": "q",
+            "texts": ["a", "b"],
+            "return_text": true
+        })
+    );
+    assert_eq!(resp.results[0].document.as_ref().map(|d| d.text.as_str()), Some("b"));
 }

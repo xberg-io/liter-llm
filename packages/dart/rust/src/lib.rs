@@ -761,7 +761,7 @@ pub struct RerankResponse {
 pub struct RerankResult {
     /// Original document index in the input list.
     pub index: i64,
-    /// Relevance score in `[0, 1]`. Higher indicates more relevant.
+    /// Relevance score. Higher indicates more relevant. Most providers use `[0, 1]`; NVIDIA NIM sends a raw logit.
     pub relevance_score: f64,
     /// Original document content (if `return_documents` was true).
     pub document: Option<RerankResultDocument>,

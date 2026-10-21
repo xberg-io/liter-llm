@@ -23,7 +23,7 @@ public sealed record RerankResult
     public uint Index { get; init; } = 0;
 
     /// <summary>
-    /// Relevance score in `[0, 1]`. Higher indicates more relevant.
+    /// Relevance score. Higher indicates more relevant. Most providers use `[0, 1]`; NVIDIA NIM sends a raw logit.
     /// </summary>
     [JsonPropertyName("relevance_score")]
     public double RelevanceScore { get; init; } = 0.0;

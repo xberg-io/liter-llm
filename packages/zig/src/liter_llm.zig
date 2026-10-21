@@ -1335,7 +1335,7 @@ pub const RerankResponse = struct {
 pub const RerankResult = struct {
     /// Original document index in the input list.
     index: u32,
-    /// Relevance score in `[0, 1]`. Higher indicates more relevant.
+    /// Relevance score. Higher indicates more relevant. Most providers use `[0, 1]`; NVIDIA NIM sends a raw logit.
     relevance_score: f64,
     /// Original document content (if `return_documents` was true).
     document: ?RerankResultDocument,

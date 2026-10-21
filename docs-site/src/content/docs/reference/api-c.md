@@ -2338,7 +2338,7 @@ A single reranked document with its relevance score.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `uint32_t` | — | Original document index in the input list. |
-| `relevance_score` | `double` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
+| `relevance_score` | `double` | — | Relevance score. Higher indicates more relevant. Most providers use `[0, 1]`; NVIDIA NIM sends a raw logit. |
 | `document` | `LITERLLMAlefHandle` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
 
 ---

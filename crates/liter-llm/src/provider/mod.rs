@@ -823,6 +823,11 @@ impl Provider for OpenAiCompatibleProvider {
         }
     }
 
+    /// The rerank path of the provider the client's `model_hint` names.
+    fn rerank_path(&self) -> &str {
+        rerank_shape::rerank_path_of(self.hint_provider.as_deref().unwrap_or(""))
+    }
+
     fn base_url(&self) -> &str {
         &self.base_url
     }
@@ -946,6 +951,16 @@ impl Provider for ConfigDrivenProvider {
     fn transform_rerank_response(&self, body: &mut serde_json::Value) -> Result<()> {
         rerank_shape::reshape_rerank_reply(&self.config.name, body);
         Ok(())
+    }
+
+    /// Word the rerank request as the provider reads it.
+    fn transform_rerank_request(&self, body: &mut serde_json::Value) -> Result<()> {
+        rerank_shape::reshape_rerank_request(&self.config.name, body);
+        Ok(())
+    }
+
+    fn rerank_path(&self) -> &str {
+        rerank_shape::rerank_path_of(&self.config.name)
     }
 
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {

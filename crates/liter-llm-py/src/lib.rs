@@ -4865,7 +4865,7 @@ pub struct RerankResult {
     /// Original document index in the input list.
     #[pyo3(get)]
     pub index: u32,
-    /// Relevance score in `[0, 1]`. Higher indicates more relevant.
+    /// Relevance score. Higher indicates more relevant. Most providers use `[0, 1]`; NVIDIA NIM sends a raw logit.
     #[pyo3(get)]
     pub relevance_score: f64,
     /// Original document content (if `return_documents` was true).

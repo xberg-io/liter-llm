@@ -2696,7 +2696,7 @@ final class RerankResult
     public function __construct(
         /** @var int Original document index in the input list. */
         public readonly int $index,
-        /** @var float Relevance score in `[0, 1]`. Higher indicates more relevant. */
+        /** @var float Relevance score. Higher indicates more relevant. Most providers use `[0, 1]`; NVIDIA NIM sends a raw logit. */
         public readonly float $relevanceScore,
         ?RerankResultDocument $document = null
     ) { }

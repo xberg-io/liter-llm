@@ -2186,7 +2186,7 @@ A single reranked document with its relevance score.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `int` | — | Original document index in the input list. |
-| `relevance_score` | `float` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
+| `relevance_score` | `float` | — | Relevance score. Higher indicates more relevant. Most providers use `[0, 1]`; NVIDIA NIM sends a raw logit. |
 | `document` | `RerankResultDocument \| None` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
 
 ---

@@ -50,7 +50,6 @@ impl Provider for VoyageProvider {
     /// Voyage documents `top_k` for the number of results and does not list `top_n`.
     fn transform_rerank_request(&self, body: &mut Value) -> Result<()> {
         if let Some(obj) = body.as_object_mut()
-            && !obj.contains_key("top_k")
             && let Some(top_n) = obj.remove("top_n")
         {
             obj.insert("top_k".to_owned(), top_n);
@@ -141,13 +140,6 @@ mod tests {
             body,
             json!({"model": "rerank-2", "query": "q", "documents": ["a"], "top_k": 1})
         );
-    }
-
-    #[test]
-    fn test_voyage_rerank_request_keeps_a_top_k_the_caller_set() {
-        let mut body = json!({"top_n": 1, "top_k": 3});
-        VoyageProvider.transform_rerank_request(&mut body).unwrap();
-        assert_eq!(body, json!({"top_n": 1, "top_k": 3}));
     }
 
     #[test]

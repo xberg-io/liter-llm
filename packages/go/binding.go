@@ -2994,7 +2994,7 @@ type RerankResponse struct {
 type RerankResult struct {
 	// Original document index in the input list.
 	Index uint32 `json:"index"`
-	// Relevance score in `[0, 1]`. Higher indicates more relevant.
+	// Relevance score. Higher indicates more relevant. Most providers use `[0, 1]`; NVIDIA NIM sends a raw logit.
 	RelevanceScore float64 `json:"relevance_score"`
 	// Original document content (if `return_documents` was true).
 	Document *RerankResultDocument `json:"document,omitempty"`

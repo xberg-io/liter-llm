@@ -18,6 +18,8 @@ struct Shape {
     list: ListAt,
     /// The name of the score field when it is not `relevance_score`.
     score_field: Option<&'static str>,
+    /// The name of the field that echoes the document text, when it is not `document`.
+    text_field: Option<&'static str>,
 }
 
 fn shape_of(provider: &str) -> Option<Shape> {
@@ -26,15 +28,18 @@ fn shape_of(provider: &str) -> Option<Shape> {
         "voyage" | "fireworks_ai" => Some(Shape {
             list: ListAt::Key("data"),
             score_field: None,
+            text_field: None,
         }),
         "nvidia_nim" => Some(Shape {
             list: ListAt::Key("rankings"),
             score_field: Some("logit"),
+            text_field: None,
         }),
         // Hugging Face Text Embeddings Inference answers with a bare array.
         "huggingface" => Some(Shape {
             list: ListAt::TopLevel,
             score_field: Some("score"),
+            text_field: Some("text"),
         }),
         _ => None,
     }
@@ -78,6 +83,13 @@ pub(crate) fn reshape_rerank_reply(provider: &str, body: &mut Value) {
         {
             item.insert("relevance_score".to_owned(), score);
         }
+        if let Some(field) = shape.text_field
+            && !item.contains_key("document")
+            && let Some(text) = item.remove(field)
+            && !text.is_null()
+        {
+            item.insert("document".to_owned(), text);
+        }
         if let Some(doc) = item.get_mut("document")
             && let Some(text) = doc.as_str()
         {
@@ -89,6 +101,63 @@ pub(crate) fn reshape_rerank_reply(provider: &str, body: &mut Value) {
             obj.insert("results".to_owned(), items);
         }
         _ => *body = json!({ "results": items }),
+    }
+}
+
+/// The rerank path of `provider`, relative to its base URL.
+///
+/// NVIDIA NIM serves reranking at `/ranking`. Every other provider uses `/rerank`.
+pub(crate) fn rerank_path_of(provider: &str) -> &'static str {
+    match provider {
+        "nvidia_nim" => "/ranking",
+        _ => "/rerank",
+    }
+}
+
+/// The text of one request document, which is a string or an object with a `text` field.
+fn document_text(doc: &Value) -> Value {
+    match doc {
+        Value::Object(obj) => obj.get("text").cloned().unwrap_or(Value::Null),
+        other => other.clone(),
+    }
+}
+
+/// Word the rerank request for `provider`, whose fields differ from the canonical request.
+///
+/// NVIDIA NIM reads `query` as `{"text": ...}` and the documents as `passages`, each
+/// `{"text": ...}`. Hugging Face TEI reads the documents as `texts`, a list of strings, and
+/// the flag that returns them as `return_text`. Neither documents a field that limits the
+/// number of results, so `top_n` is not sent. A provider with no row, and a body that is
+/// not an object, are left alone.
+pub(crate) fn reshape_rerank_request(provider: &str, body: &mut Value) {
+    let Some(obj) = body.as_object_mut() else {
+        return;
+    };
+    match provider {
+        "nvidia_nim" => {
+            if let Some(query) = obj.get_mut("query")
+                && query.is_string()
+            {
+                *query = json!({ "text": query.take() });
+            }
+            if let Some(Value::Array(docs)) = obj.remove("documents") {
+                let passages = docs.iter().map(|doc| json!({ "text": document_text(doc) })).collect();
+                obj.insert("passages".to_owned(), Value::Array(passages));
+            }
+            obj.remove("top_n");
+            obj.remove("return_documents");
+        }
+        "huggingface" => {
+            if let Some(Value::Array(docs)) = obj.remove("documents") {
+                let texts = docs.iter().map(document_text).collect();
+                obj.insert("texts".to_owned(), Value::Array(texts));
+            }
+            if let Some(flag) = obj.remove("return_documents") {
+                obj.insert("return_text".to_owned(), flag);
+            }
+            obj.remove("top_n");
+        }
+        _ => {}
     }
 }
 
@@ -160,5 +229,64 @@ mod tests {
         let mut body = json!([1, null, "x", []]);
         reshape_rerank_reply("huggingface", &mut body);
         assert_eq!(body, json!({"results": [1, null, "x", []]}));
+    }
+
+    #[test]
+    fn tei_text_becomes_the_result_document() {
+        let mut body = json!([{"index": 1, "score": 0.9, "text": "doc"}, {"index": 0, "score": 0.1, "text": null}]);
+        reshape_rerank_reply("huggingface", &mut body);
+        assert_eq!(
+            body,
+            json!({"results": [
+                {"index": 1, "relevance_score": 0.9, "document": {"text": "doc"}},
+                {"index": 0, "relevance_score": 0.1}
+            ]})
+        );
+    }
+
+    #[test]
+    fn nim_request_sends_query_and_passages_as_text_objects() {
+        let mut body = json!({
+            "model": "m", "query": "q", "documents": ["a", {"text": "b"}],
+            "top_n": 1, "return_documents": true
+        });
+        reshape_rerank_request("nvidia_nim", &mut body);
+        assert_eq!(
+            body,
+            json!({"model": "m", "query": {"text": "q"}, "passages": [{"text": "a"}, {"text": "b"}]})
+        );
+    }
+
+    #[test]
+    fn tei_request_sends_texts_and_return_text() {
+        let mut body = json!({
+            "model": "m", "query": "q", "documents": ["a", {"text": "b"}],
+            "top_n": 1, "return_documents": true
+        });
+        reshape_rerank_request("huggingface", &mut body);
+        assert_eq!(
+            body,
+            json!({"model": "m", "query": "q", "texts": ["a", "b"], "return_text": true})
+        );
+    }
+
+    #[test]
+    fn a_request_to_another_provider_is_left_alone() {
+        let original = json!({"query": "q", "documents": ["a"], "top_n": 1});
+        for provider in ["cohere", "fireworks_ai", "jina_ai"] {
+            let mut body = original.clone();
+            reshape_rerank_request(provider, &mut body);
+            assert_eq!(body, original, "{provider}");
+        }
+        let mut body = json!("text");
+        reshape_rerank_request("nvidia_nim", &mut body);
+        assert_eq!(body, json!("text"));
+    }
+
+    #[test]
+    fn only_nim_has_its_own_rerank_path() {
+        assert_eq!(rerank_path_of("nvidia_nim"), "/ranking");
+        assert_eq!(rerank_path_of("huggingface"), "/rerank");
+        assert_eq!(rerank_path_of(""), "/rerank");
     }
 }

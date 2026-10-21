@@ -1889,7 +1889,7 @@ export interface RerankResponse {
 export interface RerankResult {
   /** Original document index in the input list. */
   readonly index: number
-  /** Relevance score in `[0, 1]`. Higher indicates more relevant. */
+  /** Relevance score. Higher indicates more relevant. Most providers use `[0, 1]`; NVIDIA NIM sends a raw logit. */
   readonly relevanceScore: number
   /** Original document content (if `return_documents` was true). */
   readonly document?: RerankResultDocument
