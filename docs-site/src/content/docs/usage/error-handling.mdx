@@ -69,14 +69,14 @@ The classification for 400 and 422 prefers the structured `code` field (`context
 
 ## Retry behaviour
 
-The built-in HTTP client retries only on transient status codes. From `crates/liter-llm/src/http/retry.rs`:
+The built-in HTTP client retries only on transient status codes and on transport failures that produce no reply. From `crates/liter-llm/src/http/retry.rs`:
 
-- Retries only on `429`, `500`, `502`, `503`, `504`. Everything else fails fast.
+- Retries on the status codes `429`, `500`, `502`, `503`, `504` and `529`, and on a connection that fails or closes without a reply (reset, refused, DNS or TLS failure). Everything else fails fast.
 - `max_retries` defaults to `3` and is set globally via `[general]` `max_retries` in the proxy config.
 - Backoff is exponential: `1s`, `2s`, `4s`, `8s`, capped at `30s`.
 - Jitter scales each delay to a random value in `[0.5x, 1.0x]` of the capped base to avoid thundering herds.
-- For `429`, the `Retry-After` header takes precedence, capped at `60s`. Integer seconds are parsed; HTTP-date format is logged and falls back to exponential backoff.
-- The loop honours the overall request timeout. A retry that would exceed the timeout is not attempted.
+- For `429`, `503` and `529`, the `Retry-After` header takes precedence, capped at `60s`. Integer seconds are parsed; HTTP-date format is logged and falls back to exponential backoff.
+- A request that times out is not retried, including a timeout while the client opens the connection. The same back-off applies to every retry above. The server may have the request and may still be working on it. The caller gets the `Timeout` error after about `timeout_secs`, and no setting turns the retry back on.
 
 Retries apply to single-endpoint calls. Cross-endpoint failover between models is handled by the separate [Fallback & Routing](/usage/fallback-routing/) layer.
 

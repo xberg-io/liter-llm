@@ -241,8 +241,8 @@ mod retry_header_tests {
 /// - Validating the effective request URL against the active outbound policy.
 /// - Parsing the `Retry-After` header before consuming the response body.
 /// - Exponential back-off via `retry::should_retry`, including for
-///   transport-level failures (connection reset, DNS failure, timeout) that
-///   never produce a response at all.
+///   transport-level failures (connection reset, DNS failure) that never
+///   produce a response at all. A request that times out is not sent again.
 /// - Reading the error body and mapping it to `LiterLlmError` on final failure.
 ///
 /// On success the **successful** `Response` is returned so the caller can
@@ -271,7 +271,10 @@ where
                 // ~keep A transport-level error means no response was ever received, so it
                 // must go through the same retry budget as a 5xx — otherwise a single
                 // connection reset fails the whole request even though `max_retries > 0`.
-                if let Some(delay) = retry::should_retry_transport_error(attempt, max_retries) {
+                // A timeout is not retried; `should_retry_transport_error` refuses it.
+                if let Some(delay) =
+                    retry::should_retry_transport_error(transport_error.is_timeout(), attempt, max_retries)
+                {
                     attempt += 1;
                     tracing::warn!(
                         error = %transport_error.without_url(),

@@ -248,6 +248,30 @@ async fn should_pass_model_in_body() {
     assert_eq!(body["model"], "gpt-4", "model should be present in request body");
 }
 
+#[tokio::test]
+async fn should_send_reasoning_effort_none_to_openai_compatible_server() {
+    let mock = MockServer::start();
+    let config = ClientConfigBuilder::new("test-key")
+        .base_url(mock.url())
+        .max_retries(0)
+        .build();
+    let client = DefaultClient::new(config, None).expect("client creation should succeed");
+
+    let req: ChatCompletionRequest = serde_json::from_value(serde_json::json!({
+        "model": "gpt-4",
+        "messages": [{"role": "user", "content": "Hi"}],
+        "reasoning_effort": "none"
+    }))
+    .expect("reasoning_effort \"none\" must deserialize");
+    let resp = client.chat(req).await;
+    assert!(resp.is_ok(), "chat request should succeed: {resp:?}");
+
+    let requests = mock.requests();
+    assert_eq!(requests.len(), 1, "should have exactly one captured request");
+    let body: serde_json::Value = serde_json::from_str(&requests[0].body).unwrap();
+    assert_eq!(body["reasoning_effort"], "none");
+}
+
 /// Send one chat request through a `base_url`-pinned client built with `hint`
 /// and return the `model` the server received.
 async fn model_received_by_server(hint: Option<&str>, requested: &str) -> String {

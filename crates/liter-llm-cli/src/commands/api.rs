@@ -96,21 +96,35 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
     let watch_mode = resolve_watch_mode(&args)?;
 
     let coordinator = ShutdownCoordinator::new();
-    let handle = coordinator.handle();
-
     coordinator.spawn_signal_handler();
 
+    serve_until_shutdown(config, watch_mode, coordinator).await
+}
+
+/// Run the proxy until a shutdown signal arrives or the server stops by itself.
+async fn serve_until_shutdown(
+    config: ProxyConfig,
+    watch_mode: WatchMode,
+    coordinator: ShutdownCoordinator,
+) -> Result<(), String> {
+    let handle = coordinator.handle();
+
     let server_handle = handle.clone();
-    let server_task = tokio::spawn(async move {
+    let mut server_task = tokio::spawn(async move {
         ProxyServer::new(config)
             .with_watch_mode(watch_mode)
             .serve_with_shutdown(Some(server_handle))
             .await
     });
 
+    // ~keep A server that fails during startup ends its task with no shutdown signal, so the wait
+    // ~keep for the signal must also watch the task or the process stays alive without a listener.
     {
         let mut drain_handle = handle.clone();
-        drain_handle.wait_for_drain_start().await;
+        tokio::select! {
+            () = drain_handle.wait_for_drain_start() => {}
+            outcome = &mut server_task => return server_outcome(outcome),
+        }
     }
 
     let phase = handle.phase();
@@ -132,19 +146,22 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
         }
     }
 
-    match server_task.await {
-        Ok(Ok(())) => {}
+    server_outcome(server_task.await)
+}
+
+/// Turn the result of the server task into the result of the command.
+fn server_outcome(outcome: Result<Result<(), String>, tokio::task::JoinError>) -> Result<(), String> {
+    match outcome {
+        Ok(Ok(())) => Ok(()),
         Ok(Err(e)) => {
             tracing::error!("server exited with error: {e}");
-            return Err(e);
+            Err(e)
         }
         Err(e) => {
             tracing::error!("server task panicked: {e}");
-            return Err(format!("server task panicked: {e}"));
+            Err(format!("server task panicked: {e}"))
         }
     }
-
-    Ok(())
 }
 
 /// Translate CLI flags into a [`WatchMode`].
@@ -213,5 +230,43 @@ pub(crate) fn build_outbound_policy(config: &ProxyConfig) -> Result<OutboundPoli
                 .collect::<Result<Vec<_>, _>>()?;
             Ok(OutboundPolicy::Allowlist(urls))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A model entry for a provider with no route and no `base_url` must stop startup with the
+    /// refusal. Before, the command waited for a signal and printed the error only after SIGTERM.
+    #[tokio::test]
+    async fn startup_fails_promptly_for_a_model_with_no_route() {
+        let config = ProxyConfig::from_toml_str(
+            r#"
+[server]
+host = "127.0.0.1"
+port = 0
+
+[[models]]
+name = "m1"
+provider_model = "snowflake/arctic"
+api_key = "sk-test"
+"#,
+        )
+        .expect("valid TOML");
+
+        let outcome = tokio::time::timeout(
+            Duration::from_secs(20),
+            serve_until_shutdown(config, WatchMode::Off, ShutdownCoordinator::new()),
+        )
+        .await
+        .expect("startup must end without a shutdown signal");
+
+        let message = outcome.expect_err("startup must fail");
+        assert!(message.contains("failed to build client for model 'm1'"), "{message}");
+        assert!(
+            message.contains("provider `snowflake` has no built-in route"),
+            "{message}"
+        );
     }
 }

@@ -23,7 +23,6 @@
 //! back to the embedded catalog. [`super::model_pricing`] is embedded-only
 //! by design (see its doc comment) and never reflects this overlay.
 
-use std::collections::HashMap;
 #[cfg(feature = "native-http")]
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
@@ -34,7 +33,7 @@ use arc_swap::ArcSwapOption;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use super::{CatalogInfo, ModelPricing, catalog_info_from_str, registry_from_catalog_str};
+use super::{CatalogInfo, CatalogRegistry, catalog_info_from_str, registry_from_catalog_str};
 
 /// Default source for [`refresh_catalog`]: the rolling `model-catalog`
 /// release asset published by this repository.
@@ -59,7 +58,7 @@ const FETCH_TIMEOUT_SECS: u64 = 30;
 /// successful overlay (or the embedded catalog, if none has ever been
 /// installed) always remains available; this is what makes runtime refresh
 /// air-gap-safe.
-static OVERLAY: LazyLock<ArcSwapOption<HashMap<String, ModelPricing>>> = LazyLock::new(|| ArcSwapOption::from(None));
+static OVERLAY: LazyLock<ArcSwapOption<CatalogRegistry>> = LazyLock::new(|| ArcSwapOption::from(None));
 static OVERLAY_INFO: LazyLock<ArcSwapOption<CatalogInfo>> = LazyLock::new(|| ArcSwapOption::from(None));
 
 /// Read the current overlay registry, if one has been installed.
@@ -67,7 +66,7 @@ static OVERLAY_INFO: LazyLock<ArcSwapOption<CatalogInfo>> = LazyLock::new(|| Arc
 /// Returns a cheaply-cloned [`Arc`] (an atomic refcount bump), not a borrow
 /// tied to the static, so callers can read through it without holding a lock
 /// across `.await` points or blocking a concurrent install.
-pub(crate) fn overlay_registry() -> Option<Arc<HashMap<String, ModelPricing>>> {
+pub(crate) fn overlay_registry() -> Option<Arc<CatalogRegistry>> {
     OVERLAY.load_full()
 }
 

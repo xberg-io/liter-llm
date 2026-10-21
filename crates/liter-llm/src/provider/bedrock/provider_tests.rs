@@ -212,6 +212,25 @@ fn transform_request_reasoning_effort_high() {
 
 #[test]
 #[serial]
+fn transform_request_reasoning_effort_none_disables_thinking() {
+    let p = provider();
+    let mut body = json!({
+        "messages": [{"role": "user", "content": "No thinking."}],
+        "reasoning_effort": "none"
+    });
+    p.transform_request(&mut body)
+        .expect("transform_request should not fail");
+
+    let thinking = &body["additionalModelRequestFields"]["thinking"];
+    assert_eq!(thinking["type"], "disabled");
+    assert!(
+        thinking.get("budget_tokens").is_none(),
+        "a disabled thinking block carries no budget"
+    );
+}
+
+#[test]
+#[serial]
 fn transform_request_no_reasoning_effort_omits_amf() {
     let p = provider();
     let mut body = json!({

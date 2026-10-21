@@ -78,6 +78,8 @@ pub enum ReasoningEffort {
     High,
     Minimal,
     Max,
+    /// Turn reasoning off. Providers that cannot turn reasoning off return their own error.
+    None,
 }
 
 /// Chat completion request (compatible with OpenAI and similar APIs).
@@ -504,6 +506,26 @@ mod tests {
             serde_json::from_value::<ReasoningEffort>(serde_json::json!("max")).expect("deserialize should not fail"),
             ReasoningEffort::Max
         );
+        assert_eq!(
+            serde_json::to_value(ReasoningEffort::None).expect("serialize should not fail"),
+            serde_json::json!("none")
+        );
+        assert_eq!(
+            serde_json::from_value::<ReasoningEffort>(serde_json::json!("none")).expect("deserialize should not fail"),
+            ReasoningEffort::None
+        );
+    }
+
+    #[test]
+    fn reasoning_effort_none_is_accepted_and_sent_as_none() {
+        let request: ChatCompletionRequest = serde_json::from_value(serde_json::json!({
+            "model": "m",
+            "messages": [{"role": "user", "content": "hi"}],
+            "reasoning_effort": "none"
+        }))
+        .expect("reasoning_effort \"none\" must deserialize");
+        let wire = serde_json::to_value(&request).expect("serialize should not fail");
+        assert_eq!(wire["reasoning_effort"], "none");
     }
 
     fn make_response(model: &str, usage: Usage) -> ChatCompletionResponse {

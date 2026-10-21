@@ -221,6 +221,11 @@ fn tool_config(body: &Value) -> Option<Value> {
 fn additional_model_fields(body: &Value) -> Option<Value> {
     let mut additional_model_fields: Option<serde_json::Value> = None;
     if let Some(effort) = body.get("reasoning_effort").and_then(|e| e.as_str()) {
+        // ~keep "none" sends an explicit disabled block: newer Claude models think by default
+        // when `thinking` is absent, so dropping the field would not turn thinking off.
+        if effort == "none" {
+            return Some(json!({"thinking": {"type": "disabled"}}));
+        }
         let budget_tokens = reasoning_effort_to_budget_tokens(effort);
         additional_model_fields = Some(json!({
             "thinking": {
