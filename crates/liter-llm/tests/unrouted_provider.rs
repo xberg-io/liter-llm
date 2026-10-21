@@ -352,6 +352,66 @@ async fn client_hinted_at_a_provider_without_route_is_refused_at_construction() 
     assert!(proxy.spy.seen().is_empty());
 }
 
+/// Audio, image and search providers whose native APIs are not OpenAI-shaped.
+const NATIVE_API_PROVIDERS: [&str; 9] = [
+    "elevenlabs",
+    "deepgram",
+    "stability",
+    "tavily",
+    "brave",
+    "fal_ai",
+    "runwayml",
+    "assemblyai",
+    "serper",
+];
+
+#[tokio::test]
+#[serial]
+async fn native_api_provider_without_base_url_sends_nothing_on_any_endpoint() {
+    let proxy = ProxyGuard::install();
+    let client = client(None, None).expect("client");
+    for provider in NATIVE_API_PROVIDERS {
+        let outcomes = call_every_endpoint(&client, &format!("{provider}/some-model")).await;
+        assert_refused(&outcomes, provider);
+    }
+    assert_eq!(
+        proxy.spy.seen(),
+        Vec::<String>::new(),
+        "no request may leave the process"
+    );
+}
+
+#[tokio::test]
+#[serial]
+async fn native_api_provider_with_a_base_url_still_reaches_it() {
+    let target = Spy::start(Some(CHAT_REPLY));
+    for provider in NATIVE_API_PROVIDERS {
+        let before = target.seen().len();
+        let client = client(Some(&target.url), None).expect("client");
+        let chat = client
+            .chat(request(serde_json::json!({
+                "model": format!("{provider}/some-model"),
+                "messages": [{"role": "user", "content": "hi"}]
+            })))
+            .await;
+        assert!(chat.is_ok(), "{provider}: {chat:?}");
+        assert_eq!(target.seen().len(), before + 1, "{provider}: one request to the base_url");
+    }
+}
+
+#[tokio::test]
+#[serial]
+async fn client_hinted_at_a_native_api_provider_is_refused_at_construction() {
+    for provider in NATIVE_API_PROVIDERS {
+        match client(None, Some(&format!("{provider}/some-model"))) {
+            Err(LiterLlmError::BadRequest { message, .. }) => {
+                assert!(message.contains(&format!("`{provider}`")), "{message}");
+            }
+            other => panic!("{provider}: expected a refusal, got {:?}", other.map(drop)),
+        }
+    }
+}
+
 #[tokio::test]
 #[serial]
 async fn provider_without_route_works_with_a_base_url() {
