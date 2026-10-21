@@ -395,7 +395,11 @@ async fn native_api_provider_with_a_base_url_still_reaches_it() {
             })))
             .await;
         assert!(chat.is_ok(), "{provider}: {chat:?}");
-        assert_eq!(target.seen().len(), before + 1, "{provider}: one request to the base_url");
+        assert_eq!(
+            target.seen().len(),
+            before + 1,
+            "{provider}: one request to the base_url"
+        );
     }
 }
 
