@@ -3104,7 +3104,11 @@ mod build_provider_tests {
                 .provider;
             assert_eq!(empty.name(), plain.name(), "hint {hint}");
             assert_eq!(empty.base_url(), plain.base_url(), "hint {hint}");
-            assert_eq!(empty.chat_completions_path(), plain.chat_completions_path(), "hint {hint}");
+            assert_eq!(
+                empty.chat_completions_path(),
+                plain.chat_completions_path(),
+                "hint {hint}"
+            );
         }
         let client = DefaultClient::new(empty_config, Some("cohere")).expect("client should build");
         let routed = client
