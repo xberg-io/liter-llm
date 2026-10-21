@@ -987,7 +987,7 @@ impl DefaultClient {
     /// the construction-time provider is reused (zero allocation).
     fn resolve_provider_for_model(&self, model: &str) -> Result<Arc<dyn Provider>> {
         // ~keep A base_url override pins the construction-time provider for mock/proxy endpoints.
-        if self.config.base_url.is_some() {
+        if self.config.effective_base_url().is_some() {
             return Ok(Arc::clone(&self.provider));
         }
         // ~keep Keep the construction-time provider when it already matches the model.
@@ -1009,7 +1009,7 @@ impl DefaultClient {
     /// so a model for another provider is not sent to that provider's endpoint.
     /// Does nothing when a `base_url` is set.
     fn refuse_unrouted_model(&self, model: &str) -> Result<()> {
-        if self.config.base_url.is_none() {
+        if self.config.effective_base_url().is_none() {
             provider::route_model(model)?;
         }
         Ok(())
@@ -1235,7 +1235,7 @@ fn transform_rerank_reply(resolved: &dyn Provider, model: &str, raw: &mut serde_
 /// 2. `model_hint` -> auto-detect by model name prefix.
 /// 3. Default -> OpenAI.
 fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Arc<dyn Provider>> {
-    if let Some(ref base_url) = config.base_url {
+    if let Some(base_url) = config.effective_base_url().map(str::to_owned) {
         if let Some(model) = model_hint
             && model.starts_with("azure/")
         {
