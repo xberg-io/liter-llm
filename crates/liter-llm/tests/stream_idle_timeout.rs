@@ -21,9 +21,9 @@ const SILENT_TIMEOUT: Duration = Duration::from_millis(500);
 /// How long the mock server stays silent. The server holds the socket this long and then drops it,
 /// so a client that has no idle limit sees a closed stream, not a `Timeout` error.
 ///
-/// The bound on a silent stream is this stall, not a multiple of the idle limit. A slow or loaded
-/// process can add seconds to a 500 ms limit and the stream still ends first, because the idle limit
-/// fires 20 times before the server lets go.
+/// The bound on a silent stream is this stall, not a multiple of the idle limit. The stall is 20
+/// times the limit, so a slow or loaded process can add seconds to the 500 ms limit and the stream
+/// still ends with `Timeout` before the server lets go.
 const SILENT_STALL: Duration = Duration::from_secs(10);
 
 /// The idle limit ended a silent stream: not before the limit, and before the server ended the stall.
