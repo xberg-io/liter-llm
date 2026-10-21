@@ -138,7 +138,10 @@ mod tests {
     fn a_provider_with_no_row_and_a_canonical_reply_are_left_alone() {
         let cases = [
             ("cohere", json!({"rankings": [{"index": 0, "logit": 1.0}]})),
-            ("nvidia_nim", json!({"results": [{"index": 0, "relevance_score": 0.1}], "rankings": []})),
+            (
+                "nvidia_nim",
+                json!({"results": [{"index": 0, "relevance_score": 0.1}], "rankings": []}),
+            ),
             ("nvidia_nim", json!([{"index": 0, "logit": 1.0}])),
             ("huggingface", json!({"results": []})),
             ("huggingface", json!({"data": [{"index": 0, "score": 1.0}]})),

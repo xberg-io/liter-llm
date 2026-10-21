@@ -1234,21 +1234,8 @@ async fn rerank_reply_that_is_not_an_object_is_a_parse_error_not_a_panic() {
     }
 }
 
-fn hinted_client(mock: &MockServer, hint: &str) -> DefaultClient {
-    let config = ClientConfigBuilder::new("test-api-key")
-        .base_url(mock.url())
-        .max_retries(0)
-        .build();
-    DefaultClient::new(config, Some(hint)).expect("client creation should succeed")
-}
-
-fn rerank_mock(body: serde_json::Value) -> MockServer {
-    MockServer::start_with_routes(vec![MockRoute {
-        method: "POST".into(),
-        path_prefix: "/rerank".into(),
-        status: 200,
-        body: body.to_string(),
-    }])
+fn rerank_json_mock(body: serde_json::Value) -> MockServer {
+    rerank_mock(body.to_string())
 }
 
 /// One reply for each provider whose rerank reply is not the `results` shape.
@@ -1281,7 +1268,7 @@ fn foreign_rerank_replies() -> Vec<(&'static str, &'static str, serde_json::Valu
 #[tokio::test]
 async fn rerank_reply_of_fireworks_nim_and_tei_parses_into_results() {
     for (hint, model, reply) in foreign_rerank_replies() {
-        let mock = rerank_mock(reply);
+        let mock = rerank_json_mock(reply);
         let client = hinted_client(&mock, hint);
 
         let resp = client
@@ -1297,7 +1284,7 @@ async fn rerank_reply_of_fireworks_nim_and_tei_parses_into_results() {
 #[tokio::test]
 async fn rerank_raw_reply_of_fireworks_nim_and_tei_parses_and_keeps_the_raw_reply() {
     for (hint, model, reply) in foreign_rerank_replies() {
-        let mock = rerank_mock(reply.clone());
+        let mock = rerank_json_mock(reply.clone());
         let client = hinted_client(&mock, hint);
 
         let exchange = client
@@ -1313,7 +1300,7 @@ async fn rerank_raw_reply_of_fireworks_nim_and_tei_parses_and_keeps_the_raw_repl
 #[tokio::test]
 async fn rerank_nim_logit_becomes_the_relevance_score() {
     let (hint, model, reply) = foreign_rerank_replies().remove(1);
-    let mock = rerank_mock(reply);
+    let mock = rerank_json_mock(reply);
     let client = hinted_client(&mock, hint);
 
     let resp = client.rerank(rerank_request(model)).await.expect("NIM reply parses");
@@ -1336,10 +1323,13 @@ fn first_request_body(mock: &MockServer) -> serde_json::Value {
 
 #[tokio::test]
 async fn rerank_voyage_request_sends_top_k_when_the_model_names_voyage() {
-    let mock = rerank_mock(serde_json::json!({"data": [{"index": 1, "relevance_score": 0.9}]}));
+    let mock = rerank_json_mock(serde_json::json!({"data": [{"index": 1, "relevance_score": 0.9}]}));
     let client = build_client(&mock);
 
-    client.rerank(top_n_request("voyage/rerank-2")).await.expect("reply parses");
+    client
+        .rerank(top_n_request("voyage/rerank-2"))
+        .await
+        .expect("reply parses");
 
     let body = first_request_body(&mock);
     assert_eq!(body["top_k"], 1);
@@ -1349,7 +1339,7 @@ async fn rerank_voyage_request_sends_top_k_when_the_model_names_voyage() {
 
 #[tokio::test]
 async fn rerank_voyage_request_sends_top_k_when_the_client_names_voyage_as_hint() {
-    let mock = rerank_mock(serde_json::json!({"data": [{"index": 1, "relevance_score": 0.9}]}));
+    let mock = rerank_json_mock(serde_json::json!({"data": [{"index": 1, "relevance_score": 0.9}]}));
     let client = hinted_client(&mock, "voyage");
 
     client.rerank(top_n_request("rerank-2")).await.expect("reply parses");
@@ -1361,7 +1351,7 @@ async fn rerank_voyage_request_sends_top_k_when_the_client_names_voyage_as_hint(
 
 #[tokio::test]
 async fn rerank_raw_voyage_request_sends_top_k() {
-    let mock = rerank_mock(serde_json::json!({"data": [{"index": 1, "relevance_score": 0.9}]}));
+    let mock = rerank_json_mock(serde_json::json!({"data": [{"index": 1, "relevance_score": 0.9}]}));
     let client = hinted_client(&mock, "voyage");
 
     let exchange = client
@@ -1378,7 +1368,7 @@ async fn rerank_raw_voyage_request_sends_top_k() {
 
 #[tokio::test]
 async fn rerank_request_to_cohere_keeps_top_n() {
-    let mock = rerank_mock(serde_json::json!({"results": [{"index": 1, "relevance_score": 0.9}]}));
+    let mock = rerank_json_mock(serde_json::json!({"results": [{"index": 1, "relevance_score": 0.9}]}));
     let client = hinted_client(&mock, "cohere");
 
     client
