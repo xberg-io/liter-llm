@@ -440,35 +440,13 @@ jobs:
           assets: liter-llm-zig-v${{ needs.prepare.outputs.version }}.tar.gz
 
   build-python-wheels:
-    name: Build Python wheels (${{ matrix.label }})
+    name: Python wheels
     needs: [prepare, registry-results]
     if: >-
       ${{ !inputs.plugins-only && (always() && needs.prepare.outputs.release_python == 'true' && (needs.registry-results.outputs.pypi != 'true' || needs.prepare.outputs.force_republish == 'true')) }}
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - label: linux-x86_64
-            runner: ubuntu-latest
-          - label: linux-aarch64
-            runner: ubuntu-24.04-arm
-          - label: macos-arm64
-            runner: macos-latest
-          - label: windows-x86_64
-            runner: windows-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: xberg-io/actions/build-python-wheels@v1
-        with:
-          package-dir: packages/python
-          cibw-build: "cp310-*"
-          cibw-skip: "*-musllinux* *-win32 *-manylinux_i686 *-macosx_x86_64"
-          cibw-environment: 'MATURIN_BUILD_ARGS="--compatibility linux" CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=cc'
-          artifact-name: python-wheel-${{ matrix.label }}
+    uses: ./.github/workflows/python-wheels.yaml
+    with:
+      checkout_ref: ${{ needs.prepare.outputs.checkout_ref }}
 
   build-python-sdist:
     name: Build Python sdist

@@ -177,6 +177,12 @@ fn apply_reasoning_effort(body: &mut Value) {
         });
 
     if let Some(effort) = reasoning_effort {
+        // ~keep "none" sends an explicit disabled block: newer Claude models think by default
+        // when `thinking` is absent, so dropping the field would not turn thinking off.
+        if effort == "none" {
+            body["thinking"] = json!({"type": "disabled"});
+            return;
+        }
         // ~keep 1024 is Anthropic's documented minimum thinking budget_tokens, so
         // "minimal" and "low" both floor there — the duplicate value is intentional.
         let budget_tokens: u64 = match effort.as_str() {

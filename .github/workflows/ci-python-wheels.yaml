@@ -1,0 +1,32 @@
+name: CI Python Wheels
+
+# ~keep Builds every Python wheel the release builds, including the Intel macOS wheel that is
+# cross-built on the arm64 runner, and runs the platform and architecture check on each. The
+# job calls the same workflow the release calls and holds no registry credentials.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/python/**"
+      - "crates/liter-llm/**"
+      - "crates/liter-llm-py/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "scripts/ci/check_python_wheel.py"
+      - ".github/workflows/python-wheels.yaml"
+      - ".github/workflows/ci-python-wheels.yaml"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-python-wheels-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  wheels:
+    name: Python wheels
+    if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
+    uses: ./.github/workflows/python-wheels.yaml

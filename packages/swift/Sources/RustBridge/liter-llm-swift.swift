@@ -736,6 +736,9 @@ public func exactModelInfo<GenericIntoRustString: IntoRustString>(_ model: Gener
 public func installCatalogOverlayFromStr<GenericIntoRustString: IntoRustString>(_ catalog_json: GenericIntoRustString) throws -> () {
     try { let val = __swift_bridge__$install_catalog_overlay_from_str({ let rustString = catalog_json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val != nil { throw RustString(ptr: val!) } else { return } }()
 }
+public func listCatalogModels<GenericIntoRustString: IntoRustString>(_ provider: Optional<GenericIntoRustString>) -> RustVec<CatalogModel> {
+    RustVec(ptr: __swift_bridge__$list_catalog_models({ if let rustString = optionalStringIntoRustString(provider) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
+}
 public func modelInfo<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString) -> Optional<ModelInfo> {
     { let val = __swift_bridge__$model_info({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val != nil { return ModelInfo(ptr: val!) } else { return nil } }()
 }
@@ -854,6 +857,9 @@ public func cacheConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: G
 }
 public func catalogInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CatalogInfo {
     try { let val = __swift_bridge__$catalog_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CatalogInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func catalogModelFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CatalogModel {
+    try { let val = __swift_bridge__$catalog_model_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CatalogModel(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func catalogRefreshConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CatalogRefreshConfig {
     try { let val = __swift_bridge__$catalog_refresh_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CatalogRefreshConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -1214,6 +1220,9 @@ public func __alef_phantom_vec_bedrock_config() -> RustVec<BedrockConfig> {
 }
 public func __alef_phantom_vec_catalog_info() -> RustVec<CatalogInfo> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_catalog_info())
+}
+public func __alef_phantom_vec_catalog_model() -> RustVec<CatalogModel> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_catalog_model())
 }
 public func __alef_phantom_vec_catalog_refresh_config() -> RustVec<CatalogRefreshConfig> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_catalog_refresh_config())
@@ -2643,6 +2652,143 @@ extension CatalogInfo: Vectorizable {
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
         __swift_bridge__$Vec_CatalogInfo$len(vecPtr)
+    }
+}
+
+
+public class CatalogModel: CatalogModelRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$CatalogModel$_free(ptr)
+        }
+    }
+}
+extension CatalogModel {
+    public convenience init<GenericIntoRustString: IntoRustString>(_ key: GenericIntoRustString, _ provider: GenericIntoRustString, _ model: GenericIntoRustString, _ mode: Optional<GenericIntoRustString>, _ max_tokens: Optional<UInt64>, _ max_input_tokens: Optional<UInt64>, _ max_output_tokens: Optional<UInt64>, _ supports_vision: Optional<Bool>, _ supports_function_calling: Optional<Bool>, _ supports_reasoning: Optional<Bool>, _ supports_structured_output: Optional<Bool>, _ supports_audio_input: Optional<Bool>, _ supports_audio_output: Optional<Bool>, _ supports_prompt_caching: Optional<Bool>) {
+        self.init(ptr: __swift_bridge__$CatalogModel$new({ let rustString = key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = provider.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let rustString = optionalStringIntoRustString(mode) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), max_tokens.intoFfiRepr(), max_input_tokens.intoFfiRepr(), max_output_tokens.intoFfiRepr(), supports_vision.intoFfiRepr(), supports_function_calling.intoFfiRepr(), supports_reasoning.intoFfiRepr(), supports_structured_output.intoFfiRepr(), supports_audio_input.intoFfiRepr(), supports_audio_output.intoFfiRepr(), supports_prompt_caching.intoFfiRepr()))
+    }
+}
+public class CatalogModelRefMut: CatalogModelRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class CatalogModelRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension CatalogModelRef {
+    public func key() -> RustString {
+        RustString(ptr: __swift_bridge__$CatalogModel$key(ptr))
+    }
+
+    public func provider() -> RustString {
+        RustString(ptr: __swift_bridge__$CatalogModel$provider(ptr))
+    }
+
+    public func model() -> RustString {
+        RustString(ptr: __swift_bridge__$CatalogModel$model(ptr))
+    }
+
+    public func mode() -> Optional<RustString> {
+        { let val = __swift_bridge__$CatalogModel$mode(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func maxTokens() -> Optional<UInt64> {
+        __swift_bridge__$CatalogModel$max_tokens(ptr).intoSwiftRepr()
+    }
+
+    public func maxInputTokens() -> Optional<UInt64> {
+        __swift_bridge__$CatalogModel$max_input_tokens(ptr).intoSwiftRepr()
+    }
+
+    public func maxOutputTokens() -> Optional<UInt64> {
+        __swift_bridge__$CatalogModel$max_output_tokens(ptr).intoSwiftRepr()
+    }
+
+    public func supportsVision() -> Optional<Bool> {
+        __swift_bridge__$CatalogModel$supports_vision(ptr).intoSwiftRepr()
+    }
+
+    public func supportsFunctionCalling() -> Optional<Bool> {
+        __swift_bridge__$CatalogModel$supports_function_calling(ptr).intoSwiftRepr()
+    }
+
+    public func supportsReasoning() -> Optional<Bool> {
+        __swift_bridge__$CatalogModel$supports_reasoning(ptr).intoSwiftRepr()
+    }
+
+    public func supportsStructuredOutput() -> Optional<Bool> {
+        __swift_bridge__$CatalogModel$supports_structured_output(ptr).intoSwiftRepr()
+    }
+
+    public func supportsAudioInput() -> Optional<Bool> {
+        __swift_bridge__$CatalogModel$supports_audio_input(ptr).intoSwiftRepr()
+    }
+
+    public func supportsAudioOutput() -> Optional<Bool> {
+        __swift_bridge__$CatalogModel$supports_audio_output(ptr).intoSwiftRepr()
+    }
+
+    public func supportsPromptCaching() -> Optional<Bool> {
+        __swift_bridge__$CatalogModel$supports_prompt_caching(ptr).intoSwiftRepr()
+    }
+}
+extension CatalogModel: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_CatalogModel$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_CatalogModel$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: CatalogModel) {
+        __swift_bridge__$Vec_CatalogModel$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_CatalogModel$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (CatalogModel(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<CatalogModelRef> {
+        let pointer = __swift_bridge__$Vec_CatalogModel$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return CatalogModelRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<CatalogModelRefMut> {
+        let pointer = __swift_bridge__$Vec_CatalogModel$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return CatalogModelRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<CatalogModelRef> {
+        UnsafePointer<CatalogModelRef>(OpaquePointer(__swift_bridge__$Vec_CatalogModel$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_CatalogModel$len(vecPtr)
     }
 }
 

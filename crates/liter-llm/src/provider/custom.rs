@@ -194,6 +194,7 @@ impl Provider for CustomProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     /// Mutex to serialize tests that share the global custom-provider registry.
     static TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -206,6 +207,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(outbound_policy)]
     fn register_and_detect_by_model_prefix() {
         let _guard = setup();
 
@@ -232,6 +234,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(outbound_policy)]
     fn unregister_removes_provider() {
         let _guard = setup();
 
@@ -258,6 +261,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(outbound_policy)]
     fn custom_provider_with_api_key_auth() {
         let _guard = setup();
 
@@ -279,6 +283,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(outbound_policy)]
     fn custom_provider_with_no_auth() {
         let _guard = setup();
 
@@ -299,6 +304,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(outbound_policy)]
     fn custom_provider_bearer_auth() {
         let _guard = setup();
 
@@ -318,6 +324,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(outbound_policy)]
     fn register_replaces_existing_provider() {
         let _guard = setup();
 

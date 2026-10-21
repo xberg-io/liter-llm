@@ -303,6 +303,28 @@ pub struct AuthConfig {
     pub env_var: Option<String>,
 }
 
+/// The HTTP status an error event stands for when its payload has no usable
+/// `status_code`. The error code decides first, then the error type; an error
+/// with neither reads as 400, like a request the provider refused.
+fn status_for_error_kind(code: Option<&str>, kind: Option<&str>) -> u16 {
+    match code {
+        Some("rate_limit_exceeded" | "insufficient_quota") => return 429,
+        Some("invalid_api_key") => return 401,
+        Some("model_not_found") => return 404,
+        Some("server_error") => return 500,
+        _ => {}
+    }
+    match kind {
+        Some("rate_limit_error") => 429,
+        Some("authentication_error") => 401,
+        Some("permission_error") => 403,
+        Some("not_found_error") => 404,
+        Some("server_error" | "api_error") => 500,
+        Some("overloaded_error") => 529,
+        _ => 400,
+    }
+}
+
 /// A provider defines how to reach an LLM API endpoint.
 pub(crate) trait Provider: Send + Sync {
     /// Validate provider configuration at construction time.
@@ -469,6 +491,17 @@ pub(crate) trait Provider: Send + Sync {
         Ok(())
     }
 
+    /// Transform the raw rerank reply before deserialization into `RerankResponse`.
+    ///
+    /// The canonical shape is a top-level `results` array. Providers whose rerank
+    /// reply differs (a different key, a different `document` form) override this
+    /// to reshape it. Rerank replies do not pass through [`Provider::transform_response`]:
+    /// that step reshapes chat replies, and a chat transform applied to a rerank
+    /// reply discards the `results` array. The default is a no-op.
+    fn transform_rerank_response(&self, _body: &mut serde_json::Value) -> Result<()> {
+        Ok(())
+    }
+
     /// Build the full URL for a specific endpoint and model.
     ///
     /// Default: `{base_url}{endpoint_path}`.  Providers like Azure and Bedrock
@@ -512,20 +545,31 @@ pub(crate) trait Provider: Send + Sync {
         // otherwise decode into a valid-looking, content-free chunk and the
         // failure would vanish, leaving callers awaiting content that is never
         // sent.
+        //
+        // ~keep The error kind comes from `LiterLlmError::from_status`, the same
+        // classifier the HTTP path uses, so an error event is the same kind
+        // mid-stream as the same body in an HTTP reply. A payload status in
+        // 400..=599 goes to that classifier as is. A payload status outside that
+        // range keeps its raw number in a bad-request error. With no usable status,
+        // `status_for_error_kind` reads one from the error code or type.
         if let Ok(value) = serde_json::from_str::<serde_json::Value>(event_data)
             && let Some(error) = value.get("error")
         {
-            let message = error
-                .get("message")
-                .and_then(serde_json::Value::as_str)
-                .unwrap_or("provider returned an error mid-stream")
-                .to_string();
+            let text = |key: &str| error.get(key).and_then(serde_json::Value::as_str);
+            let message = text("message").unwrap_or("provider returned an error mid-stream");
             let status = error
                 .get("status_code")
                 .and_then(serde_json::Value::as_u64)
                 .and_then(|s| u16::try_from(s).ok())
-                .unwrap_or(400);
-            return Err(LiterLlmError::BadRequest { message, status });
+                .unwrap_or_else(|| status_for_error_kind(text("code"), text("type")));
+            if !(400..=599).contains(&status) {
+                return Err(LiterLlmError::BadRequest {
+                    message: message.to_string(),
+                    status,
+                });
+            }
+            let body = serde_json::json!({ "error": { "message": message, "code": text("code") } });
+            return Err(LiterLlmError::from_status(status, &body.to_string(), None));
         }
 
         serde_json::from_str::<crate::types::ChatCompletionChunk>(event_data)
@@ -606,6 +650,7 @@ pub(crate) mod google_ai;
 pub(crate) mod mistral;
 pub mod outbound_policy;
 pub(crate) mod vertex;
+pub(crate) mod voyage;
 
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
 pub use outbound_policy::configure_outbound_client_builder;
@@ -736,6 +781,22 @@ pub(crate) struct OpenAiCompatibleProvider {
 impl Provider for OpenAiCompatibleProvider {
     fn name(&self) -> &str {
         &self.name
+    }
+
+    /// Read a rerank reply as the provider named by the client's `model_hint` words it.
+    ///
+    /// The `base_url` only says where to send the request. A client built with
+    /// `model_hint = "voyage"` still talks to a Voyage endpoint, whatever model name
+    /// (`rerank-2` or `voyage/rerank-2`) a request carries.
+    fn transform_rerank_response(&self, body: &mut serde_json::Value) -> Result<()> {
+        match self
+            .hint_provider
+            .as_deref()
+            .and_then(|hint| detect_builtin_provider(&format!("{hint}/")))
+        {
+            Some(named) => named.transform_rerank_response(body),
+            None => Ok(()),
+        }
     }
 
     fn base_url(&self) -> &str {
@@ -896,6 +957,73 @@ impl Provider for ConfigDrivenProvider {
     }
 }
 
+/// Find the registry entry named by a `provider/` prefix, by name or alias.
+fn registry_entry_for_prefix<'r>(reg: &'r ProviderRegistry, prefix: &str) -> Option<&'r ProviderEntry> {
+    reg.providers
+        .iter()
+        .find(|e| e.config.name == prefix)
+        .or_else(|| reg.providers.iter().find(|e| e.aliases.iter().any(|a| a == prefix)))
+}
+
+/// A registry entry has a route of its own when it names a `base_url` and is not a
+/// complex provider (complex providers need dedicated auth and request code, matched
+/// by prefix before the registry lookup in [`detect_provider`]).
+fn has_route(reg: &ProviderRegistry, entry: &ProviderEntry) -> bool {
+    entry.config.base_url.is_some() && !reg.complex_providers.contains(&entry.config.name)
+}
+
+/// Like [`detect_provider`], but refuses a model whose `provider/` prefix names a registry
+/// provider that has no route.
+///
+/// Such a model would otherwise fall back to [`OpenAiProvider`], sending another
+/// provider's requests to the OpenAI endpoint. Callers that have no `base_url` use this
+/// instead of [`detect_provider`] and fall back to OpenAI only on `Ok(None)`, which means
+/// the model names no registry provider at all.
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] naming the provider and asking for a `base_url`.
+pub(crate) fn route_model(model: &str) -> Result<Option<Box<dyn Provider>>> {
+    if let Some(provider) = detect_provider(model) {
+        return Ok(Some(provider));
+    }
+    if let Ok(reg) = REGISTRY.as_ref()
+        && let Some(error) = unrouted_provider_error(reg, model)
+    {
+        return Err(error);
+    }
+    Ok(None)
+}
+
+/// Refuse a bare `model_hint` that names a registry provider with no route.
+///
+/// A hint such as `snowflake` is checked like the `snowflake/` prefix of a model. It never
+/// selects a provider: a hint that has a route keeps falling back to [`OpenAiProvider`].
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] naming the provider and asking for a `base_url`.
+pub(crate) fn refuse_unrouted_hint(hint: &str) -> Result<()> {
+    route_model(&format!("{hint}/"))?;
+    Ok(())
+}
+
+/// The refusal for a model whose `provider/` prefix names a registry entry with no route.
+fn unrouted_provider_error(reg: &ProviderRegistry, model: &str) -> Option<LiterLlmError> {
+    let (prefix, _) = model.split_once('/')?;
+    let entry = registry_entry_for_prefix(reg, prefix)?;
+    if has_route(reg, entry) {
+        return None;
+    }
+    Some(LiterLlmError::BadRequest {
+        message: format!(
+            "provider `{}` has no built-in route; set base_url to its endpoint",
+            entry.config.name
+        ),
+        status: 400,
+    })
+}
+
 /// Detect which provider to use based on model name.
 ///
 /// Strategy:
@@ -908,17 +1036,25 @@ impl Provider for ConfigDrivenProvider {
 /// 7. `"provider/"` prefix — look up the prefix in the registry.
 /// 8. Walk all registry entries and check their `model_prefixes`.
 ///
-/// Returns `None` when no built-in provider matches.  The caller should fall
-/// back to a config-specified `base_url` or default to [`OpenAiProvider`].
+/// Returns `None` when no built-in provider matches.  Callers without a `base_url` use
+/// [`route_model`], which refuses a registry provider that has no route before the caller
+/// defaults to [`OpenAiProvider`].
 ///
 /// Complex providers (those listed in `complex_providers` in providers.json)
 /// are excluded from config-driven routing because they require custom
 /// auth/request logic beyond simple bearer tokens.
 pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
-    if let Some(provider) = custom::detect_custom_provider(model) {
-        return Some(provider);
-    }
+    custom::detect_custom_provider(model).or_else(|| detect_builtin_provider(model))
+}
 
+/// Detect the built-in provider that a model name designates, skipping custom providers.
+///
+/// A custom provider decides where a request goes and how it is signed. The wire format
+/// of a reply belongs to the model name, so reply handling asks this function.
+///
+/// Every prefix test here is a case-sensitive `starts_with` (or an exact match on the
+/// registry name), so `Voyage/rerank-2` names no provider.
+pub(crate) fn detect_builtin_provider(model: &str) -> Option<Box<dyn Provider>> {
     let openai = OpenAiProvider;
     if openai.matches_model(model) {
         return Some(Box::new(openai));
@@ -957,6 +1093,10 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
         return Some(Box::new(mistral::MistralProvider));
     }
 
+    if model.starts_with("voyage/") {
+        return Some(Box::new(voyage::VoyageProvider));
+    }
+
     if model.starts_with("github_copilot/") {
         return Some(Box::new(github_copilot::GithubCopilotProvider::from_env()));
     }
@@ -967,13 +1107,8 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
     };
 
     if let Some((prefix, _)) = model.split_once('/')
-        && let Some(entry) = reg
-            .providers
-            .iter()
-            .find(|e| e.config.name == prefix)
-            .or_else(|| reg.providers.iter().find(|e| e.aliases.iter().any(|a| a == prefix)))
-        && entry.config.base_url.is_some()
-        && !reg.complex_providers.contains(&entry.config.name)
+        && let Some(entry) = registry_entry_for_prefix(reg, prefix)
+        && has_route(reg, entry)
     {
         return Some(Box::new(ConfigDrivenProvider::from_entry(entry)));
     }
@@ -1253,6 +1388,199 @@ mod tests {
         assert!(err.to_string().contains("upstream capacity exceeded"));
     }
 
+    /// Parse a mid-stream error event and return the error it raises.
+    fn mid_stream_error(payload: &str) -> LiterLlmError {
+        OpenAiProvider
+            .parse_stream_event(payload)
+            .expect_err("a mid-stream error object must not decode as a chunk")
+    }
+
+    /// Revert line: in `parse_stream_event`, build `BadRequest` directly instead of
+    /// calling `LiterLlmError::from_status` to make this test fail.
+    #[test]
+    fn parse_stream_event_classifies_rate_limit_error_without_status() {
+        let err = mid_stream_error(
+            r#"{"error":{"message":"slow down","type":"rate_limit_error","code":"rate_limit_exceeded"}}"#,
+        );
+        assert!(matches!(err, LiterLlmError::RateLimited { .. }), "got: {err:?}");
+        assert_eq!(err.status_code(), 429);
+        assert!(err.is_transient());
+        assert!(err.to_string().contains("slow down"));
+    }
+
+    /// Revert line: as above, build `BadRequest` directly to make this test fail.
+    #[test]
+    fn parse_stream_event_classifies_rate_limit_error_with_status() {
+        let err = mid_stream_error(
+            r#"{"error":{"message":"slow down","type":"rate_limit_error","code":"rate_limit_exceeded","status_code":429}}"#,
+        );
+        assert!(matches!(err, LiterLlmError::RateLimited { .. }), "got: {err:?}");
+        assert_eq!(err.status_code(), 429);
+    }
+
+    /// Revert line: as above, build `BadRequest` directly to make this test fail.
+    #[test]
+    fn parse_stream_event_classifies_context_length_error_like_http() {
+        let err = mid_stream_error(
+            r#"{"error":{"message":"too long","type":"invalid_request_error","code":"context_length_exceeded"}}"#,
+        );
+        assert!(
+            matches!(err, LiterLlmError::ContextWindowExceeded { .. }),
+            "got: {err:?}"
+        );
+    }
+
+    /// Revert line: as above, build `BadRequest` directly to make this test fail.
+    #[test]
+    fn parse_stream_event_classifies_authentication_error_from_status() {
+        let err = mid_stream_error(r#"{"error":{"message":"bad key","code":"invalid_api_key","status_code":401}}"#);
+        assert!(
+            matches!(err, LiterLlmError::Authentication { status: 401, .. }),
+            "got: {err:?}"
+        );
+    }
+
+    /// Revert line: change the upper bound `599` of the range check in
+    /// `parse_stream_event` to `598`, or the lower bound `400` to `401`, to make
+    /// this test fail.
+    #[test]
+    fn parse_stream_event_classifies_the_edges_of_the_error_range() {
+        let err = mid_stream_error(r#"{"error":{"message":"edge","status_code":599}}"#);
+        assert!(
+            matches!(err, LiterLlmError::ServerError { status: 599, .. }),
+            "got: {err:?}"
+        );
+        let err =
+            mid_stream_error(r#"{"error":{"message":"edge","code":"context_length_exceeded","status_code":400}}"#);
+        assert!(
+            matches!(err, LiterLlmError::ContextWindowExceeded { .. }),
+            "got: {err:?}"
+        );
+    }
+
+    /// Revert line: remove the range check on the payload status in
+    /// `parse_stream_event` to make this test fail.
+    #[test]
+    fn parse_stream_event_keeps_raw_payload_status_outside_error_range() {
+        for status in [0_u16, 99, 200, 399, 600] {
+            let payload = format!(r#"{{"error":{{"message":"odd","status_code":{status}}}}}"#);
+            let err = mid_stream_error(&payload);
+            assert!(
+                matches!(&err, LiterLlmError::BadRequest { status: got, .. } if *got == status),
+                "status {status}, got: {err:?}"
+            );
+            assert!(err.to_string().contains("odd"), "status {status}, got: {err}");
+        }
+    }
+
+    /// Revert line: replace `u16::try_from(s).ok()` in `parse_stream_event` with an
+    /// `as u16` cast to make this test fail (65965 wraps to 429).
+    #[test]
+    fn parse_stream_event_ignores_payload_status_above_u16() {
+        let err = mid_stream_error(r#"{"error":{"message":"huge","status_code":65965}}"#);
+        assert!(
+            matches!(err, LiterLlmError::BadRequest { status: 400, .. }),
+            "got: {err:?}"
+        );
+    }
+
+    /// Revert line: drop the rate-limit code arm of `status_for_error_kind` to make
+    /// this test fail.
+    #[test]
+    fn parse_stream_event_classifies_rate_limit_code_alone() {
+        let err = mid_stream_error(r#"{"error":{"message":"slow down","code":"rate_limit_exceeded"}}"#);
+        assert!(matches!(err, LiterLlmError::RateLimited { .. }), "got: {err:?}");
+        assert_eq!(err.status_code(), 429);
+    }
+
+    /// Revert line: drop the rate-limit type arm of `status_for_error_kind` to make
+    /// this test fail.
+    #[test]
+    fn parse_stream_event_classifies_rate_limit_type_alone() {
+        let err = mid_stream_error(r#"{"error":{"message":"slow down","type":"rate_limit_error"}}"#);
+        assert!(matches!(err, LiterLlmError::RateLimited { .. }), "got: {err:?}");
+        assert_eq!(err.status_code(), 429);
+    }
+
+    /// Revert line: read the error type before the error code in
+    /// `status_for_error_kind` to make this test fail. When the two disagree,
+    /// the code decides.
+    #[test]
+    fn parse_stream_event_prefers_error_code_over_type() {
+        let cases = [
+            (r#""code":"rate_limit_exceeded","type":"invalid_request_error""#, 429),
+            (r#""code":"rate_limit_exceeded","type":"authentication_error""#, 429),
+        ];
+        for (kind, status) in cases {
+            let err = mid_stream_error(&format!(r#"{{"error":{{"message":"x",{kind}}}}}"#));
+            assert!(matches!(err, LiterLlmError::RateLimited { .. }), "{kind}: got {err:?}");
+            assert_eq!(err.status_code(), status, "{kind}");
+        }
+    }
+
+    /// Revert line: drop an arm of `status_for_error_kind` to make this test fail.
+    /// Each event has no status, and must give the kind that the same body gives
+    /// as an HTTP reply at the status `status_for_error_kind` reads from it.
+    #[test]
+    fn parse_stream_event_classifies_error_code_and_type_without_status() {
+        let cases = [
+            (r#""code":"insufficient_quota""#, 429),
+            (r#""code":"invalid_api_key""#, 401),
+            (r#""code":"model_not_found""#, 404),
+            (r#""code":"server_error""#, 500),
+            (r#""type":"authentication_error""#, 401),
+            (r#""type":"permission_error""#, 403),
+            (r#""type":"not_found_error""#, 404),
+            (r#""type":"server_error""#, 500),
+            (r#""type":"api_error""#, 500),
+            (r#""type":"overloaded_error""#, 529),
+        ];
+        for (fields, status) in cases {
+            let err = mid_stream_error(&format!(r#"{{"error":{{"message":"boom",{fields}}}}}"#));
+            let http_body = format!(r#"{{"error":{{"message":"boom",{fields}}}}}"#);
+            let http = LiterLlmError::from_status(status, &http_body, None);
+            assert_eq!(
+                std::mem::discriminant(&err),
+                std::mem::discriminant(&http),
+                "{fields}: stream gave {err:?}, HTTP {status} gives {http:?}"
+            );
+            assert_eq!(err.status_code(), http.status_code(), "{fields}");
+        }
+    }
+
+    /// Revert line: drop the `insufficient_quota` code arm of `status_for_error_kind`
+    /// to make this test fail.
+    #[test]
+    fn parse_stream_event_classifies_insufficient_quota_as_quota_exceeded() {
+        let err = mid_stream_error(r#"{"error":{"message":"out of credit","code":"insufficient_quota"}}"#);
+        assert!(
+            matches!(err, LiterLlmError::ProviderQuotaExceeded { .. }),
+            "got: {err:?}"
+        );
+        assert!(!err.is_transient());
+    }
+
+    /// An error with no status, code or type reads as a plain 400.
+    #[test]
+    fn parse_stream_event_reads_unknown_error_kind_as_bad_request() {
+        let err = mid_stream_error(r#"{"error":{"message":"odd","code":"something_else","type":"other"}}"#);
+        assert!(
+            matches!(err, LiterLlmError::BadRequest { status: 400, .. }),
+            "got: {err:?}"
+        );
+    }
+
+    /// Revert line: remove the fallback message in `parse_stream_event` to make this
+    /// test fail.
+    #[test]
+    fn parse_stream_event_keeps_fallback_message_when_error_has_none() {
+        let err = mid_stream_error(r#"{"error":{"code":"rate_limit_exceeded"}}"#);
+        assert!(
+            err.to_string().contains("provider returned an error mid-stream"),
+            "got: {err}"
+        );
+    }
+
     /// Revert line: delete `#[serde(default)]` from `ChatCompletionChunk::choices`
     /// in `types/chat.rs` to make this test fail.
     #[test]
@@ -1279,5 +1607,197 @@ mod tests {
             .expect("valid chunk must yield Some");
         assert_eq!(chunk.id, "chatcmpl-1");
         assert_eq!(chunk.choices[0].delta.content.as_deref(), Some("hi"));
+    }
+}
+
+#[cfg(test)]
+mod route_model_tests {
+    use super::*;
+
+    /// Registry providers without a route of their own: complex providers that no
+    /// dedicated implementation answers for, and the gateways that need a `base_url`.
+    const UNROUTED: &[&str] = &[
+        "a2a",
+        "amazon_nova",
+        "anthropic_text",
+        "auto_router",
+        "aws_polly",
+        "azure_ai",
+        "azure_text",
+        "baseten",
+        "bedrock_mantle",
+        "black_forest_labs",
+        "chatgpt",
+        "cloudflare",
+        "cursor",
+        "databricks",
+        "dataforseo",
+        "datarobot",
+        "gdc",
+        "gigachat",
+        "heroku",
+        "manus",
+        "nvidia_riva",
+        "oci",
+        "petals",
+        "ragflow",
+        "reducto",
+        "sagemaker",
+        "sagemaker_chat",
+        "sap",
+        "searxng",
+        "snowflake",
+        "soniox",
+        "triton",
+        "watsonx",
+        "watsonx_text",
+    ];
+
+    const GATEWAYS: &[&str] = &[
+        "custom",
+        "custom_openai",
+        "hosted_vllm",
+        "infinity",
+        "litellm_proxy",
+        "openai_like",
+    ];
+
+    fn refusal(model: &str) -> String {
+        match route_model(model) {
+            Err(LiterLlmError::BadRequest { message, status }) => {
+                assert_eq!(status, 400, "{model}: refusal must be a 400");
+                message
+            }
+            Err(other) => panic!("{model}: expected BadRequest, got {other:?}"),
+            Ok(found) => panic!(
+                "{model}: expected a refusal, got provider {:?}",
+                found.map(|p| p.name().to_owned())
+            ),
+        }
+    }
+
+    #[test]
+    fn provider_without_route_is_refused_with_its_name_and_base_url() {
+        for name in UNROUTED.iter().chain(GATEWAYS) {
+            let message = refusal(&format!("{name}/some-model"));
+            assert!(message.contains(&format!("`{name}`")), "{name}: message {message:?}");
+            assert!(message.contains("base_url"), "{name}: message {message:?}");
+        }
+    }
+
+    #[test]
+    fn nested_provider_namespace_is_refused_by_its_first_segment() {
+        let message = refusal("azure_ai/agents/some-agent");
+        assert!(message.contains("`azure_ai`"), "{message:?}");
+    }
+
+    #[test]
+    fn no_registry_provider_falls_through_to_the_default() {
+        let reg = REGISTRY.as_ref().expect("registry should load");
+        let mut checked = 0;
+        for entry in &reg.providers {
+            let names = std::iter::once(entry.config.name.as_str()).chain(entry.aliases.iter().map(String::as_str));
+            for name in names {
+                let model = format!("{name}/some-model");
+                // A provider named by `provider/` either has a route or is refused.
+                // `Ok(None)` is the silent fall back to the OpenAI endpoint.
+                assert!(
+                    !matches!(route_model(&model), Ok(None)),
+                    "{model}: falls through to the default provider"
+                );
+                checked += 1;
+            }
+        }
+        assert!(checked >= reg.providers.len(), "sweep covered {checked} names");
+    }
+
+    #[test]
+    fn providers_with_a_route_keep_routing() {
+        for (model, expected) in [
+            ("gpt-4o", "openai"),
+            ("claude-3-5-sonnet-20241022", "anthropic"),
+            ("anthropic/claude-3-5-sonnet-20241022", "anthropic"),
+            ("ollama/llama3", "ollama"),
+            ("ollama_chat/llama3", "ollama"),
+            ("groq/llama3-70b", "groq"),
+            ("deepseek/deepseek-chat", "deepseek"),
+            ("mistral/mistral-large-latest", "mistral"),
+        ] {
+            let provider = route_model(model)
+                .unwrap_or_else(|e| panic!("{model}: {e}"))
+                .unwrap_or_else(|| panic!("{model}: no provider"));
+            assert_eq!(provider.name(), expected, "{model}");
+        }
+    }
+
+    fn synthetic_registry(providers: serde_json::Value, complex: &[&str]) -> ProviderRegistry {
+        let raw: ProviderRegistryRaw =
+            serde_json::from_value(serde_json::json!({"providers": providers, "complex_providers": complex}))
+                .expect("synthetic registry should parse");
+        ProviderRegistry::from_raw(raw)
+    }
+
+    #[test]
+    fn registry_entry_without_base_url_is_refused_even_when_not_complex() {
+        let reg = synthetic_registry(serde_json::json!([{"name": "plain", "aliases": ["plain_alias"]}]), &[]);
+        for model in ["plain/m", "plain_alias/m"] {
+            match unrouted_provider_error(&reg, model) {
+                Some(LiterLlmError::BadRequest { message, status }) => {
+                    assert_eq!(status, 400, "{model}");
+                    assert!(message.contains("`plain`") && message.contains("base_url"), "{message}");
+                }
+                other => panic!("{model}: expected a refusal, got {other:?}"),
+            }
+        }
+    }
+
+    #[test]
+    fn registry_entry_with_base_url_that_is_not_complex_has_a_route() {
+        let reg = synthetic_registry(
+            serde_json::json!([{"name": "plain", "base_url": "https://plain.example/v1"}]),
+            &[],
+        );
+        assert!(unrouted_provider_error(&reg, "plain/m").is_none());
+    }
+
+    #[test]
+    fn complex_registry_entry_with_base_url_is_refused() {
+        let reg = synthetic_registry(
+            serde_json::json!([{"name": "fancy", "base_url": "https://fancy.example/v1"}]),
+            &["fancy"],
+        );
+        assert!(unrouted_provider_error(&reg, "fancy/m").is_some());
+    }
+
+    #[test]
+    fn prefix_that_names_no_registry_entry_is_not_refused() {
+        let reg = synthetic_registry(serde_json::json!([{"name": "plain"}]), &[]);
+        assert!(unrouted_provider_error(&reg, "other/m").is_none());
+        assert!(unrouted_provider_error(&reg, "no-slash").is_none());
+    }
+
+    #[test]
+    fn bare_hint_is_refused_like_its_prefix() {
+        for hint in ["snowflake", "watsonx", "hosted_vllm"] {
+            match refuse_unrouted_hint(hint) {
+                Err(LiterLlmError::BadRequest { message, .. }) => {
+                    assert!(message.contains(&format!("`{hint}`")), "{message}");
+                }
+                other => panic!("{hint}: expected a refusal, got {other:?}"),
+            }
+        }
+    }
+
+    #[test]
+    fn bare_hint_with_a_route_or_no_registry_entry_is_accepted() {
+        for hint in ["anthropic", "groq", "ollama", "gpt-4o", "some-local-model"] {
+            assert!(refuse_unrouted_hint(hint).is_ok(), "{hint}");
+        }
+    }
+
+    #[test]
+    fn model_that_names_no_registry_provider_is_left_to_the_caller() {
+        assert!(route_model("some-random-model").expect("no refusal").is_none());
+        assert!(route_model("not-a-provider/model").expect("no refusal").is_none());
     }
 }
