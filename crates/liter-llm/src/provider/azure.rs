@@ -85,6 +85,10 @@ impl Default for AzureProvider {
 }
 
 impl Provider for AzureProvider {
+    fn at_base_url(&self, base_url: &str) -> Option<Box<dyn Provider>> {
+        Some(Box::new(Self::with_base_url(base_url)))
+    }
+
     fn name(&self) -> &str {
         "azure"
     }

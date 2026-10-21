@@ -358,6 +358,18 @@ pub(crate) trait Provider: Send + Sync {
     /// Base URL (e.g., "https://api.openai.com/v1").
     fn base_url(&self) -> &str;
 
+    /// This provider, sent to `base_url` instead of its own host.
+    ///
+    /// A `base_url` on the client changes only the host that receives the request. The
+    /// request body, the path and the reply handling stay those of this provider.
+    /// A provider whose URL is not `{base_url}{path}` (Azure, Google AI Studio, Vertex AI,
+    /// Bedrock) or whose base URL is private state overrides this method. The default
+    /// returns `None`, and [`on_base_url`] then wraps the provider so that only its host changes.
+    fn at_base_url(&self, base_url: &str) -> Option<Box<dyn Provider>> {
+        let _ = base_url;
+        None
+    }
+
     /// Build the authorization header as `Some((header-name, header-value))`.
     ///
     /// Returns `None` when the provider requires no authentication header
@@ -649,6 +661,7 @@ pub(crate) mod github_copilot;
 pub(crate) mod google_ai;
 pub(crate) mod mistral;
 pub mod outbound_policy;
+pub(crate) mod rebased;
 pub(crate) mod vertex;
 pub(crate) mod voyage;
 
@@ -781,22 +794,6 @@ pub(crate) struct OpenAiCompatibleProvider {
 impl Provider for OpenAiCompatibleProvider {
     fn name(&self) -> &str {
         &self.name
-    }
-
-    /// Read a rerank reply as the provider named by the client's `model_hint` words it.
-    ///
-    /// The `base_url` only says where to send the request. A client built with
-    /// `model_hint = "voyage"` still talks to a Voyage endpoint, whatever model name
-    /// (`rerank-2` or `voyage/rerank-2`) a request carries.
-    fn transform_rerank_response(&self, body: &mut serde_json::Value) -> Result<()> {
-        match self
-            .hint_provider
-            .as_deref()
-            .and_then(|hint| detect_builtin_provider(&format!("{hint}/")))
-        {
-            Some(named) => named.transform_rerank_response(body),
-            None => Ok(()),
-        }
     }
 
     fn base_url(&self) -> &str {
@@ -995,17 +992,34 @@ pub(crate) fn route_model(model: &str) -> Result<Option<Box<dyn Provider>>> {
     Ok(None)
 }
 
-/// Refuse a bare `model_hint` that names a registry provider with no route.
+/// The provider that a client's `model_hint` selects, or `None` when the hint names none.
 ///
-/// A hint such as `snowflake` is checked like the `snowflake/` prefix of a model. It never
-/// selects a provider: a hint that has a route keeps falling back to [`OpenAiProvider`].
+/// This is the one rule that turns a hint into a route. A bare provider name (`cohere`) and
+/// the `provider/model` form (`cohere/command-r-plus`) select the same provider, and so does
+/// a model name that [`detect_provider`] knows (`command-r-plus`). A `base_url` plays no part
+/// in the choice: it changes only the host, see [`on_base_url`].
 ///
 /// # Errors
 ///
-/// Returns [`LiterLlmError::BadRequest`] naming the provider and asking for a `base_url`.
-pub(crate) fn refuse_unrouted_hint(hint: &str) -> Result<()> {
-    route_model(&format!("{hint}/"))?;
-    Ok(())
+/// Returns [`LiterLlmError::BadRequest`] when the hint names a registry provider that has no
+/// route of its own. A caller with a `base_url` treats that as "no built-in provider".
+pub(crate) fn route_hint(hint: &str) -> Result<Option<Box<dyn Provider>>> {
+    if let Some(provider) = route_model(hint)? {
+        return Ok(Some(provider));
+    }
+    if hint.contains('/') {
+        return Ok(None);
+    }
+    route_model(&format!("{hint}/"))
+}
+
+/// Send `provider` to `base_url`: the provider keeps its request body, its paths and its
+/// reply handling, and only the host changes.
+pub(crate) fn on_base_url(provider: Box<dyn Provider>, base_url: &str) -> Box<dyn Provider> {
+    match provider.at_base_url(base_url) {
+        Some(rebased) => rebased,
+        None => Box::new(rebased::BaseUrlOverride::new(provider, base_url)),
+    }
 }
 
 /// The refusal for a model whose `provider/` prefix names a registry entry with no route.
@@ -1779,7 +1793,7 @@ mod route_model_tests {
     #[test]
     fn bare_hint_is_refused_like_its_prefix() {
         for hint in ["snowflake", "watsonx", "hosted_vllm"] {
-            match refuse_unrouted_hint(hint) {
+            match route_hint(hint) {
                 Err(LiterLlmError::BadRequest { message, .. }) => {
                     assert!(message.contains(&format!("`{hint}`")), "{message}");
                 }
@@ -1791,8 +1805,43 @@ mod route_model_tests {
     #[test]
     fn bare_hint_with_a_route_or_no_registry_entry_is_accepted() {
         for hint in ["anthropic", "groq", "ollama", "gpt-4o", "some-local-model"] {
-            assert!(refuse_unrouted_hint(hint).is_ok(), "{hint}");
+            assert!(route_hint(hint).is_ok(), "{hint}");
         }
+    }
+
+    #[test]
+    fn bare_hint_and_slash_hint_select_the_same_provider() {
+        for (bare, slash) in [
+            ("cohere", "cohere/command-r-plus"),
+            ("mistral", "mistral/mistral-large-latest"),
+            ("voyage", "voyage/rerank-2"),
+            ("anthropic", "anthropic/claude-sonnet-4"),
+            ("gemini", "gemini/gemini-2.0-flash"),
+            ("vertex_ai", "vertex_ai/gemini-2.0-flash"),
+            ("ollama", "ollama/llama3"),
+            ("groq", "groq/llama3-8b"),
+        ] {
+            let bare_name = route_hint(bare).expect("no refusal").map(|p| p.name().to_owned());
+            let slash_name = route_hint(slash).expect("no refusal").map(|p| p.name().to_owned());
+            assert!(bare_name.is_some(), "{bare} selects a provider");
+            assert_eq!(bare_name, slash_name, "{bare} and {slash}");
+        }
+    }
+
+    #[test]
+    fn hint_that_names_no_provider_selects_none() {
+        for hint in ["llama3.1:8b", "some-local-model", "not-a-provider/model"] {
+            assert!(route_hint(hint).expect("no refusal").is_none(), "{hint}");
+        }
+    }
+
+    #[test]
+    fn on_base_url_changes_only_the_host() {
+        let provider = route_hint("cohere").expect("no refusal").expect("cohere is built in");
+        let rebased = on_base_url(provider, "http://gateway.test/v1/");
+        assert_eq!(rebased.name(), "cohere");
+        assert_eq!(rebased.chat_completions_path(), "/chat");
+        assert_eq!(rebased.build_url("/chat", "m"), "http://gateway.test/v1/chat");
     }
 
     #[test]

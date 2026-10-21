@@ -163,6 +163,7 @@ fn percent_encode_model(model: &str) -> String {
 ///     .build();
 /// let client = DefaultClient::new(config, Some("bedrock/anthropic.claude-3-sonnet-20240229-v1:0"))?;
 /// ```
+#[derive(Clone)]
 pub struct BedrockProvider {
     region: String,
     /// Cached base URL: `https://bedrock-runtime.{region}.{dns_suffix}`.
@@ -338,6 +339,10 @@ impl BedrockProvider {
 }
 
 impl Provider for BedrockProvider {
+    fn at_base_url(&self, base_url: &str) -> Option<Box<dyn Provider>> {
+        Some(Box::new(self.clone().with_base_url(base_url)))
+    }
+
     fn name(&self) -> &str {
         "bedrock"
     }

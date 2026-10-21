@@ -144,6 +144,10 @@ impl VertexAiProvider {
 }
 
 impl Provider for VertexAiProvider {
+    fn at_base_url(&self, base_url: &str) -> Option<Box<dyn Provider>> {
+        Some(Box::new(Self::with_base_url(base_url)))
+    }
+
     fn name(&self) -> &str {
         "vertex_ai"
     }

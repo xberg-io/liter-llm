@@ -828,6 +828,9 @@ pub struct DefaultClient {
     /// Provider resolved at construction; shared via Arc so streaming closures
     /// can capture an owned reference without requiring `unsafe`.
     provider: Arc<dyn Provider>,
+    /// True when the `model_hint` selected `provider`: a model name without a `provider/`
+    /// prefix then stays on it, instead of picking a provider by name pattern.
+    hint_pins_provider: bool,
     /// Pre-computed auth header `(name, value)` — avoids `format!("Bearer {key}")`
     /// on every request.  `None` when the provider requires no authentication.
     cached_auth_header: Option<(String, String)>,
@@ -870,11 +873,14 @@ impl DefaultClient {
     /// Build a client.
     ///
     /// Constructs an HTTP client with the given configuration and provider hint.
-    /// If `model_hint` is provided, its prefix determines the default provider
-    /// (e.g. `"groq/llama3-70b"` selects Groq; `"claude-3-5-sonnet"` defaults to OpenAI).
-    /// Pass `None` to use OpenAI as the default. The hint does not constrain
-    /// per-request routing — individual requests can override the provider via
-    /// their own model prefix.
+    /// `model_hint` selects the provider by its bare name (`"groq"`), by the
+    /// `provider/model` form (`"groq/llama3-70b"`) or by a model name the client knows
+    /// (`"claude-3-5-sonnet"` selects Anthropic). A `base_url` changes only the host
+    /// that the selected provider sends its requests to. Pass `None`, or a hint that
+    /// names no provider, to use OpenAI (or a generic OpenAI-compatible provider when
+    /// `base_url` is set). A request model with a `provider/` prefix can still
+    /// override the provider for that request, unless a `base_url` is set. A request model
+    /// without a prefix stays on the provider the hint selected.
     ///
     /// When `config.load_env` is true (the default), and no API key was provided,
     /// the client reads the provider's designated environment variable
@@ -891,7 +897,10 @@ impl DefaultClient {
     /// Returns `LiterLlmError::Http` if the underlying HTTP client cannot be constructed.
     pub fn new(config: ClientConfig, model_hint: Option<&str>) -> Result<Self> {
         config::validate_response_limit(config.max_response_bytes)?;
-        let provider = build_provider(&config, model_hint)?;
+        let BuiltProvider {
+            provider,
+            hint_pins_provider,
+        } = build_provider(&config, model_hint)?;
         provider.validate()?;
 
         #[cfg(not(target_arch = "wasm32"))]
@@ -974,6 +983,7 @@ impl DefaultClient {
             http,
             http_stream,
             provider,
+            hint_pins_provider,
             cached_auth_header,
             cached_extra_headers,
             managed: None,
@@ -988,6 +998,11 @@ impl DefaultClient {
     fn resolve_provider_for_model(&self, model: &str) -> Result<Arc<dyn Provider>> {
         // ~keep A base_url override pins the construction-time provider for mock/proxy endpoints.
         if self.config.base_url.is_some() {
+            return Ok(Arc::clone(&self.provider));
+        }
+        // ~keep A hint chose the provider, so a model name without a `provider/` prefix stays on it.
+        // ~keep Otherwise a `gemini-` model under a `vertex_ai` hint would reach Google AI Studio.
+        if self.hint_pins_provider && !model.contains('/') {
             return Ok(Arc::clone(&self.provider));
         }
         // ~keep Keep the construction-time provider when it already matches the model.
@@ -1221,76 +1236,69 @@ fn transform_rerank_reply(resolved: &dyn Provider, model: &str, raw: &mut serde_
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// The provider a client resolves at construction, and whether its hint chose it.
+struct BuiltProvider {
+    provider: Arc<dyn Provider>,
+    /// True when `model_hint` selected `provider`. A bare model name then stays on it.
+    hint_pins_provider: bool,
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
 /// Resolve the provider to use for all requests on this client.
 ///
-/// Priority:
-/// 1. Explicit `base_url` in config:
-///    - If `model_hint` identifies a provider with a non-standard URL format
-///      (Azure embeds the deployment name and `?api-version=…`), construct
-///      that provider with the override (issue #83).
-///    - Otherwise, treat the override as a generic OpenAI-compatible endpoint
-///      (LM Studio, Ollama, vLLM, gateways, etc.).  Models are sent verbatim
-///      except for a leading `custom/` and a leading `X/` where `X` is the
-///      provider named by `model_hint` (issue #249).
-/// 2. `model_hint` -> auto-detect by model name prefix.
-/// 3. Default -> OpenAI.
-fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Arc<dyn Provider>> {
-    if let Some(ref base_url) = config.base_url {
-        if let Some(model) = model_hint
-            && model.starts_with("azure/")
-        {
-            return Ok(Arc::new(provider::azure::AzureProvider::with_base_url(
-                base_url.clone(),
-            )));
-        }
-        if let Some(model) = model_hint
-            && model.starts_with("anthropic/")
-        {
-            return Ok(Arc::new(provider::anthropic::AnthropicProvider::with_base_url(
-                base_url.clone(),
-            )));
-        }
-        if let Some(model) = model_hint
-            && (model.starts_with("gemini/") || model.starts_with("google_ai/"))
-        {
-            return Ok(Arc::new(provider::google_ai::GoogleAiProvider::with_base_url(
-                base_url.clone(),
-            )));
-        }
-        if let Some(model) = model_hint
-            && model.starts_with("vertex_ai/")
-        {
-            return Ok(Arc::new(provider::vertex::VertexAiProvider::with_base_url(
-                base_url.clone(),
-            )));
-        }
-        if let Some(model) = model_hint
-            && model.starts_with("bedrock/")
-        {
-            return Ok(Arc::new(
-                build_bedrock_provider_config(config).with_base_url(base_url.clone()),
-            ));
-        }
-        return Ok(Arc::new(OpenAiCompatibleProvider {
+/// One rule decides the route, and `base_url` plays no part in it:
+/// 1. `model_hint` selects a built-in provider, by its bare name (`cohere`), by the
+///    `provider/model` form (`cohere/command-r-plus`) or by a model name it knows. A hint
+///    that names a registry provider with no route is refused, unless a `base_url` supplies one.
+/// 2. A `base_url` changes only the host. The selected provider keeps its request body, its
+///    paths and its reply handling. A hint that selects no provider, and no hint, give a
+///    generic OpenAI-compatible provider at the `base_url` (LM Studio, Ollama, vLLM,
+///    gateways). Models are sent verbatim except for a leading `custom/` and a leading `X/`
+///    where `X` is the provider named by `model_hint` (issue #249).
+/// 3. Without a `base_url`, a hint that selects no provider, and no hint, give OpenAI.
+fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<BuiltProvider> {
+    let hinted = match model_hint {
+        Some(hint) => match (route_hint(config, hint), &config.base_url) {
+            (Ok(routed), _) => routed,
+            // ~keep A registry provider with no route of its own is reachable through a `base_url`.
+            (Err(_), Some(_)) => None,
+            (Err(error), None) => return Err(error),
+        },
+        None => None,
+    };
+    let hint_pins_provider = hinted.is_some();
+    let provider: Arc<dyn Provider> = match (hinted, &config.base_url) {
+        (Some(routed), Some(base_url)) => Arc::from(provider::on_base_url(routed, base_url)),
+        (Some(routed), None) => Arc::from(routed),
+        (None, Some(base_url)) => Arc::new(OpenAiCompatibleProvider {
             name: "custom".into(),
             base_url: base_url.clone(),
             env_var: None,
             model_prefixes: vec![],
             hint_provider: model_hint.and_then(provider::hint_provider_name),
-        }));
-    }
+        }),
+        (None, None) => Arc::new(OpenAiProvider),
+    };
+    Ok(BuiltProvider {
+        provider,
+        hint_pins_provider,
+    })
+}
 
-    if let Some(model) = model_hint {
-        if model.starts_with("bedrock/") {
-            return Ok(build_bedrock_provider(config));
-        }
-        if let Some(p) = provider::route_model(model)? {
-            return Ok(Arc::from(p));
-        }
-        provider::refuse_unrouted_hint(model)?;
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// The built-in provider that a hint selects. Bedrock is built from the client config, which
+/// carries its region and credentials.
+fn route_hint(config: &ClientConfig, hint: &str) -> Result<Option<Box<dyn Provider>>> {
+    if names_bedrock(hint) {
+        return Ok(Some(Box::new(build_bedrock_provider_config(config))));
     }
+    provider::route_hint(hint)
+}
 
-    Ok(Arc::new(OpenAiProvider))
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// True for `bedrock` and `bedrock/...`.
+fn names_bedrock(hint_or_model: &str) -> bool {
+    hint_or_model == "bedrock" || hint_or_model.starts_with("bedrock/")
 }
 
 /// Build a [`provider::bedrock::BedrockProvider`] from `config`, threading
@@ -2853,7 +2861,7 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("https://resourceA.cognitiveservices.azure.com")
             .build();
-        let p = build_provider(&config, Some("azure/gpt-5-mini")).expect("provider should build");
+        let p = build_provider(&config, Some("azure/gpt-5-mini")).expect("provider should build").provider;
         assert_eq!(p.name(), "azure");
         let url = p.build_url("/chat/completions", "gpt-5-mini");
         assert!(
@@ -2867,7 +2875,7 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:11434/v1")
             .build();
-        let p = build_provider(&config, Some("llama3.1:8b")).expect("provider should build");
+        let p = build_provider(&config, Some("llama3.1:8b")).expect("provider should build").provider;
         assert_eq!(p.name(), "custom");
         let url = p.build_url("/chat/completions", "llama3.1:8b");
         assert_eq!(url, "http://localhost:11434/v1/chat/completions");
@@ -2878,7 +2886,7 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:11434/v1?token=secret")
             .build();
-        let provider = build_provider(&config, Some("local-model")).expect("provider should build");
+        let provider = build_provider(&config, Some("local-model")).expect("provider should build").provider;
         let url = provider.build_url("/chat/completions", "local-model");
         assert_eq!(url, "http://localhost:11434/v1/chat/completions?token=secret");
     }
@@ -2895,7 +2903,7 @@ mod build_provider_tests {
             ("vertex_ai/gemini-2.5-flash", "vertex_ai", ":generateContent"),
             ("bedrock/anthropic.claude-v2", "bedrock", "/model/"),
         ] {
-            let provider = build_provider(&config, Some(model)).expect("provider should build");
+            let provider = build_provider(&config, Some(model)).expect("provider should build").provider;
             let bare_model = provider.strip_model_prefix(model);
             let url = provider.build_url(provider.chat_completions_path(), bare_model);
             assert_eq!(provider.name(), expected_name);
@@ -2922,12 +2930,12 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:8080/v1")
             .build();
-        let provider = build_provider(&config, Some("voyage")).expect("provider should build");
+        let provider = build_provider(&config, Some("voyage")).expect("provider should build").provider;
         let mut body = serde_json::json!({"data": [{"index": 0, "relevance_score": 0.5}]});
         transform_rerank_reply(provider.as_ref(), "rerank-2", &mut body).unwrap();
         assert!(body.get("results").is_some() && body.get("data").is_none());
 
-        let unhinted = build_provider(&config, None).expect("provider should build");
+        let unhinted = build_provider(&config, None).expect("provider should build").provider;
         let mut body = serde_json::json!({"data": [{"index": 0, "relevance_score": 0.5}]});
         transform_rerank_reply(unhinted.as_ref(), "rerank-2", &mut body).unwrap();
         assert!(body.get("results").is_none() && body.get("data").is_some());
@@ -2939,18 +2947,17 @@ mod build_provider_tests {
             .base_url("http://localhost:11434/v1")
             .build();
 
-        let hinted = build_provider(&config, Some("openai")).expect("provider should build");
+        let hinted = build_provider(&config, Some("openai")).expect("provider should build").provider;
         assert_eq!(hinted.strip_model_prefix("openai/gpt-4o-mini"), "gpt-4o-mini");
-        assert_eq!(hinted.strip_model_prefix("custom/my-model"), "my-model");
         assert_eq!(hinted.strip_model_prefix("anthropic/claude-x"), "anthropic/claude-x");
         assert_eq!(hinted.strip_model_prefix("meta-llama/llama-3"), "meta-llama/llama-3");
         assert_eq!(hinted.strip_model_prefix("llama3.1:8b"), "llama3.1:8b");
         assert_eq!(hinted.strip_model_prefix("openai/"), "openai/");
 
-        let hinted_with_model = build_provider(&config, Some("openai/gpt-4o-mini")).expect("provider should build");
+        let hinted_with_model = build_provider(&config, Some("openai/gpt-4o-mini")).expect("provider should build").provider;
         assert_eq!(hinted_with_model.strip_model_prefix("openai/gpt-4o"), "gpt-4o");
 
-        let unhinted = build_provider(&config, None).expect("provider should build");
+        let unhinted = build_provider(&config, None).expect("provider should build").provider;
         assert_eq!(unhinted.strip_model_prefix("openai/gpt-4o-mini"), "openai/gpt-4o-mini");
         assert_eq!(unhinted.strip_model_prefix("custom/my-model"), "my-model");
     }
@@ -2958,7 +2965,7 @@ mod build_provider_tests {
     #[test]
     fn no_base_url_falls_through_to_detect_provider() {
         let config = ClientConfigBuilder::new("test-key").build();
-        let p = build_provider(&config, Some("azure/gpt-4o")).expect("provider should build");
+        let p = build_provider(&config, Some("azure/gpt-4o")).expect("provider should build").provider;
         assert_eq!(p.name(), "azure");
     }
 
@@ -2967,7 +2974,7 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("https://proxy.internal/anthropic/")
             .build();
-        let p = build_provider(&config, Some("anthropic/claude-3-5-sonnet-20241022")).expect("provider should build");
+        let p = build_provider(&config, Some("anthropic/claude-3-5-sonnet-20241022")).expect("provider should build").provider;
         assert_eq!(p.name(), "anthropic");
         assert_eq!(p.base_url(), "https://proxy.internal/anthropic");
     }
@@ -3010,7 +3017,7 @@ mod build_provider_tests {
     fn a_bare_hint_and_a_slash_hint_select_the_same_provider() {
         let config = ClientConfigBuilder::new("test-key").build();
         for (hint, expected) in ROUTED_HINTS {
-            let provider = build_provider(&config, Some(hint)).expect("provider should build");
+            let provider = build_provider(&config, Some(hint)).expect("provider should build").provider;
             assert_eq!(provider.name(), *expected, "hint {hint}");
         }
     }
@@ -3035,8 +3042,8 @@ mod build_provider_tests {
             .base_url("http://gateway.test/v1")
             .build();
         for (hint, _) in ROUTED_HINTS {
-            let plain = build_provider(&plain_config, Some(hint)).expect("provider should build");
-            let based = build_provider(&based_config, Some(hint)).expect("provider should build");
+            let plain = build_provider(&plain_config, Some(hint)).expect("provider should build").provider;
+            let based = build_provider(&based_config, Some(hint)).expect("provider should build").provider;
             assert_eq!(based.name(), plain.name(), "hint {hint}");
             assert_eq!(
                 based.chat_completions_path(),
