@@ -1091,7 +1091,13 @@ impl DefaultClient {
         model: &str,
         stream: Option<bool>,
     ) -> Result<PreparedRequest> {
-        self.prepare_request_with(serializable, endpoint_fn, |p, body| p.transform_request(body), model, stream)
+        self.prepare_request_with(
+            serializable,
+            endpoint_fn,
+            |p, body| p.transform_request(body),
+            model,
+            stream,
+        )
     }
 
     /// Prepare an embedding request. The provider rebuilds the body in

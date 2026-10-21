@@ -1315,9 +1315,7 @@ mod tests {
         let speech = json!({"model": "tts-1", "input": "hello", "voice": "alloy"});
         for original in [moderation, speech] {
             let mut body = original.clone();
-            CohereProvider
-                .transform_request(&mut body)
-                .expect("request transforms");
+            CohereProvider.transform_request(&mut body).expect("request transforms");
             assert_eq!(body, original);
         }
     }
