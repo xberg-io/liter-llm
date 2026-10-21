@@ -1233,3 +1233,160 @@ async fn rerank_reply_that_is_not_an_object_is_a_parse_error_not_a_panic() {
         );
     }
 }
+
+fn hinted_client(mock: &MockServer, hint: &str) -> DefaultClient {
+    let config = ClientConfigBuilder::new("test-api-key")
+        .base_url(mock.url())
+        .max_retries(0)
+        .build();
+    DefaultClient::new(config, Some(hint)).expect("client creation should succeed")
+}
+
+fn rerank_mock(body: serde_json::Value) -> MockServer {
+    MockServer::start_with_routes(vec![MockRoute {
+        method: "POST".into(),
+        path_prefix: "/rerank".into(),
+        status: 200,
+        body: body.to_string(),
+    }])
+}
+
+/// One reply for each provider whose rerank reply is not the `results` shape.
+/// Every reply ranks document 2 first and document 0 second.
+fn foreign_rerank_replies() -> Vec<(&'static str, &'static str, serde_json::Value)> {
+    vec![
+        (
+            "fireworks_ai",
+            "fireworks_ai/rerank-x",
+            serde_json::json!({
+                "object": "list",
+                "data": [{"index": 2, "relevance_score": 0.9}, {"index": 0, "relevance_score": 0.5}],
+                "model": "rerank-x",
+                "usage": {"total_tokens": 3}
+            }),
+        ),
+        (
+            "nvidia_nim",
+            "nvidia_nim/nv-rerankqa",
+            serde_json::json!({"rankings": [{"index": 2, "logit": 0.2}, {"index": 0, "logit": -1.0}]}),
+        ),
+        (
+            "huggingface",
+            "huggingface/bge-reranker",
+            serde_json::json!([{"index": 2, "score": 0.9}, {"index": 0, "score": 0.5}]),
+        ),
+    ]
+}
+
+#[tokio::test]
+async fn rerank_reply_of_fireworks_nim_and_tei_parses_into_results() {
+    for (hint, model, reply) in foreign_rerank_replies() {
+        let mock = rerank_mock(reply);
+        let client = hinted_client(&mock, hint);
+
+        let resp = client
+            .rerank(rerank_request(model))
+            .await
+            .unwrap_or_else(|e| panic!("{model}: the reply should parse: {e}"));
+
+        let order: Vec<u32> = resp.results.iter().map(|r| r.index).collect();
+        assert_eq!(order, vec![2, 0], "{model}");
+    }
+}
+
+#[tokio::test]
+async fn rerank_raw_reply_of_fireworks_nim_and_tei_parses_and_keeps_the_raw_reply() {
+    for (hint, model, reply) in foreign_rerank_replies() {
+        let mock = rerank_mock(reply.clone());
+        let client = hinted_client(&mock, hint);
+
+        let exchange = client
+            .rerank_raw(rerank_request(model))
+            .await
+            .unwrap_or_else(|e| panic!("{model}: the reply should parse: {e}"));
+
+        assert_eq!(exchange.data.results.len(), 2, "{model}");
+        assert_eq!(exchange.raw_response, Some(reply), "{model}");
+    }
+}
+
+#[tokio::test]
+async fn rerank_nim_logit_becomes_the_relevance_score() {
+    let (hint, model, reply) = foreign_rerank_replies().remove(1);
+    let mock = rerank_mock(reply);
+    let client = hinted_client(&mock, hint);
+
+    let resp = client.rerank(rerank_request(model)).await.expect("NIM reply parses");
+
+    assert_eq!(resp.results[0].relevance_score, 0.2);
+    assert_eq!(resp.results[1].relevance_score, -1.0);
+}
+
+fn top_n_request(model: &str) -> RerankRequest {
+    RerankRequest {
+        top_n: Some(1),
+        ..rerank_request(model)
+    }
+}
+
+fn first_request_body(mock: &MockServer) -> serde_json::Value {
+    let requests = mock.requests();
+    serde_json::from_str(&requests[0].body).expect("request body is JSON")
+}
+
+#[tokio::test]
+async fn rerank_voyage_request_sends_top_k_when_the_model_names_voyage() {
+    let mock = rerank_mock(serde_json::json!({"data": [{"index": 1, "relevance_score": 0.9}]}));
+    let client = build_client(&mock);
+
+    client.rerank(top_n_request("voyage/rerank-2")).await.expect("reply parses");
+
+    let body = first_request_body(&mock);
+    assert_eq!(body["top_k"], 1);
+    assert!(body.get("top_n").is_none(), "Voyage does not document top_n: {body}");
+    assert_eq!(body["query"], "q", "the other fields stay");
+}
+
+#[tokio::test]
+async fn rerank_voyage_request_sends_top_k_when_the_client_names_voyage_as_hint() {
+    let mock = rerank_mock(serde_json::json!({"data": [{"index": 1, "relevance_score": 0.9}]}));
+    let client = hinted_client(&mock, "voyage");
+
+    client.rerank(top_n_request("rerank-2")).await.expect("reply parses");
+
+    let body = first_request_body(&mock);
+    assert_eq!(body["top_k"], 1);
+    assert!(body.get("top_n").is_none(), "Voyage does not document top_n: {body}");
+}
+
+#[tokio::test]
+async fn rerank_raw_voyage_request_sends_top_k() {
+    let mock = rerank_mock(serde_json::json!({"data": [{"index": 1, "relevance_score": 0.9}]}));
+    let client = hinted_client(&mock, "voyage");
+
+    let exchange = client
+        .rerank_raw(top_n_request("voyage/rerank-2"))
+        .await
+        .expect("reply parses");
+
+    assert_eq!(exchange.raw_request["top_k"], 1);
+    assert!(exchange.raw_request.get("top_n").is_none());
+    let body = first_request_body(&mock);
+    assert_eq!(body["top_k"], 1);
+    assert!(body.get("top_n").is_none());
+}
+
+#[tokio::test]
+async fn rerank_request_to_cohere_keeps_top_n() {
+    let mock = rerank_mock(serde_json::json!({"results": [{"index": 1, "relevance_score": 0.9}]}));
+    let client = hinted_client(&mock, "cohere");
+
+    client
+        .rerank(top_n_request("cohere/rerank-v3.5"))
+        .await
+        .expect("reply parses");
+
+    let body = first_request_body(&mock);
+    assert_eq!(body["top_n"], 1);
+    assert!(body.get("top_k").is_none());
+}
