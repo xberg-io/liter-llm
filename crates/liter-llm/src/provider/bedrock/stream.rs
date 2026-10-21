@@ -55,7 +55,8 @@ pub(crate) fn exception_error(exception_type: &str, payload: &str) -> LiterLlmEr
         "resourceNotFoundException" => 404,
         "modelTimeoutException" => 408,
         "throttlingException" | "modelNotReadyException" => 429,
-        "internalServerException" | "modelStreamErrorException" => 500,
+        "modelStreamErrorException" | "modelErrorException" => 424,
+        "internalServerException" => 500,
         "serviceUnavailableException" => 503,
         _ => return LiterLlmError::Streaming { message },
     };

@@ -317,9 +317,12 @@ fn status_for_error_kind(code: Option<&str>, kind: Option<&str>) -> u16 {
     match kind {
         Some("rate_limit_error") => 429,
         Some("authentication_error") => 401,
+        Some("billing_error") => 402,
         Some("permission_error") => 403,
         Some("not_found_error") => 404,
+        Some("request_too_large") => 413,
         Some("server_error" | "api_error") => 500,
+        Some("timeout_error") => 504,
         Some("overloaded_error") => 529,
         _ => 400,
     }
@@ -334,14 +337,21 @@ pub(crate) fn status_code_field(event: &serde_json::Value) -> Option<u16> {
 }
 
 /// The `retry_after` of an error event, in seconds, read from the error object
-/// or from the top level of the event. A negative, non-finite or absent value
-/// gives `None`.
+/// first, then from the top level of the event. A value is a number or a string
+/// that holds a number, like the `Retry-After` header. A negative, non-finite or
+/// unreadable value is skipped, so the next place still gets read.
 fn retry_after_field(event: &serde_json::Value) -> Option<std::time::Duration> {
-    let seconds = event
-        .pointer("/error/retry_after")
-        .or_else(|| event.get("retry_after"))
-        .and_then(serde_json::Value::as_f64)?;
-    std::time::Duration::try_from_secs_f64(seconds).ok()
+    let seconds = |value: &serde_json::Value| -> Option<std::time::Duration> {
+        let secs = match value {
+            serde_json::Value::String(s) => s.trim().parse::<f64>().ok()?,
+            other => other.as_f64()?,
+        };
+        std::time::Duration::try_from_secs_f64(secs).ok()
+    };
+    [event.pointer("/error/retry_after"), event.get("retry_after")]
+        .into_iter()
+        .flatten()
+        .find_map(seconds)
 }
 
 /// Build the error for an error event inside a stream, or `None` when the event
@@ -1458,6 +1468,20 @@ mod tests {
                 r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":"soon"}}"#,
                 None,
             ),
+            // A string that holds a number reads like the `Retry-After` header.
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":"30"}}"#,
+                Some(Duration::from_secs(30)),
+            ),
+            // An unusable value in the error object does not hide the top level.
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":-4},"retry_after":5}"#,
+                Some(Duration::from_secs(5)),
+            ),
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":"soon"},"retry_after":"6"}"#,
+                Some(Duration::from_secs(6)),
+            ),
         ];
         for (payload, want) in cases {
             let err = mid_stream_error(payload);
@@ -1467,6 +1491,23 @@ mod tests {
             );
             assert_eq!(err.retry_after(), want, "{payload}");
         }
+    }
+
+    /// Revert line: remove the `billing_error`, `request_too_large` and `timeout_error`
+    /// arms of `status_for_error_kind` to make this test fail. Each Anthropic error type
+    /// gives the status that the Anthropic API documents for it.
+    #[test]
+    fn parse_stream_event_anthropic_error_types_keep_their_status() {
+        for (kind, status) in [
+            ("billing_error", 402),
+            ("request_too_large", 413),
+            ("timeout_error", 504),
+        ] {
+            let err = mid_stream_error(&format!(r#"{{"error":{{"message":"m","type":"{kind}"}}}}"#));
+            assert_eq!(err.status_code(), status, "{kind}: {err:?}");
+        }
+        let err = mid_stream_error(r#"{"error":{"message":"m","type":"timeout_error"}}"#);
+        assert!(matches!(err, LiterLlmError::ServiceUnavailable { .. }), "got: {err:?}");
     }
 
     /// An overloaded error event keeps its delay too: the 529 kind carries `retry_after`.

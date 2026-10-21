@@ -409,14 +409,15 @@ fn verify_frame_crcs(frame: &[u8]) -> Result<()> {
     Ok(())
 }
 
-/// The `:event-type` and `:message-type` header values, `""` when absent.
-/// A repeated header takes its last value.
+/// The event type and `:message-type` header values, `""` when absent. An
+/// `exception` frame names its type in `:exception-type`; every other frame
+/// uses `:event-type`. A repeated header takes its last value.
 fn frame_types(headers: &[EventHeader]) -> (&str, &str) {
     let mut event_type = "";
     let mut message_type = "";
     for h in headers {
         match h.name.as_str() {
-            ":event-type" => event_type = &h.value,
+            ":event-type" | ":exception-type" => event_type = &h.value,
             ":message-type" => message_type = &h.value,
             _ => {}
         }
@@ -761,7 +762,8 @@ mod tests {
     }
 
     /// Revert line: make `decode_frame` build `LiterLlmError::Streaming` for an
-    /// exception frame again to make this test fail.
+    /// exception frame again to make this test fail. A real exception frame names
+    /// its type in `:exception-type`, not `:event-type`.
     #[test]
     fn exception_frame_has_the_http_error_kind() {
         let cases = [
@@ -771,10 +773,12 @@ mod tests {
             ("resourceNotFoundException", 404),
             ("internalServerException", 500),
             ("serviceUnavailableException", 503),
+            ("modelStreamErrorException", 424),
+            ("modelErrorException", 424),
         ];
         for (exception, status) in cases {
             let frame = build_frame(
-                &[(":message-type", "exception"), (":event-type", exception)],
+                &[(":message-type", "exception"), (":exception-type", exception)],
                 br#"{"message":"Rate exceeded"}"#,
             );
             let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
@@ -793,7 +797,7 @@ mod tests {
     #[test]
     fn unknown_exception_frame_stays_a_streaming_error() {
         let frame = build_frame(
-            &[(":message-type", "exception"), (":event-type", "futureException")],
+            &[(":message-type", "exception"), (":exception-type", "futureException")],
             br#"{"message":"odd"}"#,
         );
         let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };

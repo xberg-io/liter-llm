@@ -136,6 +136,20 @@ impl Provider for CohereProvider {
             return Err(err);
         }
 
+        // Cohere documents no error event. A failed generation ends with a `message-end`
+        // event whose `delta.error` holds the text and whose finish reason is `ERROR`.
+        if event_type == "message-end" {
+            let error_text = v.pointer("/delta/error").and_then(Value::as_str);
+            let errored = v.pointer("/delta/finish_reason").and_then(Value::as_str) == Some("ERROR");
+            if error_text.is_some() || errored {
+                return Err(LiterLlmError::Streaming {
+                    message: error_text
+                        .unwrap_or("Cohere ended the stream with finish reason ERROR")
+                        .to_owned(),
+                });
+            }
+        }
+
         Ok(match event_type {
             "message-start" => Some(cohere_message_start_chunk(&v)),
             "content-delta" => Some(cohere_content_delta_chunk(&v)),
@@ -422,6 +436,25 @@ mod tests {
             .unwrap_err();
         assert!(err.to_string().contains("too many"), "got: {err}");
         assert_eq!(err.retry_after(), Some(std::time::Duration::from_secs(4)));
+    }
+
+    /// Revert line: remove the `message-end` error check from `parse_stream_event`
+    /// to make this test fail (the event is then a normal end chunk).
+    #[test]
+    fn parse_stream_event_message_end_error_is_an_error() {
+        let err = CohereProvider
+            .parse_stream_event(r#"{"type":"message-end","delta":{"error":"model failed","finish_reason":"ERROR"}}"#)
+            .unwrap_err();
+        assert!(matches!(err, LiterLlmError::Streaming { .. }), "got: {err:?}");
+        assert!(err.to_string().contains("model failed"), "got: {err}");
+        let err = CohereProvider
+            .parse_stream_event(r#"{"type":"message-end","delta":{"finish_reason":"ERROR"}}"#)
+            .unwrap_err();
+        assert!(err.to_string().contains("ERROR"), "got: {err}");
+        let ok = CohereProvider
+            .parse_stream_event(r#"{"type":"message-end","delta":{"finish_reason":"COMPLETE"}}"#)
+            .unwrap();
+        assert!(ok.is_some());
     }
 
     #[test]
@@ -948,7 +981,7 @@ mod tests {
     #[test]
     fn test_parse_stream_event_message_end_unknown_finish_reason() {
         let provider = CohereProvider;
-        let event = r#"{"delta":{"finish_reason":"ERROR"},"type":"message-end"}"#;
+        let event = r#"{"delta":{"finish_reason":"STOP_SEQUENCE"},"type":"message-end"}"#;
         let chunk = provider
             .parse_stream_event(event)
             .expect("should parse")
