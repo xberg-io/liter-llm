@@ -60,7 +60,7 @@ Liter-llm supports **174 providers** out of the box. Route requests to any provi
 | Deepseek | `deepseek/` | :white_check_mark: | -- | -- | -- | -- |
 | Docker Model Runner | `docker_model_runner/` | :white_check_mark: | -- | -- | -- | -- |
 | DuckDuckGo | `duckduckgo/` | -- | -- | -- | -- | -- |
-| Eden AI | `edenai/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- |
+| Eden AI | `edenai/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | ElevenLabs | `elevenlabs/` | -- | -- | -- | -- | -- |
 | Empiriolabs | `empiriolabs/` | :white_check_mark: | -- | -- | -- | -- |
 | Empower | `empower/` | :white_check_mark: | -- | -- | -- | -- |
@@ -108,7 +108,7 @@ Liter-llm supports **174 providers** out of the box. Route requests to any provi
 | Milvus | `milvus/` | -- | -- | -- | -- | -- |
 | Minimax | `minimax/` | :white_check_mark: | -- | -- | -- | -- |
 | Mistral AI API | `mistral/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
-| ModelScope | `modelscope/` | :white_check_mark: | -- | :white_check_mark: | -- | -- |
+| ModelScope | `modelscope/` | :white_check_mark: | -- | -- | -- | -- |
 | Moonshot | `moonshot/` | :white_check_mark: | -- | -- | -- | -- |
 | Morph | `morph/` | :white_check_mark: | -- | -- | -- | -- |
 | Nadir | `nadir/` | :white_check_mark: | -- | -- | -- | -- |
