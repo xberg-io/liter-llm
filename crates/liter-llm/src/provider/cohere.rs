@@ -380,6 +380,39 @@ mod tests {
 
     use super::*;
 
+    /// Revert line: remove the error-event check from `parse_stream_event` to make this
+    /// test fail (the event is then skipped and the stream ends with no error).
+    #[test]
+    fn parse_stream_event_error_event_has_the_http_error_kind() {
+        let cases = [
+            (
+                r#"{"type":"error","error":{"message":"slow down","type":"rate_limit_error"}}"#,
+                429,
+            ),
+            (r#"{"error":{"message":"bad key","status_code":401}}"#, 401),
+            (
+                r#"{"type":"error","message":"too many","status_code":429,"retry_after":4}"#,
+                429,
+            ),
+            (r#"{"type":"error","message":"boom","status_code":500}"#, 500),
+        ];
+        for (event, status) in cases {
+            let err = CohereProvider.parse_stream_event(event).unwrap_err();
+            let http = LiterLlmError::from_status(status, r#"{"error":{"message":"x"}}"#, None);
+            assert_eq!(
+                std::mem::discriminant(&err),
+                std::mem::discriminant(&http),
+                "{event}: stream gave {err:?}, HTTP {status} gives {http:?}"
+            );
+            assert_eq!(err.status_code(), status, "{event}");
+        }
+        let err = CohereProvider
+            .parse_stream_event(r#"{"type":"error","message":"too many","status_code":429,"retry_after":4}"#)
+            .unwrap_err();
+        assert!(err.to_string().contains("too many"), "got: {err}");
+        assert_eq!(err.retry_after(), Some(std::time::Duration::from_secs(4)));
+    }
+
     #[test]
     fn test_cohere_name_and_base_url() {
         let provider = CohereProvider;

@@ -653,6 +653,21 @@ fn parse_stream_event_error_event_has_the_http_error_kind() {
     assert_eq!(err.retry_after(), Some(Duration::from_secs(9)));
 }
 
+/// An `error` event with no error object has no type to classify; it stays a
+/// generic streaming error with a fixed message.
+#[test]
+fn parse_stream_event_error_event_without_error_object_is_a_streaming_error() {
+    let err = provider().parse_stream_event(r#"{"type":"error"}"#).unwrap_err();
+    assert!(
+        matches!(err, crate::error::LiterLlmError::Streaming { .. }),
+        "got: {err:?}"
+    );
+    assert!(
+        err.to_string().contains("unknown Anthropic streaming error"),
+        "got: {err}"
+    );
+}
+
 #[test]
 fn parse_stream_event_ping_returns_none() {
     let event = r#"{"type":"ping"}"#;

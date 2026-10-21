@@ -761,6 +761,49 @@ mod tests {
             other => panic!("expected error, got {other:?}"),
         }
     }
+
+    /// Revert line: make `decode_frame` build `LiterLlmError::Streaming` for an
+    /// exception frame again to make this test fail.
+    #[test]
+    fn exception_frame_has_the_http_error_kind() {
+        let cases = [
+            ("throttlingException", 429),
+            ("validationException", 400),
+            ("accessDeniedException", 403),
+            ("resourceNotFoundException", 404),
+            ("internalServerException", 500),
+            ("serviceUnavailableException", 503),
+        ];
+        for (exception, status) in cases {
+            let frame = build_frame(
+                &[(":message-type", "exception"), (":event-type", exception)],
+                br#"{"message":"Rate exceeded"}"#,
+            );
+            let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
+            let err = decode_frame(&frame, &parse).unwrap_err();
+            let http = LiterLlmError::from_status(status, r#"{"error":{"message":"x"}}"#, None);
+            assert_eq!(
+                std::mem::discriminant(&err),
+                std::mem::discriminant(&http),
+                "{exception}: frame gave {err:?}, HTTP {status} gives {http:?}"
+            );
+            assert_eq!(err.status_code(), status, "{exception}");
+            assert!(err.to_string().contains("Rate exceeded"), "{exception}: {err}");
+        }
+    }
+
+    #[test]
+    fn unknown_exception_frame_stays_a_streaming_error() {
+        let frame = build_frame(
+            &[(":message-type", "exception"), (":event-type", "futureException")],
+            br#"{"message":"odd"}"#,
+        );
+        let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
+        let err = decode_frame(&frame, &parse).unwrap_err();
+        assert!(matches!(err, LiterLlmError::Streaming { .. }), "got: {err:?}");
+        assert!(err.to_string().contains("futureException"), "got: {err}");
+        assert!(err.to_string().contains("odd"), "got: {err}");
+    }
 }
 
 /// Test helper: a stream that yields items from a Vec.
