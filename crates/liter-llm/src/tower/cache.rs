@@ -2094,8 +2094,11 @@ mod tests {
 
         let none = strategy_key(&strategy, &embed(None)).expect("embed request is cacheable");
         let none_again = strategy_key(&strategy, &embed(None)).expect("embed request is cacheable");
-        let query = strategy_key(&strategy, &embed(Some(serde_json::json!({"input_type": "search_query"}))))
-            .expect("embed request is cacheable");
+        let query = strategy_key(
+            &strategy,
+            &embed(Some(serde_json::json!({"input_type": "search_query"}))),
+        )
+        .expect("embed request is cacheable");
         let document = strategy_key(
             &strategy,
             &embed(Some(serde_json::json!({"input_type": "search_document"}))),
@@ -2104,6 +2107,9 @@ mod tests {
 
         assert_eq!(none.0, none_again.0, "equal requests share a key");
         assert_ne!(none.0, query.0, "setting `extra_body` must change the cache key");
-        assert_ne!(query.0, document.0, "a different `input_type` must change the cache key");
+        assert_ne!(
+            query.0, document.0,
+            "a different `input_type` must change the cache key"
+        );
     }
 }

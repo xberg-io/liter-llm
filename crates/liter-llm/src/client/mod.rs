@@ -3701,7 +3701,10 @@ mod build_provider_tests {
             prepared.body_json["parameters"],
             serde_json::json!({"outputDimensionality": 256})
         );
-        assert_eq!(prepared.body_json["instances"], serde_json::json!([{"content": "what is rust?"}]));
+        assert_eq!(
+            prepared.body_json["instances"],
+            serde_json::json!([{"content": "what is rust?"}])
+        );
     }
 
     #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
@@ -3734,7 +3737,10 @@ mod build_provider_tests {
             .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
             .expect("prepare_request should not fail");
 
-        assert_eq!(prepared.body_json["parameters"], serde_json::json!({"autoTruncate": false}));
+        assert_eq!(
+            prepared.body_json["parameters"],
+            serde_json::json!({"autoTruncate": false})
+        );
         assert!(prepared.body_json.get("extra_body").is_none());
     }
 
@@ -3749,7 +3755,12 @@ mod build_provider_tests {
         let bodies = vec![
             (
                 "embed",
-                client.prepare_request(&embed_request(model, extra.clone()), |p| p.embeddings_path(), model, None),
+                client.prepare_request(
+                    &embed_request(model, extra.clone()),
+                    |p| p.embeddings_path(),
+                    model,
+                    None,
+                ),
             ),
             (
                 "rerank",
@@ -3847,7 +3858,10 @@ mod build_provider_tests {
         for (kind, prepared) in bodies {
             let prepared = prepared.unwrap_or_else(|e| panic!("{kind}: prepare_request failed: {e}"));
             assert_eq!(prepared.body_json["provider_option"], "value", "{kind}: key is merged");
-            assert!(prepared.body_json.get("extra_body").is_none(), "{kind}: wrapper is removed");
+            assert!(
+                prepared.body_json.get("extra_body").is_none(),
+                "{kind}: wrapper is removed"
+            );
         }
     }
 

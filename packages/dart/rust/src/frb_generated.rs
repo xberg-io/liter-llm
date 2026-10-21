@@ -5841,6 +5841,7 @@ const _: fn() = || {
         let _: Option<String> = CreateImageRequest.style;
         let _: Option<String> = CreateImageRequest.response_format;
         let _: Option<String> = CreateImageRequest.user;
+        let _: Option<String> = CreateImageRequest.extra_body;
     }
     {
         let CreateResponseRequest = None::<crate::CreateResponseRequest>.unwrap();
@@ -5861,6 +5862,7 @@ const _: fn() = || {
         let _: String = CreateSpeechRequest.voice;
         let _: Option<String> = CreateSpeechRequest.response_format;
         let _: Option<f64> = CreateSpeechRequest.speed;
+        let _: Option<String> = CreateSpeechRequest.extra_body;
     }
     {
         let CreateTranscriptionRequest = None::<crate::CreateTranscriptionRequest>.unwrap();
@@ -5870,6 +5872,7 @@ const _: fn() = || {
         let _: Option<String> = CreateTranscriptionRequest.prompt;
         let _: Option<String> = CreateTranscriptionRequest.response_format;
         let _: Option<f64> = CreateTranscriptionRequest.temperature;
+        let _: Option<String> = CreateTranscriptionRequest.extra_body;
     }
     {
         let CustomProviderConfig = None::<crate::CustomProviderConfig>.unwrap();
@@ -5934,6 +5937,7 @@ const _: fn() = || {
         let _: Option<crate::EmbeddingFormat> = EmbeddingRequest.encoding_format;
         let _: Option<i64> = EmbeddingRequest.dimensions;
         let _: Option<String> = EmbeddingRequest.user;
+        let _: Option<String> = EmbeddingRequest.extra_body;
     }
     {
         let EmbeddingResponse = None::<crate::EmbeddingResponse>.unwrap();
@@ -6246,6 +6250,7 @@ const _: fn() = || {
         let ModerationRequest = None::<crate::ModerationRequest>.unwrap();
         let _: crate::ModerationInput = ModerationRequest.input;
         let _: Option<String> = ModerationRequest.model;
+        let _: Option<String> = ModerationRequest.extra_body;
     }
     {
         let ModerationResponse = None::<crate::ModerationResponse>.unwrap();
@@ -6286,6 +6291,7 @@ const _: fn() = || {
         let _: crate::OcrDocument = OcrRequest.document;
         let _: Option<Vec<i64>> = OcrRequest.pages;
         let _: Option<bool> = OcrRequest.include_image_base64;
+        let _: Option<String> = OcrRequest.extra_body;
     }
     {
         let OcrResponse = None::<crate::OcrResponse>.unwrap();
@@ -6345,6 +6351,7 @@ const _: fn() = || {
         let _: Vec<crate::RerankDocument> = RerankRequest.documents;
         let _: Option<i64> = RerankRequest.top_n;
         let _: Option<bool> = RerankRequest.return_documents;
+        let _: Option<String> = RerankRequest.extra_body;
     }
     {
         let RerankResponse = None::<crate::RerankResponse>.unwrap();
@@ -6403,6 +6410,7 @@ const _: fn() = || {
         let _: Option<i64> = SearchRequest.max_results;
         let _: Option<Vec<String>> = SearchRequest.search_domain_filter;
         let _: Option<String> = SearchRequest.country;
+        let _: Option<String> = SearchRequest.extra_body;
     }
     {
         let SearchResponse = None::<crate::SearchResponse>.unwrap();
@@ -7279,6 +7287,7 @@ impl SseDecode for crate::CreateImageRequest {
         let mut var_style = <Option<String>>::sse_decode(deserializer);
         let mut var_responseFormat = <Option<String>>::sse_decode(deserializer);
         let mut var_user = <Option<String>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::CreateImageRequest {
             prompt: var_prompt,
             model: var_model,
@@ -7288,6 +7297,7 @@ impl SseDecode for crate::CreateImageRequest {
             style: var_style,
             response_format: var_responseFormat,
             user: var_user,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -7326,12 +7336,14 @@ impl SseDecode for crate::CreateSpeechRequest {
         let mut var_voice = <String>::sse_decode(deserializer);
         let mut var_responseFormat = <Option<String>>::sse_decode(deserializer);
         let mut var_speed = <Option<f64>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::CreateSpeechRequest {
             model: var_model,
             input: var_input,
             voice: var_voice,
             response_format: var_responseFormat,
             speed: var_speed,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -7345,6 +7357,7 @@ impl SseDecode for crate::CreateTranscriptionRequest {
         let mut var_prompt = <Option<String>>::sse_decode(deserializer);
         let mut var_responseFormat = <Option<String>>::sse_decode(deserializer);
         let mut var_temperature = <Option<f64>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::CreateTranscriptionRequest {
             model: var_model,
             file: var_file,
@@ -7352,6 +7365,7 @@ impl SseDecode for crate::CreateTranscriptionRequest {
             prompt: var_prompt,
             response_format: var_responseFormat,
             temperature: var_temperature,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -7508,12 +7522,14 @@ impl SseDecode for crate::EmbeddingRequest {
         let mut var_encodingFormat = <Option<crate::EmbeddingFormat>>::sse_decode(deserializer);
         let mut var_dimensions = <Option<i64>>::sse_decode(deserializer);
         let mut var_user = <Option<String>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::EmbeddingRequest {
             model: var_model,
             input: var_input,
             encoding_format: var_encodingFormat,
             dimensions: var_dimensions,
             user: var_user,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -8675,9 +8691,11 @@ impl SseDecode for crate::ModerationRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_input = <crate::ModerationInput>::sse_decode(deserializer);
         let mut var_model = <Option<String>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::ModerationRequest {
             input: var_input,
             model: var_model,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -8769,11 +8787,13 @@ impl SseDecode for crate::OcrRequest {
         let mut var_document = <crate::OcrDocument>::sse_decode(deserializer);
         let mut var_pages = <Option<Vec<i64>>>::sse_decode(deserializer);
         let mut var_includeImageBase64 = <Option<bool>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::OcrRequest {
             model: var_model,
             document: var_document,
             pages: var_pages,
             include_image_base64: var_includeImageBase64,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -9457,12 +9477,14 @@ impl SseDecode for crate::RerankRequest {
         let mut var_documents = <Vec<crate::RerankDocument>>::sse_decode(deserializer);
         let mut var_topN = <Option<i64>>::sse_decode(deserializer);
         let mut var_returnDocuments = <Option<bool>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::RerankRequest {
             model: var_model,
             query: var_query,
             documents: var_documents,
             top_n: var_topN,
             return_documents: var_returnDocuments,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -9597,12 +9619,14 @@ impl SseDecode for crate::SearchRequest {
         let mut var_maxResults = <Option<i64>>::sse_decode(deserializer);
         let mut var_searchDomainFilter = <Option<Vec<String>>>::sse_decode(deserializer);
         let mut var_country = <Option<String>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::SearchRequest {
             model: var_model,
             query: var_query,
             max_results: var_maxResults,
             search_domain_filter: var_searchDomainFilter,
             country: var_country,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -10862,6 +10886,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::CreateImageRequest> {
             self.0.style.into_into_dart().into_dart(),
             self.0.response_format.into_into_dart().into_dart(),
             self.0.user.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -10904,6 +10929,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::CreateSpeechRequest> {
             self.0.voice.into_into_dart().into_dart(),
             self.0.response_format.into_into_dart().into_dart(),
             self.0.speed.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -10924,6 +10950,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::CreateTranscriptionRequ
             self.0.prompt.into_into_dart().into_dart(),
             self.0.response_format.into_into_dart().into_dart(),
             self.0.temperature.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -11111,6 +11138,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::EmbeddingRequest> {
             self.0.encoding_format.into_into_dart().into_dart(),
             self.0.dimensions.into_into_dart().into_dart(),
             self.0.user.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -11848,6 +11876,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::ModerationRequest> {
         [
             self.0.input.into_into_dart().into_dart(),
             self.0.model.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -11957,6 +11986,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::OcrRequest> {
             self.0.document.into_into_dart().into_dart(),
             self.0.pages.into_into_dart().into_dart(),
             self.0.include_image_base64.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -12140,6 +12170,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::RerankRequest> {
             self.0.documents.into_into_dart().into_dart(),
             self.0.top_n.into_into_dart().into_dart(),
             self.0.return_documents.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -12297,6 +12328,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::SearchRequest> {
             self.0.max_results.into_into_dart().into_dart(),
             self.0.search_domain_filter.into_into_dart().into_dart(),
             self.0.country.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -13241,6 +13273,7 @@ impl SseEncode for crate::CreateImageRequest {
         <Option<String>>::sse_encode(self.style, serializer);
         <Option<String>>::sse_encode(self.response_format, serializer);
         <Option<String>>::sse_encode(self.user, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -13267,6 +13300,7 @@ impl SseEncode for crate::CreateSpeechRequest {
         <String>::sse_encode(self.voice, serializer);
         <Option<String>>::sse_encode(self.response_format, serializer);
         <Option<f64>>::sse_encode(self.speed, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -13279,6 +13313,7 @@ impl SseEncode for crate::CreateTranscriptionRequest {
         <Option<String>>::sse_encode(self.prompt, serializer);
         <Option<String>>::sse_encode(self.response_format, serializer);
         <Option<f64>>::sse_encode(self.temperature, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -13404,6 +13439,7 @@ impl SseEncode for crate::EmbeddingRequest {
         <Option<crate::EmbeddingFormat>>::sse_encode(self.encoding_format, serializer);
         <Option<i64>>::sse_encode(self.dimensions, serializer);
         <Option<String>>::sse_encode(self.user, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -14313,6 +14349,7 @@ impl SseEncode for crate::ModerationRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::ModerationInput>::sse_encode(self.input, serializer);
         <Option<String>>::sse_encode(self.model, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -14379,6 +14416,7 @@ impl SseEncode for crate::OcrRequest {
         <crate::OcrDocument>::sse_encode(self.document, serializer);
         <Option<Vec<i64>>>::sse_encode(self.pages, serializer);
         <Option<bool>>::sse_encode(self.include_image_base64, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -14983,6 +15021,7 @@ impl SseEncode for crate::RerankRequest {
         <Vec<crate::RerankDocument>>::sse_encode(self.documents, serializer);
         <Option<i64>>::sse_encode(self.top_n, serializer);
         <Option<bool>>::sse_encode(self.return_documents, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -15079,6 +15118,7 @@ impl SseEncode for crate::SearchRequest {
         <Option<i64>>::sse_encode(self.max_results, serializer);
         <Option<Vec<String>>>::sse_encode(self.search_domain_filter, serializer);
         <Option<String>>::sse_encode(self.country, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 

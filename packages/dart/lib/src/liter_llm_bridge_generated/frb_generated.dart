@@ -7781,8 +7781,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   CreateImageRequest dco_decode_create_image_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    if (arr.length != 9)
+      throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
     return CreateImageRequest(
       prompt: dco_decode_String(arr[0]),
       model: dco_decode_opt_String(arr[1]),
@@ -7792,6 +7792,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       style: dco_decode_opt_String(arr[5]),
       responseFormat: dco_decode_opt_String(arr[6]),
       user: dco_decode_opt_String(arr[7]),
+      extraBody: dco_decode_opt_String(arr[8]),
     );
   }
 
@@ -7818,14 +7819,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   CreateSpeechRequest dco_decode_create_speech_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return CreateSpeechRequest(
       model: dco_decode_String(arr[0]),
       input: dco_decode_String(arr[1]),
       voice: dco_decode_String(arr[2]),
       responseFormat: dco_decode_opt_String(arr[3]),
       speed: dco_decode_opt_box_autoadd_f_64(arr[4]),
+      extraBody: dco_decode_opt_String(arr[5]),
     );
   }
 
@@ -7835,8 +7837,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return CreateTranscriptionRequest(
       model: dco_decode_String(arr[0]),
       file: dco_decode_String(arr[1]),
@@ -7844,6 +7846,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       prompt: dco_decode_opt_String(arr[3]),
       responseFormat: dco_decode_opt_String(arr[4]),
       temperature: dco_decode_opt_box_autoadd_f_64(arr[5]),
+      extraBody: dco_decode_opt_String(arr[6]),
     );
   }
 
@@ -7969,14 +7972,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   EmbeddingRequest dco_decode_embedding_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return EmbeddingRequest(
       model: dco_decode_String(arr[0]),
       input: dco_decode_embedding_input(arr[1]),
       encodingFormat: dco_decode_opt_box_autoadd_embedding_format(arr[2]),
       dimensions: dco_decode_opt_box_autoadd_i_64(arr[3]),
       user: dco_decode_opt_String(arr[4]),
+      extraBody: dco_decode_opt_String(arr[5]),
     );
   }
 
@@ -8761,11 +8765,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ModerationRequest dco_decode_moderation_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ModerationRequest(
       input: dco_decode_moderation_input(arr[0]),
       model: dco_decode_opt_String(arr[1]),
+      extraBody: dco_decode_opt_String(arr[2]),
     );
   }
 
@@ -8841,13 +8846,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   OcrRequest dco_decode_ocr_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return OcrRequest(
       model: dco_decode_String(arr[0]),
       document: dco_decode_ocr_document(arr[1]),
       pages: dco_decode_opt_list_prim_i_64_strict(arr[2]),
       includeImageBase64: dco_decode_opt_box_autoadd_bool(arr[3]),
+      extraBody: dco_decode_opt_String(arr[4]),
     );
   }
 
@@ -9295,14 +9301,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RerankRequest dco_decode_rerank_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return RerankRequest(
       model: dco_decode_String(arr[0]),
       query: dco_decode_String(arr[1]),
       documents: dco_decode_list_rerank_document(arr[2]),
       topN: dco_decode_opt_box_autoadd_i_64(arr[3]),
       returnDocuments: dco_decode_opt_box_autoadd_bool(arr[4]),
+      extraBody: dco_decode_opt_String(arr[5]),
     );
   }
 
@@ -9417,14 +9424,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SearchRequest dco_decode_search_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return SearchRequest(
       model: dco_decode_String(arr[0]),
       query: dco_decode_String(arr[1]),
       maxResults: dco_decode_opt_box_autoadd_i_64(arr[2]),
       searchDomainFilter: dco_decode_opt_list_String(arr[3]),
       country: dco_decode_opt_String(arr[4]),
+      extraBody: dco_decode_opt_String(arr[5]),
     );
   }
 
@@ -10894,6 +10902,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_style = sse_decode_opt_String(deserializer);
     var var_responseFormat = sse_decode_opt_String(deserializer);
     var var_user = sse_decode_opt_String(deserializer);
+    var var_extraBody = sse_decode_opt_String(deserializer);
     return CreateImageRequest(
       prompt: var_prompt,
       model: var_model,
@@ -10903,6 +10912,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       style: var_style,
       responseFormat: var_responseFormat,
       user: var_user,
+      extraBody: var_extraBody,
     );
   }
 
@@ -10943,12 +10953,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_voice = sse_decode_String(deserializer);
     var var_responseFormat = sse_decode_opt_String(deserializer);
     var var_speed = sse_decode_opt_box_autoadd_f_64(deserializer);
+    var var_extraBody = sse_decode_opt_String(deserializer);
     return CreateSpeechRequest(
       model: var_model,
       input: var_input,
       voice: var_voice,
       responseFormat: var_responseFormat,
       speed: var_speed,
+      extraBody: var_extraBody,
     );
   }
 
@@ -10963,6 +10975,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_prompt = sse_decode_opt_String(deserializer);
     var var_responseFormat = sse_decode_opt_String(deserializer);
     var var_temperature = sse_decode_opt_box_autoadd_f_64(deserializer);
+    var var_extraBody = sse_decode_opt_String(deserializer);
     return CreateTranscriptionRequest(
       model: var_model,
       file: var_file,
@@ -10970,6 +10983,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       prompt: var_prompt,
       responseFormat: var_responseFormat,
       temperature: var_temperature,
+      extraBody: var_extraBody,
     );
   }
 
@@ -11095,12 +11109,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
     var var_dimensions = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_user = sse_decode_opt_String(deserializer);
+    var var_extraBody = sse_decode_opt_String(deserializer);
     return EmbeddingRequest(
       model: var_model,
       input: var_input,
       encodingFormat: var_encodingFormat,
       dimensions: var_dimensions,
       user: var_user,
+      extraBody: var_extraBody,
     );
   }
 
@@ -12219,7 +12235,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_input = sse_decode_moderation_input(deserializer);
     var var_model = sse_decode_opt_String(deserializer);
-    return ModerationRequest(input: var_input, model: var_model);
+    var var_extraBody = sse_decode_opt_String(deserializer);
+    return ModerationRequest(
+      input: var_input,
+      model: var_model,
+      extraBody: var_extraBody,
+    );
   }
 
   @protected
@@ -12302,11 +12323,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_document = sse_decode_ocr_document(deserializer);
     var var_pages = sse_decode_opt_list_prim_i_64_strict(deserializer);
     var var_includeImageBase64 = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_extraBody = sse_decode_opt_String(deserializer);
     return OcrRequest(
       model: var_model,
       document: var_document,
       pages: var_pages,
       includeImageBase64: var_includeImageBase64,
+      extraBody: var_extraBody,
     );
   }
 
@@ -13030,12 +13053,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_documents = sse_decode_list_rerank_document(deserializer);
     var var_topN = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_returnDocuments = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_extraBody = sse_decode_opt_String(deserializer);
     return RerankRequest(
       model: var_model,
       query: var_query,
       documents: var_documents,
       topN: var_topN,
       returnDocuments: var_returnDocuments,
+      extraBody: var_extraBody,
     );
   }
 
@@ -13154,12 +13179,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_maxResults = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_searchDomainFilter = sse_decode_opt_list_String(deserializer);
     var var_country = sse_decode_opt_String(deserializer);
+    var var_extraBody = sse_decode_opt_String(deserializer);
     return SearchRequest(
       model: var_model,
       query: var_query,
       maxResults: var_maxResults,
       searchDomainFilter: var_searchDomainFilter,
       country: var_country,
+      extraBody: var_extraBody,
     );
   }
 
@@ -14548,6 +14575,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.style, serializer);
     sse_encode_opt_String(self.responseFormat, serializer);
     sse_encode_opt_String(self.user, serializer);
+    sse_encode_opt_String(self.extraBody, serializer);
   }
 
   @protected
@@ -14578,6 +14606,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.voice, serializer);
     sse_encode_opt_String(self.responseFormat, serializer);
     sse_encode_opt_box_autoadd_f_64(self.speed, serializer);
+    sse_encode_opt_String(self.extraBody, serializer);
   }
 
   @protected
@@ -14592,6 +14621,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.prompt, serializer);
     sse_encode_opt_String(self.responseFormat, serializer);
     sse_encode_opt_box_autoadd_f_64(self.temperature, serializer);
+    sse_encode_opt_String(self.extraBody, serializer);
   }
 
   @protected
@@ -14719,6 +14749,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
     sse_encode_opt_box_autoadd_i_64(self.dimensions, serializer);
     sse_encode_opt_String(self.user, serializer);
+    sse_encode_opt_String(self.extraBody, serializer);
   }
 
   @protected
@@ -15646,6 +15677,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_moderation_input(self.input, serializer);
     sse_encode_opt_String(self.model, serializer);
+    sse_encode_opt_String(self.extraBody, serializer);
   }
 
   @protected
@@ -15707,6 +15739,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_ocr_document(self.document, serializer);
     sse_encode_opt_list_prim_i_64_strict(self.pages, serializer);
     sse_encode_opt_box_autoadd_bool(self.includeImageBase64, serializer);
+    sse_encode_opt_String(self.extraBody, serializer);
   }
 
   @protected
@@ -16427,6 +16460,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_list_rerank_document(self.documents, serializer);
     sse_encode_opt_box_autoadd_i_64(self.topN, serializer);
     sse_encode_opt_box_autoadd_bool(self.returnDocuments, serializer);
+    sse_encode_opt_String(self.extraBody, serializer);
   }
 
   @protected
@@ -16526,6 +16560,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_i_64(self.maxResults, serializer);
     sse_encode_opt_list_String(self.searchDomainFilter, serializer);
     sse_encode_opt_String(self.country, serializer);
+    sse_encode_opt_String(self.extraBody, serializer);
   }
 
   @protected
