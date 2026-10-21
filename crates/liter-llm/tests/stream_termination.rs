@@ -18,7 +18,7 @@ use std::thread;
 
 use futures_util::StreamExt;
 use liter_llm::LiterLlmError;
-use liter_llm::client::{ClientConfigBuilder, DefaultClient, LlmClient};
+use liter_llm::client::{ClientConfigBuilder, DefaultClient, LlmClient, LlmClientRaw};
 use liter_llm::types::{ChatCompletionChunk, ChatCompletionRequest, FinishReason, Message, UserMessage};
 
 /// Serve one SSE response with `body`, then close the connection.
