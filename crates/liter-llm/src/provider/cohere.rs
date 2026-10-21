@@ -125,6 +125,31 @@ impl Provider for CohereProvider {
 
         let event_type = v.get("type").and_then(|t| t.as_str()).unwrap_or("");
 
+        // ~keep An error event is either `{"error": {...}}` or a flat
+        // `{"type": "error", "message": ...}`. Both go through the shared classifier,
+        // so the error kind matches the same body in an HTTP reply.
+        let wrapped = (v.get("error").is_none() && event_type == "error").then(|| serde_json::json!({ "error": &v }));
+        let error_event = wrapped.as_ref().unwrap_or(&v);
+        if let Some(err) =
+            crate::provider::stream_error_event(error_event, crate::provider::status_code_field(error_event))
+        {
+            return Err(err);
+        }
+
+        // Cohere documents no error event. A failed generation ends with a `message-end`
+        // event whose `delta.error` holds the text and whose finish reason is `ERROR`.
+        if event_type == "message-end" {
+            let error_text = v.pointer("/delta/error").and_then(Value::as_str);
+            let errored = v.pointer("/delta/finish_reason").and_then(Value::as_str) == Some("ERROR");
+            if error_text.is_some() || errored {
+                return Err(LiterLlmError::Streaming {
+                    message: error_text
+                        .unwrap_or("Cohere ended the stream with finish reason ERROR")
+                        .to_owned(),
+                });
+            }
+        }
+
         Ok(match event_type {
             "message-start" => Some(cohere_message_start_chunk(&v)),
             "content-delta" => Some(cohere_content_delta_chunk(&v)),
@@ -379,6 +404,79 @@ mod tests {
     use serde_json::json;
 
     use super::*;
+
+    /// Revert line: remove the error-event check from `parse_stream_event` to make this
+    /// test fail (the event is then skipped and the stream ends with no error).
+    #[test]
+    fn parse_stream_event_error_event_has_the_http_error_kind() {
+        let cases = [
+            (
+                r#"{"type":"error","error":{"message":"slow down","type":"rate_limit_error"}}"#,
+                429,
+            ),
+            (r#"{"error":{"message":"bad key","status_code":401}}"#, 401),
+            (
+                r#"{"type":"error","message":"too many","status_code":429,"retry_after":4}"#,
+                429,
+            ),
+            (r#"{"type":"error","message":"boom","status_code":500}"#, 500),
+        ];
+        for (event, status) in cases {
+            let err = CohereProvider.parse_stream_event(event).unwrap_err();
+            let http = LiterLlmError::from_status(status, r#"{"error":{"message":"x"}}"#, None);
+            assert_eq!(
+                std::mem::discriminant(&err),
+                std::mem::discriminant(&http),
+                "{event}: stream gave {err:?}, HTTP {status} gives {http:?}"
+            );
+            assert_eq!(err.status_code(), status, "{event}");
+        }
+        let err = CohereProvider
+            .parse_stream_event(r#"{"type":"error","message":"too many","status_code":429,"retry_after":4}"#)
+            .unwrap_err();
+        assert!(err.to_string().contains("too many"), "got: {err}");
+        assert_eq!(err.retry_after(), Some(std::time::Duration::from_secs(4)));
+    }
+
+    /// Revert line: drop the top-level fallback or the string parse from `status_code_field`
+    /// to make this test fail.
+    #[test]
+    fn parse_stream_event_error_event_status_edge_inputs() {
+        let cases = [
+            // A string status reads as a number.
+            (r#"{"type":"error","message":"slow","status_code":"429"}"#, 429),
+            (r#"{"error":{"message":"slow","status_code":"503"}}"#, 503),
+            // A top-level status beside an `error` object counts.
+            (r#"{"error":{"message":"slow"},"status_code":429}"#, 429),
+            // The error object wins over the top level.
+            (r#"{"error":{"message":"x","status_code":401},"status_code":429}"#, 401),
+            // No status at all gives the default 400.
+            (r#"{"type":"error","message":"odd"}"#, 400),
+        ];
+        for (event, status) in cases {
+            let err = CohereProvider.parse_stream_event(event).unwrap_err();
+            assert_eq!(err.status_code(), status, "{event}: {err:?}");
+        }
+    }
+
+    /// Revert line: remove the `message-end` error check from `parse_stream_event`
+    /// to make this test fail (the event is then a normal end chunk).
+    #[test]
+    fn parse_stream_event_message_end_error_is_an_error() {
+        let err = CohereProvider
+            .parse_stream_event(r#"{"type":"message-end","delta":{"error":"model failed","finish_reason":"ERROR"}}"#)
+            .unwrap_err();
+        assert!(matches!(err, LiterLlmError::Streaming { .. }), "got: {err:?}");
+        assert!(err.to_string().contains("model failed"), "got: {err}");
+        let err = CohereProvider
+            .parse_stream_event(r#"{"type":"message-end","delta":{"finish_reason":"ERROR"}}"#)
+            .unwrap_err();
+        assert!(err.to_string().contains("ERROR"), "got: {err}");
+        let ok = CohereProvider
+            .parse_stream_event(r#"{"type":"message-end","delta":{"finish_reason":"COMPLETE"}}"#)
+            .unwrap();
+        assert!(ok.is_some());
+    }
 
     #[test]
     fn test_cohere_name_and_base_url() {
@@ -904,7 +1002,7 @@ mod tests {
     #[test]
     fn test_parse_stream_event_message_end_unknown_finish_reason() {
         let provider = CohereProvider;
-        let event = r#"{"delta":{"finish_reason":"ERROR"},"type":"message-end"}"#;
+        let event = r#"{"delta":{"finish_reason":"STOP_SEQUENCE"},"type":"message-end"}"#;
         let chunk = provider
             .parse_stream_event(event)
             .expect("should parse")
