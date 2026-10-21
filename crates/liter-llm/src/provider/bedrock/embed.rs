@@ -72,7 +72,7 @@ pub(super) fn transform_bedrock_embed_request(body: &mut serde_json::Value) -> R
         if let Some(dimensions) = body.get("dimensions") {
             new_body["dimensions"] = dimensions.clone();
         }
-        carry_extra_body(body, &mut new_body);
+        crate::provider::carry_extra_body(body, &mut new_body);
         *body = new_body;
         return Ok(());
     }
@@ -82,7 +82,7 @@ pub(super) fn transform_bedrock_embed_request(body: &mut serde_json::Value) -> R
             "texts": texts,
             "input_type": COHERE_EMBED_DEFAULT_INPUT_TYPE
         });
-        carry_extra_body(body, &mut new_body);
+        crate::provider::carry_extra_body(body, &mut new_body);
         *body = new_body;
         return Ok(());
     }
@@ -94,16 +94,6 @@ pub(super) fn transform_bedrock_embed_request(body: &mut serde_json::Value) -> R
         ),
         status: 400,
     })
-}
-
-/// Keep the caller's `extra_body` on the rebuilt body.
-///
-/// The rebuild drops every OpenAI field. The client merges `extra_body` into the
-/// body after the provider transform, so the caller's keys must survive it.
-fn carry_extra_body(from: &mut serde_json::Value, to: &mut serde_json::Value) {
-    if let Some(extra_body) = from.get_mut("extra_body").map(serde_json::Value::take) {
-        to["extra_body"] = extra_body;
-    }
 }
 
 /// Normalize a Bedrock `InvokeModel` embedding response to OpenAI's embeddings list format.

@@ -331,7 +331,9 @@ impl Stream for RequireTerminalChunk {
 /// Vertex, Bedrock) already strip it inside their own `transform_request`, so by the
 /// time this runs there is nothing left for them to merge; there it only has an
 /// effect for OpenAI-compatible providers, which pass `extra_body` through
-/// unchanged. That caveat is chat-path-only: the Responses path
+/// unchanged. The Bedrock and Vertex embed transforms differ: they rebuild the body
+/// and keep `extra_body` on it, so this merge applies the caller's keys. The Gemini
+/// API embed transform merges them into each embed request itself. The Responses path
 /// ([`response_request_body`]) runs no provider transform at all, so the merged keys
 /// always reach the wire as literal OpenAI Responses fields.
 ///
@@ -3742,6 +3744,85 @@ mod build_provider_tests {
             serde_json::json!({"autoTruncate": false})
         );
         assert!(prepared.body_json.get("extra_body").is_none());
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_keeps_dimensions_when_extra_body_sets_parameters() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = EmbeddingRequest {
+            dimensions: Some(256),
+            ..embed_request(
+                "vertex_ai/text-embedding-005",
+                Some(serde_json::json!({"parameters": {"autoTruncate": false}})),
+            )
+        };
+
+        let prepared = client
+            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["parameters"],
+            serde_json::json!({"outputDimensionality": 256, "autoTruncate": false})
+        );
+        assert!(prepared.body_json.get("extra_body").is_none());
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_extra_body_parameters_override_the_dimensions_key() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = EmbeddingRequest {
+            dimensions: Some(256),
+            ..embed_request(
+                "vertex_ai/text-embedding-005",
+                Some(serde_json::json!({"parameters": {"outputDimensionality": 512, "autoTruncate": false}})),
+            )
+        };
+
+        let prepared = client
+            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["parameters"],
+            serde_json::json!({"outputDimensionality": 512, "autoTruncate": false})
+        );
+    }
+
+    #[test]
+    fn gemini_api_embed_takes_extra_body_fields_in_each_request() {
+        for model in ["gemini/text-embedding-004", "google_ai/text-embedding-004"] {
+            let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
+                .expect("client construction should succeed");
+            let req = EmbeddingRequest {
+                input: crate::types::EmbeddingInput::Multiple(vec!["one".into(), "two".into()]),
+                dimensions: Some(128),
+                ..embed_request(
+                    model,
+                    Some(serde_json::json!({"taskType": "RETRIEVAL_QUERY", "title": "doc"})),
+                )
+            };
+
+            let prepared = client
+                .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+                .expect("prepare_request should not fail");
+
+            let requests = prepared.body_json["requests"].as_array().expect("requests array");
+            assert_eq!(requests.len(), 2, "{model}");
+            for request in requests {
+                assert_eq!(request["taskType"], "RETRIEVAL_QUERY", "{model}");
+                assert_eq!(request["title"], "doc", "{model}");
+                assert_eq!(request["outputDimensionality"], 128, "{model}");
+            }
+            assert!(prepared.body_json.get("extra_body").is_none(), "{model}");
+            assert!(prepared.body_json.get("taskType").is_none(), "{model}");
+        }
     }
 
     /// Every non-chat request type accepts `extra_body` and sends its keys as body fields.

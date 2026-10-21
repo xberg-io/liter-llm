@@ -20,10 +20,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   still sends `search_document` when `extra_body` has none. Bedrock Cohere and Titan embed requests send other
   `extra_body` keys, such as `truncate` or `normalize`, in the request body. The embedding cache key includes
   `extra_body` (#334).
+- Gemini API (`gemini/` and `google_ai/`) embed requests merge the `extra_body` keys, such as `taskType` and `title`,
+  into each embed request (#334).
+
+### Changed
+
+- **Swift: `CreateImageRequest`, `CreateSpeechRequest`, `CreateTranscriptionRequest`, `EmbeddingRequest`,
+  `ModerationRequest`, `OcrRequest`, `RerankRequest` and `SearchRequest` are now `typealias`es over the Rust bridge
+  types**, like `ChatCompletionRequest`, rather than native `struct`s. They gain the `extra_body` field, which holds
+  JSON. Code that built them with the memberwise initialiser must use the bridge initialiser, and they are no longer
+  `Codable` or `Hashable` value types (#334).
 
 ### Fixed
 
-- Vertex AI embed requests send `dimensions` as `parameters.outputDimensionality`. Before, the value was dropped without an error (#334).
+- Vertex AI embed requests send `dimensions` as `parameters.outputDimensionality`. Before, the value was dropped without an error. An `extra_body.parameters` object adds its keys to `outputDimensionality` and does not replace it (#334).
 - Parse Voyage rerank replies, which list the scored documents under `data` instead of `results`, so `voyage/` rerank calls return the same `results` as other providers. The reply shape follows the model in the request, and a client that names Voyage as its `model_hint` reads Voyage replies for a bare model such as `rerank-2`. A custom provider that claims the `voyage/` prefix still decides where the request goes, but the reply is read as a Voyage reply. A `results: null` beside a valid `data` array parses from `data`. The `voyage/` prefix is case-sensitive, like every other provider prefix. (#306)
 - Rerank replies no longer pass through the chat transform of the provider that sends the request. This fixes `cohere/` rerank calls, whose replies the Cohere chat transform rebuilt without the `results` array, and any rerank call from a client pinned to a provider with a chat transform. (#306)
 - `reasoning_effort: "none"` is now accepted by the typed `ReasoningEffort` field in every binding and reaches the server as `"none"` on OpenAI-compatible, Azure and Ollama endpoints. Anthropic and Bedrock send `thinking: {type: "disabled"}`, and Vertex AI and Gemini send a thinking budget of 0 (#301).
