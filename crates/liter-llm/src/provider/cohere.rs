@@ -136,15 +136,11 @@ impl Provider for CohereProvider {
 
     /// Rebuild an embed reply like [`Self::transform_response`], then name the model.
     ///
-    /// A Cohere embed reply carries no `model`, so an empty or missing one takes the model of
-    /// the request. No other provider gets this step.
+    /// A Cohere embed reply carries no `model`, so the rebuilt list takes the model of the
+    /// request. No other provider gets this step.
     fn transform_embedding_response(&self, body: &mut Value, request_model: &str) -> Result<()> {
         self.transform_response(body)?;
-        let unnamed = body
-            .get("model")
-            .and_then(Value::as_str)
-            .is_none_or(str::is_empty);
-        if unnamed && let Some(obj) = body.as_object_mut() {
+        if let Some(obj) = body.as_object_mut() {
             obj.insert("model".into(), Value::String(request_model.to_owned()));
         }
         Ok(())
@@ -1403,7 +1399,11 @@ mod tests {
 
     #[test]
     fn test_cohere_embed_request_rejects_a_mixed_list_and_a_token_array() {
-        for input in [json!(["a", 5]), json!([[1, 2, 3]]), json!(["a", {"type": "text", "text": "b"}])] {
+        for input in [
+            json!(["a", 5]),
+            json!([[1, 2, 3]]),
+            json!(["a", {"type": "text", "text": "b"}]),
+        ] {
             let mut body = json!({"model": "embed-v4.0", "input": input});
             let err = CohereProvider
                 .transform_embedding_request(&mut body)
@@ -1417,26 +1417,12 @@ mod tests {
     }
 
     #[test]
-    fn test_cohere_embed_reply_without_a_model_takes_the_request_model() {
-        for reply in [
-            json!({"embeddings": {"float": [[0.5]]}}),
-            json!({"embeddings": {"float": [[0.5]]}, "model": ""}),
-        ] {
-            let mut body = reply;
-            CohereProvider
-                .transform_embedding_response(&mut body, "embed-v4.0")
-                .expect("a float reply should rebuild");
-            assert_eq!(body["model"], "embed-v4.0");
-        }
-    }
-
-    #[test]
-    fn test_cohere_embed_reply_with_a_model_keeps_it() {
-        let mut body = json!({"embeddings": {"float": [[0.5]]}, "model": "served-model"});
+    fn test_cohere_embed_reply_takes_the_request_model() {
+        let mut body = json!({"embeddings": {"float": [[0.5]]}});
         CohereProvider
             .transform_embedding_response(&mut body, "embed-v4.0")
             .expect("a float reply should rebuild");
-        assert_eq!(body["model"], "served-model");
+        assert_eq!(body["model"], "embed-v4.0");
     }
 
     #[test]
