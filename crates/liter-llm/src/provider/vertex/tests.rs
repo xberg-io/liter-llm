@@ -773,7 +773,8 @@ fn next_models_page_url_adds_the_encoded_page_token() {
     let p = provider();
     let url = "https://h/v1beta1/publishers/google/models";
     assert_eq!(
-        p.next_models_page_url(url, &json!({"nextPageToken": "ab+/="})).as_deref(),
+        p.next_models_page_url(url, &json!({"nextPageToken": "ab+/="}))
+            .as_deref(),
         Some("https://h/v1beta1/publishers/google/models?pageToken=ab%2B%2F%3D")
     );
     assert_eq!(
@@ -786,6 +787,12 @@ fn next_models_page_url_adds_the_encoded_page_token() {
 #[test]
 fn next_models_page_url_is_none_on_the_last_page() {
     let p = provider();
-    assert_eq!(p.next_models_page_url("https://h/m", &json!({"publisherModels": []})), None);
-    assert_eq!(p.next_models_page_url("https://h/m", &json!({"nextPageToken": ""})), None);
+    assert_eq!(
+        p.next_models_page_url("https://h/m", &json!({"publisherModels": []})),
+        None
+    );
+    assert_eq!(
+        p.next_models_page_url("https://h/m", &json!({"nextPageToken": ""})),
+        None
+    );
 }

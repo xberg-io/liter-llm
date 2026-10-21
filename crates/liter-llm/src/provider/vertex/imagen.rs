@@ -75,11 +75,13 @@ pub(super) fn transform_imagen_request(body: &mut Value) -> Result<()> {
 /// Whether a reply is an Imagen `:predict` reply: a prediction carries image bytes, or the
 /// safety filter removed it and left a `raiFilteredReason`.
 pub(super) fn is_image_response(body: &Value) -> bool {
-    body.get("predictions").and_then(Value::as_array).is_some_and(|predictions| {
-        predictions
-            .iter()
-            .any(|p| p.get("bytesBase64Encoded").is_some() || p.get("raiFilteredReason").is_some())
-    })
+    body.get("predictions")
+        .and_then(Value::as_array)
+        .is_some_and(|predictions| {
+            predictions
+                .iter()
+                .any(|p| p.get("bytesBase64Encoded").is_some() || p.get("raiFilteredReason").is_some())
+        })
 }
 
 /// Transform an Imagen `:predict` reply to the OpenAI image response.

@@ -45,7 +45,10 @@ fn model_arn(model: &str, region: &str) -> Result<String> {
     if model.starts_with("arn:") {
         return Ok(model.to_owned());
     }
-    if INFERENCE_PROFILE_PREFIXES.iter().any(|prefix| model.starts_with(prefix)) {
+    if INFERENCE_PROFILE_PREFIXES
+        .iter()
+        .any(|prefix| model.starts_with(prefix))
+    {
         return Err(LiterLlmError::BadRequest {
             message: format!(
                 "Bedrock rerank takes a foundation model id or an ARN, and `{model}` is an inference profile id; pass the ARN of the inference profile"

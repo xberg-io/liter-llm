@@ -1149,7 +1149,11 @@ fn rerank_model_that_is_an_arn_passes_unchanged() {
 #[test]
 #[serial]
 fn rerank_refuses_an_inference_profile_id() {
-    for model in ["us.amazon.rerank-v1:0", "eu.amazon.rerank-v1:0", "apac.cohere.rerank-v3-5:0"] {
+    for model in [
+        "us.amazon.rerank-v1:0",
+        "eu.amazon.rerank-v1:0",
+        "apac.cohere.rerank-v3-5:0",
+    ] {
         let err = rerank_model_arn("us-east-1", model).unwrap_err();
         assert!(
             matches!(err, crate::error::LiterLlmError::BadRequest { status: 400, .. }),
