@@ -1130,11 +1130,11 @@ pub(crate) fn route_builtin_hint(hint: &str) -> Result<Option<Box<dyn Provider>>
     route_hint_with(hint, route_builtin_model)
 }
 
+/// Selects the provider that a model name designates.
+type ModelRoute = fn(&str) -> Result<Option<Box<dyn Provider>>>;
+
 /// The hint read as a model name first, then a bare hint read as the `hint/` prefix.
-fn route_hint_with(
-    hint: &str,
-    route: fn(&str) -> Result<Option<Box<dyn Provider>>>,
-) -> Result<Option<Box<dyn Provider>>> {
+fn route_hint_with(hint: &str, route: ModelRoute) -> Result<Option<Box<dyn Provider>>> {
     if let Some(provider) = route(hint)? {
         return Ok(Some(provider));
     }
