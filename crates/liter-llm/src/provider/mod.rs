@@ -328,12 +328,50 @@ fn status_for_error_kind(code: Option<&str>, kind: Option<&str>) -> u16 {
     }
 }
 
-/// The payload `status_code` of an error event, if it fits a `u16`.
+/// A JSON number, or a string that holds a whole number, as a `u16`.
+fn u16_field(value: &serde_json::Value) -> Option<u16> {
+    let number = match value {
+        serde_json::Value::String(s) => s.trim().parse::<u64>().ok()?,
+        other => other.as_u64()?,
+    };
+    u16::try_from(number).ok()
+}
+
+/// The payload `status_code` of an error event, if it fits a `u16`. The error
+/// object is read first, then the top level of the event. The value is a number
+/// or a string that holds a number. A value that does not read is skipped.
 pub(crate) fn status_code_field(event: &serde_json::Value) -> Option<u16> {
-    event
-        .pointer("/error/status_code")
-        .and_then(serde_json::Value::as_u64)
-        .and_then(|s| u16::try_from(s).ok())
+    [event.pointer("/error/status_code"), event.get("status_code")]
+        .into_iter()
+        .flatten()
+        .find_map(u16_field)
+}
+
+/// The HTTP status of a Google error object (Gemini and Vertex AI). The numeric
+/// `code` decides when it is an error status (400 to 599), as a number or a
+/// string. Otherwise the canonical `status` name decides, as in Google's error
+/// model. `None` when neither gives an error status.
+pub(crate) fn google_error_status(event: &serde_json::Value) -> Option<u16> {
+    let from_code = event
+        .pointer("/error/code")
+        .and_then(u16_field)
+        .filter(|s| (400..=599).contains(s));
+    from_code.or_else(
+        || match event.pointer("/error/status").and_then(serde_json::Value::as_str)? {
+            "INVALID_ARGUMENT" | "FAILED_PRECONDITION" | "OUT_OF_RANGE" => Some(400),
+            "UNAUTHENTICATED" => Some(401),
+            "PERMISSION_DENIED" => Some(403),
+            "NOT_FOUND" => Some(404),
+            "ABORTED" | "ALREADY_EXISTS" => Some(409),
+            "RESOURCE_EXHAUSTED" => Some(429),
+            "CANCELLED" => Some(499),
+            "UNKNOWN" | "INTERNAL" | "DATA_LOSS" => Some(500),
+            "UNIMPLEMENTED" => Some(501),
+            "UNAVAILABLE" => Some(503),
+            "DEADLINE_EXCEEDED" => Some(504),
+            _ => None,
+        },
+    )
 }
 
 /// The `retry_after` of an error event, in seconds, read from the error object
@@ -1491,6 +1529,30 @@ mod tests {
             );
             assert_eq!(err.retry_after(), want, "{payload}");
         }
+    }
+
+    /// A null, string or negative `retry_after` in the error object does not hide a valid
+    /// top-level value, and a numeric string reads as seconds. Huge values are not capped,
+    /// like a `Retry-After` header on the HTTP path.
+    /// Revert line: change `find_map(seconds)` to `next().and_then(seconds)` to make this
+    /// test fail.
+    #[test]
+    fn parse_stream_event_retry_after_edge_inputs() {
+        use std::time::Duration;
+        let cases = [
+            (r#""retry_after":null"#, Some(Duration::from_secs(9))),
+            (r#""retry_after":"soon""#, Some(Duration::from_secs(9))),
+            (r#""retry_after":-1"#, Some(Duration::from_secs(9))),
+            (r#""retry_after":"30""#, Some(Duration::from_secs(30))),
+        ];
+        for (inner, want) in cases {
+            let payload = format!(r#"{{"error":{{"message":"x","type":"rate_limit_error",{inner}}},"retry_after":9}}"#);
+            let err = mid_stream_error(&payload);
+            // The string "30" sits in the object and wins; the others fall through to 9 s.
+            assert_eq!(err.retry_after(), want, "{payload}");
+        }
+        let err = mid_stream_error(r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":1e12}}"#);
+        assert_eq!(err.retry_after(), Some(Duration::from_secs(1_000_000_000_000)));
     }
 
     /// Revert line: remove the `billing_error`, `request_too_large` and `timeout_error`

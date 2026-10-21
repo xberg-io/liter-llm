@@ -365,6 +365,23 @@ where
         return Err(crate::provider::bedrock::exception_error(event_type, payload_str));
     }
 
+    if message_type == "error" {
+        let header = |name: &str| {
+            headers
+                .iter()
+                .rev()
+                .find(|h| h.name == name)
+                .map_or("", |h| h.value.as_str())
+        };
+        return Err(LiterLlmError::Streaming {
+            message: format!(
+                "Bedrock EventStream error ({}): {}",
+                header(":error-code"),
+                header(":error-message")
+            ),
+        });
+    }
+
     if message_type != "event" {
         return Ok(None);
     }
@@ -775,6 +792,7 @@ mod tests {
             ("serviceUnavailableException", 503),
             ("modelStreamErrorException", 424),
             ("modelErrorException", 424),
+            ("modelNotReadyException", 429),
         ];
         for (exception, status) in cases {
             let frame = build_frame(
@@ -792,6 +810,42 @@ mod tests {
             assert_eq!(err.status_code(), status, "{exception}");
             assert!(err.to_string().contains("Rate exceeded"), "{exception}: {err}");
         }
+    }
+
+    /// Revert line: remove the `modelTimeoutException` arm of `exception_error` to make
+    /// this test fail. HTTP 408 gives `Timeout`, a kind with no message.
+    #[test]
+    fn model_timeout_exception_frame_is_a_timeout() {
+        let frame = build_frame(
+            &[
+                (":message-type", "exception"),
+                (":exception-type", "modelTimeoutException"),
+            ],
+            br#"{"message":"too slow"}"#,
+        );
+        let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
+        let err = decode_frame(&frame, &parse).unwrap_err();
+        assert!(matches!(err, LiterLlmError::Timeout), "got: {err:?}");
+        assert_eq!(err.status_code(), 408);
+    }
+
+    /// Revert line: remove the `message-type` error branch of `decode_frame` to make
+    /// this test fail (the frame is then skipped and the stream ends with no error).
+    #[test]
+    fn error_message_frame_raises_a_streaming_error() {
+        let frame = build_frame(
+            &[
+                (":message-type", "error"),
+                (":error-code", "InternalFailure"),
+                (":error-message", "backend lost"),
+            ],
+            b"",
+        );
+        let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
+        let err = decode_frame(&frame, &parse).unwrap_err();
+        assert!(matches!(err, LiterLlmError::Streaming { .. }), "got: {err:?}");
+        assert!(err.to_string().contains("InternalFailure"), "got: {err}");
+        assert!(err.to_string().contains("backend lost"), "got: {err}");
     }
 
     #[test]

@@ -438,6 +438,27 @@ mod tests {
         assert_eq!(err.retry_after(), Some(std::time::Duration::from_secs(4)));
     }
 
+    /// Revert line: drop the top-level fallback or the string parse from `status_code_field`
+    /// to make this test fail.
+    #[test]
+    fn parse_stream_event_error_event_status_edge_inputs() {
+        let cases = [
+            // A string status reads as a number.
+            (r#"{"type":"error","message":"slow","status_code":"429"}"#, 429),
+            (r#"{"error":{"message":"slow","status_code":"503"}}"#, 503),
+            // A top-level status beside an `error` object counts.
+            (r#"{"error":{"message":"slow"},"status_code":429}"#, 429),
+            // The error object wins over the top level.
+            (r#"{"error":{"message":"x","status_code":401},"status_code":429}"#, 401),
+            // No status at all gives the default 400.
+            (r#"{"type":"error","message":"odd"}"#, 400),
+        ];
+        for (event, status) in cases {
+            let err = CohereProvider.parse_stream_event(event).unwrap_err();
+            assert_eq!(err.status_code(), status, "{event}: {err:?}");
+        }
+    }
+
     /// Revert line: remove the `message-end` error check from `parse_stream_event`
     /// to make this test fail (the event is then a normal end chunk).
     #[test]

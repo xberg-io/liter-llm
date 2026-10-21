@@ -599,6 +599,34 @@ fn gemini_stream_error_event_raises_the_http_error_kind() {
     }
 }
 
+/// Revert line: remove the `status` name map from `google_error_status` to make this
+/// test fail. The numeric `code` wins when it is an error status; a string `code`
+/// reads as a number; a `code` that is no error status gives way to the `status` name.
+#[test]
+fn gemini_stream_error_event_edge_inputs_keep_the_http_error_kind() {
+    let cases = [
+        (r#"{"message":"quota","status":"RESOURCE_EXHAUSTED"}"#, 429),
+        (r#"{"message":"down","status":"UNAVAILABLE"}"#, 503),
+        (r#"{"message":"slow","status":"DEADLINE_EXCEEDED"}"#, 504),
+        (r#"{"code":"429","message":"quota"}"#, 429),
+        (r#"{"code":200,"message":"odd","status":"RESOURCE_EXHAUSTED"}"#, 429),
+        // A code that is no error status and no status name gives the default 400.
+        (r#"{"code":200,"message":"odd"}"#, 400),
+    ];
+    for (error, status) in cases {
+        let event = format!(r#"{{"error":{error}}}"#);
+        let err = provider().parse_stream_event(&event).unwrap_err();
+        assert_eq!(err.status_code(), status, "{error}: {err:?}");
+    }
+    let err = provider()
+        .parse_stream_event(r#"{"error":{"message":"quota","status":"RESOURCE_EXHAUSTED"}}"#)
+        .unwrap_err();
+    assert!(
+        matches!(err, crate::error::LiterLlmError::RateLimited { .. }),
+        "got: {err:?}"
+    );
+}
+
 #[test]
 fn gemini_stream_error_event_keeps_message_and_retry_after() {
     let event = r#"{"error":{"code":429,"message":"quota gone","status":"RESOURCE_EXHAUSTED","retry_after":11}}"#;

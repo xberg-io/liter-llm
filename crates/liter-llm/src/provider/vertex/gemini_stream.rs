@@ -28,11 +28,7 @@ pub(crate) fn parse_gemini_stream_event(event_data: &str) -> Result<Option<ChatC
     })?;
     // ~keep Gemini sends an error event as `{"error": {"code": 429, ...}}`. It must
     // fail before the response transform, which would read it as an empty chunk.
-    let status = body
-        .pointer("/error/code")
-        .and_then(Value::as_u64)
-        .and_then(|s| u16::try_from(s).ok());
-    if let Some(err) = crate::provider::stream_error_event(&body, status) {
+    if let Some(err) = crate::provider::stream_error_event(&body, crate::provider::google_error_status(&body)) {
         return Err(err);
     }
     let has_usage = body.get("usageMetadata").is_some();
