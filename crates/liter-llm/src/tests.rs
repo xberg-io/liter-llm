@@ -1296,14 +1296,6 @@ mod provider_tests {
     }
 
     #[test]
-    fn nvidia_nim_rerank_path_is_ranking_and_others_keep_rerank() {
-        let nim = detect_provider("nvidia_nim/nv-rerankqa").expect("provider should be detected");
-        assert_eq!(nim.rerank_path(), "/ranking");
-        let tei = detect_provider("huggingface/bge-reranker").expect("provider should be detected");
-        assert_eq!(tei.rerank_path(), "/rerank");
-    }
-
-    #[test]
     fn dashscope_family_rerank_uses_the_compatible_api_route() {
         for (model, url) in [
             (

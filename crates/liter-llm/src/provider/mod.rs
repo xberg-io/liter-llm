@@ -959,10 +959,6 @@ impl Provider for ConfigDrivenProvider {
         Ok(())
     }
 
-    fn rerank_path(&self) -> &str {
-        rerank_shape::rerank_path_of(&self.config.name)
-    }
-
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
         if let Some(mappings) = &self.config.param_mappings
             && let Some(obj) = body.as_object_mut()
