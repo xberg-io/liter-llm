@@ -32,15 +32,11 @@ pub(super) fn parse_stream_event(event_data: &str) -> Result<Option<ChatCompleti
 
         "content_block_stop" | "ping" => Ok(None),
 
-        "error" => {
-            let message = event
-                .pointer("/error/message")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown Anthropic streaming error");
-            Err(LiterLlmError::Streaming {
-                message: message.to_owned(),
-            })
-        }
+        "error" => Err(
+            crate::provider::stream_error_event(&event, None).unwrap_or_else(|| LiterLlmError::Streaming {
+                message: "unknown Anthropic streaming error".to_owned(),
+            }),
+        ),
 
         _ => Ok(None),
     }

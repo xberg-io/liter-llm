@@ -40,6 +40,30 @@ pub(crate) fn parse_bedrock_stream_event(event_type: &str, payload: &str) -> Res
     }
 }
 
+/// The error for an EventStream `exception` frame: the error kind that the same
+/// body gives in an HTTP reply. An exception type that has no HTTP equivalent
+/// stays a generic streaming error.
+pub(crate) fn exception_error(exception_type: &str, payload: &str) -> LiterLlmError {
+    let provider_message = serde_json::from_str::<Value>(payload)
+        .ok()
+        .and_then(|v| v.get("message").and_then(Value::as_str).map(str::to_owned))
+        .unwrap_or_else(|| payload.to_owned());
+    let message = format!("Bedrock EventStream exception ({exception_type}): {provider_message}");
+    let status = match exception_type {
+        "validationException" => 400,
+        "accessDeniedException" => 403,
+        "resourceNotFoundException" => 404,
+        "modelTimeoutException" => 408,
+        "throttlingException" | "modelNotReadyException" => 429,
+        "modelStreamErrorException" | "modelErrorException" => 424,
+        "internalServerException" => 500,
+        "serviceUnavailableException" => 503,
+        _ => return LiterLlmError::Streaming { message },
+    };
+    crate::provider::stream_error_event(&json!({ "error": { "message": message } }), Some(status))
+        .unwrap_or(LiterLlmError::Streaming { message })
+}
+
 /// Deserialize a chunk built as JSON, mapping failures to a streaming error.
 fn chunk_from_json(chunk_json: Value) -> Result<ChatCompletionChunk> {
     serde_json::from_value(chunk_json).map_err(|e| LiterLlmError::Streaming {
