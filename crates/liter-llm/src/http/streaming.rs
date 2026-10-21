@@ -887,14 +887,15 @@ mod tests {
     #[tokio::test]
     async fn invalid_utf8_on_a_checked_stream_is_reported_once() {
         let inner = futures_util::stream::iter(vec![
-            Ok::<_, reqwest::Error>(Bytes::from_static(b"data: ")),
+            Ok::<_, reqwest::Error>(Bytes::from(CONTENT_EVENT.as_bytes().to_vec())),
             Ok::<_, reqwest::Error>(Bytes::from_static(&[0xFF])),
         ]);
         let parser: Pin<Box<SseParser<_, _, _>>> =
             Box::pin(SseParser::new(inner, json_parse, Some(has_finish_reason), None));
         let items = futures_util::StreamExt::collect::<Vec<_>>(parser).await;
-        assert_eq!(items.len(), 1, "only the UTF-8 error: {items:?}");
-        assert!(matches!(&items[0], Err(LiterLlmError::Streaming { message }) if message.contains("invalid UTF-8")));
+        assert_eq!(items.len(), 2, "a chunk and only the UTF-8 error: {items:?}");
+        assert!(items[0].is_ok());
+        assert!(matches!(&items[1], Err(LiterLlmError::Streaming { message }) if message.contains("invalid UTF-8")));
     }
 
     #[tokio::test]
