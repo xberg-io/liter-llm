@@ -384,9 +384,9 @@ async fn native_api_provider_without_base_url_sends_nothing_on_any_endpoint() {
 #[serial]
 async fn an_empty_base_url_counts_as_unset() {
     let proxy = ProxyGuard::install();
-    let client = client(Some(""), None).expect("client");
+    let empty = client(Some(""), None).expect("client");
     for provider in NATIVE_API_PROVIDERS {
-        let outcomes = call_every_endpoint(&client, &format!("{provider}/some-model")).await;
+        let outcomes = call_every_endpoint(&empty, &format!("{provider}/some-model")).await;
         assert_refused(&outcomes, provider);
     }
     assert!(proxy.spy.seen().is_empty());
