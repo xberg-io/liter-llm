@@ -2961,6 +2961,7 @@ mod build_provider_tests {
             .expect("provider should build")
             .provider;
         assert_eq!(hinted.strip_model_prefix("openai/gpt-4o-mini"), "gpt-4o-mini");
+        assert_eq!(hinted.strip_model_prefix("custom/my-model"), "my-model");
         assert_eq!(hinted.strip_model_prefix("anthropic/claude-x"), "anthropic/claude-x");
         assert_eq!(hinted.strip_model_prefix("meta-llama/llama-3"), "meta-llama/llama-3");
         assert_eq!(hinted.strip_model_prefix("llama3.1:8b"), "llama3.1:8b");

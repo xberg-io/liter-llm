@@ -679,6 +679,20 @@ pub(crate) use outbound_policy::{authenticated_outbound_client, configure_creden
 pub(crate) struct OpenAiProvider;
 
 impl Provider for OpenAiProvider {
+    /// OpenAI's request format at another host is the generic OpenAI-compatible provider.
+    ///
+    /// The `max_tokens` rename to `max_completion_tokens` belongs to OpenAI's own service. A
+    /// local server or a gateway at `base_url` keeps the `max_tokens` the caller sent.
+    fn at_base_url(&self, base_url: &str) -> Option<Box<dyn Provider>> {
+        Some(Box::new(OpenAiCompatibleProvider {
+            name: "custom".into(),
+            base_url: base_url.to_owned(),
+            env_var: None,
+            model_prefixes: vec![],
+            hint_provider: Some("openai".into()),
+        }))
+    }
+
     fn name(&self) -> &str {
         "openai"
     }
@@ -1830,6 +1844,16 @@ mod route_model_tests {
             assert!(bare_name.is_some(), "{bare} selects a provider");
             assert_eq!(bare_name, slash_name, "{bare} and {slash}");
         }
+    }
+
+    #[test]
+    fn openai_at_a_base_url_is_the_generic_provider() {
+        let provider = route_hint("gpt-5").expect("no refusal").expect("gpt-5 names OpenAI");
+        let rebased = on_base_url(provider, "http://localhost:8080/v1");
+        assert_eq!(rebased.name(), "custom");
+        assert_eq!(rebased.strip_model_prefix("openai/gpt-5"), "gpt-5");
+        assert_eq!(rebased.strip_model_prefix("custom/my-model"), "my-model");
+        assert_eq!(rebased.strip_model_prefix("anthropic/claude-x"), "anthropic/claude-x");
     }
 
     #[test]
