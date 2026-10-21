@@ -71,7 +71,7 @@ impl Provider for CohereProvider {
     }
 
     /// Cohere lists models at `/models`. The path exists on v1 only: [`Self::build_url`]
-    /// moves this one path off the v2 base.
+    /// moves this one path off the v2 base and asks for the largest page.
     fn models_path(&self) -> &str {
         "/models"
     }
@@ -82,14 +82,13 @@ impl Provider for CohereProvider {
     }
 
     /// Build the URL for an endpoint. Every path is relative to the v2 base, except the model
-    /// list, which Cohere serves at `/v1/models` and not under `/v2`.
+    /// list, which Cohere serves at `/v1/models` and not under `/v2`. The model list asks for
+    /// `page_size=1000`, the largest page Cohere allows (the default is 20).
     fn build_url(&self, endpoint_path: &str, _model: &str) -> String {
-        let base = if endpoint_path == self.models_path() {
-            MODELS_BASE_URL
-        } else {
-            self.base_url()
-        };
-        format!("{base}{endpoint_path}")
+        if endpoint_path == self.models_path() {
+            return format!("{MODELS_BASE_URL}{endpoint_path}?page_size={MODELS_PAGE_SIZE}");
+        }
+        format!("{}{endpoint_path}", self.base_url())
     }
 
     /// Strip transport-level parameters that Cohere does not accept in the body, and
@@ -116,13 +115,7 @@ impl Provider for CohereProvider {
     /// OpenAI (and documented as legal by this crate's own `ChatCompletionRequest`)
     /// but must be rejected here rather than silently coerced to `0.01`.
     ///
-    /// An embedding body (`input` present, no `messages`) is rebuilt into Cohere's embed
-    /// body instead: see [`transform_embed_request`].
     fn transform_request(&self, body: &mut Value) -> Result<()> {
-        if body.get("input").is_some() && body.get("messages").is_none() {
-            return transform_embed_request(body);
-        }
-
         super::validate_sampling_param_range(body, "top_p", "Cohere", 0.01, 0.99)?;
 
         if let Some(obj) = body.as_object_mut() {
@@ -132,6 +125,14 @@ impl Provider for CohereProvider {
             }
         }
         Ok(())
+    }
+
+    /// Rebuild an embedding request into Cohere's embed body: see [`transform_embed_request`].
+    ///
+    /// The client calls this for the embeddings endpoint only, so no other request body
+    /// (moderation, speech, chat) is ever taken for an embedding body.
+    fn transform_embedding_request(&self, body: &mut Value) -> Result<()> {
+        transform_embed_request(body)
     }
 
     /// Parse a Cohere v2 streaming SSE event into a `ChatCompletionChunk`.
@@ -284,12 +285,15 @@ const EMBED_MODEL_PREFIX: &str = "embed-";
 /// Base URL of the Cohere list-models endpoint, which has no v2 form.
 const MODELS_BASE_URL: &str = "https://api.cohere.com/v1";
 
+/// The largest `page_size` the Cohere list-models endpoint accepts. The default is 20.
+const MODELS_PAGE_SIZE: u32 = 1000;
+
 /// `input_type` sent with every embed request.
 ///
 /// Cohere's v3 and later embed models require this field, and `EmbeddingRequest` has no
 /// field to map it from. `search_document` is the indexing-side value, the same default as
-/// the Bedrock Cohere embed adapter. A caller that embeds queries gets `search_query`
-/// through a provider-options passthrough, which this default does not replace.
+/// the Bedrock Cohere embed adapter. Every request sends this value: a caller cannot ask
+/// for `search_query` today.
 const EMBED_DEFAULT_INPUT_TYPE: &str = "search_document";
 
 /// Rebuild an OpenAI-style embedding body into Cohere's `POST /v2/embed` body.
@@ -312,6 +316,12 @@ fn transform_embed_request(body: &mut Value) -> Result<()> {
     });
 
     match input {
+        Value::Array(items) if items.is_empty() => {
+            return Err(LiterLlmError::BadRequest {
+                message: "Cohere embeddings need at least one input".into(),
+                status: 400,
+            });
+        }
         Value::String(text) => out["texts"] = json!([text]),
         Value::Array(items) if items.iter().all(Value::is_string) => out["texts"] = Value::Array(items),
         Value::Array(parts) => {
@@ -358,7 +368,7 @@ fn embed_content_part(part: &Value) -> Result<Value> {
 
 /// Rebuild a Cohere embed reply (`embeddings.float`) into an OpenAI embeddings list.
 ///
-/// Usage comes from `meta.billed_units.input_tokens`. A reply without `embeddings.float` is
+/// Usage comes from `meta.billed_units`: `input_tokens` plus `image_tokens`. A reply without `embeddings.float` is
 /// an error: the request asks for float vectors, so a reply without them is not a usable
 /// reply and must not become an empty list.
 fn transform_embed_response(body: &mut Value) -> Result<()> {
@@ -378,10 +388,12 @@ fn transform_embed_response(body: &mut Value) -> Result<()> {
         .map(|(index, embedding)| json!({"object": "embedding", "embedding": embedding, "index": index}))
         .collect();
 
-    let input_tokens = body
-        .pointer("/meta/billed_units/input_tokens")
-        .and_then(Value::as_u64)
-        .unwrap_or(0);
+    let billed = |field: &str| {
+        body.pointer(&format!("/meta/billed_units/{field}"))
+            .and_then(Value::as_u64)
+            .unwrap_or(0)
+    };
+    let input_tokens = billed("input_tokens") + billed("image_tokens");
 
     *body = json!({
         "object": "list",
@@ -398,9 +410,21 @@ fn transform_embed_response(body: &mut Value) -> Result<()> {
 
 /// Rebuild a Cohere model list (`models[].name`) into an OpenAI model list.
 ///
-/// The list holds the first page that Cohere returns: `next_page_token` is not followed.
+/// The request asks for the largest page ([`MODELS_PAGE_SIZE`]). A reply that still carries a
+/// `next_page_token` is an error: the list would be cut without notice.
 fn transform_models_response(body: &mut Value) -> Result<()> {
     use serde_json::json;
+
+    if body
+        .get("next_page_token")
+        .and_then(Value::as_str)
+        .is_some_and(|token| !token.is_empty())
+    {
+        return Err(LiterLlmError::ServerError {
+            message: format!("Cohere has more than {MODELS_PAGE_SIZE} models, so the model list is cut at one page"),
+            status: 502,
+        });
+    }
 
     let models = body
         .get("models")
@@ -1133,12 +1157,13 @@ mod tests {
     // `output_dimension`, reply `embeddings.<type>`) and `GET /v1/models` (reply
     // `models[].name`, `next_page_token`).
 
-    /// Serialize a typed request the way `prepare_request` does, then run the provider step.
+    /// Serialize a typed request the way `prepare_embedding_request` does, then run the
+    /// provider step for the embeddings endpoint.
     fn prepared_embed_body(req: &crate::types::EmbeddingRequest) -> Value {
         let mut body = serde_json::to_value(req).expect("request serializes");
         body["model"] = json!(CohereProvider.strip_model_prefix(&req.model));
         CohereProvider
-            .transform_request(&mut body)
+            .transform_embedding_request(&mut body)
             .expect("embed request transforms");
         body
     }
@@ -1164,7 +1189,7 @@ mod tests {
     fn test_cohere_models_url_is_v1_models() {
         assert_eq!(
             CohereProvider.build_url(CohereProvider.models_path(), ""),
-            "https://api.cohere.com/v1/models"
+            "https://api.cohere.com/v1/models?page_size=1000"
         );
     }
 
@@ -1250,9 +1275,51 @@ mod tests {
     fn test_cohere_embed_request_rejects_an_unknown_content_part() {
         let mut body = json!({"model": "embed-v4.0", "input": [{"type": "audio", "audio": "x"}]});
         let err = CohereProvider
-            .transform_request(&mut body)
+            .transform_embedding_request(&mut body)
             .expect_err("an audio part has no Cohere embed form");
         assert_eq!(err.status_code(), 400);
+    }
+
+    #[test]
+    fn test_cohere_embed_request_rejects_a_number_as_input() {
+        let mut body = json!({"model": "embed-v4.0", "input": 5});
+        let err = CohereProvider
+            .transform_embedding_request(&mut body)
+            .expect_err("a number is not an embedding input");
+        assert_eq!(err.status_code(), 400);
+    }
+
+    #[test]
+    fn test_cohere_embed_request_rejects_an_empty_input_list() {
+        let mut body = json!({"model": "embed-v4.0", "input": []});
+        let err = CohereProvider
+            .transform_embedding_request(&mut body)
+            .expect_err("an empty list has nothing to embed");
+        assert_eq!(err.status_code(), 400);
+    }
+
+    #[test]
+    fn test_cohere_embed_request_with_null_dimensions_sends_no_output_dimension() {
+        let mut body = json!({"model": "embed-v4.0", "input": "alpha", "dimensions": null});
+        CohereProvider
+            .transform_embedding_request(&mut body)
+            .expect("embed request transforms");
+        assert!(body.get("output_dimension").is_none());
+    }
+
+    #[test]
+    fn test_cohere_non_embed_bodies_are_not_rebuilt_as_embed_bodies() {
+        // Moderation and speech bodies carry `input` and no `messages`. Only the embeddings
+        // endpoint rebuilds a body, so these two keep every field they had.
+        let moderation = json!({"model": "omni-moderation", "input": "some text"});
+        let speech = json!({"model": "tts-1", "input": "hello", "voice": "alloy"});
+        for original in [moderation, speech] {
+            let mut body = original.clone();
+            CohereProvider
+                .transform_request(&mut body)
+                .expect("request transforms");
+            assert_eq!(body, original);
+        }
     }
 
     #[test]
@@ -1278,7 +1345,7 @@ mod tests {
             "embeddings": {"float": [[0.1, 0.2], [0.3, 0.4]]},
             "texts": ["alpha", "beta"],
             "response_type": "embeddings_by_type",
-            "meta": {"api_version": {"version": "2"}, "billed_units": {"input_tokens": 7}}
+            "meta": {"api_version": {"version": "2"}, "billed_units": {"input_tokens": 7, "image_tokens": 3}}
         })
     }
 
@@ -1295,8 +1362,8 @@ mod tests {
         assert_eq!(parsed.data[1].index, 1);
         assert_eq!(parsed.data[1].embedding, vec![0.3_f32, 0.4_f32]);
         let usage = parsed.usage.expect("usage is read from billed units");
-        assert_eq!(usage.prompt_tokens, 7);
-        assert_eq!(usage.total_tokens, 7);
+        assert_eq!(usage.prompt_tokens, 10, "text and image tokens are both billed input");
+        assert_eq!(usage.total_tokens, 10);
     }
 
     #[test]
@@ -1325,6 +1392,26 @@ mod tests {
         let ids: Vec<&str> = parsed.data.iter().map(|m| m.id.as_str()).collect();
         assert_eq!(ids, vec!["command-r", "embed-english-v3.0"]);
         assert_eq!(parsed.object, "list");
+        assert!(parsed.data.iter().all(|m| m.owned_by == "cohere"));
+    }
+
+    #[test]
+    fn test_cohere_models_reply_with_more_pages_is_an_error() {
+        let mut body = json!({"models": [{"name": "command-r"}], "next_page_token": "page-2"});
+        let err = CohereProvider
+            .transform_response(&mut body)
+            .expect_err("a list cut at one page must not look complete");
+        assert_eq!(err.status_code(), 502);
+        assert!(err.to_string().contains("1000"), "unexpected error: {err}");
+    }
+
+    #[test]
+    fn test_cohere_models_reply_where_models_is_not_an_array_is_an_error() {
+        let mut body = json!({"models": "none"});
+        let err = CohereProvider
+            .transform_response(&mut body)
+            .expect_err("models must be an array");
+        assert_eq!(err.status_code(), 502);
     }
 
     #[test]

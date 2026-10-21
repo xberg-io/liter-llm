@@ -171,6 +171,18 @@ fn str_pair(pair: &(String, String)) -> (&str, &str) {
     (pair.0.as_str(), pair.1.as_str())
 }
 
+/// Set the reply `model` to the request model when the reply carries none or an empty one.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn fill_empty_model(reply: &mut serde_json::Value, model: &str) {
+    let missing = reply
+        .get("model")
+        .and_then(serde_json::Value::as_str)
+        .is_none_or(str::is_empty);
+    if missing && let Some(obj) = reply.as_object_mut() {
+        obj.insert("model".into(), serde_json::Value::String(model.to_owned()));
+    }
+}
+
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 fn provider_auth_header(provider: &dyn Provider, api_key: &str) -> Option<(String, String)> {
     (!api_key.is_empty())
@@ -1079,6 +1091,31 @@ impl DefaultClient {
         model: &str,
         stream: Option<bool>,
     ) -> Result<PreparedRequest> {
+        self.prepare_request_with(serializable, endpoint_fn, |p, body| p.transform_request(body), model, stream)
+    }
+
+    /// Prepare an embedding request. The provider rebuilds the body in
+    /// [`Provider::transform_embedding_request`], chosen by the endpoint being called.
+    fn prepare_embedding_request(&self, req: &EmbeddingRequest) -> Result<PreparedRequest> {
+        self.prepare_request_with(
+            req,
+            |p| p.embeddings_path(),
+            |p, body| p.transform_embedding_request(body),
+            &req.model,
+            None,
+        )
+    }
+
+    /// [`Self::prepare_request`] with the provider's body transform for the endpoint chosen by
+    /// the caller.
+    fn prepare_request_with(
+        &self,
+        serializable: &impl serde::Serialize,
+        endpoint_fn: impl FnOnce(&dyn Provider) -> &str,
+        transform_fn: impl FnOnce(&dyn Provider, &mut serde_json::Value) -> Result<()>,
+        model: &str,
+        stream: Option<bool>,
+    ) -> Result<PreparedRequest> {
         if model.is_empty() {
             return Err(LiterLlmError::BadRequest {
                 message: "model must not be empty".into(),
@@ -1110,7 +1147,7 @@ impl DefaultClient {
                 obj.insert("max_completion_tokens".into(), max_tokens);
             }
         }
-        prov.transform_request(&mut body)?;
+        transform_fn(prov.as_ref(), &mut body)?;
         // ~keep Whether the provider's wire format carries `stream` at all is the provider's
         // decision, recorded here by whether the key survived `transform_request`. Providers that
         // rebuild the body into a native format (Vertex/Gemini `generateContent`, Bedrock
@@ -1440,7 +1477,7 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             // ~keep Embeddings have no stream flag; passing None prevents inserting one.
-            let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, None)?;
+            let prepared = self.prepare_embedding_request(&req)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1466,6 +1503,7 @@ impl LlmClient for DefaultClient {
             )
             .await?;
             prepared.provider.transform_response(&mut raw)?;
+            fill_empty_model(&mut raw, &req.model);
             serde_json::from_value::<EmbeddingResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -1864,7 +1902,7 @@ impl LlmClientRaw for DefaultClient {
 
     fn embed_raw(&self, req: EmbeddingRequest) -> BoxFuture<'_, Result<RawExchange<EmbeddingResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, None)?;
+            let prepared = self.prepare_embedding_request(&req)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -1893,6 +1931,7 @@ impl LlmClientRaw for DefaultClient {
 
             let raw_response = Some(raw.clone());
             prepared.provider.transform_response(&mut raw)?;
+            fill_empty_model(&mut raw, &req.model);
             let data = serde_json::from_value::<EmbeddingResponse>(raw).map_err(LiterLlmError::from)?;
 
             Ok(RawExchange {
@@ -3011,6 +3050,62 @@ mod build_provider_tests {
             prepared.body_json["model"], "extra-body-override",
             "extra_body keys must override identically named top-level keys"
         );
+    }
+
+    fn cohere_client() -> DefaultClient {
+        DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("cohere/command-r"))
+            .expect("client construction should succeed")
+    }
+
+    #[test]
+    fn embedding_request_takes_the_embedding_body_of_the_provider() {
+        let req = EmbeddingRequest {
+            model: "cohere/embed-english-v3.0".into(),
+            input: crate::types::EmbeddingInput::Single("alpha".into()),
+            ..Default::default()
+        };
+
+        let prepared = cohere_client()
+            .prepare_embedding_request(&req)
+            .expect("prepare_embedding_request should not fail");
+
+        assert_eq!(prepared.url, "https://api.cohere.com/v2/embed");
+        assert_eq!(prepared.body_json["texts"], serde_json::json!(["alpha"]));
+        assert!(prepared.body_json.get("input").is_none());
+    }
+
+    #[test]
+    fn non_embedding_bodies_with_input_are_not_rebuilt_as_embedding_bodies() {
+        let client = cohere_client();
+        let moderation = serde_json::json!({"model": "cohere/omni-moderation", "input": "some text"});
+        let speech = serde_json::json!({"model": "cohere/tts-1", "input": "hello", "voice": "alloy"});
+
+        let prepared = client
+            .prepare_request(&moderation, |p| p.moderations_path(), "cohere/omni-moderation", None)
+            .expect("moderation request should prepare");
+        assert_eq!(prepared.body_json["input"], "some text");
+        assert!(prepared.body_json.get("texts").is_none());
+
+        let prepared = client
+            .prepare_request(&speech, |p| p.audio_speech_path(), "cohere/tts-1", None)
+            .expect("speech request should prepare");
+        assert_eq!(prepared.body_json["voice"], "alloy");
+        assert_eq!(prepared.body_json["input"], "hello");
+    }
+
+    #[test]
+    fn fill_empty_model_sets_a_missing_or_empty_model_only() {
+        let mut missing = serde_json::json!({"object": "list"});
+        fill_empty_model(&mut missing, "m");
+        assert_eq!(missing["model"], "m");
+
+        let mut empty = serde_json::json!({"model": ""});
+        fill_empty_model(&mut empty, "m");
+        assert_eq!(empty["model"], "m");
+
+        let mut named = serde_json::json!({"model": "served-model"});
+        fill_empty_model(&mut named, "m");
+        assert_eq!(named["model"], "served-model");
     }
 
     #[test]

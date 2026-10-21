@@ -481,6 +481,15 @@ pub(crate) trait Provider: Send + Sync {
         Ok(())
     }
 
+    /// Transform the body of an embedding request before sending.
+    ///
+    /// The client calls this, and not [`Self::transform_request`], for the embeddings endpoint.
+    /// The default runs `transform_request`. A provider with its own embedding body overrides
+    /// it, so the choice depends on the endpoint and never on the shape of the body.
+    fn transform_embedding_request(&self, body: &mut serde_json::Value) -> Result<()> {
+        self.transform_request(body)
+    }
+
     /// Transform the raw response JSON before deserialization into canonical types.
     ///
     /// Providers returning non-OpenAI formats (Anthropic, Bedrock, Vertex) override
