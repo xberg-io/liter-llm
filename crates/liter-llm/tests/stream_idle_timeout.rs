@@ -18,8 +18,25 @@ use tokio::net::{TcpListener, TcpStream};
 /// Idle limit used by the silent stream tests.
 const SILENT_TIMEOUT: Duration = Duration::from_millis(500);
 
-/// A silent stream must end within three idle limits. A limit of eight times the timeout misses it.
-const SILENT_STREAM_BOUND: Duration = Duration::from_millis(1500);
+/// How long the mock server stays silent. The server holds the socket this long and then drops it,
+/// so a client that has no idle limit sees a closed stream, not a `Timeout` error.
+///
+/// The bound on a silent stream is this stall, not a multiple of the idle limit. A slow or loaded
+/// process can add seconds to a 500 ms limit and the stream still ends first, because the idle limit
+/// fires 20 times before the server lets go.
+const SILENT_STALL: Duration = Duration::from_secs(10);
+
+/// The idle limit ended a silent stream: not before the limit, and before the server ended the stall.
+fn assert_silent_stream_ended_at_the_idle_limit(elapsed: Duration) {
+    assert!(
+        elapsed >= SILENT_TIMEOUT,
+        "the stream ended before the idle limit, after {elapsed:?}"
+    );
+    assert!(
+        elapsed < SILENT_STALL,
+        "the idle limit did not fire before the server ended the stall, ended at {elapsed:?}"
+    );
+}
 
 /// What the mock server does after it reads the request.
 #[derive(Clone, Copy)]
@@ -30,7 +47,7 @@ struct Script {
     chunk_pause: Duration,
     /// Number of content chunks.
     chunks: usize,
-    /// When true the server sends the first chunk, then stays silent and never finishes.
+    /// When true the server sends the first chunk, then stays silent for `SILENT_STALL`.
     stall_after_first: bool,
     /// How the events are framed on the wire.
     wire: Wire,
@@ -162,7 +179,7 @@ async fn serve_one(mut sock: TcpStream, script: Script) {
     }
     let _ = sock.write_all(&text_event(script.wire, "")).await;
     if script.stall_after_first {
-        tokio::time::sleep(Duration::from_secs(30)).await;
+        tokio::time::sleep(SILENT_STALL).await;
         return;
     }
     for i in 0..script.chunks {
@@ -256,11 +273,7 @@ async fn stream_that_goes_silent_fails_with_the_timeout_error() {
     }
     let err = last_err.expect("a silent stream must fail");
     assert!(matches!(err, LiterLlmError::Timeout), "got {err:?}");
-    assert!(
-        started.elapsed() < SILENT_STREAM_BOUND,
-        "the stall must end at the idle limit, ended at {:?}",
-        started.elapsed()
-    );
+    assert_silent_stream_ended_at_the_idle_limit(started.elapsed());
 }
 
 #[tokio::test]
@@ -409,11 +422,7 @@ async fn silent_stream_fails_with_the_timeout_error(entry: Entry, wire: Wire) {
     }
     let err = last_err.expect("a silent stream must fail");
     assert!(matches!(err, LiterLlmError::Timeout), "got {err:?}");
-    assert!(
-        started.elapsed() < SILENT_STREAM_BOUND,
-        "the stall must end at the idle limit, ended at {:?}",
-        started.elapsed()
-    );
+    assert_silent_stream_ended_at_the_idle_limit(started.elapsed());
 }
 
 macro_rules! idle_tests {
