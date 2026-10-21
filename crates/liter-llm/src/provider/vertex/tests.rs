@@ -684,3 +684,69 @@ fn transform_response_maps_publisher_models_to_a_model_list() {
         })
     );
 }
+
+#[test]
+fn chat_request_with_a_prompt_stays_a_chat_request() {
+    let mut body = json!({
+        "model": "gemini-2.0-flash",
+        "messages": [{"role": "user", "content": "hi"}],
+        "prompt": "a cat"
+    });
+    provider().transform_request(&mut body).unwrap();
+    assert!(body.get("contents").is_some());
+    assert!(body.get("instances").is_none());
+}
+
+#[test]
+fn transform_response_of_predictions_that_the_filter_removed_has_no_images() {
+    let mut body = json!({"predictions": [{"raiFilteredReason": "blocked"}, {"raiFilteredReason": "blocked"}]});
+    provider().transform_response(&mut body).unwrap();
+    assert_eq!(body["data"], json!([]));
+    assert!(body["created"].as_u64().unwrap() > 0);
+}
+
+#[test]
+fn imagen_request_names_the_fields_it_drops() {
+    let body = json!({"prompt": "p", "quality": "hd", "user": "u", "n": 1});
+    assert_eq!(imagen::dropped_fields(&body), ["quality", "user"]);
+}
+
+#[test]
+fn transform_response_names_the_publisher_of_each_model() {
+    let mut body = json!({"publisherModels": [
+        {"name": "publishers/meta/models/llama-3"},
+        {"name": "gemini-bare"},
+        {}
+    ]});
+    provider().transform_response(&mut body).unwrap();
+    assert_eq!(
+        body["data"],
+        json!([
+            {"id": "llama-3", "object": "model", "created": 0, "owned_by": "meta"},
+            {"id": "gemini-bare", "object": "model", "created": 0, "owned_by": "google"},
+            {"id": "", "object": "model", "created": 0, "owned_by": "google"}
+        ])
+    );
+}
+
+#[test]
+fn next_models_page_url_adds_the_encoded_page_token() {
+    let p = provider();
+    let url = "https://h/v1beta1/publishers/google/models";
+    assert_eq!(
+        p.next_models_page_url(url, &json!({"nextPageToken": "ab+/="})).as_deref(),
+        Some("https://h/v1beta1/publishers/google/models?pageToken=ab%2B%2F%3D")
+    );
+    assert_eq!(
+        p.next_models_page_url(&format!("{url}?pageToken=old"), &json!({"nextPageToken": "new"}))
+            .as_deref(),
+        Some("https://h/v1beta1/publishers/google/models?pageToken=new")
+    );
+}
+
+#[test]
+fn next_models_page_url_is_none_on_the_last_page() {
+    let p = provider();
+    assert_eq!(p.next_models_page_url("https://h/m", &json!({"publisherModels": []})), None);
+    assert_eq!(p.next_models_page_url("https://h/m", &json!({"nextPageToken": ""})), None);
+}
