@@ -2861,7 +2861,9 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("https://resourceA.cognitiveservices.azure.com")
             .build();
-        let p = build_provider(&config, Some("azure/gpt-5-mini")).expect("provider should build").provider;
+        let p = build_provider(&config, Some("azure/gpt-5-mini"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(p.name(), "azure");
         let url = p.build_url("/chat/completions", "gpt-5-mini");
         assert!(
@@ -2875,7 +2877,9 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:11434/v1")
             .build();
-        let p = build_provider(&config, Some("llama3.1:8b")).expect("provider should build").provider;
+        let p = build_provider(&config, Some("llama3.1:8b"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(p.name(), "custom");
         let url = p.build_url("/chat/completions", "llama3.1:8b");
         assert_eq!(url, "http://localhost:11434/v1/chat/completions");
@@ -2886,7 +2890,9 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:11434/v1?token=secret")
             .build();
-        let provider = build_provider(&config, Some("local-model")).expect("provider should build").provider;
+        let provider = build_provider(&config, Some("local-model"))
+            .expect("provider should build")
+            .provider;
         let url = provider.build_url("/chat/completions", "local-model");
         assert_eq!(url, "http://localhost:11434/v1/chat/completions?token=secret");
     }
@@ -2903,7 +2909,9 @@ mod build_provider_tests {
             ("vertex_ai/gemini-2.5-flash", "vertex_ai", ":generateContent"),
             ("bedrock/anthropic.claude-v2", "bedrock", "/model/"),
         ] {
-            let provider = build_provider(&config, Some(model)).expect("provider should build").provider;
+            let provider = build_provider(&config, Some(model))
+                .expect("provider should build")
+                .provider;
             let bare_model = provider.strip_model_prefix(model);
             let url = provider.build_url(provider.chat_completions_path(), bare_model);
             assert_eq!(provider.name(), expected_name);
@@ -2930,7 +2938,9 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:8080/v1")
             .build();
-        let provider = build_provider(&config, Some("voyage")).expect("provider should build").provider;
+        let provider = build_provider(&config, Some("voyage"))
+            .expect("provider should build")
+            .provider;
         let mut body = serde_json::json!({"data": [{"index": 0, "relevance_score": 0.5}]});
         transform_rerank_reply(provider.as_ref(), "rerank-2", &mut body).unwrap();
         assert!(body.get("results").is_some() && body.get("data").is_none());
@@ -2947,14 +2957,18 @@ mod build_provider_tests {
             .base_url("http://localhost:11434/v1")
             .build();
 
-        let hinted = build_provider(&config, Some("openai")).expect("provider should build").provider;
+        let hinted = build_provider(&config, Some("openai"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(hinted.strip_model_prefix("openai/gpt-4o-mini"), "gpt-4o-mini");
         assert_eq!(hinted.strip_model_prefix("anthropic/claude-x"), "anthropic/claude-x");
         assert_eq!(hinted.strip_model_prefix("meta-llama/llama-3"), "meta-llama/llama-3");
         assert_eq!(hinted.strip_model_prefix("llama3.1:8b"), "llama3.1:8b");
         assert_eq!(hinted.strip_model_prefix("openai/"), "openai/");
 
-        let hinted_with_model = build_provider(&config, Some("openai/gpt-4o-mini")).expect("provider should build").provider;
+        let hinted_with_model = build_provider(&config, Some("openai/gpt-4o-mini"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(hinted_with_model.strip_model_prefix("openai/gpt-4o"), "gpt-4o");
 
         let unhinted = build_provider(&config, None).expect("provider should build").provider;
@@ -2965,7 +2979,9 @@ mod build_provider_tests {
     #[test]
     fn no_base_url_falls_through_to_detect_provider() {
         let config = ClientConfigBuilder::new("test-key").build();
-        let p = build_provider(&config, Some("azure/gpt-4o")).expect("provider should build").provider;
+        let p = build_provider(&config, Some("azure/gpt-4o"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(p.name(), "azure");
     }
 
@@ -2974,7 +2990,9 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("https://proxy.internal/anthropic/")
             .build();
-        let p = build_provider(&config, Some("anthropic/claude-3-5-sonnet-20241022")).expect("provider should build").provider;
+        let p = build_provider(&config, Some("anthropic/claude-3-5-sonnet-20241022"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(p.name(), "anthropic");
         assert_eq!(p.base_url(), "https://proxy.internal/anthropic");
     }
@@ -3017,7 +3035,9 @@ mod build_provider_tests {
     fn a_bare_hint_and_a_slash_hint_select_the_same_provider() {
         let config = ClientConfigBuilder::new("test-key").build();
         for (hint, expected) in ROUTED_HINTS {
-            let provider = build_provider(&config, Some(hint)).expect("provider should build").provider;
+            let provider = build_provider(&config, Some(hint))
+                .expect("provider should build")
+                .provider;
             assert_eq!(provider.name(), *expected, "hint {hint}");
         }
     }
@@ -3042,8 +3062,12 @@ mod build_provider_tests {
             .base_url("http://gateway.test/v1")
             .build();
         for (hint, _) in ROUTED_HINTS {
-            let plain = build_provider(&plain_config, Some(hint)).expect("provider should build").provider;
-            let based = build_provider(&based_config, Some(hint)).expect("provider should build").provider;
+            let plain = build_provider(&plain_config, Some(hint))
+                .expect("provider should build")
+                .provider;
+            let based = build_provider(&based_config, Some(hint))
+                .expect("provider should build")
+                .provider;
             assert_eq!(based.name(), plain.name(), "hint {hint}");
             assert_eq!(
                 based.chat_completions_path(),

@@ -1797,7 +1797,11 @@ mod route_model_tests {
                 Err(LiterLlmError::BadRequest { message, .. }) => {
                     assert!(message.contains(&format!("`{hint}`")), "{message}");
                 }
-                other => panic!("{hint}: expected a refusal, got {other:?}"),
+                Err(error) => panic!("{hint}: expected a bad request, got {error:?}"),
+                Ok(routed) => panic!(
+                    "{hint}: expected a refusal, got {:?}",
+                    routed.map(|provider| provider.name().to_owned())
+                ),
             }
         }
     }

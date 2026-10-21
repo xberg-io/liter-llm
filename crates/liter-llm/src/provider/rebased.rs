@@ -148,6 +148,7 @@ impl Provider for BaseUrlOverride {
         body: &[u8],
         credential: Option<&crate::auth::Credential>,
     ) -> Result<Vec<(String, String)>> {
-        self.inner.signing_headers_with_credential(method, url, body, credential)
+        self.inner
+            .signing_headers_with_credential(method, url, body, credential)
     }
 }
