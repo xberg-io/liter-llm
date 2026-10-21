@@ -368,3 +368,29 @@ async fn a_timeout_after_the_connection_opened_is_sent_once_with_a_connect_timeo
     );
     assert_eq!(server.requests.load(Ordering::SeqCst), 1);
 }
+
+#[tokio::test]
+async fn the_connect_timeout_option_reaches_the_client() {
+    // A client built from ClientOptions with a 1 s connect timeout gives up on a connection that
+    // never opens in about 1 s. With the 10 s default it would take 10 s.
+    let client = liter_llm::create_client_with_options(liter_llm::ClientOptions {
+        api_key: "test-key".into(),
+        base_url: Some(UNROUTABLE.into()),
+        timeout_secs: Some(30),
+        connect_timeout_secs: Some(1),
+        max_retries: Some(0),
+        model_hint: Some("openai/m".into()),
+        ..Default::default()
+    })
+    .expect("create client");
+
+    let start = Instant::now();
+    let result = client.chat(request()).await;
+    let elapsed = start.elapsed();
+
+    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+    assert!(
+        elapsed < Duration::from_secs(5),
+        "the option sets the connect timeout, the default is 10 s: {elapsed:?}"
+    );
+}
