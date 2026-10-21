@@ -237,14 +237,23 @@ fn parse_chat_stream_event(
     Ok(Some(chunk))
 }
 
+/// Whether a chat chunk ends the reply: some choice carries a finish reason.
+///
+/// An SSE chat stream ends with `[DONE]` or with such a chunk. A stream that
+/// closes with neither was cut.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn chunk_has_finish_reason(chunk: &ChatCompletionChunk) -> bool {
+    chunk.choices.iter().any(|choice| choice.finish_reason.is_some())
+}
+
 /// Whether a provider's native chat stream protocol always ends with an event
 /// that carries a finish reason.
 ///
 /// Anthropic (`message_delta` with `stop_reason`), Gemini/Vertex
 /// (`finishReason`), Cohere (`message-end`) and Bedrock (`messageStop`) all do,
 /// so a stream from them that ends without one was cut off. OpenAI-compatible
-/// servers are not held to this: some omit `[DONE]` or end with non-standard
-/// metadata events (#155), and a clean EOF there stays a normal end (#295).
+/// servers may end with `[DONE]` alone, so this wrapper does not hold them to a
+/// finish reason; the SSE reader reports one that closes with neither (#356).
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 fn requires_terminal_chat_chunk(provider: &dyn Provider) -> bool {
     matches!(provider.name(), "anthropic" | "google_ai" | "vertex_ai" | "cohere")
@@ -293,7 +302,7 @@ impl Stream for RequireTerminalChunk {
         }
         match self.inner.as_mut().poll_next(cx) {
             Poll::Ready(Some(Ok(chunk))) => {
-                if chunk.choices.iter().any(|choice| choice.finish_reason.is_some()) {
+                if chunk_has_finish_reason(&chunk) {
                     self.finished = true;
                 }
                 Poll::Ready(Some(Ok(chunk)))
@@ -1406,6 +1415,7 @@ impl LlmClient for DefaultClient {
                             body: prepared.body_bytes,
                         },
                         parse_event,
+                        Some(chunk_has_finish_reason),
                         self.response_read_options(),
                     )
                     .await?
@@ -1838,6 +1848,7 @@ impl LlmClientRaw for DefaultClient {
                             body: prepared.body_bytes,
                         },
                         parse_event,
+                        Some(chunk_has_finish_reason),
                         self.response_read_options(),
                     )
                     .await?
@@ -2643,6 +2654,7 @@ impl ResponseClient for DefaultClient {
                     body: body_bytes,
                 },
                 parse_response_stream_event,
+                None,
                 self.response_read_options(),
             )
             .await

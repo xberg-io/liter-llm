@@ -1,7 +1,8 @@
 //! A chat stream cut off before the provider's final event must not look like
 //! a complete response (#295). Protocols that always end with a finish reason
-//! surface truncation as an error; OpenAI-compatible streams stay lenient
-//! because some servers omit `[DONE]` (#155).
+//! surface truncation as an error. OpenAI-compatible streams end with `[DONE]`
+//! or with a chunk that carries a finish reason; a clean close with neither is
+//! a cut stream (#356).
 //!
 //! Anthropic and Gemini are exercised end to end here. Cohere and Bedrock are
 //! covered by the unit tests next to the adapter, because a `base_url`
@@ -153,10 +154,21 @@ async fn gemini_stream_with_finish_reason_completes() {
     assert_complete(&collect(GEMINI_MODEL, body).await);
 }
 
+const OPENAI_CONTENT: &str = r#"{"id":"c1","object":"chat.completion.chunk","created":0,"model":"gpt-4o","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":null}]}"#;
+const OPENAI_FINISH: &str = r#"{"id":"c1","object":"chat.completion.chunk","created":0,"model":"gpt-4o","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}"#;
+
 #[tokio::test]
-async fn openai_compatible_stream_without_done_stays_lenient() {
-    let body = sse(&[
-        r#"{"id":"c1","object":"chat.completion.chunk","created":0,"model":"gpt-4o","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":null}]}"#,
-    ]);
+async fn openai_compatible_stream_cut_on_an_event_boundary_is_an_error() {
+    assert_truncated(&collect("openai/gpt-4o", sse(&[OPENAI_CONTENT, OPENAI_CONTENT])).await);
+}
+
+#[tokio::test]
+async fn openai_compatible_stream_with_done_completes() {
+    let body = format!("{}data: [DONE]\n\n", sse(&[OPENAI_CONTENT]));
     assert_complete(&collect("openai/gpt-4o", body).await);
+}
+
+#[tokio::test]
+async fn openai_compatible_stream_with_finish_reason_and_no_done_completes() {
+    assert_complete(&collect("openai/gpt-4o", sse(&[OPENAI_CONTENT, OPENAI_FINISH])).await);
 }
