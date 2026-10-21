@@ -948,6 +948,8 @@ impl DefaultClient {
             #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
             let builder = crate::provider::configure_outbound_client_builder(builder, config.transport.dns_cache_ttl);
             #[cfg(not(target_arch = "wasm32"))]
+            let builder = builder.connect_timeout(config.connect_timeout);
+            #[cfg(not(target_arch = "wasm32"))]
             let builder = if stream {
                 builder.read_timeout(config.timeout)
             } else {

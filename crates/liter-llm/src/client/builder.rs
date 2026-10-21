@@ -88,6 +88,7 @@ pub struct ClientBuilder<K = NoApiKey, P = NoProvider> {
     provider_hint: String,
     base_url: Option<String>,
     timeout: Duration,
+    connect_timeout: Duration,
     max_retries: u32,
     max_response_bytes: Option<usize>,
     transport: TransportConfig,
@@ -128,6 +129,7 @@ impl ClientBuilder<NoApiKey, NoProvider> {
             provider_hint: String::new(),
             base_url: None,
             timeout: Duration::from_secs(60),
+            connect_timeout: Duration::from_secs(10),
             max_retries: 3,
             max_response_bytes: None,
             transport: TransportConfig::default(),
@@ -179,6 +181,7 @@ impl<K, P> ClientBuilder<K, P> {
             provider_hint: self.provider_hint,
             base_url: self.base_url,
             timeout: self.timeout,
+            connect_timeout: self.connect_timeout,
             max_retries: self.max_retries,
             max_response_bytes: self.max_response_bytes,
             transport: self.transport,
@@ -224,6 +227,7 @@ impl<K, P> ClientBuilder<K, P> {
             provider_hint: provider_name.into(),
             base_url: self.base_url,
             timeout: self.timeout,
+            connect_timeout: self.connect_timeout,
             max_retries: self.max_retries,
             max_response_bytes: self.max_response_bytes,
             transport: self.transport,
@@ -267,6 +271,14 @@ impl<K, P> ClientBuilder<K, P> {
     /// Set the per-request timeout (default: 60 s).
     pub fn timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
+        self
+    }
+
+    /// Set the connect timeout (default: 10 s).
+    ///
+    /// A connection that does not open in this time is retried up to `max_retries` times.
+    pub fn connect_timeout(mut self, timeout: Duration) -> Self {
+        self.connect_timeout = timeout;
         self
     }
 
@@ -416,6 +428,7 @@ impl ClientBuilder<WithApiKey, WithProvider> {
             api_key: self.api_key,
             base_url: self.base_url,
             timeout: self.timeout,
+            connect_timeout: self.connect_timeout,
             max_retries: self.max_retries,
             max_response_bytes: self.max_response_bytes,
             extra_headers: Vec::new(),

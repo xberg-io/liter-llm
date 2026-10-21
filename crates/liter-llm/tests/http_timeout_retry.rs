@@ -292,3 +292,79 @@ async fn a_connection_dropped_on_every_attempt_uses_up_the_retries() {
         "the server receives the first request and two retries"
     );
 }
+
+/// An address that drops every packet, so a connection to it never opens.
+const UNROUTABLE: &str = "http://10.255.255.1";
+
+fn unroutable_client(timeout: Duration, connect_timeout: Duration, max_retries: u32) -> DefaultClient {
+    let config = ClientConfigBuilder::new("test-key")
+        .base_url(UNROUTABLE)
+        .timeout(timeout)
+        .connect_timeout(connect_timeout)
+        .max_retries(max_retries)
+        .build();
+    DefaultClient::new(config, Some("openai/m")).expect("create client")
+}
+
+#[tokio::test]
+async fn a_connect_timeout_is_tried_again() {
+    // Each of the three attempts waits 500 ms for a connection, and the two back-offs add at
+    // least 0.5 s and 1 s. A connect timeout that is sent once ends in about 500 ms. The
+    // request timeout is long, so only the connect timeout can end an attempt.
+    let client = unroutable_client(Duration::from_secs(30), Duration::from_millis(500), 2);
+
+    let start = Instant::now();
+    let result = tokio::time::timeout(Duration::from_secs(25), client.chat(request()))
+        .await
+        .expect("the call ends once the retries are used up");
+    let elapsed = start.elapsed();
+
+    assert!(
+        matches!(result, Err(LiterLlmError::Timeout)),
+        "a connection that never opens ends in a Timeout error, got {result:?}"
+    );
+    assert!(
+        elapsed >= Duration::from_millis(2500),
+        "the connect timeout is retried twice: {elapsed:?}"
+    );
+}
+
+#[tokio::test]
+async fn a_connect_timeout_with_no_retries_is_sent_once() {
+    let client = unroutable_client(Duration::from_secs(30), Duration::from_millis(500), 0);
+
+    let start = Instant::now();
+    let result = client.chat(request()).await;
+    let elapsed = start.elapsed();
+
+    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+    assert!(
+        elapsed < Duration::from_millis(1500),
+        "with no retries the call ends after one connect timeout: {elapsed:?}"
+    );
+}
+
+#[tokio::test]
+async fn a_timeout_after_the_connection_opened_is_sent_once_with_a_connect_timeout_set() {
+    // The server accepts the connection at once, so the connect timeout never fires. The reply
+    // never comes, so the request timeout does, and the request is not sent again.
+    let server = silent_server(Duration::from_secs(8));
+    let config = ClientConfigBuilder::new("test-key")
+        .base_url(server.base_url.clone())
+        .timeout(Duration::from_secs(1))
+        .connect_timeout(Duration::from_secs(5))
+        .max_retries(2)
+        .build();
+    let client = DefaultClient::new(config, Some("openai/m")).expect("create client");
+
+    let start = Instant::now();
+    let result = client.chat(request()).await;
+    let elapsed = start.elapsed();
+
+    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+    assert!(
+        elapsed < Duration::from_millis(2500),
+        "the caller gets the Timeout after about one timeout: {elapsed:?}"
+    );
+    assert_eq!(server.requests.load(Ordering::SeqCst), 1);
+}

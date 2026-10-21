@@ -36,6 +36,7 @@ api_key = "sk-..."
 base_url = "https://api.openai.com/v1"
 model_hint = "openai"
 timeout_secs = 120
+connect_timeout_secs = 5
 max_retries = 5
 cooldown_secs = 30
 health_check_secs = 60
@@ -77,7 +78,8 @@ model_prefixes = ["my-provider/"]
 | `base_url`          | string | Override the provider's base URL.                                                |
 | `model_hint`        | string | Pre-resolve a provider (e.g. `"openai"`); skips prefix lookup.                   |
 | `timeout_secs`      | int    | Per-request timeout in seconds (default: 60).                                    |
-| `max_retries`       | int    | Retries on 429, 500, 502, 503, 504, 529 and failed connections, with backoff (default: 3). A timeout is not retried. |
+| `connect_timeout_secs` | int | Time to open the connection, in seconds (default: 10). A connect timeout is retried. |
+| `max_retries`       | int    | Retries on 429, 500, 502, 503, 504, 529 and failed connections and connect timeouts, with backoff (default: 3). A timeout after the connection is open is not retried. |
 | `cooldown_secs`     | int    | Circuit-breaker cooldown after transient errors.                                 |
 | `health_check_secs` | int    | Interval for background health checks.                                           |
 | `cost_tracking`     | bool   | Enable per-request cost calculation.                                             |
@@ -231,7 +233,7 @@ const client = createClientFromJson(JSON.stringify({
 
 | Key                                                                                                | Effect                                                                                                        |
 | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `api_key`, `base_url`, `model_hint`, `timeout_secs`, `max_retries`, `extra_headers`                | Client settings, applied to the underlying HTTP client.                                                       |
+| `api_key`, `base_url`, `model_hint`, `timeout_secs`, `connect_timeout_secs`, `max_retries`, `extra_headers`                | Client settings, applied to the underlying HTTP client.                                                       |
 | `cache`, `budget`, `cooldown_secs`, `rate_limit`, `in_flight_limit`, `health_check_secs`, `cost_tracking`, `tracing` | Middleware. When any is set, `chat`, `chat_stream`, `embed`, `list_models`, `image_generate`, `speech`, `transcribe`, `moderate`, `rerank`, `search` and `ocr` run through the managed Tower stack. File, batch and response operations bypass it. |
 | `providers`                                                                                        | Each entry is registered process-wide as a custom provider (`auth_header`: `"Bearer"`/`"Authorization"`/unset sends a bearer token, `"none"` sends no auth header, any other value names a header that carries the raw key). |
 
@@ -300,7 +302,8 @@ Hooks are not expressible in JSON; build a `ClientConfig` in Rust to use them. A
 | `base_url`     | string | from registry | Override the provider's base URL.                         |
 | `model_hint`   | string | none          | Pre-resolve a provider at construction (e.g. `"openai"`). |
 | `timeout_secs` | int    | 60            | Request timeout in seconds.                               |
-| `max_retries`  | int    | 3             | Retries on 429, 500, 502, 503, 504, 529 and failed connections, with backoff. A timeout is not retried. |
+| `connect_timeout_secs` | int | 10        | Time to open the connection, in seconds. A connect timeout is retried. |
+| `max_retries`  | int    | 3             | Retries on 429, 500, 502, 503, 504, 529 and failed connections and connect timeouts, with backoff. A timeout after the connection is open is not retried. |
 
 ## API key environment variables
 
