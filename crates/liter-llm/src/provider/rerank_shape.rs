@@ -1,7 +1,8 @@
-//! Rerank reply shapes that differ from the canonical `results` array.
+//! Rerank reply and request shapes that differ from the canonical ones.
 //!
-//! One table names the shape of each provider, and one function applies it. A provider
-//! whose rerank reply is not canonical adds a row here; it adds no parser of its own.
+//! One table names the reply shape of each provider, and one function applies it. A provider
+//! whose rerank reply is not canonical adds a row here; it adds no parser of its own. The
+//! request side holds the rerank path and the request wording of NVIDIA NIM and Hugging Face TEI.
 
 use serde_json::{Value, json};
 
