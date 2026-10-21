@@ -72,7 +72,7 @@ fn wire__crate__DefaultClient_cancel_batch_impl(
             let api_batch_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -118,7 +118,7 @@ fn wire__crate__DefaultClient_cancel_response_impl(
             let api_response_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -165,7 +165,7 @@ fn wire__crate__DefaultClient_chat_impl(
             let api_req = <crate::ChatCompletionRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -260,7 +260,7 @@ fn wire__crate__DefaultClient_create_batch_impl(
             let api_req = <crate::CreateBatchRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -306,7 +306,7 @@ fn wire__crate__DefaultClient_create_file_impl(
             let api_req = <crate::CreateFileRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -352,7 +352,7 @@ fn wire__crate__DefaultClient_create_response_impl(
             let api_req = <crate::CreateResponseRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -398,7 +398,7 @@ fn wire__crate__DefaultClient_delete_file_impl(
             let api_file_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -444,7 +444,7 @@ fn wire__crate__DefaultClient_embed_impl(
             let api_req = <crate::EmbeddingRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -490,7 +490,7 @@ fn wire__crate__DefaultClient_fetch_batch_for_polling_impl(
             let api_batch_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -537,7 +537,7 @@ fn wire__crate__DefaultClient_file_content_impl(
             let api_file_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -583,7 +583,7 @@ fn wire__crate__DefaultClient_image_generate_impl(
             let api_req = <crate::CreateImageRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -629,7 +629,7 @@ fn wire__crate__DefaultClient_list_batches_impl(
             let api_query = <Option<crate::BatchListQuery>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -675,7 +675,7 @@ fn wire__crate__DefaultClient_list_files_impl(
             let api_query = <Option<crate::FileListQuery>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -720,7 +720,7 @@ fn wire__crate__DefaultClient_list_models_impl(
                 );
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -766,7 +766,7 @@ fn wire__crate__DefaultClient_moderate_impl(
             let api_req = <crate::ModerationRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -812,7 +812,7 @@ fn wire__crate__DefaultClient_ocr_impl(
             let api_req = <crate::OcrRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -858,7 +858,7 @@ fn wire__crate__DefaultClient_rerank_impl(
             let api_req = <crate::RerankRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -904,7 +904,7 @@ fn wire__crate__DefaultClient_retrieve_batch_impl(
             let api_batch_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -950,7 +950,7 @@ fn wire__crate__DefaultClient_retrieve_file_impl(
             let api_file_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -996,7 +996,7 @@ fn wire__crate__DefaultClient_retrieve_response_impl(
             let api_response_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1043,7 +1043,7 @@ fn wire__crate__DefaultClient_search_impl(
             let api_req = <crate::SearchRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1089,7 +1089,7 @@ fn wire__crate__DefaultClient_speech_impl(
             let api_req = <crate::CreateSpeechRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1135,7 +1135,7 @@ fn wire__crate__DefaultClient_transcribe_impl(
             let api_req = <crate::CreateTranscriptionRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1224,7 +1224,7 @@ fn wire__crate__all_providers_impl(
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::all_providers()?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -1310,7 +1310,7 @@ fn wire__crate__check_bound_impl(
             let api_limit = <i64>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::check_bound(api_context, api_current_len, api_incoming, api_limit)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -1503,7 +1503,7 @@ fn wire__crate__complex_provider_names_impl(
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::complex_provider_names()?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -1533,7 +1533,7 @@ fn wire__crate__count_request_tokens_impl(
             let api_req = <crate::ChatCompletionRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::count_request_tokens(api_model, api_req)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -1563,7 +1563,7 @@ fn wire__crate__count_tokens_impl(
             let api_text = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::count_tokens(api_model, api_text)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -2271,7 +2271,7 @@ fn wire__crate__create_client_impl(
             let api_model_hint = <Option<String>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::create_client(
                         api_api_key,
                         api_base_url,
@@ -2306,7 +2306,7 @@ fn wire__crate__create_client_from_json_impl(
             let api_json = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::create_client_from_json(api_json)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -2364,7 +2364,7 @@ fn wire__crate__create_client_with_options_impl(
             let api_options = <crate::ClientOptions>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::create_client_with_options(api_options)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -5258,7 +5258,7 @@ fn wire__crate__install_catalog_overlay_from_str_impl(
             let api_catalog_json = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::install_catalog_overlay_from_str(api_catalog_json)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -5488,7 +5488,7 @@ fn wire__crate__refresh_catalog_impl(
             let api_config = <crate::CatalogRefreshConfig>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let output_ok = crate::refresh_catalog(api_config).await?;
                         std::result::Result::Ok(output_ok)
@@ -5519,7 +5519,7 @@ fn wire__crate__register_custom_provider_impl(
             let api_config = <crate::CustomProviderConfig>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::register_custom_provider(api_config)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -5547,7 +5547,7 @@ fn wire__crate__unregister_custom_provider_impl(
             let api_name = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::unregister_custom_provider(api_name)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -6015,7 +6015,7 @@ const _: fn() = || {
         }
         crate::LiterLlmError::RateLimited { message, retry_after } => {
             let _: String = message;
-            let _: i64 = retry_after;
+            let _: Option<i64> = retry_after;
         }
         crate::LiterLlmError::BadRequest { message, status } => {
             let _: String = message;
@@ -6041,7 +6041,7 @@ const _: fn() = || {
         } => {
             let _: String = message;
             let _: i64 = status;
-            let _: i64 = retry_after;
+            let _: Option<i64> = retry_after;
         }
         crate::LiterLlmError::Timeout => {}
         crate::LiterLlmError::Network { message } => {
@@ -6063,7 +6063,7 @@ const _: fn() = || {
         }
         crate::LiterLlmError::BudgetExceeded { message, model } => {
             let _: String = message;
-            let _: String = model;
+            let _: Option<String> = model;
         }
         crate::LiterLlmError::HookRejected { message } => {
             let _: String = message;
@@ -6560,6 +6560,14 @@ impl SseDecode for DefaultClient {
     }
 }
 
+impl SseDecode for AlefBridgeError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <crate::AlefBridgeErrorWire>::sse_decode(deserializer);
+        return crate::alef_decode_bridge_error(inner);
+    }
+}
+
 impl SseDecode for std::collections::HashMap<String, String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -6597,6 +6605,34 @@ impl SseDecode for String {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <Vec<u8>>::sse_decode(deserializer);
         return String::from_utf8(inner).unwrap();
+    }
+}
+
+impl SseDecode for crate::AlefBridgeErrorWire {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_error = <crate::LiterLlmError>::sse_decode(deserializer);
+                return crate::AlefBridgeErrorWire::LiterLlmError { error: var_error };
+            }
+            1 => {
+                let mut var_error = <crate::CatalogRefreshError>::sse_decode(deserializer);
+                return crate::AlefBridgeErrorWire::CatalogRefreshError { error: var_error };
+            }
+            2 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::AlefBridgeErrorWire::InvalidInput { message: var_message };
+            }
+            3 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::AlefBridgeErrorWire::NativeFailure { message: var_message };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -8199,7 +8235,7 @@ impl SseDecode for crate::LiterLlmError {
             }
             1 => {
                 let mut var_message = <String>::sse_decode(deserializer);
-                let mut var_retryAfter = <i64>::sse_decode(deserializer);
+                let mut var_retryAfter = <Option<i64>>::sse_decode(deserializer);
                 return crate::LiterLlmError::RateLimited {
                     message: var_message,
                     retry_after: var_retryAfter,
@@ -8236,7 +8272,7 @@ impl SseDecode for crate::LiterLlmError {
             7 => {
                 let mut var_message = <String>::sse_decode(deserializer);
                 let mut var_status = <i64>::sse_decode(deserializer);
-                let mut var_retryAfter = <i64>::sse_decode(deserializer);
+                let mut var_retryAfter = <Option<i64>>::sse_decode(deserializer);
                 return crate::LiterLlmError::ServiceUnavailable {
                     message: var_message,
                     status: var_status,
@@ -8276,7 +8312,7 @@ impl SseDecode for crate::LiterLlmError {
             }
             14 => {
                 let mut var_message = <String>::sse_decode(deserializer);
-                let mut var_model = <String>::sse_decode(deserializer);
+                let mut var_model = <Option<String>>::sse_decode(deserializer);
                 return crate::LiterLlmError::BudgetExceeded {
                     message: var_message,
                     model: var_model,
@@ -10197,6 +10233,46 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<DefaultClient>> for DefaultCli
     }
 }
 
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<AlefBridgeError> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        crate::alef_encode_bridge_error(self.0).into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<AlefBridgeError> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<AlefBridgeError>> for AlefBridgeError {
+    fn into_into_dart(self) -> FrbWrapper<AlefBridgeError> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::AlefBridgeErrorWire {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::AlefBridgeErrorWire::LiterLlmError { error } => {
+                [0.into_dart(), error.into_into_dart().into_dart()].into_dart()
+            }
+            crate::AlefBridgeErrorWire::CatalogRefreshError { error } => {
+                [1.into_dart(), error.into_into_dart().into_dart()].into_dart()
+            }
+            crate::AlefBridgeErrorWire::InvalidInput { message } => {
+                [2.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            crate::AlefBridgeErrorWire::NativeFailure { message } => {
+                [3.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::AlefBridgeErrorWire {}
+impl flutter_rust_bridge::IntoIntoDart<crate::AlefBridgeErrorWire> for crate::AlefBridgeErrorWire {
+    fn into_into_dart(self) -> crate::AlefBridgeErrorWire {
+        self
+    }
+}
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::AssistantContent> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
@@ -12713,6 +12789,13 @@ impl SseEncode for DefaultClient {
     }
 }
 
+impl SseEncode for AlefBridgeError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::AlefBridgeErrorWire>::sse_encode(crate::alef_encode_bridge_error(self), serializer);
+    }
+}
+
 impl SseEncode for std::collections::HashMap<String, String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -12747,6 +12830,33 @@ impl SseEncode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<u8>>::sse_encode(self.into_bytes(), serializer);
+    }
+}
+
+impl SseEncode for crate::AlefBridgeErrorWire {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::AlefBridgeErrorWire::LiterLlmError { error } => {
+                <i32>::sse_encode(0, serializer);
+                <crate::LiterLlmError>::sse_encode(error, serializer);
+            }
+            crate::AlefBridgeErrorWire::CatalogRefreshError { error } => {
+                <i32>::sse_encode(1, serializer);
+                <crate::CatalogRefreshError>::sse_encode(error, serializer);
+            }
+            crate::AlefBridgeErrorWire::InvalidInput { message } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            crate::AlefBridgeErrorWire::NativeFailure { message } => {
+                <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -13976,7 +14086,7 @@ impl SseEncode for crate::LiterLlmError {
             crate::LiterLlmError::RateLimited { message, retry_after } => {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(message, serializer);
-                <i64>::sse_encode(retry_after, serializer);
+                <Option<i64>>::sse_encode(retry_after, serializer);
             }
             crate::LiterLlmError::BadRequest { message, status } => {
                 <i32>::sse_encode(2, serializer);
@@ -14008,7 +14118,7 @@ impl SseEncode for crate::LiterLlmError {
                 <i32>::sse_encode(7, serializer);
                 <String>::sse_encode(message, serializer);
                 <i64>::sse_encode(status, serializer);
-                <i64>::sse_encode(retry_after, serializer);
+                <Option<i64>>::sse_encode(retry_after, serializer);
             }
             crate::LiterLlmError::Timeout => {
                 <i32>::sse_encode(8, serializer);
@@ -14038,7 +14148,7 @@ impl SseEncode for crate::LiterLlmError {
             crate::LiterLlmError::BudgetExceeded { message, model } => {
                 <i32>::sse_encode(14, serializer);
                 <String>::sse_encode(message, serializer);
-                <String>::sse_encode(model, serializer);
+                <Option<String>>::sse_encode(model, serializer);
             }
             crate::LiterLlmError::HookRejected { message } => {
                 <i32>::sse_encode(15, serializer);
