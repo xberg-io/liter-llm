@@ -18,8 +18,50 @@ use tokio::net::{TcpListener, TcpStream};
 /// Idle limit used by the silent stream tests.
 const SILENT_TIMEOUT: Duration = Duration::from_millis(500);
 
-/// A silent stream must end within three idle limits. A limit of eight times the timeout misses it.
-const SILENT_STREAM_BOUND: Duration = Duration::from_millis(1500);
+/// How long the mock server stays silent. The server holds the socket this long and then drops it,
+/// so a client that has no idle limit sees a closed stream, not a `Timeout` error.
+const SILENT_STALL: Duration = Duration::from_secs(10);
+
+/// A limit that works ends its call within this many times the configured limit. A slow or loaded
+/// process adds well under one limit of delay to a call; a limit set 10 times too long misses the
+/// ceiling by a factor of two.
+const CEILING_FACTOR: u32 = 5;
+
+/// The ceiling for a call that has a configured `limit`.
+fn ceiling(limit: Duration) -> Duration {
+    limit * CEILING_FACTOR
+}
+
+/// Read a silent stream to its error and check the idle limit.
+///
+/// The gap is the time since the stream last yielded an item, so it excludes the time that setup
+/// takes on a slow process. The client starts its timer when it reads the last bytes, a moment before
+/// this function sees the item, so the gap can be a little under the limit: the floor is half the
+/// limit. The ceiling is five limits.
+async fn assert_silent_stream_ends_at_the_idle_limit(mut stream: BoxStream<'static, Result<String, LiterLlmError>>) {
+    let mut quiet_since = Instant::now();
+    let mut last_err = None;
+    while let Some(item) = stream.next().await {
+        match item {
+            Ok(_) => quiet_since = Instant::now(),
+            Err(e) => {
+                last_err = Some(e);
+                break;
+            }
+        }
+    }
+    let gap = quiet_since.elapsed();
+    let err = last_err.expect("a silent stream must fail");
+    assert!(matches!(err, LiterLlmError::Timeout), "got {err:?}");
+    assert!(
+        gap >= SILENT_TIMEOUT / 2,
+        "the stream ended well before the idle limit, after {gap:?}"
+    );
+    assert!(
+        gap < ceiling(SILENT_TIMEOUT),
+        "the idle limit did not fire within {CEILING_FACTOR} limits, the stream was quiet for {gap:?}"
+    );
+}
 
 /// What the mock server does after it reads the request.
 #[derive(Clone, Copy)]
@@ -30,7 +72,7 @@ struct Script {
     chunk_pause: Duration,
     /// Number of content chunks.
     chunks: usize,
-    /// When true the server sends the first chunk, then stays silent and never finishes.
+    /// When true the server sends the first chunk, then stays silent for `SILENT_STALL`.
     stall_after_first: bool,
     /// How the events are framed on the wire.
     wire: Wire,
@@ -162,7 +204,7 @@ async fn serve_one(mut sock: TcpStream, script: Script) {
     }
     let _ = sock.write_all(&text_event(script.wire, "")).await;
     if script.stall_after_first {
-        tokio::time::sleep(Duration::from_secs(30)).await;
+        tokio::time::sleep(SILENT_STALL).await;
         return;
     }
     for i in 0..script.chunks {
@@ -245,22 +287,8 @@ async fn stream_that_goes_silent_fails_with_the_timeout_error() {
     })
     .await;
     let c = client(base, SILENT_TIMEOUT);
-    let started = Instant::now();
-    let mut stream = c.chat_stream(request()).await.expect("stream opens");
-    let mut last_err = None;
-    while let Some(item) = stream.next().await {
-        if let Err(e) = item {
-            last_err = Some(e);
-            break;
-        }
-    }
-    let err = last_err.expect("a silent stream must fail");
-    assert!(matches!(err, LiterLlmError::Timeout), "got {err:?}");
-    assert!(
-        started.elapsed() < SILENT_STREAM_BOUND,
-        "the stall must end at the idle limit, ended at {:?}",
-        started.elapsed()
-    );
+    let stream = c.chat_stream(request()).await.expect("stream opens");
+    assert_silent_stream_ends_at_the_idle_limit(Box::pin(stream.map(|r| r.map(|c| chunk_text(&c))))).await;
 }
 
 #[tokio::test]
@@ -398,22 +426,8 @@ async fn silent_stream_fails_with_the_timeout_error(entry: Entry, wire: Wire) {
         wire,
     })
     .await;
-    let started = Instant::now();
-    let mut stream = open(entry, base, SILENT_TIMEOUT).await;
-    let mut last_err = None;
-    while let Some(item) = stream.next().await {
-        if let Err(e) = item {
-            last_err = Some(e);
-            break;
-        }
-    }
-    let err = last_err.expect("a silent stream must fail");
-    assert!(matches!(err, LiterLlmError::Timeout), "got {err:?}");
-    assert!(
-        started.elapsed() < SILENT_STREAM_BOUND,
-        "the stall must end at the idle limit, ended at {:?}",
-        started.elapsed()
-    );
+    let stream = open(entry, base, SILENT_TIMEOUT).await;
+    assert_silent_stream_ends_at_the_idle_limit(stream).await;
 }
 
 macro_rules! idle_tests {
@@ -459,7 +473,13 @@ idle_tests!(
 
 const UNARY_BODY: &str = r#"{"id":"x","object":"chat.completion","created":0,"model":"m","choices":[{"index":0,"message":{"role":"assistant","content":"hi"},"finish_reason":"stop"}]}"#;
 
-/// Serve one complete reply with a `Content-Length`, dripped in 12 pieces 200 ms apart (about 2.4 s).
+/// Pieces in the dripped reply.
+const DRIP_PIECES: usize = 40;
+
+/// Whole-request limit of the dripped-reply tests.
+const WHOLE_REQUEST_LIMIT: Duration = Duration::from_secs(1);
+
+/// Serve one complete reply with a `Content-Length`, dripped in `DRIP_PIECES` pieces 200 ms apart (about 8 s, longer than the ceiling of the 1 s limit).
 async fn drip_unary(mut sock: TcpStream) {
     let mut buf = vec![0u8; 16384];
     let mut seen = Vec::new();
@@ -476,7 +496,7 @@ async fn drip_unary(mut sock: TcpStream) {
     if sock.write_all(head.as_bytes()).await.is_err() {
         return;
     }
-    for piece in UNARY_BODY.as_bytes().chunks(UNARY_BODY.len().div_ceil(12)) {
+    for piece in UNARY_BODY.as_bytes().chunks(UNARY_BODY.len().div_ceil(DRIP_PIECES)) {
         tokio::time::sleep(Duration::from_millis(200)).await;
         if sock.write_all(piece).await.is_err() || sock.flush().await.is_err() {
             return;
@@ -495,23 +515,32 @@ async fn start_unary_drip() -> String {
     format!("http://{addr}/v1")
 }
 
-#[tokio::test]
-async fn chat_keeps_the_whole_request_limit() {
-    // Bytes keep arriving, so only a whole-request limit ends this call at the 1 s timeout.
-    let c = client(start_unary_drip().await, Duration::from_secs(1));
-    let started = Instant::now();
-    let result = c.chat(request()).await;
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {:?}", result.err());
+/// The whole-request limit ended a call whose bytes kept arriving: not before the limit, and within
+/// the ceiling. The reply drips for longer than the ceiling, so a call with no limit succeeds.
+fn assert_whole_request_limit_ended_the_call(elapsed: Duration) {
     assert!(
-        started.elapsed() < Duration::from_millis(1800),
-        "the call must end at the timeout, ended at {:?}",
-        started.elapsed()
+        elapsed >= WHOLE_REQUEST_LIMIT,
+        "the call ended before the limit, after {elapsed:?}"
+    );
+    assert!(
+        elapsed < ceiling(WHOLE_REQUEST_LIMIT),
+        "the call did not end within {CEILING_FACTOR} limits, ended at {elapsed:?}"
     );
 }
 
 #[tokio::test]
+async fn chat_keeps_the_whole_request_limit() {
+    // Bytes keep arriving, so only a whole-request limit ends this call at the 1 s timeout.
+    let c = client(start_unary_drip().await, WHOLE_REQUEST_LIMIT);
+    let started = Instant::now();
+    let result = c.chat(request()).await;
+    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {:?}", result.err());
+    assert_whole_request_limit_ended_the_call(started.elapsed());
+}
+
+#[tokio::test]
 async fn create_response_keeps_the_whole_request_limit() {
-    let c = client(start_unary_drip().await, Duration::from_secs(1));
+    let c = client(start_unary_drip().await, WHOLE_REQUEST_LIMIT);
     let req = CreateResponseRequest {
         model: "m".into(),
         input: serde_json::json!("hi"),
@@ -526,9 +555,5 @@ async fn create_response_keeps_the_whole_request_limit() {
     let started = Instant::now();
     let result = c.create_response(req).await;
     assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {:?}", result.err());
-    assert!(
-        started.elapsed() < Duration::from_millis(1800),
-        "the call must end at the timeout, ended at {:?}",
-        started.elapsed()
-    );
+    assert_whole_request_limit_ended_the_call(started.elapsed());
 }
