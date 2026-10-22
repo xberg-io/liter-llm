@@ -3912,7 +3912,10 @@ mod build_provider_tests {
         let model = "ollama/nomic-embed-text";
         let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
             .expect("client construction should succeed");
-        let req = embed_request(model, Some(serde_json::json!({"truncate": false, "keep_alive": "5m", "num_ctx": 8192})));
+        let req = embed_request(
+            model,
+            Some(serde_json::json!({"truncate": false, "keep_alive": "5m", "num_ctx": 8192})),
+        );
 
         let prepared = client
             .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
