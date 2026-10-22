@@ -255,6 +255,19 @@ pub(crate) fn chunk_has_finish_reason(chunk: &ChatCompletionChunk) -> bool {
     chunk.choices.iter().any(|choice| choice.finish_reason.is_some())
 }
 
+/// Whether a Responses event ends the reply: `response.completed`,
+/// `response.incomplete` or `response.failed`.
+///
+/// A Responses stream ends with `[DONE]` or with such an event. A stream that
+/// closes with neither was cut.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) fn response_event_is_terminal(event: &ResponseStreamEvent) -> bool {
+    matches!(
+        event,
+        ResponseStreamEvent::Completed(_) | ResponseStreamEvent::Incomplete(_) | ResponseStreamEvent::Failed(_)
+    )
+}
+
 /// Whether a provider's native chat stream protocol always ends with an event
 /// that carries a finish reason.
 ///
@@ -777,6 +790,8 @@ pub trait ResponseClient: Send + Sync {
     /// Returns a stream of `ResponseStreamEvent` items. The stream terminates
     /// when a terminal event (`response.completed`, `response.incomplete`, or
     /// `response.failed`) is yielded and the underlying connection closes.
+    /// If the connection closes before a terminal event, the stream yields one
+    /// `Streaming` error after the last event.
     ///
     /// # Errors
     ///
@@ -814,6 +829,8 @@ pub trait ResponseClient {
     /// Returns a stream of `ResponseStreamEvent` items. The stream terminates
     /// when a terminal event (`response.completed`, `response.incomplete`, or
     /// `response.failed`) is yielded and the underlying connection closes.
+    /// If the connection closes before a terminal event, the stream yields one
+    /// `Streaming` error after the last event.
     ///
     /// # Errors
     ///
@@ -898,6 +915,7 @@ impl DefaultClient {
         http::request::ResponseReadOptions {
             max_retries: self.config.max_retries,
             max_response_bytes: self.config.max_response_bytes,
+            timeout: Some(self.config.timeout),
         }
     }
 
@@ -927,11 +945,13 @@ impl DefaultClient {
     /// API key was provided, and the provider's environment variable is unset or empty.
     /// Returns `LiterLlmError::BadRequest` if no `base_url` is set and `model_hint` names a
     /// registry provider that has no route of its own.
+    /// Returns `LiterLlmError::BadRequest` if `max_response_bytes` or `connect_timeout` is zero.
     /// Returns `LiterLlmError::InvalidHeader` if pre-validated headers somehow
     /// become invalid during client construction (extremely rare; indicates a bug).
     /// Returns `LiterLlmError::Http` if the underlying HTTP client cannot be constructed.
     pub fn new(config: ClientConfig, model_hint: Option<&str>) -> Result<Self> {
         config::validate_response_limit(config.max_response_bytes)?;
+        config::validate_connect_timeout(config.connect_timeout)?;
         let BuiltProvider {
             provider,
             hint_pins_provider,
@@ -998,11 +1018,14 @@ impl DefaultClient {
             #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
             let builder = crate::provider::configure_outbound_client_builder(builder, config.transport.dns_cache_ttl);
             #[cfg(not(target_arch = "wasm32"))]
+            let builder = builder.connect_timeout(config.connect_timeout);
+            #[cfg(not(target_arch = "wasm32"))]
             let builder = if stream {
                 builder.read_timeout(config.timeout)
             } else {
                 builder.timeout(config.timeout)
             };
+            // ~keep The wasm32 client has no builder timeout: `http::deadline` applies `timeout` per call.
             #[cfg(target_arch = "wasm32")]
             let _ = stream;
             #[cfg(not(target_arch = "wasm32"))]
@@ -1704,16 +1727,10 @@ impl LlmClient for DefaultClient {
                 let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
                 let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-                let mut raw = http::request::get_json_raw_bounded(
-                    &self.http,
-                    &url,
-                    auth,
-                    &extra,
-                    self.config.max_retries,
-                    self.config.max_response_bytes,
-                )
-                .await
-                .map_err(|e| self.provider.transform_error(e))?;
+                let mut raw =
+                    http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                        .await
+                        .map_err(|e| self.provider.transform_error(e))?;
                 let next_url = self.provider.next_models_page_url(&url, &raw);
                 self.provider.transform_response(&mut raw)?;
                 let page = serde_json::from_value::<ModelsListResponse>(raw).map_err(LiterLlmError::from)?;
@@ -2386,6 +2403,7 @@ impl FileClient for DefaultClient {
                 &extra,
                 form,
                 self.config.max_response_bytes,
+                Some(self.config.timeout),
             )
             .await?;
             serde_json::from_value::<FileObject>(raw).map_err(LiterLlmError::from)
@@ -2405,15 +2423,8 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<FileObject>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2431,15 +2442,8 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "DELETE", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::delete_json_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::delete_json_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<DeleteResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2471,15 +2475,8 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<FileListResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2497,15 +2494,7 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            http::request::get_binary_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await
+            http::request::get_binary_bounded(&self.http, &url, auth, &extra, self.response_read_options()).await
         })
     }
 }
@@ -2549,15 +2538,8 @@ impl BatchClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<BatchObject>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2586,15 +2568,8 @@ impl BatchClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<BatchListResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2839,7 +2814,7 @@ impl ResponseClient for DefaultClient {
                     body: body_bytes,
                 },
                 parse_response_stream_event,
-                None,
+                Some(response_event_is_terminal),
                 self.response_read_options(),
             )
             .await
@@ -2857,15 +2832,8 @@ impl ResponseClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<ResponseObject>(raw).map_err(LiterLlmError::from)
         })
     }

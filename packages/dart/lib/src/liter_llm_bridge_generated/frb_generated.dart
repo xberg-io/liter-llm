@@ -7788,15 +7788,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ClientOptions dco_decode_client_options(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return ClientOptions(
       apiKey: dco_decode_String(arr[0]),
       baseUrl: dco_decode_opt_String(arr[1]),
       timeoutSecs: dco_decode_opt_box_autoadd_i_64(arr[2]),
-      maxRetries: dco_decode_opt_box_autoadd_i_64(arr[3]),
-      maxResponseBytes: dco_decode_opt_box_autoadd_i_64(arr[4]),
-      modelHint: dco_decode_opt_String(arr[5]),
+      connectTimeoutSecs: dco_decode_opt_box_autoadd_i_64(arr[3]),
+      maxRetries: dco_decode_opt_box_autoadd_i_64(arr[4]),
+      maxResponseBytes: dco_decode_opt_box_autoadd_i_64(arr[5]),
+      modelHint: dco_decode_opt_String(arr[6]),
     );
   }
 
@@ -8608,30 +8609,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LlmConfig dco_decode_llm_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 19)
-      throw Exception('unexpected arr length: expect 19 but see ${arr.length}');
+    if (arr.length != 20)
+      throw Exception('unexpected arr length: expect 20 but see ${arr.length}');
     return LlmConfig(
       model: dco_decode_String(arr[0]),
       apiKey: dco_decode_opt_String(arr[1]),
       baseUrl: dco_decode_opt_String(arr[2]),
       timeoutSecs: dco_decode_opt_box_autoadd_i_64(arr[3]),
-      maxRetries: dco_decode_opt_box_autoadd_i_64(arr[4]),
-      temperature: dco_decode_opt_box_autoadd_f_64(arr[5]),
-      maxTokens: dco_decode_opt_box_autoadd_i_64(arr[6]),
-      loadEnv: dco_decode_opt_box_autoadd_bool(arr[7]),
-      headers: dco_decode_opt_Map_String_String_None(arr[8]),
-      providers: dco_decode_opt_list_llm_provider_config(arr[9]),
-      cache: dco_decode_opt_box_autoadd_llm_cache_config(arr[10]),
-      budget: dco_decode_opt_box_autoadd_llm_budget_config(arr[11]),
-      rateLimit: dco_decode_opt_box_autoadd_llm_rate_limit_config(arr[12]),
+      connectTimeoutSecs: dco_decode_opt_box_autoadd_i_64(arr[4]),
+      maxRetries: dco_decode_opt_box_autoadd_i_64(arr[5]),
+      temperature: dco_decode_opt_box_autoadd_f_64(arr[6]),
+      maxTokens: dco_decode_opt_box_autoadd_i_64(arr[7]),
+      loadEnv: dco_decode_opt_box_autoadd_bool(arr[8]),
+      headers: dco_decode_opt_Map_String_String_None(arr[9]),
+      providers: dco_decode_opt_list_llm_provider_config(arr[10]),
+      cache: dco_decode_opt_box_autoadd_llm_cache_config(arr[11]),
+      budget: dco_decode_opt_box_autoadd_llm_budget_config(arr[12]),
+      rateLimit: dco_decode_opt_box_autoadd_llm_rate_limit_config(arr[13]),
       inFlightLimit: dco_decode_opt_box_autoadd_llm_in_flight_limit_config(
-        arr[13],
+        arr[14],
       ),
-      costTracking: dco_decode_opt_box_autoadd_bool(arr[14]),
-      tracing: dco_decode_opt_box_autoadd_bool(arr[15]),
-      cooldownSecs: dco_decode_opt_box_autoadd_i_64(arr[16]),
-      healthCheckSecs: dco_decode_opt_box_autoadd_i_64(arr[17]),
-      bedrock: dco_decode_opt_box_autoadd_bedrock_config(arr[18]),
+      costTracking: dco_decode_opt_box_autoadd_bool(arr[15]),
+      tracing: dco_decode_opt_box_autoadd_bool(arr[16]),
+      cooldownSecs: dco_decode_opt_box_autoadd_i_64(arr[17]),
+      healthCheckSecs: dco_decode_opt_box_autoadd_i_64(arr[18]),
+      bedrock: dco_decode_opt_box_autoadd_bedrock_config(arr[19]),
     );
   }
 
@@ -10944,6 +10946,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_apiKey = sse_decode_String(deserializer);
     var var_baseUrl = sse_decode_opt_String(deserializer);
     var var_timeoutSecs = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_connectTimeoutSecs = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_maxRetries = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_maxResponseBytes = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_modelHint = sse_decode_opt_String(deserializer);
@@ -10951,6 +10954,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       apiKey: var_apiKey,
       baseUrl: var_baseUrl,
       timeoutSecs: var_timeoutSecs,
+      connectTimeoutSecs: var_connectTimeoutSecs,
       maxRetries: var_maxRetries,
       maxResponseBytes: var_maxResponseBytes,
       modelHint: var_modelHint,
@@ -12040,6 +12044,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_apiKey = sse_decode_opt_String(deserializer);
     var var_baseUrl = sse_decode_opt_String(deserializer);
     var var_timeoutSecs = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_connectTimeoutSecs = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_maxRetries = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_temperature = sse_decode_opt_box_autoadd_f_64(deserializer);
     var var_maxTokens = sse_decode_opt_box_autoadd_i_64(deserializer);
@@ -12063,6 +12068,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       apiKey: var_apiKey,
       baseUrl: var_baseUrl,
       timeoutSecs: var_timeoutSecs,
+      connectTimeoutSecs: var_connectTimeoutSecs,
       maxRetries: var_maxRetries,
       temperature: var_temperature,
       maxTokens: var_maxTokens,
@@ -14692,6 +14698,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.apiKey, serializer);
     sse_encode_opt_String(self.baseUrl, serializer);
     sse_encode_opt_box_autoadd_i_64(self.timeoutSecs, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.connectTimeoutSecs, serializer);
     sse_encode_opt_box_autoadd_i_64(self.maxRetries, serializer);
     sse_encode_opt_box_autoadd_i_64(self.maxResponseBytes, serializer);
     sse_encode_opt_String(self.modelHint, serializer);
@@ -15645,6 +15652,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.apiKey, serializer);
     sse_encode_opt_String(self.baseUrl, serializer);
     sse_encode_opt_box_autoadd_i_64(self.timeoutSecs, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.connectTimeoutSecs, serializer);
     sse_encode_opt_box_autoadd_i_64(self.maxRetries, serializer);
     sse_encode_opt_box_autoadd_f_64(self.temperature, serializer);
     sse_encode_opt_box_autoadd_i_64(self.maxTokens, serializer);

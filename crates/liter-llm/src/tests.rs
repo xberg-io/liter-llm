@@ -4,6 +4,67 @@ fn init_crypto_for_unit_tests() {
     crate::ensure_crypto_provider();
 }
 
+/// A loopback port that refuses every connection and that no other process can take.
+///
+/// The socket is bound and never listens, so the operating system answers each connect with a
+/// refusal. The socket keeps the port while the value lives. A port that a test binds and then
+/// frees can go to another test process before the test connects to it. Keep the value in a
+/// named binding until the test ends.
+#[cfg(test)]
+pub(crate) struct RefusedPort {
+    _socket: tokio::net::TcpSocket,
+    address: std::net::SocketAddr,
+    url: String,
+}
+
+#[cfg(test)]
+impl RefusedPort {
+    pub(crate) fn new() -> Self {
+        let socket = tokio::net::TcpSocket::new_v4().expect("create socket");
+        socket.set_reuseaddr(false).expect("disable address reuse");
+        socket
+            .bind("127.0.0.1:0".parse().expect("loopback address"))
+            .expect("bind the refusing port");
+        let address = socket.local_addr().expect("refusing port address");
+        Self {
+            _socket: socket,
+            address,
+            url: format!("http://{address}/"),
+        }
+    }
+
+    pub(crate) fn address(&self) -> std::net::SocketAddr {
+        self.address
+    }
+
+    pub(crate) fn url(&self) -> &str {
+        &self.url
+    }
+}
+
+#[cfg(test)]
+mod refused_port_tests {
+    use super::RefusedPort;
+
+    #[tokio::test]
+    async fn a_held_refused_port_refuses_connections_and_cannot_be_bound_again() {
+        let port = RefusedPort::new();
+
+        let bind = std::net::TcpListener::bind(port.address());
+        assert_eq!(
+            bind.err().map(|e| e.kind()),
+            Some(std::io::ErrorKind::AddrInUse),
+            "another socket cannot take the port while the guard lives"
+        );
+        let connect = tokio::net::TcpStream::connect(port.address()).await;
+        assert_eq!(
+            connect.err().map(|e| e.kind()),
+            Some(std::io::ErrorKind::ConnectionRefused),
+            "a connect to the guarded port is refused"
+        );
+    }
+}
+
 #[cfg(test)]
 mod serde_tests {
     use crate::types::*;
@@ -1596,11 +1657,9 @@ mod error_tests {
     #[cfg(feature = "native-http")]
     #[tokio::test]
     async fn reqwest_connect_failure_stays_network() {
-        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
-        let url = format!("http://{}/", listener.local_addr().expect("addr"));
-        drop(listener);
+        let port = super::RefusedPort::new();
         let client = reqwest::Client::new();
-        let err = client.get(&url).send().await.expect_err("connection refused");
+        let err = client.get(port.url()).send().await.expect_err("connection refused");
         assert!(matches!(LiterLlmError::from(err), LiterLlmError::Network { .. }));
     }
 }

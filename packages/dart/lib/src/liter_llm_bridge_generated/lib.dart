@@ -17,7 +17,7 @@ part 'lib.freezed.dart';
 /// **Errors:**
 ///
 /// Returns `LiterLlmError.BadRequest` for a zero or platform-overflowing
-/// `max_response_bytes`, plus the errors documented by `create_client`.
+/// `max_response_bytes`, a zero `connect_timeout_secs`, plus the errors documented by `create_client`.
 Future<DefaultClient> createClientWithOptions({
   required ClientOptions options,
 }) => RustLib.instance.api.crateCreateClientWithOptions(options: options);
@@ -2116,6 +2116,10 @@ class ClientOptions {
   /// Optional request timeout in seconds.
   final PlatformInt64? timeoutSecs;
 
+  /// Optional connect timeout in seconds. A connect timeout is retried up to `max_retries` times.
+  /// Zero is an error on every target. `wasm32` ignores any other value.
+  final PlatformInt64? connectTimeoutSecs;
+
   /// Optional retry count for retryable provider failures.
   final PlatformInt64? maxRetries;
 
@@ -2129,6 +2133,7 @@ class ClientOptions {
     required this.apiKey,
     this.baseUrl,
     this.timeoutSecs,
+    this.connectTimeoutSecs,
     this.maxRetries,
     this.maxResponseBytes,
     this.modelHint,
@@ -2139,6 +2144,7 @@ class ClientOptions {
       apiKey.hashCode ^
       baseUrl.hashCode ^
       timeoutSecs.hashCode ^
+      connectTimeoutSecs.hashCode ^
       maxRetries.hashCode ^
       maxResponseBytes.hashCode ^
       modelHint.hashCode;
@@ -2151,6 +2157,7 @@ class ClientOptions {
           apiKey == other.apiKey &&
           baseUrl == other.baseUrl &&
           timeoutSecs == other.timeoutSecs &&
+          connectTimeoutSecs == other.connectTimeoutSecs &&
           maxRetries == other.maxRetries &&
           maxResponseBytes == other.maxResponseBytes &&
           modelHint == other.modelHint;
@@ -3491,6 +3498,10 @@ class LlmConfig {
   /// Request timeout, in seconds.
   final PlatformInt64? timeoutSecs;
 
+  /// Connect timeout, in seconds. A connect timeout is retried up to `max_retries` times.
+  /// Zero is an error on every target. `wasm32` ignores any other value.
+  final PlatformInt64? connectTimeoutSecs;
+
   /// Maximum number of retries on 429 / 5xx responses.
   final PlatformInt64? maxRetries;
 
@@ -3542,6 +3553,7 @@ class LlmConfig {
     this.apiKey,
     this.baseUrl,
     this.timeoutSecs,
+    this.connectTimeoutSecs,
     this.maxRetries,
     this.temperature,
     this.maxTokens,
@@ -3565,6 +3577,7 @@ class LlmConfig {
       apiKey.hashCode ^
       baseUrl.hashCode ^
       timeoutSecs.hashCode ^
+      connectTimeoutSecs.hashCode ^
       maxRetries.hashCode ^
       temperature.hashCode ^
       maxTokens.hashCode ^
@@ -3590,6 +3603,7 @@ class LlmConfig {
           apiKey == other.apiKey &&
           baseUrl == other.baseUrl &&
           timeoutSecs == other.timeoutSecs &&
+          connectTimeoutSecs == other.connectTimeoutSecs &&
           maxRetries == other.maxRetries &&
           temperature == other.temperature &&
           maxTokens == other.maxTokens &&

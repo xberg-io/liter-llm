@@ -88,6 +88,7 @@ pub struct ClientBuilder<K = NoApiKey, P = NoProvider> {
     provider_hint: String,
     base_url: Option<String>,
     timeout: Duration,
+    connect_timeout: Duration,
     max_retries: u32,
     max_response_bytes: Option<usize>,
     transport: TransportConfig,
@@ -128,6 +129,7 @@ impl ClientBuilder<NoApiKey, NoProvider> {
             provider_hint: String::new(),
             base_url: None,
             timeout: Duration::from_secs(60),
+            connect_timeout: Duration::from_secs(10),
             max_retries: 3,
             max_response_bytes: None,
             transport: TransportConfig::default(),
@@ -179,6 +181,7 @@ impl<K, P> ClientBuilder<K, P> {
             provider_hint: self.provider_hint,
             base_url: self.base_url,
             timeout: self.timeout,
+            connect_timeout: self.connect_timeout,
             max_retries: self.max_retries,
             max_response_bytes: self.max_response_bytes,
             transport: self.transport,
@@ -224,6 +227,7 @@ impl<K, P> ClientBuilder<K, P> {
             provider_hint: provider_name.into(),
             base_url: self.base_url,
             timeout: self.timeout,
+            connect_timeout: self.connect_timeout,
             max_retries: self.max_retries,
             max_response_bytes: self.max_response_bytes,
             transport: self.transport,
@@ -267,6 +271,16 @@ impl<K, P> ClientBuilder<K, P> {
     /// Set the per-request timeout (default: 60 s).
     pub fn timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
+        self
+    }
+
+    /// Set the connect timeout (default: 10 s).
+    ///
+    /// A connection that does not open in this time is retried up to `max_retries` times.
+    /// Zero is an error when the client is built, on every target. `wasm32` ignores any
+    /// other value.
+    pub fn connect_timeout(mut self, timeout: Duration) -> Self {
+        self.connect_timeout = timeout;
         self
     }
 
@@ -416,6 +430,7 @@ impl ClientBuilder<WithApiKey, WithProvider> {
             api_key: self.api_key,
             base_url: self.base_url,
             timeout: self.timeout,
+            connect_timeout: self.connect_timeout,
             max_retries: self.max_retries,
             max_response_bytes: self.max_response_bytes,
             extra_headers: Vec::new(),
@@ -456,5 +471,51 @@ impl ClientBuilder<WithApiKey, WithProvider> {
         };
 
         super::DefaultClient::new(config, hint)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::client::ClientConfigBuilder;
+
+    #[test]
+    fn the_default_connect_timeout_is_ten_seconds() {
+        assert_eq!(ClientBuilder::new().connect_timeout, Duration::from_secs(10));
+    }
+
+    #[test]
+    fn the_typed_builder_and_the_config_builder_share_the_default_connect_timeout() {
+        assert_eq!(
+            ClientBuilder::new().connect_timeout,
+            ClientConfigBuilder::new("sk-test").build().connect_timeout
+        );
+    }
+
+    // `api_key()` and `provider()` each make a new builder of another type. The value set before
+    // the call must reach the built client, not the 10 s default.
+
+    #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+    #[test]
+    fn a_connect_timeout_set_before_api_key_reaches_the_client() {
+        let client = ClientBuilder::new()
+            .provider("openai")
+            .connect_timeout(Duration::from_secs(3))
+            .api_key("sk-test")
+            .build()
+            .expect("build the client");
+        assert_eq!(client.config.connect_timeout, Duration::from_secs(3));
+    }
+
+    #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+    #[test]
+    fn a_connect_timeout_set_before_provider_reaches_the_client() {
+        let client = ClientBuilder::new()
+            .api_key("sk-test")
+            .connect_timeout(Duration::from_secs(3))
+            .provider("openai")
+            .build()
+            .expect("build the client");
+        assert_eq!(client.config.connect_timeout, Duration::from_secs(3));
     }
 }

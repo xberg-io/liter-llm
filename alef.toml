@@ -863,6 +863,7 @@ precondition = "command -v uv >/dev/null 2>&1"
 e2e = [
   "cd e2e/python && uv sync --no-install-project --no-install-workspace",
   "cd e2e/python && uv run --no-sync pytest tests/ -q",
+  "cd e2e/python && uv run --no-sync pytest ../../scripts/tests/test_python_content_accessors.py -q",
 ]
 
 [crates.test.node]

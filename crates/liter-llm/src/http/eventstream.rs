@@ -60,6 +60,7 @@ where
         ResponseReadOptions {
             max_retries,
             max_response_bytes: None,
+            timeout: None,
         },
     )
     .await
@@ -86,7 +87,7 @@ where
     P: Fn(&str, &str) -> Result<Option<ChatCompletionChunk>> + Send + 'static,
 {
     let resp = request.send(client, options).await?;
-    let byte_stream = resp.bytes_stream();
+    let byte_stream = crate::http::deadline::idle_timeout(resp.bytes_stream(), options.timeout);
     let stream = EventStreamParser::new(byte_stream, parse_event);
     Ok(Box::pin(stream))
 }
@@ -248,9 +249,10 @@ impl<S, P> EventStreamParser<S, P> {
     }
 }
 
-impl<S, P> Stream for EventStreamParser<S, P>
+impl<S, E, P> Stream for EventStreamParser<S, P>
 where
-    S: Stream<Item = std::result::Result<bytes::Bytes, reqwest::Error>>,
+    S: Stream<Item = std::result::Result<bytes::Bytes, E>>,
+    LiterLlmError: From<E>,
     P: Fn(&str, &str) -> Result<Option<ChatCompletionChunk>>,
 {
     type Item = Result<ChatCompletionChunk>;
@@ -668,7 +670,7 @@ mod tests {
         let chunk1 = bytes::Bytes::from(frame[..mid].to_vec());
         let chunk2 = bytes::Bytes::from(frame[mid..].to_vec());
 
-        let byte_stream = VecStream::new(vec![Ok(chunk1), Ok(chunk2)]);
+        let byte_stream = VecStream::new(vec![Ok::<_, LiterLlmError>(chunk1), Ok(chunk2)]);
         let parse = |event_type: &str, payload: &str| -> Result<Option<ChatCompletionChunk>> {
             if event_type == "contentBlockDelta" {
                 let v: serde_json::Value = serde_json::from_str(payload).expect("payload should be valid JSON");
@@ -718,7 +720,7 @@ mod tests {
         );
 
         let partial = bytes::Bytes::from(frame[..frame.len() / 2].to_vec());
-        let byte_stream = VecStream::new(vec![Ok(partial)]);
+        let byte_stream = VecStream::new(vec![Ok::<_, LiterLlmError>(partial)]);
 
         let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
 
@@ -759,7 +761,7 @@ mod tests {
             br#"{"message":"Rate exceeded"}"#,
         );
 
-        let byte_stream = VecStream::new(vec![Ok(bytes::Bytes::from(frame))]);
+        let byte_stream = VecStream::new(vec![Ok::<_, LiterLlmError>(bytes::Bytes::from(frame))]);
         let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
 
         let parser = EventStreamParser::new(byte_stream, parse);

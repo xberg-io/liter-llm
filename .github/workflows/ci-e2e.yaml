@@ -8,6 +8,7 @@ on:
       - packages/**
       - e2e/**
       - fixtures/**
+      - scripts/tests/test_python_content_accessors.py
       - schemas/**
       - Cargo.toml
       - Cargo.lock
@@ -33,6 +34,7 @@ on:
       - packages/**
       - e2e/**
       - fixtures/**
+      - scripts/tests/test_python_content_accessors.py
       - schemas/**
       - Cargo.toml
       - Cargo.lock

@@ -26,6 +26,7 @@
     "c/chat/finish-reason-length.md",
     "c/chat/multi-turn-conversation.md",
     "c/chat/parallel-tool-calls.md",
+    "c/chat/parts-reply.md",
     "c/chat/reasoning-effort-none.md",
     "c/chat/response-format-json-object.md",
     "c/chat/response-format-json-schema.md",
@@ -217,6 +218,7 @@
     "csharp/chat/finish-reason-length.md",
     "csharp/chat/multi-turn-conversation.md",
     "csharp/chat/parallel-tool-calls.md",
+    "csharp/chat/parts-reply.md",
     "csharp/chat/reasoning-effort-none.md",
     "csharp/chat/response-format-json-object.md",
     "csharp/chat/response-format-json-schema.md",
@@ -408,6 +410,7 @@
     "dart/chat/finish-reason-length.md",
     "dart/chat/multi-turn-conversation.md",
     "dart/chat/parallel-tool-calls.md",
+    "dart/chat/parts-reply.md",
     "dart/chat/reasoning-effort-none.md",
     "dart/chat/response-format-json-object.md",
     "dart/chat/response-format-json-schema.md",
@@ -599,6 +602,7 @@
     "elixir/chat/finish-reason-length.md",
     "elixir/chat/multi-turn-conversation.md",
     "elixir/chat/parallel-tool-calls.md",
+    "elixir/chat/parts-reply.md",
     "elixir/chat/reasoning-effort-none.md",
     "elixir/chat/response-format-json-object.md",
     "elixir/chat/response-format-json-schema.md",
@@ -790,6 +794,7 @@
     "go/chat/finish-reason-length.md",
     "go/chat/multi-turn-conversation.md",
     "go/chat/parallel-tool-calls.md",
+    "go/chat/parts-reply.md",
     "go/chat/reasoning-effort-none.md",
     "go/chat/response-format-json-object.md",
     "go/chat/response-format-json-schema.md",
@@ -981,6 +986,7 @@
     "java/chat/finish-reason-length.md",
     "java/chat/multi-turn-conversation.md",
     "java/chat/parallel-tool-calls.md",
+    "java/chat/parts-reply.md",
     "java/chat/reasoning-effort-none.md",
     "java/chat/response-format-json-object.md",
     "java/chat/response-format-json-schema.md",
@@ -1172,6 +1178,7 @@
     "kotlin-android/chat/finish-reason-length.md",
     "kotlin-android/chat/multi-turn-conversation.md",
     "kotlin-android/chat/parallel-tool-calls.md",
+    "kotlin-android/chat/parts-reply.md",
     "kotlin-android/chat/reasoning-effort-none.md",
     "kotlin-android/chat/response-format-json-object.md",
     "kotlin-android/chat/response-format-json-schema.md",
@@ -1363,6 +1370,7 @@
     "php/chat/finish-reason-length.md",
     "php/chat/multi-turn-conversation.md",
     "php/chat/parallel-tool-calls.md",
+    "php/chat/parts-reply.md",
     "php/chat/reasoning-effort-none.md",
     "php/chat/response-format-json-object.md",
     "php/chat/response-format-json-schema.md",
@@ -1554,6 +1562,7 @@
     "python/chat/finish-reason-length.md",
     "python/chat/multi-turn-conversation.md",
     "python/chat/parallel-tool-calls.md",
+    "python/chat/parts-reply.md",
     "python/chat/reasoning-effort-none.md",
     "python/chat/response-format-json-object.md",
     "python/chat/response-format-json-schema.md",
@@ -1745,6 +1754,7 @@
     "ruby/chat/finish-reason-length.md",
     "ruby/chat/multi-turn-conversation.md",
     "ruby/chat/parallel-tool-calls.md",
+    "ruby/chat/parts-reply.md",
     "ruby/chat/reasoning-effort-none.md",
     "ruby/chat/response-format-json-object.md",
     "ruby/chat/response-format-json-schema.md",
@@ -1936,6 +1946,7 @@
     "rust/chat/finish-reason-length.md",
     "rust/chat/multi-turn-conversation.md",
     "rust/chat/parallel-tool-calls.md",
+    "rust/chat/parts-reply.md",
     "rust/chat/reasoning-effort-none.md",
     "rust/chat/response-format-json-object.md",
     "rust/chat/response-format-json-schema.md",
@@ -2127,6 +2138,7 @@
     "swift/chat/finish-reason-length.md",
     "swift/chat/multi-turn-conversation.md",
     "swift/chat/parallel-tool-calls.md",
+    "swift/chat/parts-reply.md",
     "swift/chat/reasoning-effort-none.md",
     "swift/chat/response-format-json-object.md",
     "swift/chat/response-format-json-schema.md",
@@ -2318,6 +2330,7 @@
     "typescript/chat/finish-reason-length.md",
     "typescript/chat/multi-turn-conversation.md",
     "typescript/chat/parallel-tool-calls.md",
+    "typescript/chat/parts-reply.md",
     "typescript/chat/reasoning-effort-none.md",
     "typescript/chat/response-format-json-object.md",
     "typescript/chat/response-format-json-schema.md",
@@ -2508,6 +2521,7 @@
     "wasm/chat/finish-reason-length.md",
     "wasm/chat/multi-turn-conversation.md",
     "wasm/chat/parallel-tool-calls.md",
+    "wasm/chat/parts-reply.md",
     "wasm/chat/reasoning-effort-none.md",
     "wasm/chat/response-format-json-object.md",
     "wasm/chat/response-format-json-schema.md",
@@ -2698,6 +2712,7 @@
     "zig/chat/finish-reason-length.md",
     "zig/chat/multi-turn-conversation.md",
     "zig/chat/parallel-tool-calls.md",
+    "zig/chat/parts-reply.md",
     "zig/chat/reasoning-effort-none.md",
     "zig/chat/response-format-json-object.md",
     "zig/chat/response-format-json-schema.md",
@@ -3160,6 +3175,18 @@
         "language": "c"
       },
       "path": "c/chat/parallel-tool-calls.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "parts_reply",
+        "language": "c"
+      },
+      "path": "c/chat/parts-reply.md",
       "language": "c",
       "target": "c",
       "session": "c",
@@ -5460,6 +5487,18 @@
     },
     {
       "key": {
+        "fixture_id": "parts_reply",
+        "language": "csharp"
+      },
+      "path": "csharp/chat/parts-reply.md",
+      "language": "csharp",
+      "target": "csharp",
+      "session": "csharp",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "reasoning_effort_none",
         "language": "csharp"
       },
@@ -7744,6 +7783,18 @@
         "language": "dart"
       },
       "path": "dart/chat/parallel-tool-calls.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "parts_reply",
+        "language": "dart"
+      },
+      "path": "dart/chat/parts-reply.md",
       "language": "dart",
       "target": "dart",
       "session": "dart",
@@ -10044,6 +10095,18 @@
     },
     {
       "key": {
+        "fixture_id": "parts_reply",
+        "language": "elixir"
+      },
+      "path": "elixir/chat/parts-reply.md",
+      "language": "elixir",
+      "target": "elixir",
+      "session": "elixir",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "reasoning_effort_none",
         "language": "elixir"
       },
@@ -12328,6 +12391,18 @@
         "language": "go"
       },
       "path": "go/chat/parallel-tool-calls.md",
+      "language": "go",
+      "target": "go",
+      "session": "go",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "parts_reply",
+        "language": "go"
+      },
+      "path": "go/chat/parts-reply.md",
       "language": "go",
       "target": "go",
       "session": "go",
@@ -14628,6 +14703,18 @@
     },
     {
       "key": {
+        "fixture_id": "parts_reply",
+        "language": "java"
+      },
+      "path": "java/chat/parts-reply.md",
+      "language": "java",
+      "target": "java",
+      "session": "java",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "reasoning_effort_none",
         "language": "java"
       },
@@ -16912,6 +16999,18 @@
         "language": "kotlin_android"
       },
       "path": "kotlin-android/chat/parallel-tool-calls.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "parts_reply",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/chat/parts-reply.md",
       "language": "kotlin",
       "target": "kotlin_android",
       "session": "kotlin_android",
@@ -19212,6 +19311,18 @@
     },
     {
       "key": {
+        "fixture_id": "parts_reply",
+        "language": "php"
+      },
+      "path": "php/chat/parts-reply.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "reasoning_effort_none",
         "language": "php"
       },
@@ -21504,6 +21615,18 @@
     },
     {
       "key": {
+        "fixture_id": "parts_reply",
+        "language": "python"
+      },
+      "path": "python/chat/parts-reply.md",
+      "language": "python",
+      "target": "python",
+      "session": "python",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "reasoning_effort_none",
         "language": "python"
       },
@@ -23788,6 +23911,18 @@
         "language": "ruby"
       },
       "path": "ruby/chat/parallel-tool-calls.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "parts_reply",
+        "language": "ruby"
+      },
+      "path": "ruby/chat/parts-reply.md",
       "language": "ruby",
       "target": "ruby",
       "session": "ruby",
@@ -26146,6 +26281,21 @@
         "language": "rust"
       },
       "path": "rust/chat/parallel-tool-calls.md",
+      "language": "rust",
+      "target": "rust",
+      "session": "rust",
+      "requires": [
+        "crate:serde_json",
+        "crate:tokio"
+      ],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "parts_reply",
+        "language": "rust"
+      },
+      "path": "rust/chat/parts-reply.md",
       "language": "rust",
       "target": "rust",
       "session": "rust",
@@ -28945,6 +29095,18 @@
     },
     {
       "key": {
+        "fixture_id": "parts_reply",
+        "language": "swift"
+      },
+      "path": "swift/chat/parts-reply.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "reasoning_effort_none",
         "language": "swift"
       },
@@ -31237,6 +31399,18 @@
     },
     {
       "key": {
+        "fixture_id": "parts_reply",
+        "language": "node"
+      },
+      "path": "typescript/chat/parts-reply.md",
+      "language": "typescript",
+      "target": "node",
+      "session": "node",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "reasoning_effort_none",
         "language": "node"
       },
@@ -33517,6 +33691,18 @@
     },
     {
       "key": {
+        "fixture_id": "parts_reply",
+        "language": "wasm"
+      },
+      "path": "wasm/chat/parts-reply.md",
+      "language": "typescript",
+      "target": "wasm",
+      "session": "wasm",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "reasoning_effort_none",
         "language": "wasm"
       },
@@ -35789,6 +35975,18 @@
         "language": "zig"
       },
       "path": "zig/chat/parallel-tool-calls.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "parts_reply",
+        "language": "zig"
+      },
+      "path": "zig/chat/parts-reply.md",
       "language": "zig",
       "target": "zig",
       "session": "zig",
@@ -44867,6 +45065,66 @@
     },
     {
       "fixture_id": "parallel_tool_calls",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "c"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "go"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "java"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "node"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "php"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "python"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "parts_reply",
       "language": "zig"
     },
     {
@@ -56321,6 +56579,66 @@
     },
     {
       "fixture_id": "parallel_tool_calls",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "c"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "go"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "java"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "node"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "php"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "python"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "parts_reply",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "parts_reply",
       "language": "zig"
     },
     {

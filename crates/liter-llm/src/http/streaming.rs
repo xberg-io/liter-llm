@@ -111,6 +111,7 @@ where
         ResponseReadOptions {
             max_retries,
             max_response_bytes: None,
+            timeout: None,
         },
     )
     .await
@@ -162,7 +163,7 @@ where
     T: Send + 'static,
 {
     let resp = request.send(client, options).await?;
-    let byte_stream = resp.bytes_stream();
+    let byte_stream = crate::http::deadline::idle_timeout(resp.bytes_stream(), options.timeout);
     let stream = SseParser::new_with_framing(byte_stream, parse_event, is_final, None, framing);
     Ok(Box::pin(stream))
 }
@@ -194,6 +195,7 @@ where
         ResponseReadOptions {
             max_retries,
             max_response_bytes: None,
+            timeout: None,
         },
     )
     .await
@@ -337,9 +339,10 @@ where
     }
 }
 
-impl<S, P, T> Stream for SseParser<S, P, T>
+impl<S, E, P, T> Stream for SseParser<S, P, T>
 where
-    S: Stream<Item = std::result::Result<Bytes, reqwest::Error>>,
+    S: Stream<Item = std::result::Result<Bytes, E>>,
+    LiterLlmError: From<E>,
     P: Fn(&str) -> Result<Option<T>>,
 {
     type Item = Result<T>;
@@ -545,9 +548,7 @@ fn truncation_error_at_eof(
 fn missing_final_event_error() -> LiterLlmError {
     tracing::warn!("SSE stream ended before [DONE] or a final event; stream was truncated");
     LiterLlmError::Streaming {
-        message: "SSE stream ended before its final event ([DONE] or a chunk with a finish reason); \
-                  the response is incomplete"
-            .to_owned(),
+        message: "SSE stream ended before its final event; the response is incomplete".to_owned(),
     }
 }
 

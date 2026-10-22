@@ -19,7 +19,7 @@ use std::thread;
 use futures_util::StreamExt;
 use liter_llm::LiterLlmError;
 use liter_llm::client::{ClientConfigBuilder, DefaultClient, LlmClient, LlmClientRaw, ResponseClient};
-use liter_llm::types::responses::CreateResponseRequest;
+use liter_llm::types::responses::{CreateResponseRequest, ResponseStreamEvent};
 use liter_llm::types::{ChatCompletionChunk, ChatCompletionRequest, FinishReason, Message, UserMessage};
 
 /// Serve one SSE response with `body`, then close the connection.
@@ -227,15 +227,19 @@ async fn openai_compatible_raw_stream_cut_on_an_event_boundary_is_an_error() {
     assert_truncated(&collect_raw("openai/gpt-4o", sse(&[OPENAI_CONTENT, OPENAI_CONTENT])).await);
 }
 
-/// The Responses stream does not check its end: it has no finish reason on its events,
-/// so a clean close without a final event stays a clean end. Turning the check on for
-/// this call site would make the stream error here.
-#[tokio::test]
-async fn responses_stream_closed_without_a_final_event_ends_cleanly() {
-    let (client, server) = client(
-        "openai/gpt-4o",
-        sse(&[r#"{"type":"response.created"}"#, r#"{"type":"response.created"}"#]),
-    );
+const RESPONSE_CREATED: &str = r#"{"type":"response.created"}"#;
+const RESPONSE_DELTA: &str =
+    r#"{"type":"response.output_text.delta","item_id":"m1","output_index":0,"content_index":0,"delta":"Hi"}"#;
+
+fn response_terminal(kind: &str) -> String {
+    format!(
+        r#"{{"type":"response.{kind}","response":{{"id":"r1","object":"response","created_at":1,"model":"gpt-4o","status":"{kind}","output":[]}}}}"#
+    )
+}
+
+/// Drain the Responses stream of `body`, returning every item it yielded.
+async fn collect_responses(body: String) -> Vec<Result<ResponseStreamEvent, LiterLlmError>> {
+    let (client, server) = client("openai/gpt-4o", body);
     let req = CreateResponseRequest {
         model: "gpt-4o".into(),
         input: serde_json::json!("Hello"),
@@ -250,11 +254,82 @@ async fn responses_stream_closed_without_a_final_event_ends_cleanly() {
     let stream = client.create_response_stream(req).await.expect("stream opens");
     let items = stream.collect::<Vec<_>>().await;
     server.join().expect("response server completed");
-    assert_eq!(items.len(), 2, "both events arrive: {items:?}");
+    items
+}
+
+/// A Responses stream that closes before `response.completed`, `response.incomplete`
+/// or `response.failed` ends in one `Streaming` error after the last event.
+#[tokio::test]
+async fn responses_stream_cut_before_a_terminal_event_is_an_error() {
+    let items = collect_responses(sse(&[RESPONSE_CREATED, RESPONSE_DELTA, RESPONSE_DELTA])).await;
+    let (last, content) = items.split_last().expect("stream yields items");
+    assert_eq!(content.len(), 3, "every event before the cut arrives: {items:?}");
     assert!(
-        items.iter().all(Result::is_ok),
-        "a clean close must not be an error: {items:?}"
+        content.iter().all(Result::is_ok),
+        "content before the cut must still arrive: {items:?}"
     );
+    assert!(
+        matches!(last, Err(LiterLlmError::Streaming { message }) if message.contains("final event")),
+        "a cut Responses stream must end in a Streaming error, got {last:?}"
+    );
+    let Err(LiterLlmError::Streaming { message }) = last else {
+        unreachable!("checked above")
+    };
+    assert!(
+        !message.contains("[DONE]") && !message.contains("finish reason"),
+        "the error must not name chat stream endings, got: {message}"
+    );
+}
+
+#[tokio::test]
+async fn responses_stream_cut_on_an_event_boundary_reports_one_error() {
+    let items = collect_responses(sse(&[RESPONSE_CREATED])).await;
+    assert_eq!(items.iter().filter(|item| item.is_err()).count(), 1, "{items:?}");
+    assert!(items.last().is_some_and(Result::is_err), "{items:?}");
+}
+
+/// A body with no events at all is a cut stream: one `Streaming` error, no items.
+#[tokio::test]
+async fn responses_stream_with_an_empty_body_is_one_error() {
+    let items = collect_responses(String::new()).await;
+    assert_eq!(items.len(), 1, "{items:?}");
+    assert!(
+        matches!(&items[0], Err(LiterLlmError::Streaming { message }) if message.contains("final event")),
+        "an empty Responses body must end in a Streaming error, got {items:?}"
+    );
+}
+
+/// A body of SSE comment lines carries no event, so it ends like an empty body.
+#[tokio::test]
+async fn responses_stream_with_a_comment_only_body_is_one_error() {
+    let items = collect_responses(": keep-alive\n\n: keep-alive\n\n".to_owned()).await;
+    assert_eq!(items.len(), 1, "{items:?}");
+    assert!(
+        matches!(&items[0], Err(LiterLlmError::Streaming { message }) if message.contains("final event")),
+        "a comment-only Responses body must end in a Streaming error, got {items:?}"
+    );
+}
+
+/// OpenAI-compatible servers that front the Responses API may end with `[DONE]`; the
+/// shared SSE reader accepts that as a clean end for every stream.
+#[tokio::test]
+async fn responses_stream_ended_by_done_completes() {
+    let body = format!("{}data: [DONE]\n\n", sse(&[RESPONSE_CREATED, RESPONSE_DELTA]));
+    let items = collect_responses(body).await;
+    assert_eq!(items.len(), 2, "{items:?}");
+    assert!(items.iter().all(Result::is_ok), "[DONE] must not error: {items:?}");
+}
+
+#[tokio::test]
+async fn responses_stream_with_a_terminal_event_completes() {
+    for kind in ["completed", "incomplete", "failed"] {
+        let items = collect_responses(sse(&[RESPONSE_CREATED, RESPONSE_DELTA, &response_terminal(kind)])).await;
+        assert_eq!(items.len(), 3, "response.{kind}: {items:?}");
+        assert!(
+            items.iter().all(Result::is_ok),
+            "response.{kind} must not error: {items:?}"
+        );
+    }
 }
 
 #[tokio::test]

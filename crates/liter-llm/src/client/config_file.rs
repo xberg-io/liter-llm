@@ -47,6 +47,7 @@ pub struct FileConfig {
     pub base_url: Option<String>,
     pub model_hint: Option<String>,
     pub timeout_secs: Option<u64>,
+    pub connect_timeout_secs: Option<u64>,
     pub max_retries: Option<u32>,
     pub max_response_bytes: Option<usize>,
     pub extra_headers: Option<HashMap<String, String>>,
@@ -185,6 +186,9 @@ impl FileConfig {
         }
         if let Some(t) = self.timeout_secs {
             builder = builder.timeout(Duration::from_secs(t));
+        }
+        if let Some(t) = self.connect_timeout_secs {
+            builder = builder.connect_timeout(Duration::from_secs(t));
         }
         if let Some(r) = self.max_retries {
             builder = builder.max_retries(r);

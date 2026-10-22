@@ -38,9 +38,11 @@ pub fn should_retry(status: u16, attempt: u32, max_retries: u32, retry_after: Op
 /// reset, DNS failure, TLS handshake failure) rather than an HTTP status
 /// response.
 ///
-/// A request that timed out (`timed_out`) is never retried: the server may
-/// have the request and may still be working on it, so a second try would run
-/// it twice and stretch the caller's wait to `timeout * (max_retries + 1)`.
+/// A request that timed out after the connection opened (`timed_out`) is never
+/// retried: the server may have the request and may still be working on it, so
+/// a second try would run it twice and stretch the caller's wait to
+/// `timeout * (max_retries + 1)`. A connect timeout is not `timed_out`: the
+/// server never saw the request, so it is retried.
 ///
 /// No response was received, so there is no status code or `Retry-After`
 /// header to consult — this always falls back to the same jittered
