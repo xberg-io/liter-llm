@@ -10,14 +10,14 @@ fn init_crypto_for_unit_tests() {
 /// refusal. The socket keeps the port while the value lives. A port that a test binds and then
 /// frees can go to another test process before the test connects to it. Keep the value in a
 /// named binding until the test ends.
-#[cfg(all(test, feature = "native-http"))]
+#[cfg(test)]
 pub(crate) struct RefusedPort {
     _socket: tokio::net::TcpSocket,
     address: std::net::SocketAddr,
     url: String,
 }
 
-#[cfg(all(test, feature = "native-http"))]
+#[cfg(test)]
 impl RefusedPort {
     pub(crate) fn new() -> Self {
         let socket = tokio::net::TcpSocket::new_v4().expect("create socket");
@@ -42,7 +42,7 @@ impl RefusedPort {
     }
 }
 
-#[cfg(all(test, feature = "native-http"))]
+#[cfg(test)]
 mod refused_port_tests {
     use super::RefusedPort;
 
