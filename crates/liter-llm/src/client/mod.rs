@@ -1085,6 +1085,22 @@ impl DefaultClient {
         endpoint: provider::Endpoint,
         stream: Option<bool>,
     ) -> Result<PreparedRequest> {
+        self.prepare_request_with(serializable, endpoint_fn, model, endpoint, stream, |_, _| Ok(()))
+    }
+
+    /// Like [`Self::prepare_request`], with a request step for one endpoint.
+    ///
+    /// `endpoint_step` runs right after the provider's own `transform_request`, so a rerank
+    /// request can be reworded without any other endpoint seeing the change.
+    fn prepare_request_with(
+        &self,
+        serializable: &impl serde::Serialize,
+        endpoint_fn: impl FnOnce(&dyn Provider) -> &str,
+        model: &str,
+        endpoint: provider::Endpoint,
+        stream: Option<bool>,
+        endpoint_step: impl FnOnce(&dyn Provider, &mut serde_json::Value) -> Result<()>,
+    ) -> Result<PreparedRequest> {
         if model.is_empty() {
             return Err(LiterLlmError::BadRequest {
                 message: "model must not be empty".into(),
@@ -1119,6 +1135,7 @@ impl DefaultClient {
             }
         }
         prov.transform_request(&mut body)?;
+        endpoint_step(prov.as_ref(), &mut body)?;
         // ~keep Whether the provider's wire format carries `stream` at all is the provider's
         // decision, recorded here by whether the key survived `transform_request`. Providers that
         // rebuild the body into a native format (Vertex/Gemini `generateContent`, Bedrock
@@ -1216,16 +1233,44 @@ fn model_uses_max_completion_tokens(model: &str) -> bool {
 /// leaves it unchanged, so a gateway that normalizes replies is not affected. Rerank replies
 /// never pass through the chat transform of the provider.
 fn transform_rerank_reply(resolved: &dyn Provider, model: &str, raw: &mut serde_json::Value) -> Result<()> {
-    // ~keep Only the `provider/` prefix names a provider here. A bare model such as `rerank-2` can
-    // ~keep match a registry model prefix of a provider that has no rerank step, and that match
-    // ~keep would hide the provider the client names through its `model_hint`.
-    let named = model
-        .split_once('/')
-        .and_then(|(prefix, _)| provider::detect_builtin_provider(&format!("{prefix}/")));
-    match named {
+    match rerank_wire_provider(model) {
         Some(named) => named.transform_rerank_response(raw),
         None => resolved.transform_rerank_response(raw),
     }
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// Word a rerank request for the provider that reads it.
+///
+/// The provider is chosen as for the reply: the `provider/` prefix of the model, else the
+/// provider the request resolved to, which for a client with a `base_url` and a
+/// `model_hint` follows the hint.
+fn transform_rerank_request(resolved: &dyn Provider, model: &str, body: &mut serde_json::Value) -> Result<()> {
+    match rerank_wire_provider(model) {
+        Some(named) => named.transform_rerank_request(body),
+        None => resolved.transform_rerank_request(body),
+    }
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// The rerank path for `model`, chosen as for the request and the reply: the `provider/`
+/// prefix of the model, else the provider the request resolved to.
+fn rerank_endpoint<'a>(resolved: &'a dyn Provider, model: &str) -> &'a str {
+    match rerank_wire_provider(model) {
+        Some(named) => provider::rerank_shape::rerank_path_of(named.name()),
+        None => resolved.rerank_path(),
+    }
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// The built-in provider that the `provider/` prefix of a rerank model names.
+fn rerank_wire_provider(model: &str) -> Option<Box<dyn Provider>> {
+    // ~keep Only the `provider/` prefix names a provider here. A bare model such as `rerank-2` can
+    // ~keep match a registry model prefix of a provider that has no rerank step, and that match
+    // ~keep would hide the provider the client names through its `model_hint`.
+    model
+        .split_once('/')
+        .and_then(|(prefix, _)| provider::detect_builtin_provider(&format!("{prefix}/")))
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -1697,8 +1742,14 @@ impl LlmClient for DefaultClient {
             return managed.rerank(req);
         }
         Box::pin(async move {
-            let prepared =
-                self.prepare_request(&req, |p| p.rerank_path(), &req.model, provider::Endpoint::Rerank, None)?;
+            let prepared = self.prepare_request_with(
+                &req,
+                |p| rerank_endpoint(p, &req.model),
+                &req.model,
+                provider::Endpoint::Rerank,
+                None,
+                |resolved, body| transform_rerank_request(resolved, &req.model, body),
+            )?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -2121,8 +2172,14 @@ impl LlmClientRaw for DefaultClient {
 
     fn rerank_raw(&self, req: RerankRequest) -> BoxFuture<'_, Result<RawExchange<RerankResponse>>> {
         Box::pin(async move {
-            let prepared =
-                self.prepare_request(&req, |p| p.rerank_path(), &req.model, provider::Endpoint::Rerank, None)?;
+            let prepared = self.prepare_request_with(
+                &req,
+                |p| rerank_endpoint(p, &req.model),
+                &req.model,
+                provider::Endpoint::Rerank,
+                None,
+                |resolved, body| transform_rerank_request(resolved, &req.model, body),
+            )?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -3797,7 +3854,13 @@ mod build_provider_tests {
         let req = embed_request(model, None);
 
         let prepared = client
-            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(prepared.body_json["input_type"], "search_document");
@@ -3815,7 +3878,13 @@ mod build_provider_tests {
         );
 
         let prepared = client
-            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(prepared.body_json["input_type"], "search_query");
@@ -3833,7 +3902,13 @@ mod build_provider_tests {
         let req = embed_request(model, Some(serde_json::json!({"normalize": false})));
 
         let prepared = client
-            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(prepared.body_json["inputText"], "what is rust?");
@@ -3853,7 +3928,13 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3875,7 +3956,13 @@ mod build_provider_tests {
         let req = embed_request("vertex_ai/text-embedding-005", None);
 
         let prepared = client
-            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
             .expect("prepare_request should not fail");
 
         assert!(prepared.body_json.get("parameters").is_none());
@@ -3893,7 +3980,13 @@ mod build_provider_tests {
         );
 
         let prepared = client
-            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3918,7 +4011,13 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3943,7 +4042,13 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3967,7 +4072,13 @@ mod build_provider_tests {
             };
 
             let prepared = client
-                .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+                .prepare_request(
+                    &req,
+                    |p| p.embeddings_path(),
+                    &req.model,
+                    provider::Endpoint::Embedding,
+                    None,
+                )
                 .expect("prepare_request should not fail");
 
             let requests = prepared.body_json["requests"].as_array().expect("requests array");
@@ -4110,7 +4221,13 @@ mod build_provider_tests {
         let req = embed_request("openai/model", None);
 
         let prepared = client
-            .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(

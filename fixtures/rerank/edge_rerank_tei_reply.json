@@ -1,0 +1,56 @@
+{
+  "id": "edge_rerank_tei_reply",
+  "description": "Reranking where Hugging Face TEI returns a bare array with a score for each item",
+  "docs": {
+    "topic": "rerank",
+    "stem": "edge-rerank-tei-reply",
+    "title": "Reranking where Hugging Face TEI returns a bare array with a score for each item"
+  },
+  "category": "rerank",
+  "tags": [
+    "edge-case",
+    "rerank"
+  ],
+  "call": "rerank",
+  "input": {
+    "model": "huggingface/bge-reranker",
+    "query": "What is machine learning?",
+    "documents": [
+      "The weather is sunny today.",
+      "Deep learning uses neural networks.",
+      "Machine learning is a subset of AI."
+    ]
+  },
+  "mock_response": {
+    "status": 200,
+    "body": [
+      {
+        "index": 2,
+        "score": 0.91
+      },
+      {
+        "index": 1,
+        "score": 0.62
+      },
+      {
+        "index": 0,
+        "score": 0.04
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "count_equals",
+      "field": "results",
+      "value": 3
+    },
+    {
+      "type": "greater_than",
+      "field": "results[0].relevance_score",
+      "value": 0.9
+    }
+  ]
+}
