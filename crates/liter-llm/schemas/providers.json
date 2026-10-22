@@ -217,7 +217,6 @@
         "type": "bearer",
         "env_var": "ASSEMBLYAI_API_KEY"
       },
-      "endpoints": ["audio", "chat"],
       "model_prefixes": ["assemblyai/"],
       "model_count": 2,
       "capabilities": {
@@ -496,7 +495,6 @@
         "type": "bearer",
         "env_var": "BRAVE_API_KEY"
       },
-      "endpoints": ["search"],
       "capabilities": {
         "vision": false,
         "reasoning": false,
@@ -986,7 +984,6 @@
         "type": "bearer",
         "env_var": "DEEPGRAM_API_KEY"
       },
-      "endpoints": ["audio", "chat"],
       "model_prefixes": ["deepgram/", "deepgram/base-", "deepgram/enhanced-", "deepgram/nova-", "deepgram/whisper-"],
       "model_count": 36,
       "capabilities": {
@@ -1129,7 +1126,6 @@
         "type": "bearer",
         "env_var": "ELEVENLABS_API_KEY"
       },
-      "endpoints": ["audio", "chat"],
       "model_prefixes": ["elevenlabs/"],
       "model_count": 4,
       "capabilities": {
@@ -1216,7 +1212,6 @@
         "type": "bearer",
         "env_var": "FAL_KEY"
       },
-      "endpoints": ["chat", "image"],
       "model_prefixes": ["fal_ai/", "fal_ai/fal-"],
       "model_count": 12,
       "capabilities": {
@@ -3016,7 +3011,6 @@
         "type": "bearer",
         "env_var": "RUNWAYML_API_KEY"
       },
-      "endpoints": ["audio", "image"],
       "model_prefixes": ["runwayml/"],
       "model_count": 6,
       "capabilities": {
@@ -3226,7 +3220,6 @@
         "type": "bearer",
         "env_var": "SERPER_API_KEY"
       },
-      "endpoints": ["search"],
       "model_count": 1,
       "capabilities": {
         "vision": false,
@@ -3295,7 +3288,6 @@
         "type": "bearer",
         "env_var": "STABILITY_API_KEY"
       },
-      "endpoints": ["image"],
       "model_prefixes": ["stability/", "stability/sd3-", "stability/sd3.5-", "stability/search-", "stability/stable-"],
       "model_count": 23,
       "capabilities": {
@@ -3340,7 +3332,6 @@
         "type": "bearer",
         "env_var": "TAVILY_API_KEY"
       },
-      "endpoints": ["search"],
       "model_prefixes": ["tavily/"],
       "model_count": 2,
       "capabilities": {
@@ -3844,6 +3835,7 @@
     "amazon_nova",
     "anthropic",
     "anthropic_text",
+    "assemblyai",
     "auto_router",
     "aws_polly",
     "azure",
@@ -3863,6 +3855,9 @@
     "databricks",
     "dataforseo",
     "datarobot",
+    "deepgram",
+    "elevenlabs",
+    "fal_ai",
     "gdc",
     "gigachat",
     "github_copilot",
@@ -3880,13 +3875,17 @@
     "pydantic_ai_agents",
     "ragflow",
     "reducto",
+    "runwayml",
     "s3_vectors",
     "sagemaker",
     "sagemaker_chat",
     "sap",
     "searxng",
+    "serper",
     "snowflake",
     "soniox",
+    "stability",
+    "tavily",
     "triton",
     "vertex_ai",
     "vertex_ai/agent_engine",

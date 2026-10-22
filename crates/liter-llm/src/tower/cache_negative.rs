@@ -470,8 +470,12 @@ mod tests {
     async fn negative_cache_replay_does_not_refresh_the_window() {
         let client = MockClient::failing_rate_limited();
         let call_count = Arc::clone(&client.call_count);
-        let policy = FixedWindowNegativeCache::new(Duration::from_millis(60), true);
-        let (_, mut svc) = build_stack(client, policy);
+        // ~keep The window is far longer than any plausible test runtime, so no replay can
+        // ~keep fall outside it however busy the machine is. The test reads the stored
+        // ~keep `expires_at` instead of waiting for the window to end; expiry itself is
+        // ~keep covered by `negative_cache_returns_to_normal_after_window`.
+        let policy = FixedWindowNegativeCache::new(Duration::from_secs(3600), true);
+        let (store, mut svc) = build_stack(client, policy);
 
         let req_body = chat_req("gpt-4");
 
@@ -484,55 +488,41 @@ mod tests {
         assert!(first.is_err());
         assert_eq!(call_count.load(std::sync::atomic::Ordering::SeqCst), 1);
 
-        tokio::time::sleep(Duration::from_millis(20)).await;
-        let replay_1 = svc
-            .ready()
-            .await
-            .unwrap()
-            .call(LlmRequest::Chat(req_body.clone()))
-            .await;
-        assert!(
-            replay_1.is_err(),
-            "replay well within the window must still be an error"
-        );
-        assert_eq!(
-            call_count.load(std::sync::atomic::Ordering::SeqCst),
-            1,
-            "replay at ~20ms (window is 60ms) must be served from the negative cache, not upstream"
-        );
+        let (key, serialized, _tenant_id) =
+            strategy_key(&ExactHashStrategy, &LlmRequest::Chat(req_body.clone())).expect("chat request is cacheable");
+        let expires_at_of = |entry: Option<CachedResponse>| match entry {
+            Some(CachedResponse::Error { expires_at, .. }) => expires_at,
+            other => panic!("the failure must be stored as a negative-cache entry, got: {other:?}"),
+        };
+        let original_expires_at = expires_at_of(store.get(key, &serialized).await);
 
-        tokio::time::sleep(Duration::from_millis(20)).await;
-        let replay_2 = svc
-            .ready()
-            .await
-            .unwrap()
-            .call(LlmRequest::Chat(req_body.clone()))
-            .await;
-        assert!(
-            replay_2.is_err(),
-            "second replay still within the window must still be an error"
-        );
-        assert_eq!(
-            call_count.load(std::sync::atomic::Ordering::SeqCst),
-            1,
-            "replay at ~40ms elapsed must still be served from the negative cache"
-        );
-
-        // ~keep The final probe must land BETWEEN the two deadlines or it proves nothing.
-        // ~keep Original window: expires at t=60ms. If replays refreshed it, the t=40ms replay
-        // ~keep would have pushed it to t=100ms. Probing at ~t=75ms is past the original and
-        // ~keep short of the refreshed one, so call_count==2 holds only if the window was NOT
-        // ~keep refreshed. Probing later than 100ms (as this test first did) expires under both
-        // ~keep behaviours and cannot distinguish them.
-        tokio::time::sleep(Duration::from_millis(35)).await;
-        let _ = svc.ready().await.unwrap().call(LlmRequest::Chat(req_body)).await;
-        assert_eq!(
-            call_count.load(std::sync::atomic::Ordering::SeqCst),
-            2,
-            "upstream must be contacted again once the ORIGINAL 60ms window elapses (~120ms total \
-             elapsed here); if replays had refreshed expires_at on every poll, this would still be 1 \
-             and the entry would never expire under continuous polling"
-        );
+        for replay in 1..=2 {
+            // ~keep A refreshing replay computes `Instant::now() + window`, which differs from
+            // ~keep the stored deadline only if the clock advanced since the first failure;
+            // ~keep this sleep guarantees that, and a longer one on a busy machine only helps.
+            tokio::time::sleep(Duration::from_millis(5)).await;
+            let replayed = svc
+                .ready()
+                .await
+                .unwrap()
+                .call(LlmRequest::Chat(req_body.clone()))
+                .await;
+            assert!(
+                replayed.is_err(),
+                "replay {replay} within the window must still be an error"
+            );
+            assert_eq!(
+                call_count.load(std::sync::atomic::Ordering::SeqCst),
+                1,
+                "replay {replay} must be served from the negative cache, not upstream"
+            );
+            assert_eq!(
+                expires_at_of(store.get(key, &serialized).await),
+                original_expires_at,
+                "replay {replay} must not push the original deadline forward; if replays refreshed \
+                 it, a client polling faster than the window would keep the entry alive forever"
+            );
+        }
     }
 
     /// Full round-trip regression for the "dead negative cache" bug: an error

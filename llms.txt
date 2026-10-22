@@ -54,7 +54,7 @@ Part of the xberg.io ecosystem:
 - `moderate(request)` — Classify content for policy violations
 
 ### Search
-- `search(request)` — Web/document search across 12 providers (Brave, Tavily, Google PSE, etc.)
+- `search(request)` — Web/document search across 12 providers (Brave, Google PSE, etc.)
 
 ### OCR
 - `ocr(request)` — Document OCR with Markdown output across 4 providers (Mistral, Azure, etc.)

@@ -878,10 +878,16 @@ pub(crate) fn strategy_key(strategy: &dyn CacheKeyStrategy, req: &LlmRequest) ->
         }
         LlmRequestKind::Embed(r) => {
             let input = serde_json::to_string(&r.input).ok()?;
-            let params = serde_json::json!({
+            let mut params = serde_json::json!({
                 "dimensions": r.dimensions,
                 "encoding_format": r.encoding_format,
             });
+            // ~keep `extra_body` can change the vectors (for example `input_type`), so it is part
+            // ~keep of the key. It is added only when set, which keeps the key of a request
+            // ~keep without it identical to the key before the field existed.
+            if let Some(extra_body) = &r.extra_body {
+                params["extra_body"] = extra_body.clone();
+            }
             (r.model.as_str().to_owned(), input, params.to_string(), req_tenant, None)
         }
         _ => return None,
@@ -2068,5 +2074,42 @@ mod tests {
             "changing `response_format` must change the cache key"
         );
         assert_ne!(base_key.0, seed_key.0, "changing `seed` must change the cache key");
+    }
+
+    /// `extra_body` can change an embedding (for example `input_type`), so two
+    /// requests that differ only there must not share a cache entry.
+    #[test]
+    fn embed_cache_key_changes_with_extra_body() {
+        use crate::types::{EmbeddingInput, EmbeddingRequest};
+
+        let embed = |extra_body: Option<serde_json::Value>| {
+            LlmRequest::Embed(EmbeddingRequest {
+                model: "bedrock/cohere.embed-english-v3".into(),
+                input: EmbeddingInput::Single("what is rust?".into()),
+                extra_body,
+                ..Default::default()
+            })
+        };
+        let strategy = ExactHashStrategy;
+
+        let none = strategy_key(&strategy, &embed(None)).expect("embed request is cacheable");
+        let none_again = strategy_key(&strategy, &embed(None)).expect("embed request is cacheable");
+        let query = strategy_key(
+            &strategy,
+            &embed(Some(serde_json::json!({"input_type": "search_query"}))),
+        )
+        .expect("embed request is cacheable");
+        let document = strategy_key(
+            &strategy,
+            &embed(Some(serde_json::json!({"input_type": "search_document"}))),
+        )
+        .expect("embed request is cacheable");
+
+        assert_eq!(none.0, none_again.0, "equal requests share a key");
+        assert_ne!(none.0, query.0, "setting `extra_body` must change the cache key");
+        assert_ne!(
+            query.0, document.0,
+            "a different `input_type` must change the cache key"
+        );
     }
 }
