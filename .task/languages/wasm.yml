@@ -52,6 +52,18 @@ tasks:
     cmds:
       - wasm-pack test --headless --firefox
 
+  lint:check:
+    desc: Lint liter-llm-wasm for wasm32-unknown-unknown (CI)
+    cmds:
+      - cargo clippy --target wasm32-unknown-unknown -p liter-llm-wasm -- -D warnings
+
+  test:wasm32:
+    desc: Run the liter-llm wasm32 tests in Node.js (CI). Needs wasm-bindgen-test-runner at the wasm-bindgen version in Cargo.lock.
+    env:
+      CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER: wasm-bindgen-test-runner
+    cmds:
+      - cargo test --target wasm32-unknown-unknown -p liter-llm --no-default-features --features wasm-http --test wasm_timeout
+
   clean:
     desc: Clean WASM build artifacts
     dir: "{{.WASM_DIR}}"
