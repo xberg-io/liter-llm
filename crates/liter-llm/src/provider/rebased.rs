@@ -133,6 +133,10 @@ impl Provider for BaseUrlOverride {
         self.inner.transform_rerank_response(body)
     }
 
+    fn transform_rerank_request(&self, body: &mut serde_json::Value) -> Result<()> {
+        self.inner.transform_rerank_request(body)
+    }
+
     fn parse_stream_event(&self, event_data: &str) -> Result<Option<crate::types::ChatCompletionChunk>> {
         self.inner.parse_stream_event(event_data)
     }

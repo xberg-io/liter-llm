@@ -1014,6 +1014,11 @@ impl Provider for ConfigDrivenProvider {
         self.config.auth.as_ref().and_then(|a| a.env_var.as_deref())
     }
 
+    /// The rerank path of the provider: `/ranking` for NVIDIA NIM, `/rerank` for the rest.
+    fn rerank_path(&self) -> &str {
+        rerank_shape::rerank_path_of(&self.config.name)
+    }
+
     fn build_url(&self, endpoint_path: &str, _model: &str) -> String {
         if endpoint_path == self.rerank_path()
             && let Some(url) = self.endpoint_urls.and_then(|urls| urls.get("rerank"))
