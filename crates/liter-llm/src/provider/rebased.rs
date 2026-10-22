@@ -9,7 +9,8 @@ use crate::provider::{Provider, StreamFormat};
 /// Every other method asks the wrapped provider, so the request body, the paths, the headers
 /// and the reply handling stay those of that provider. [`Provider::build_url`] and
 /// [`Provider::build_stream_url`] are not forwarded: their default builds the URL from
-/// [`Provider::base_url`], which is the new host.
+/// [`Provider::base_url`], which is the new host. [`Provider::env_var`] is not forwarded
+/// either.
 pub(crate) struct BaseUrlOverride {
     inner: Box<dyn Provider>,
     base_url: String,
@@ -29,8 +30,10 @@ impl Provider for BaseUrlOverride {
         self.inner.validate()
     }
 
+    /// No key variable: the variable belongs to the provider's own host, so a client that
+    /// has no `api_key` sends no key read from it to the `base_url` host.
     fn env_var(&self) -> Option<&str> {
-        self.inner.env_var()
+        None
     }
 
     fn name(&self) -> &str {
