@@ -610,6 +610,16 @@ pub(crate) trait Provider: Send + Sync {
         Ok(())
     }
 
+    /// Transform the rerank request body after the common fields are set.
+    ///
+    /// Providers that name a rerank field differently from the canonical request (for
+    /// example the field that limits the number of results) override this to rename it.
+    /// It runs for rerank requests only, so it never sees a chat or embedding body.
+    /// The default is a no-op.
+    fn transform_rerank_request(&self, _body: &mut serde_json::Value) -> Result<()> {
+        Ok(())
+    }
+
     /// Build the full URL for a specific endpoint and model.
     ///
     /// Default: `{base_url}{endpoint_path}`.  Providers like Azure and Bedrock
@@ -754,6 +764,7 @@ pub(crate) mod google_ai;
 pub(crate) mod mistral;
 pub mod outbound_policy;
 pub(crate) mod rebased;
+pub(crate) mod rerank_shape;
 pub(crate) mod vertex;
 pub(crate) mod voyage;
 
@@ -1019,6 +1030,18 @@ impl Provider for ConfigDrivenProvider {
             }
             _ => model,
         }
+    }
+
+    /// Reshape the rerank reply of a provider that has a row in [`rerank_shape`].
+    fn transform_rerank_response(&self, body: &mut serde_json::Value) -> Result<()> {
+        rerank_shape::reshape_rerank_reply(&self.config.name, body);
+        Ok(())
+    }
+
+    /// Word the rerank request as the provider reads it.
+    fn transform_rerank_request(&self, body: &mut serde_json::Value) -> Result<()> {
+        rerank_shape::reshape_rerank_request(&self.config.name, body);
+        Ok(())
     }
 
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
