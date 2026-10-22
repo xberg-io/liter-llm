@@ -560,12 +560,10 @@ fn assert_endpoint_refused(outcome: &liter_llm::Result<()>, provider: &str, endp
     match outcome {
         Err(LiterLlmError::BadRequest { message, status }) => {
             assert_eq!(*status, 400, "{call} for {provider}");
-            assert!(
-                message.contains(&format!("`{provider}`"))
-                    && message.contains("no built-in route")
-                    && message.contains(endpoint)
-                    && message.contains("base_url"),
-                "{call} for {provider}: {message}"
+            assert_eq!(
+                message,
+                &format!("provider `{provider}` has no built-in route for {endpoint}; set base_url to its endpoint"),
+                "{call} for {provider}"
             );
         }
         other => panic!("{call} for {provider}: expected a refusal, got {other:?}"),
@@ -825,4 +823,48 @@ async fn a_custom_provider_named_edenai_sends_image_and_speech_to_its_base_url()
 #[serial]
 async fn a_custom_provider_named_modelscope_sends_image_to_its_base_url() {
     assert_custom_provider_not_refused("modelscope", "image", image_of).await;
+}
+
+fn assert_not_refused<T>(outcome: &liter_llm::Result<T>, provider: &str, call: &str) {
+    let error = outcome.as_ref().err();
+    assert!(
+        !matches!(error, Some(LiterLlmError::BadRequest { message, .. }) if message.contains("no built-in route")),
+        "{provider} {call}: not refused: {error:?}"
+    );
+}
+
+/// Each chat and embedding entry point sends for a provider that refuses other endpoints, so a
+/// call that passes the wrong endpoint kind to the check is caught on that exact entry point.
+#[tokio::test]
+#[serial]
+async fn every_chat_and_embedding_entry_point_of_a_marked_provider_sends() {
+    let proxy = ProxyGuard::install();
+    let client = client(None, None).expect("client");
+    let mut expected = 0;
+    for provider in ["brave", "perplexity", "edenai", "modelscope"] {
+        let model = format!("{provider}/some-model");
+        let chat = serde_json::json!({"model": model, "messages": [{"role": "user", "content": "hi"}]});
+        assert_not_refused(&client.chat(request(chat.clone())).await, provider, "chat");
+        assert_not_refused(
+            &client.chat_stream(request(chat.clone())).await,
+            provider,
+            "chat_stream",
+        );
+        assert_not_refused(&client.chat_raw(request(chat.clone())).await, provider, "chat_raw");
+        assert_not_refused(
+            &client.chat_stream_raw(request(chat)).await,
+            provider,
+            "chat_stream_raw",
+        );
+        expected += 4;
+        let embedding = serde_json::json!({"model": model, "input": "hi"});
+        assert_not_refused(&client.embed(request(embedding.clone())).await, provider, "embed");
+        assert_not_refused(&client.embed_raw(request(embedding)).await, provider, "embed_raw");
+        expected += 2;
+        assert_eq!(
+            proxy.spy.seen().len(),
+            expected,
+            "{provider}: every chat and embedding call reaches the network"
+        );
+    }
 }

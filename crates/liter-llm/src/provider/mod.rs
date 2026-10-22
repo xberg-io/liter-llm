@@ -2134,11 +2134,12 @@ mod route_model_tests {
             match refuse_unrouted_endpoint(&mixed, endpoint) {
                 Err(LiterLlmError::BadRequest { message, status }) => {
                     assert_eq!(status, 400);
-                    assert!(
-                        message.contains("`mixed`")
-                            && message.contains(endpoint.as_str())
-                            && message.contains("base_url"),
-                        "{message}"
+                    assert_eq!(
+                        message,
+                        format!(
+                            "provider `mixed` has no built-in route for {}; set base_url to its endpoint",
+                            endpoint.as_str()
+                        )
                     );
                 }
                 other => panic!("{endpoint:?}: expected a refusal, got {other:?}"),
