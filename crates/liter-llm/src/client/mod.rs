@@ -3343,6 +3343,33 @@ mod build_provider_tests {
     }
 
     #[test]
+    fn cohere_chat_request_takes_the_chat_body_of_the_provider() {
+        // Revert line: in `prepare_request_with`, run `transform_embedding_request` for every
+        // endpoint (or for `Endpoint::Chat`) to make this fail: the embed transform rejects a
+        // chat body, and the chat transform's `top_p` rename to `p` never runs.
+        let client = cohere_client();
+        let req = ChatCompletionRequest {
+            model: "cohere/command-r".into(),
+            messages: vec![],
+            top_p: Some(0.5),
+            ..Default::default()
+        };
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                None,
+            )
+            .expect("a Cohere chat request should prepare");
+
+        assert_eq!(prepared.body_json["p"], serde_json::json!(0.5));
+        assert!(prepared.body_json.get("top_p").is_none());
+    }
+
+    #[test]
     fn extra_body_cannot_override_the_transport_controlled_stream_flag() {
         let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("gpt-4"))
             .expect("client construction should succeed");
@@ -4696,8 +4723,8 @@ mod cohere_client_tests {
         assert_eq!(ranked, vec![(1, 0.9), (0, 0.1)]);
     }
 
-    /// Revert line: pass `transform_embedding_request` in place of `transform_request` at the
-    /// rerank call sites to make this test fail.
+    /// Revert line: in `prepare_request_with`, run `transform_embedding_request` for every
+    /// endpoint, or drop the rerank-specific step, to make this test fail.
     #[tokio::test]
     #[serial(outbound_policy)]
     async fn rerank_of_a_cohere_model_sends_the_rerank_body_and_parses_the_reply() {
