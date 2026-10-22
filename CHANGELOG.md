@@ -30,6 +30,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - A message content part other than `text` and `image_url`: send text and images only.
   - Tool-call `arguments` in an assistant message that are not valid JSON: send them as a JSON object.
   - Embedding `input` that is not a string or a list of strings: send the text as strings.
+- Regenerate bindings with alef 0.112.0. The Rust, Go, Java, PHP and C streaming tests read the stream before they
+  assert a mid-stream error.
+- Swift: the enum case `none` is now `none_` (the serialized value is unchanged).
+- Zig: wrappers report native conversion failures through error unions.
+- Python: getters of untagged enums return the payload of the matching variant. The stub declares them.
+- Python: error classes carry attributes, such as `message` and `status`.
+- PHP: errors are typed exception classes (29 classes under `LiterLlmError` and `CatalogRefreshError`).
+- Dart: errors are typed values, and `retryAfter` and `model` are nullable.
+- Java: builder setters of optional primitive fields take `Long` and have a `long` overload, so the signature changes.
+- Elixir: specs name struct types instead of `map()`.
+- Ruby: an optional string argument of the wrong type raises instead of becoming an empty string.
 
 ### Added
 
@@ -39,6 +50,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ability flags. The list is sorted by name in byte order and covers an installed catalog refresh. The optional
   `provider` argument keeps the models of one catalog provider id, such as `openai`; a routing name from
   `all_providers` that is not a catalog id gives an empty list, and an empty `provider` keeps every provider (#310).
+- The embedding, rerank, image, speech, transcription, moderation, search and OCR requests take an `extra_body` field in
+  every binding. Its keys are merged into the provider request body and override fields with the same name, as the chat
+  `extra_body` does. A Bedrock Cohere embed request takes `input_type` from `extra_body`, such as `search_query`, and
+  still sends `search_document` when `extra_body` has none. Bedrock Cohere and Titan embed requests send other
+  `extra_body` keys, such as `truncate` or `normalize`, in the request body. The embedding cache key includes
+  `extra_body` (#334).
+- Gemini API (`gemini/` and `google_ai/`) embed requests merge the `extra_body` keys, such as `taskType` and `title`,
+  into each embed request (#334).
+
+### Changed
+
+- **Swift: `CreateImageRequest`, `CreateSpeechRequest`, `CreateTranscriptionRequest`, `EmbeddingRequest`,
+  `ModerationRequest`, `OcrRequest`, `RerankRequest` and `SearchRequest` are now `typealias`es over the Rust bridge
+  types**, like `ChatCompletionRequest`, rather than native `struct`s. They gain the `extra_body` field, which holds
+  JSON. Code that built them with the memberwise initialiser must use the bridge initialiser, and they are no longer
+  `Codable` or `Hashable` value types. The 16 public `*Ref` and `*RefMut` typealiases of these eight types, such as `EmbeddingRequestRef` and `EmbeddingRequestRefMut`, are removed (#334).
 
 ### Fixed
 
@@ -46,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the raw JSON body (#308).
 - `chat_stream_raw` now ends in `LiterLlmError::Streaming` when a stream is cut before the provider's final event, as
   `chat_stream` does. This covers Ollama, Anthropic, Gemini, Vertex AI, Cohere and Bedrock (#308).
+- Vertex AI embed requests send `dimensions` as `parameters.outputDimensionality`. Before, the value was dropped without an error. An `extra_body.parameters` object adds its keys to `outputDimensionality` and does not replace it (#334).
 - Refuse `elevenlabs/`, `deepgram/`, `stability/`, `tavily/`, `fal_ai/`, `runwayml/`, `assemblyai/` and `serper/` models when no `base_url` is set, with the same error as other providers that have no built-in route. These services have native APIs, and the client sent them OpenAI-shaped requests that they reject. The provider list no longer declares audio, image, search or chat endpoints for them, so the providers page shows none. A call with a `base_url` is unchanged, and an empty `base_url` counts as unset. (#333)
 - Parse Voyage rerank replies, which list the scored documents under `data` instead of `results`, so `voyage/` rerank calls return the same `results` as other providers. The reply shape follows the model in the request, and a client that names Voyage as its `model_hint` reads Voyage replies for a bare model such as `rerank-2`. A custom provider that claims the `voyage/` prefix still decides where the request goes, but the reply is read as a Voyage reply. A `results: null` beside a valid `data` array parses from `data`. The `voyage/` prefix is case-sensitive, like every other provider prefix. (#306)
 - Rerank replies no longer pass through the chat transform of the provider that sends the request. This fixes `cohere/` rerank calls, whose replies the Cohere chat transform rebuilt without the `results` array, and any rerank call from a client pinned to a provider with a chat transform. (#306)

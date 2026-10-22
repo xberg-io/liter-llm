@@ -38,6 +38,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  Object
+  dco_decode_CustomSerializer_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAlefBridgeError(
+    dynamic raw,
+  );
+
+  @protected
   Map<String, String> dco_decode_Map_String_String_None(dynamic raw);
 
   @protected
@@ -55,6 +61,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String dco_decode_String(dynamic raw);
+
+  @protected
+  AlefBridgeErrorWire dco_decode_alef_bridge_error_wire(dynamic raw);
 
   @protected
   AssistantContent dco_decode_assistant_content(dynamic raw);
@@ -129,6 +138,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CatalogRefreshConfig dco_decode_box_autoadd_catalog_refresh_config(
     dynamic raw,
   );
+
+  @protected
+  CatalogRefreshError dco_decode_box_autoadd_catalog_refresh_error(dynamic raw);
 
   @protected
   ChatCompletionRequest dco_decode_box_autoadd_chat_completion_request(
@@ -943,6 +955,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  Object
+  sse_decode_CustomSerializer_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAlefBridgeError(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   Map<String, String> sse_decode_Map_String_String_None(
     SseDeserializer deserializer,
   );
@@ -964,6 +982,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String sse_decode_String(SseDeserializer deserializer);
+
+  @protected
+  AlefBridgeErrorWire sse_decode_alef_bridge_error_wire(
+    SseDeserializer deserializer,
+  );
 
   @protected
   AssistantContent sse_decode_assistant_content(SseDeserializer deserializer);
@@ -1052,6 +1075,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CatalogRefreshConfig sse_decode_box_autoadd_catalog_refresh_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CatalogRefreshError sse_decode_box_autoadd_catalog_refresh_error(
     SseDeserializer deserializer,
   );
 
@@ -2093,6 +2121,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void
+  sse_encode_CustomSerializer_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAlefBridgeError(
+    Object self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_Map_String_String_None(
     Map<String, String> self,
     SseSerializer serializer,
@@ -2119,6 +2154,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_alef_bridge_error_wire(
+    AlefBridgeErrorWire self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_assistant_content(
@@ -2234,6 +2275,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_catalog_refresh_config(
     CatalogRefreshConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_catalog_refresh_error(
+    CatalogRefreshError self,
     SseSerializer serializer,
   );
 

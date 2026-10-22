@@ -145,6 +145,7 @@ mod serde_tests {
             encoding_format: None,
             dimensions: Some(256),
             user: None,
+            extra_body: None,
         };
 
         let json = serde_json::to_string(&req).expect("serialization should not fail");
@@ -341,6 +342,7 @@ mod serde_tests {
             encoding_format: Some(EmbeddingFormat::Base64),
             dimensions: Some(1024),
             user: Some("user-123".into()),
+            extra_body: None,
         };
 
         let json = serde_json::to_string(&req).expect("serialization should not fail");
@@ -617,6 +619,7 @@ mod serde_tests {
             max_results: Some(5),
             search_domain_filter: Some(vec!["rust-lang.org".into()]),
             country: Some("US".into()),
+            extra_body: None,
         };
         let json = serde_json::to_string(&req).expect("serialization should not fail");
         assert!(json.contains("max_results"));
@@ -651,6 +654,7 @@ mod serde_tests {
             },
             pages: None,
             include_image_base64: None,
+            extra_body: None,
         };
         let json = serde_json::to_string(&req).expect("serialization should not fail");
         let parsed: OcrRequest = serde_json::from_str(&json).expect("deserialization should not fail");

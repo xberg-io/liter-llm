@@ -493,6 +493,11 @@ fn embed_request(obj: &mut Map<String, Value>) -> Result<()> {
         }
         _ => return Err(bad_request("embedding input must be a string or a list of strings")),
     }
+    // The client merges `extra_body` into the rebuilt body, so `/api/embed` fields such as
+    // `truncate`, `keep_alive` and `options` reach Ollama.
+    if let Some(extra_body) = obj.remove("extra_body") {
+        native.insert("extra_body".into(), extra_body);
+    }
     *obj = native;
     Ok(())
 }
@@ -765,6 +770,14 @@ mod tests {
                 "{base_url}: only a whole `/v1` segment comes off"
             );
         }
+    }
+
+    #[test]
+    fn embed_request_keeps_extra_body_for_the_client_to_merge() {
+        let mut body = json!({"model": "m", "input": "a", "extra_body": {"truncate": false}});
+        OllamaProvider::default().transform_request(&mut body).unwrap();
+        assert_eq!(body["extra_body"], json!({"truncate": false}));
+        assert_eq!(body["input"], "a");
     }
 
     #[test]

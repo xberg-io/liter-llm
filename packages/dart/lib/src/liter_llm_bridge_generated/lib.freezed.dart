@@ -13,6 +13,468 @@ part of 'lib.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$AlefBridgeErrorWire {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AlefBridgeErrorWire);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'AlefBridgeErrorWire()';
+}
+
+
+}
+
+/// @nodoc
+class $AlefBridgeErrorWireCopyWith<$Res>  {
+$AlefBridgeErrorWireCopyWith(AlefBridgeErrorWire _, $Res Function(AlefBridgeErrorWire) __);
+}
+
+
+/// Adds pattern-matching-related methods to [AlefBridgeErrorWire].
+extension AlefBridgeErrorWirePatterns on AlefBridgeErrorWire {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AlefBridgeErrorWire_LiterLlmError value)?  literLlmError,TResult Function( AlefBridgeErrorWire_CatalogRefreshError value)?  catalogRefreshError,TResult Function( AlefBridgeErrorWire_InvalidInput value)?  invalidInput,TResult Function( AlefBridgeErrorWire_NativeFailure value)?  nativeFailure,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case AlefBridgeErrorWire_LiterLlmError() when literLlmError != null:
+return literLlmError(_that);case AlefBridgeErrorWire_CatalogRefreshError() when catalogRefreshError != null:
+return catalogRefreshError(_that);case AlefBridgeErrorWire_InvalidInput() when invalidInput != null:
+return invalidInput(_that);case AlefBridgeErrorWire_NativeFailure() when nativeFailure != null:
+return nativeFailure(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AlefBridgeErrorWire_LiterLlmError value)  literLlmError,required TResult Function( AlefBridgeErrorWire_CatalogRefreshError value)  catalogRefreshError,required TResult Function( AlefBridgeErrorWire_InvalidInput value)  invalidInput,required TResult Function( AlefBridgeErrorWire_NativeFailure value)  nativeFailure,}){
+final _that = this;
+switch (_that) {
+case AlefBridgeErrorWire_LiterLlmError():
+return literLlmError(_that);case AlefBridgeErrorWire_CatalogRefreshError():
+return catalogRefreshError(_that);case AlefBridgeErrorWire_InvalidInput():
+return invalidInput(_that);case AlefBridgeErrorWire_NativeFailure():
+return nativeFailure(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AlefBridgeErrorWire_LiterLlmError value)?  literLlmError,TResult? Function( AlefBridgeErrorWire_CatalogRefreshError value)?  catalogRefreshError,TResult? Function( AlefBridgeErrorWire_InvalidInput value)?  invalidInput,TResult? Function( AlefBridgeErrorWire_NativeFailure value)?  nativeFailure,}){
+final _that = this;
+switch (_that) {
+case AlefBridgeErrorWire_LiterLlmError() when literLlmError != null:
+return literLlmError(_that);case AlefBridgeErrorWire_CatalogRefreshError() when catalogRefreshError != null:
+return catalogRefreshError(_that);case AlefBridgeErrorWire_InvalidInput() when invalidInput != null:
+return invalidInput(_that);case AlefBridgeErrorWire_NativeFailure() when nativeFailure != null:
+return nativeFailure(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( LiterLlmError error)?  literLlmError,TResult Function( CatalogRefreshError error)?  catalogRefreshError,TResult Function( String message)?  invalidInput,TResult Function( String message)?  nativeFailure,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case AlefBridgeErrorWire_LiterLlmError() when literLlmError != null:
+return literLlmError(_that.error);case AlefBridgeErrorWire_CatalogRefreshError() when catalogRefreshError != null:
+return catalogRefreshError(_that.error);case AlefBridgeErrorWire_InvalidInput() when invalidInput != null:
+return invalidInput(_that.message);case AlefBridgeErrorWire_NativeFailure() when nativeFailure != null:
+return nativeFailure(_that.message);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( LiterLlmError error)  literLlmError,required TResult Function( CatalogRefreshError error)  catalogRefreshError,required TResult Function( String message)  invalidInput,required TResult Function( String message)  nativeFailure,}) {final _that = this;
+switch (_that) {
+case AlefBridgeErrorWire_LiterLlmError():
+return literLlmError(_that.error);case AlefBridgeErrorWire_CatalogRefreshError():
+return catalogRefreshError(_that.error);case AlefBridgeErrorWire_InvalidInput():
+return invalidInput(_that.message);case AlefBridgeErrorWire_NativeFailure():
+return nativeFailure(_that.message);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( LiterLlmError error)?  literLlmError,TResult? Function( CatalogRefreshError error)?  catalogRefreshError,TResult? Function( String message)?  invalidInput,TResult? Function( String message)?  nativeFailure,}) {final _that = this;
+switch (_that) {
+case AlefBridgeErrorWire_LiterLlmError() when literLlmError != null:
+return literLlmError(_that.error);case AlefBridgeErrorWire_CatalogRefreshError() when catalogRefreshError != null:
+return catalogRefreshError(_that.error);case AlefBridgeErrorWire_InvalidInput() when invalidInput != null:
+return invalidInput(_that.message);case AlefBridgeErrorWire_NativeFailure() when nativeFailure != null:
+return nativeFailure(_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class AlefBridgeErrorWire_LiterLlmError extends AlefBridgeErrorWire {
+  const AlefBridgeErrorWire_LiterLlmError({required this.error}): super._();
+
+
+ final  LiterLlmError error;
+
+/// Create a copy of AlefBridgeErrorWire
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AlefBridgeErrorWire_LiterLlmErrorCopyWith<AlefBridgeErrorWire_LiterLlmError> get copyWith => _$AlefBridgeErrorWire_LiterLlmErrorCopyWithImpl<AlefBridgeErrorWire_LiterLlmError>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AlefBridgeErrorWire_LiterLlmError&&(identical(other.error, error) || other.error == error));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,error);
+}
+
+@override
+String toString() {
+    return 'AlefBridgeErrorWire.literLlmError(error: $error)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AlefBridgeErrorWire_LiterLlmErrorCopyWith<$Res> implements $AlefBridgeErrorWireCopyWith<$Res> {
+  factory $AlefBridgeErrorWire_LiterLlmErrorCopyWith(AlefBridgeErrorWire_LiterLlmError value, $Res Function(AlefBridgeErrorWire_LiterLlmError) _then) = _$AlefBridgeErrorWire_LiterLlmErrorCopyWithImpl;
+@useResult
+$Res call({
+ LiterLlmError error
+});
+
+
+$LiterLlmErrorCopyWith<$Res> get error;
+
+}
+/// @nodoc
+class _$AlefBridgeErrorWire_LiterLlmErrorCopyWithImpl<$Res>
+    implements $AlefBridgeErrorWire_LiterLlmErrorCopyWith<$Res> {
+  _$AlefBridgeErrorWire_LiterLlmErrorCopyWithImpl(this._self, this._then);
+
+  final AlefBridgeErrorWire_LiterLlmError _self;
+  final $Res Function(AlefBridgeErrorWire_LiterLlmError) _then;
+
+/// Create a copy of AlefBridgeErrorWire
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? error = null,}) {
+  return _then(AlefBridgeErrorWire_LiterLlmError(
+error: null == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as LiterLlmError,
+  ));
+}
+
+/// Create a copy of AlefBridgeErrorWire
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LiterLlmErrorCopyWith<$Res> get error {
+
+  return $LiterLlmErrorCopyWith<$Res>(_self.error, (value) {
+    return _then(_self.copyWith(error: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class AlefBridgeErrorWire_CatalogRefreshError extends AlefBridgeErrorWire {
+  const AlefBridgeErrorWire_CatalogRefreshError({required this.error}): super._();
+
+
+ final  CatalogRefreshError error;
+
+/// Create a copy of AlefBridgeErrorWire
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AlefBridgeErrorWire_CatalogRefreshErrorCopyWith<AlefBridgeErrorWire_CatalogRefreshError> get copyWith => _$AlefBridgeErrorWire_CatalogRefreshErrorCopyWithImpl<AlefBridgeErrorWire_CatalogRefreshError>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AlefBridgeErrorWire_CatalogRefreshError&&(identical(other.error, error) || other.error == error));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,error);
+}
+
+@override
+String toString() {
+    return 'AlefBridgeErrorWire.catalogRefreshError(error: $error)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AlefBridgeErrorWire_CatalogRefreshErrorCopyWith<$Res> implements $AlefBridgeErrorWireCopyWith<$Res> {
+  factory $AlefBridgeErrorWire_CatalogRefreshErrorCopyWith(AlefBridgeErrorWire_CatalogRefreshError value, $Res Function(AlefBridgeErrorWire_CatalogRefreshError) _then) = _$AlefBridgeErrorWire_CatalogRefreshErrorCopyWithImpl;
+@useResult
+$Res call({
+ CatalogRefreshError error
+});
+
+
+$CatalogRefreshErrorCopyWith<$Res> get error;
+
+}
+/// @nodoc
+class _$AlefBridgeErrorWire_CatalogRefreshErrorCopyWithImpl<$Res>
+    implements $AlefBridgeErrorWire_CatalogRefreshErrorCopyWith<$Res> {
+  _$AlefBridgeErrorWire_CatalogRefreshErrorCopyWithImpl(this._self, this._then);
+
+  final AlefBridgeErrorWire_CatalogRefreshError _self;
+  final $Res Function(AlefBridgeErrorWire_CatalogRefreshError) _then;
+
+/// Create a copy of AlefBridgeErrorWire
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? error = null,}) {
+  return _then(AlefBridgeErrorWire_CatalogRefreshError(
+error: null == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as CatalogRefreshError,
+  ));
+}
+
+/// Create a copy of AlefBridgeErrorWire
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CatalogRefreshErrorCopyWith<$Res> get error {
+
+  return $CatalogRefreshErrorCopyWith<$Res>(_self.error, (value) {
+    return _then(_self.copyWith(error: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class AlefBridgeErrorWire_InvalidInput extends AlefBridgeErrorWire {
+  const AlefBridgeErrorWire_InvalidInput({required this.message}): super._();
+
+
+ final  String message;
+
+/// Create a copy of AlefBridgeErrorWire
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AlefBridgeErrorWire_InvalidInputCopyWith<AlefBridgeErrorWire_InvalidInput> get copyWith => _$AlefBridgeErrorWire_InvalidInputCopyWithImpl<AlefBridgeErrorWire_InvalidInput>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AlefBridgeErrorWire_InvalidInput&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'AlefBridgeErrorWire.invalidInput(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AlefBridgeErrorWire_InvalidInputCopyWith<$Res> implements $AlefBridgeErrorWireCopyWith<$Res> {
+  factory $AlefBridgeErrorWire_InvalidInputCopyWith(AlefBridgeErrorWire_InvalidInput value, $Res Function(AlefBridgeErrorWire_InvalidInput) _then) = _$AlefBridgeErrorWire_InvalidInputCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$AlefBridgeErrorWire_InvalidInputCopyWithImpl<$Res>
+    implements $AlefBridgeErrorWire_InvalidInputCopyWith<$Res> {
+  _$AlefBridgeErrorWire_InvalidInputCopyWithImpl(this._self, this._then);
+
+  final AlefBridgeErrorWire_InvalidInput _self;
+  final $Res Function(AlefBridgeErrorWire_InvalidInput) _then;
+
+/// Create a copy of AlefBridgeErrorWire
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(AlefBridgeErrorWire_InvalidInput(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AlefBridgeErrorWire_NativeFailure extends AlefBridgeErrorWire {
+  const AlefBridgeErrorWire_NativeFailure({required this.message}): super._();
+
+
+ final  String message;
+
+/// Create a copy of AlefBridgeErrorWire
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AlefBridgeErrorWire_NativeFailureCopyWith<AlefBridgeErrorWire_NativeFailure> get copyWith => _$AlefBridgeErrorWire_NativeFailureCopyWithImpl<AlefBridgeErrorWire_NativeFailure>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AlefBridgeErrorWire_NativeFailure&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'AlefBridgeErrorWire.nativeFailure(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AlefBridgeErrorWire_NativeFailureCopyWith<$Res> implements $AlefBridgeErrorWireCopyWith<$Res> {
+  factory $AlefBridgeErrorWire_NativeFailureCopyWith(AlefBridgeErrorWire_NativeFailure value, $Res Function(AlefBridgeErrorWire_NativeFailure) _then) = _$AlefBridgeErrorWire_NativeFailureCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$AlefBridgeErrorWire_NativeFailureCopyWithImpl<$Res>
+    implements $AlefBridgeErrorWire_NativeFailureCopyWith<$Res> {
+  _$AlefBridgeErrorWire_NativeFailureCopyWithImpl(this._self, this._then);
+
+  final AlefBridgeErrorWire_NativeFailure _self;
+  final $Res Function(AlefBridgeErrorWire_NativeFailure) _then;
+
+/// Create a copy of AlefBridgeErrorWire
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(AlefBridgeErrorWire_NativeFailure(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$AssistantContent {
 
  Object get field0;
@@ -3262,7 +3724,7 @@ return providerQuotaExceeded(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String message,  PlatformInt64 status)?  authentication,TResult Function( String message,  PlatformInt64 retryAfter)?  rateLimited,TResult Function( String message,  PlatformInt64 status)?  badRequest,TResult Function( String message)?  contextWindowExceeded,TResult Function( String message)?  contentPolicy,TResult Function( String message)?  notFound,TResult Function( String message,  PlatformInt64 status)?  serverError,TResult Function( String message,  PlatformInt64 status,  PlatformInt64 retryAfter)?  serviceUnavailable,TResult Function()?  timeout,TResult Function( String message)?  network,TResult Function( String message)?  streaming,TResult Function( String endpoint,  String provider)?  endpointNotSupported,TResult Function( String name,  String reason)?  invalidHeader,TResult Function( String field0)?  serialization,TResult Function( String message,  String model)?  budgetExceeded,TResult Function( String message)?  hookRejected,TResult Function( String message)?  internalError,TResult Function( String url,  String reason)?  outboundForbidden,TResult Function( String key)?  idempotencyConflict,TResult Function( String key)?  idempotencyInFlight,TResult Function( String message,  PlatformInt64 status)?  providerQuotaExceeded,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String message,  PlatformInt64 status)?  authentication,TResult Function( String message,  PlatformInt64? retryAfter)?  rateLimited,TResult Function( String message,  PlatformInt64 status)?  badRequest,TResult Function( String message)?  contextWindowExceeded,TResult Function( String message)?  contentPolicy,TResult Function( String message)?  notFound,TResult Function( String message,  PlatformInt64 status)?  serverError,TResult Function( String message,  PlatformInt64 status,  PlatformInt64? retryAfter)?  serviceUnavailable,TResult Function()?  timeout,TResult Function( String message)?  network,TResult Function( String message)?  streaming,TResult Function( String endpoint,  String provider)?  endpointNotSupported,TResult Function( String name,  String reason)?  invalidHeader,TResult Function( String field0)?  serialization,TResult Function( String message,  String? model)?  budgetExceeded,TResult Function( String message)?  hookRejected,TResult Function( String message)?  internalError,TResult Function( String url,  String reason)?  outboundForbidden,TResult Function( String key)?  idempotencyConflict,TResult Function( String key)?  idempotencyInFlight,TResult Function( String message,  PlatformInt64 status)?  providerQuotaExceeded,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case LiterLlmError_Authentication() when authentication != null:
 return authentication(_that.message,_that.status);case LiterLlmError_RateLimited() when rateLimited != null:
@@ -3303,7 +3765,7 @@ return providerQuotaExceeded(_that.message,_that.status);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String message,  PlatformInt64 status)  authentication,required TResult Function( String message,  PlatformInt64 retryAfter)  rateLimited,required TResult Function( String message,  PlatformInt64 status)  badRequest,required TResult Function( String message)  contextWindowExceeded,required TResult Function( String message)  contentPolicy,required TResult Function( String message)  notFound,required TResult Function( String message,  PlatformInt64 status)  serverError,required TResult Function( String message,  PlatformInt64 status,  PlatformInt64 retryAfter)  serviceUnavailable,required TResult Function()  timeout,required TResult Function( String message)  network,required TResult Function( String message)  streaming,required TResult Function( String endpoint,  String provider)  endpointNotSupported,required TResult Function( String name,  String reason)  invalidHeader,required TResult Function( String field0)  serialization,required TResult Function( String message,  String model)  budgetExceeded,required TResult Function( String message)  hookRejected,required TResult Function( String message)  internalError,required TResult Function( String url,  String reason)  outboundForbidden,required TResult Function( String key)  idempotencyConflict,required TResult Function( String key)  idempotencyInFlight,required TResult Function( String message,  PlatformInt64 status)  providerQuotaExceeded,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String message,  PlatformInt64 status)  authentication,required TResult Function( String message,  PlatformInt64? retryAfter)  rateLimited,required TResult Function( String message,  PlatformInt64 status)  badRequest,required TResult Function( String message)  contextWindowExceeded,required TResult Function( String message)  contentPolicy,required TResult Function( String message)  notFound,required TResult Function( String message,  PlatformInt64 status)  serverError,required TResult Function( String message,  PlatformInt64 status,  PlatformInt64? retryAfter)  serviceUnavailable,required TResult Function()  timeout,required TResult Function( String message)  network,required TResult Function( String message)  streaming,required TResult Function( String endpoint,  String provider)  endpointNotSupported,required TResult Function( String name,  String reason)  invalidHeader,required TResult Function( String field0)  serialization,required TResult Function( String message,  String? model)  budgetExceeded,required TResult Function( String message)  hookRejected,required TResult Function( String message)  internalError,required TResult Function( String url,  String reason)  outboundForbidden,required TResult Function( String key)  idempotencyConflict,required TResult Function( String key)  idempotencyInFlight,required TResult Function( String message,  PlatformInt64 status)  providerQuotaExceeded,}) {final _that = this;
 switch (_that) {
 case LiterLlmError_Authentication():
 return authentication(_that.message,_that.status);case LiterLlmError_RateLimited():
@@ -3340,7 +3802,7 @@ return providerQuotaExceeded(_that.message,_that.status);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String message,  PlatformInt64 status)?  authentication,TResult? Function( String message,  PlatformInt64 retryAfter)?  rateLimited,TResult? Function( String message,  PlatformInt64 status)?  badRequest,TResult? Function( String message)?  contextWindowExceeded,TResult? Function( String message)?  contentPolicy,TResult? Function( String message)?  notFound,TResult? Function( String message,  PlatformInt64 status)?  serverError,TResult? Function( String message,  PlatformInt64 status,  PlatformInt64 retryAfter)?  serviceUnavailable,TResult? Function()?  timeout,TResult? Function( String message)?  network,TResult? Function( String message)?  streaming,TResult? Function( String endpoint,  String provider)?  endpointNotSupported,TResult? Function( String name,  String reason)?  invalidHeader,TResult? Function( String field0)?  serialization,TResult? Function( String message,  String model)?  budgetExceeded,TResult? Function( String message)?  hookRejected,TResult? Function( String message)?  internalError,TResult? Function( String url,  String reason)?  outboundForbidden,TResult? Function( String key)?  idempotencyConflict,TResult? Function( String key)?  idempotencyInFlight,TResult? Function( String message,  PlatformInt64 status)?  providerQuotaExceeded,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String message,  PlatformInt64 status)?  authentication,TResult? Function( String message,  PlatformInt64? retryAfter)?  rateLimited,TResult? Function( String message,  PlatformInt64 status)?  badRequest,TResult? Function( String message)?  contextWindowExceeded,TResult? Function( String message)?  contentPolicy,TResult? Function( String message)?  notFound,TResult? Function( String message,  PlatformInt64 status)?  serverError,TResult? Function( String message,  PlatformInt64 status,  PlatformInt64? retryAfter)?  serviceUnavailable,TResult? Function()?  timeout,TResult? Function( String message)?  network,TResult? Function( String message)?  streaming,TResult? Function( String endpoint,  String provider)?  endpointNotSupported,TResult? Function( String name,  String reason)?  invalidHeader,TResult? Function( String field0)?  serialization,TResult? Function( String message,  String? model)?  budgetExceeded,TResult? Function( String message)?  hookRejected,TResult? Function( String message)?  internalError,TResult? Function( String url,  String reason)?  outboundForbidden,TResult? Function( String key)?  idempotencyConflict,TResult? Function( String key)?  idempotencyInFlight,TResult? Function( String message,  PlatformInt64 status)?  providerQuotaExceeded,}) {final _that = this;
 switch (_that) {
 case LiterLlmError_Authentication() when authentication != null:
 return authentication(_that.message,_that.status);case LiterLlmError_RateLimited() when rateLimited != null:
@@ -3445,11 +3907,11 @@ as PlatformInt64,
 
 
 class LiterLlmError_RateLimited extends LiterLlmError {
-  const LiterLlmError_RateLimited({required this.message, required this.retryAfter}): super._();
+  const LiterLlmError_RateLimited({required this.message, this.retryAfter}): super._();
 
 
  final  String message;
- final  PlatformInt64 retryAfter;
+ final  PlatformInt64? retryAfter;
 
 /// Create a copy of LiterLlmError
 /// with the given fields replaced by the non-null parameter values.
@@ -3483,7 +3945,7 @@ abstract mixin class $LiterLlmError_RateLimitedCopyWith<$Res> implements $LiterL
   factory $LiterLlmError_RateLimitedCopyWith(LiterLlmError_RateLimited value, $Res Function(LiterLlmError_RateLimited) _then) = _$LiterLlmError_RateLimitedCopyWithImpl;
 @useResult
 $Res call({
- String message, PlatformInt64 retryAfter
+ String message, PlatformInt64? retryAfter
 });
 
 
@@ -3500,11 +3962,11 @@ class _$LiterLlmError_RateLimitedCopyWithImpl<$Res>
 
 /// Create a copy of LiterLlmError
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? retryAfter = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? retryAfter = freezed,}) {
   return _then(LiterLlmError_RateLimited(
 message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String,retryAfter: null == retryAfter ? _self.retryAfter : retryAfter // ignore: cast_nullable_to_non_nullable
-as PlatformInt64,
+as String,retryAfter: freezed == retryAfter ? _self.retryAfter : retryAfter // ignore: cast_nullable_to_non_nullable
+as PlatformInt64?,
   ));
 }
 
@@ -3859,12 +4321,12 @@ as PlatformInt64,
 
 
 class LiterLlmError_ServiceUnavailable extends LiterLlmError {
-  const LiterLlmError_ServiceUnavailable({required this.message, required this.status, required this.retryAfter}): super._();
+  const LiterLlmError_ServiceUnavailable({required this.message, required this.status, this.retryAfter}): super._();
 
 
  final  String message;
  final  PlatformInt64 status;
- final  PlatformInt64 retryAfter;
+ final  PlatformInt64? retryAfter;
 
 /// Create a copy of LiterLlmError
 /// with the given fields replaced by the non-null parameter values.
@@ -3898,7 +4360,7 @@ abstract mixin class $LiterLlmError_ServiceUnavailableCopyWith<$Res> implements 
   factory $LiterLlmError_ServiceUnavailableCopyWith(LiterLlmError_ServiceUnavailable value, $Res Function(LiterLlmError_ServiceUnavailable) _then) = _$LiterLlmError_ServiceUnavailableCopyWithImpl;
 @useResult
 $Res call({
- String message, PlatformInt64 status, PlatformInt64 retryAfter
+ String message, PlatformInt64 status, PlatformInt64? retryAfter
 });
 
 
@@ -3915,12 +4377,12 @@ class _$LiterLlmError_ServiceUnavailableCopyWithImpl<$Res>
 
 /// Create a copy of LiterLlmError
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? status = null,Object? retryAfter = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? status = null,Object? retryAfter = freezed,}) {
   return _then(LiterLlmError_ServiceUnavailable(
 message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as PlatformInt64,retryAfter: null == retryAfter ? _self.retryAfter : retryAfter // ignore: cast_nullable_to_non_nullable
-as PlatformInt64,
+as PlatformInt64,retryAfter: freezed == retryAfter ? _self.retryAfter : retryAfter // ignore: cast_nullable_to_non_nullable
+as PlatformInt64?,
   ));
 }
 
@@ -4307,11 +4769,11 @@ as String,
 
 
 class LiterLlmError_BudgetExceeded extends LiterLlmError {
-  const LiterLlmError_BudgetExceeded({required this.message, required this.model}): super._();
+  const LiterLlmError_BudgetExceeded({required this.message, this.model}): super._();
 
 
  final  String message;
- final  String model;
+ final  String? model;
 
 /// Create a copy of LiterLlmError
 /// with the given fields replaced by the non-null parameter values.
@@ -4345,7 +4807,7 @@ abstract mixin class $LiterLlmError_BudgetExceededCopyWith<$Res> implements $Lit
   factory $LiterLlmError_BudgetExceededCopyWith(LiterLlmError_BudgetExceeded value, $Res Function(LiterLlmError_BudgetExceeded) _then) = _$LiterLlmError_BudgetExceededCopyWithImpl;
 @useResult
 $Res call({
- String message, String model
+ String message, String? model
 });
 
 
@@ -4362,11 +4824,11 @@ class _$LiterLlmError_BudgetExceededCopyWithImpl<$Res>
 
 /// Create a copy of LiterLlmError
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? model = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? model = freezed,}) {
   return _then(LiterLlmError_BudgetExceeded(
 message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String,model: null == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
-as String,
+as String,model: freezed == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
