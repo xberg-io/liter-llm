@@ -4,30 +4,39 @@ fn init_crypto_for_unit_tests() {
     crate::ensure_crypto_provider();
 }
 
-/// A loopback port that refuses every connection and that no other process can take.
+/// A loopback port that fails every request at once and that no other process can take.
 ///
-/// The socket is bound and never listens, so the operating system answers each connect with a
-/// refusal. The socket keeps the port while the value lives. A port that a test binds and then
-/// frees can go to another test process before the test connects to it. Keep the value in a
-/// named binding until the test ends.
+/// The port listens and closes each connection without a reply, so a request to it fails with
+/// a transport error on every platform. A bound socket that never listens is not enough: Linux
+/// refuses a connect to it, but macOS drops the SYN and the connect waits for the operating
+/// system timeout. The listener keeps the port while the value lives.
+/// A port that a test binds and then frees can go to another test process before the test
+/// connects to it. Keep the value in a named binding until the test ends, inside a Tokio runtime.
 #[cfg(test)]
-pub(crate) struct RefusedPort {
-    _socket: tokio::net::TcpSocket,
+pub(crate) struct ClosingPort {
+    server: tokio::task::JoinHandle<()>,
     address: std::net::SocketAddr,
     url: String,
 }
 
 #[cfg(test)]
-impl RefusedPort {
+impl ClosingPort {
     pub(crate) fn new() -> Self {
-        let socket = tokio::net::TcpSocket::new_v4().expect("create socket");
-        socket.set_reuseaddr(false).expect("disable address reuse");
-        socket
-            .bind("127.0.0.1:0".parse().expect("loopback address"))
-            .expect("bind the refusing port");
-        let address = socket.local_addr().expect("refusing port address");
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind the closing port");
+        listener.set_nonblocking(true).expect("non-blocking listener");
+        let address = listener.local_addr().expect("closing port address");
+        let listener = tokio::net::TcpListener::from_std(listener).expect("register the closing port");
+        let server = tokio::spawn(async move {
+            loop {
+                // An accept error must not end the loop: that would free the port.
+                match listener.accept().await {
+                    Ok((stream, _)) => drop(stream),
+                    Err(_) => tokio::time::sleep(std::time::Duration::from_millis(10)).await,
+                }
+            }
+        });
         Self {
-            _socket: socket,
+            server,
             address,
             url: format!("http://{address}/"),
         }
@@ -43,12 +52,20 @@ impl RefusedPort {
 }
 
 #[cfg(test)]
-mod refused_port_tests {
-    use super::RefusedPort;
+impl Drop for ClosingPort {
+    fn drop(&mut self) {
+        self.server.abort();
+    }
+}
+
+#[cfg(test)]
+mod closing_port_tests {
+    use super::ClosingPort;
+    use tokio::io::AsyncReadExt as _;
 
     #[tokio::test]
-    async fn a_held_refused_port_refuses_connections_and_cannot_be_bound_again() {
-        let port = RefusedPort::new();
+    async fn a_held_closing_port_ends_connections_and_cannot_be_bound_again() {
+        let port = ClosingPort::new();
 
         let bind = std::net::TcpListener::bind(port.address());
         assert_eq!(
@@ -56,11 +73,16 @@ mod refused_port_tests {
             Some(std::io::ErrorKind::AddrInUse),
             "another socket cannot take the port while the guard lives"
         );
-        let connect = tokio::net::TcpStream::connect(port.address()).await;
-        assert_eq!(
-            connect.err().map(|e| e.kind()),
-            Some(std::io::ErrorKind::ConnectionRefused),
-            "a connect to the guarded port is refused"
+        let mut stream = tokio::net::TcpStream::connect(port.address())
+            .await
+            .expect("the held port accepts the connection");
+        let mut buffer = [0_u8; 1];
+        let read = tokio::time::timeout(std::time::Duration::from_secs(10), stream.read(&mut buffer))
+            .await
+            .expect("the held port ends the connection at once");
+        assert!(
+            matches!(read, Ok(0) | Err(_)),
+            "the connection ends with no data, got {read:?}"
         );
     }
 }
@@ -1654,12 +1676,29 @@ mod error_tests {
         assert!(matches!(LiterLlmError::from(err), LiterLlmError::Timeout));
     }
 
-    #[cfg(feature = "native-http")]
+    // macOS drops the SYN to a bound, non-listening socket, so this test runs on Linux only.
+    #[cfg(all(feature = "native-http", target_os = "linux"))]
     #[tokio::test]
     async fn reqwest_connect_failure_stays_network() {
-        let port = super::RefusedPort::new();
+        let socket = tokio::net::TcpSocket::new_v4().expect("create socket");
+        socket.set_reuseaddr(false).expect("disable address reuse");
+        socket
+            .bind("127.0.0.1:0".parse().expect("loopback address"))
+            .expect("bind the refusing port");
+        let url = format!("http://{}/", socket.local_addr().expect("refusing port address"));
         let client = reqwest::Client::new();
-        let err = client.get(port.url()).send().await.expect_err("connection refused");
+        let err = client.get(&url).send().await.expect_err("connection refused");
+        assert!(err.is_connect(), "the request fails at connect: {err:?}");
+        assert!(matches!(LiterLlmError::from(err), LiterLlmError::Network { .. }));
+        drop(socket);
+    }
+
+    #[cfg(feature = "native-http")]
+    #[tokio::test]
+    async fn reqwest_transport_failure_stays_network() {
+        let port = super::ClosingPort::new();
+        let client = reqwest::Client::new();
+        let err = client.get(port.url()).send().await.expect_err("connection closed");
         assert!(matches!(LiterLlmError::from(err), LiterLlmError::Network { .. }));
     }
 }

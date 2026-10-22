@@ -797,7 +797,7 @@ mod tests {
 
     use super::*;
     use crate::provider::{OutboundPolicy, set_outbound_policy};
-    use crate::tests::RefusedPort;
+    use crate::tests::ClosingPort;
 
     fn one_shot_json_server() -> (String, std::thread::JoinHandle<()>) {
         let listener = TcpListener::bind("127.0.0.1:0").expect("bind JSON server");
@@ -868,7 +868,7 @@ mod tests {
         use tracing::instrument::WithSubscriber as _;
 
         let client = reqwest::Client::builder().no_proxy().build().expect("HTTP client");
-        let port = RefusedPort::new();
+        let port = ClosingPort::new();
         let url = format!("{}path-secret-marker?key=query-secret-marker", port.url());
         let warnings = RetryWarnings::default();
         let mut attempts = 0;
@@ -909,7 +909,7 @@ mod tests {
         // transport-level error (e.g. connection refused) immediately via `?`,
         // bypassing the retry loop entirely regardless of `max_retries`.
         let client = reqwest::Client::new();
-        let port = RefusedPort::new();
+        let port = ClosingPort::new();
         let url = port.url().to_owned();
         let mut attempts = 0u32;
 
@@ -933,7 +933,7 @@ mod tests {
     #[serial(outbound_policy)]
     async fn with_retry_does_not_retry_transport_errors_when_max_retries_is_zero() {
         let client = reqwest::Client::new();
-        let port = RefusedPort::new();
+        let port = ClosingPort::new();
         let url = port.url().to_owned();
         let mut attempts = 0u32;
 
@@ -956,7 +956,7 @@ mod tests {
         set_outbound_policy(OutboundPolicy::DenyPrivate);
         let result = post_json_raw(
             &reqwest::Client::new(),
-            RefusedPort::new().url(),
+            ClosingPort::new().url(),
             None,
             &[],
             Bytes::from_static(b"{}"),
@@ -992,7 +992,7 @@ mod tests {
         set_outbound_policy(OutboundPolicy::DenyPrivate);
         let result = post_multipart(
             &reqwest::Client::new(),
-            RefusedPort::new().url(),
+            ClosingPort::new().url(),
             None,
             &[],
             reqwest::multipart::Form::new(),

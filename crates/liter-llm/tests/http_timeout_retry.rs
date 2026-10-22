@@ -248,6 +248,8 @@ async fn a_rate_limit_reply_is_still_sent_again() {
     assert_eq!(server.requests.load(Ordering::SeqCst), 2);
 }
 
+// macOS drops the SYN to a bound, non-listening socket, so this test runs on Linux only.
+#[cfg(target_os = "linux")]
 #[tokio::test]
 async fn a_refused_connection_is_still_tried_again() {
     // Nothing listens at first, so the first attempt fails before any request
