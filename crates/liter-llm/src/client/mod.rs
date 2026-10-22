@@ -1371,6 +1371,10 @@ fn build_bedrock_provider_config(config: &ClientConfig) -> provider::bedrock::Be
     .with_dynamic_credentials(config.credential_provider.is_some())
 }
 
+/// The most pages that list models follows. A provider that never ends its paging is an error.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+const MAX_MODEL_LIST_PAGES: usize = 100;
+
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 impl LlmClient for DefaultClient {
     fn chat(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<ChatCompletionResponse>> {
@@ -1542,23 +1546,38 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             // ~keep list_models has no model string, so use the construction-time provider.
-            let url = self.provider.build_url(self.provider.models_path(), "");
-            let (auth_header, credential) = self.resolve_auth_header().await?;
-            let auth = auth_header.as_ref().map(str_pair);
-            let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
-            let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
+            let mut url = self.provider.build_url(self.provider.models_path(), "");
+            let mut listing: Option<ModelsListResponse> = None;
+            for _ in 0..MAX_MODEL_LIST_PAGES {
+                let (auth_header, credential) = self.resolve_auth_header().await?;
+                let auth = auth_header.as_ref().map(str_pair);
+                let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
+                let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let mut raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
-            self.provider.transform_response(&mut raw)?;
-            serde_json::from_value::<ModelsListResponse>(raw).map_err(LiterLlmError::from)
+                let mut raw = http::request::get_json_raw_bounded(
+                    &self.http,
+                    &url,
+                    auth,
+                    &extra,
+                    self.config.max_retries,
+                    self.config.max_response_bytes,
+                )
+                .await?;
+                let next_url = self.provider.next_models_page_url(&url, &raw);
+                self.provider.transform_response(&mut raw)?;
+                let page = serde_json::from_value::<ModelsListResponse>(raw).map_err(LiterLlmError::from)?;
+                match listing.as_mut() {
+                    Some(listing) => listing.data.extend(page.data),
+                    None => listing = Some(page),
+                }
+                match next_url {
+                    Some(next_url) => url = next_url,
+                    None => return Ok(listing.unwrap_or_default()),
+                }
+            }
+            Err(LiterLlmError::InternalError {
+                message: format!("the model list did not end after {MAX_MODEL_LIST_PAGES} pages"),
+            })
         })
     }
 
@@ -2994,6 +3013,17 @@ mod build_provider_tests {
         transform_rerank_reply(&provider::cohere::CohereProvider, "cohere/rerank-v3.5", &mut body)
             .expect("a Cohere rerank reply is not an error");
         assert_eq!(body, original);
+    }
+
+    #[test]
+    fn rerank_reply_of_a_bedrock_model_maps_relevance_score() {
+        let provider = build_provider(&ClientConfigBuilder::new("k").build(), None).expect("provider should build");
+        let mut body = serde_json::json!({"results": [{"index": 1, "relevanceScore": 0.9}]});
+        transform_rerank_reply(provider.as_ref(), "bedrock/amazon.rerank-v1:0", &mut body).unwrap();
+        assert_eq!(
+            body,
+            serde_json::json!({"results": [{"index": 1, "relevance_score": 0.9}]})
+        );
     }
 
     #[test]
