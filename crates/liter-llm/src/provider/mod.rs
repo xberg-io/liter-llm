@@ -586,6 +586,26 @@ pub(crate) trait Provider: Send + Sync {
         Ok(())
     }
 
+    /// Transform the body of an embedding request before sending.
+    ///
+    /// The client calls this, and not [`Self::transform_request`], for the embeddings endpoint.
+    /// The default runs `transform_request`. A provider with its own embedding body overrides
+    /// it, so the choice depends on the endpoint and never on the shape of the body.
+    fn transform_embedding_request(&self, body: &mut serde_json::Value) -> Result<()> {
+        self.transform_request(body)
+    }
+
+    /// Transform the raw response JSON of an embedding request before deserialization.
+    ///
+    /// The client calls this, and not [`Self::transform_response`], for the embeddings
+    /// endpoint, after the request body is built. `request_model` is the model of the request.
+    /// The default runs `transform_response` and leaves the reply `model` as the provider sent
+    /// it. A provider whose embed reply has no `model` overrides it.
+    fn transform_embedding_response(&self, body: &mut serde_json::Value, request_model: &str) -> Result<()> {
+        let _ = request_model;
+        self.transform_response(body)
+    }
+
     /// Transform the raw response JSON before deserialization into canonical types.
     ///
     /// Providers returning non-OpenAI formats (Anthropic, Bedrock, Vertex) override
@@ -1223,7 +1243,7 @@ pub(crate) fn detect_builtin_provider(model: &str) -> Option<Box<dyn Provider>> 
         return Some(Box::new(bedrock::BedrockProvider::from_env()));
     }
 
-    if model.starts_with("command-") || model.starts_with("cohere/") {
+    if cohere::CohereProvider.matches_model(model) {
         return Some(Box::new(cohere::CohereProvider));
     }
 
@@ -1295,6 +1315,45 @@ pub fn complex_provider_names() -> Result<&'static HashSet<String>> {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    struct RenamingProvider;
+
+    impl Provider for RenamingProvider {
+        fn name(&self) -> &str {
+            "renaming"
+        }
+        fn base_url(&self) -> &str {
+            "https://example.invalid"
+        }
+        fn auth_header<'a>(&'a self, _api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
+            None
+        }
+        fn matches_model(&self, _model: &str) -> bool {
+            false
+        }
+        fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
+            body["renamed"] = json!(true);
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn transform_embedding_response_keeps_the_reply_model_by_default() {
+        let mut body = json!({"object": "list", "data": [], "model": ""});
+        RenamingProvider
+            .transform_embedding_response(&mut body, "request-model")
+            .expect("the default hook should not fail");
+        assert_eq!(body["model"], "");
+    }
+
+    #[test]
+    fn transform_embedding_request_runs_transform_request_by_default() {
+        let mut body = json!({"model": "m", "input": "x"});
+        RenamingProvider
+            .transform_embedding_request(&mut body)
+            .expect("the default hook should not fail");
+        assert_eq!(body["renamed"], true);
+    }
 
     /// Revert line: delete the `if value < min || value > max { ... }` check inside
     /// `validate_sampling_param_range` (or make it always return `Ok(())`) to make
