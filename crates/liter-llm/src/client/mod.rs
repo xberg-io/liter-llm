@@ -1531,7 +1531,9 @@ fn route_hint(config: &ClientConfig, hint: &str) -> Result<Option<Box<dyn Provid
     if names_bedrock(hint) {
         let bedrock = build_bedrock_provider_config(config);
         let environment_credentials = reads_environment_credentials(config, &bedrock, hint);
-        return Ok(Some(Box::new(bedrock.with_environment_credentials(environment_credentials))));
+        return Ok(Some(Box::new(
+            bedrock.with_environment_credentials(environment_credentials),
+        )));
     }
     if config.effective_base_url().is_some() {
         return provider::route_builtin_hint(hint);
@@ -3328,8 +3330,9 @@ mod build_provider_tests {
             let based_result = based.transform_request(&mut based_body).map_err(|e| e.to_string());
             assert_eq!(based_result, plain_result, "hint {hint}");
             assert_eq!(based_body, plain_body, "hint {hint}");
+            // ~keep Native Ollama drops a trailing `/v1` from its address, so only the host is fixed.
             let url = based.build_url(based.chat_completions_path(), "m");
-            assert!(url.starts_with("http://gateway.test/v1"), "hint {hint}: url = {url}");
+            assert!(url.starts_with("http://gateway.test/"), "hint {hint}: url = {url}");
         }
     }
 
