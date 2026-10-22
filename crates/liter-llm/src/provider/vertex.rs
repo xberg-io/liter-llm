@@ -244,6 +244,8 @@ impl Provider for VertexAiProvider {
 ///
 /// OpenAI: `{"model": "...", "input": "text"}`
 /// Gemini: `{"content": {"parts": [{"text": "text"}]}}`
+///
+/// The keys of the caller's `extra_body` merge into every embed request.
 fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
     use crate::error::LiterLlmError;
     use serde_json::json;
@@ -270,7 +272,7 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
         .and_then(serde_json::Value::as_str)
         .unwrap_or_default();
     let dimensions = body.get("dimensions").and_then(serde_json::Value::as_u64);
-    let requests: Vec<_> = texts
+    let mut requests: Vec<_> = texts
         .into_iter()
         .map(|text| {
             let mut request = json!({
@@ -284,6 +286,20 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
         })
         .collect();
 
+    match body.get_mut("extra_body").map(serde_json::Value::take) {
+        Some(serde_json::Value::Object(fields)) => {
+            // `taskType`, `title` and `outputDimensionality` belong to each embed
+            // request; the batch body holds only `requests`.
+            for request in &mut requests {
+                if let Some(request) = request.as_object_mut() {
+                    request.extend(fields.clone());
+                }
+            }
+        }
+        Some(serde_json::Value::Null) | None => {}
+        Some(_) => tracing::warn!("ignoring non-object extra_body; it cannot be merged into the request body"),
+    }
+
     *body = json!({"requests": requests});
     Ok(())
 }
@@ -291,7 +307,11 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
 /// Transform an OpenAI embedding request to Vertex AI `:predict` format.
 ///
 /// OpenAI: `{"model": "...", "input": "text"}`
-/// Vertex: `{"instances": [{"content": "text"}]}`
+/// Vertex: `{"instances": [{"content": "text"}], "parameters": {"outputDimensionality": N}}`
+///
+/// `parameters` is present only when the caller sets `dimensions`. The caller's
+/// `extra_body` stays on the rebuilt body so the client can merge it. Keys of
+/// `extra_body.parameters` join `outputDimensionality` instead of replacing it.
 fn transform_vertex_embed_request(body: &mut serde_json::Value) -> Result<()> {
     use crate::error::LiterLlmError;
     use serde_json::json;
@@ -314,7 +334,21 @@ fn transform_vertex_embed_request(body: &mut serde_json::Value) -> Result<()> {
     };
 
     let instances: Vec<_> = texts.into_iter().map(|text| json!({"content": text})).collect();
-    *body = json!({"instances": instances});
+    let dimensions = body.get("dimensions").and_then(serde_json::Value::as_u64);
+    let mut new_body = json!({"instances": instances});
+    crate::provider::carry_extra_body(body, &mut new_body);
+    if let Some(dimensions) = dimensions {
+        let mut parameters = serde_json::Map::new();
+        parameters.insert("outputDimensionality".into(), json!(dimensions));
+        // The client merge replaces `parameters` as a whole. Fold the caller's
+        // `parameters` keys over `outputDimensionality` here so `dimensions` survives.
+        if let Some(serde_json::Value::Object(extra)) = new_body.pointer_mut("/extra_body/parameters") {
+            parameters.extend(std::mem::take(extra));
+            *extra = parameters.clone();
+        }
+        new_body["parameters"] = serde_json::Value::Object(parameters);
+    }
+    *body = new_body;
     Ok(())
 }
 

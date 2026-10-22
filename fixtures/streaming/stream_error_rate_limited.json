@@ -9,8 +9,8 @@
   "category": "streaming",
   "tags": ["streaming", "error-handling"],
   "skip": {
-    "languages": ["rust", "go", "java", "php", "c", "elixir", "swift"],
-    "reason": "the generated test asserts the error on the chat_stream call and never reads the stream, and a mid-stream error arrives while the stream is read (alef#612)"
+    "languages": ["elixir", "swift"],
+    "reason": "the generated Elixir and Swift tests expect the chat_stream call itself to fail, but the call returns a stream and the mid-stream error arrives when the stream is read (xberg-io/alef#618)"
   },
   "call": "chat_stream",
   "input": {
