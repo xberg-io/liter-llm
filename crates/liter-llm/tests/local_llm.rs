@@ -42,6 +42,7 @@ fn simple_embed_request(model: &str) -> EmbeddingRequest {
         encoding_format: None,
         dimensions: None,
         user: None,
+        extra_body: None,
     }
 }
 

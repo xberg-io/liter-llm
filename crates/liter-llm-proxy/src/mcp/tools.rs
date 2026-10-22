@@ -173,6 +173,7 @@ impl LiterLlmMcp {
             style: None,
             response_format: None,
             user: None,
+            extra_body: None,
         };
 
         let resp = self
@@ -205,6 +206,7 @@ impl LiterLlmMcp {
             voice: params.voice,
             response_format: None,
             speed: None,
+            extra_body: None,
         };
 
         let resp = self.dispatch(&key_ctx, &params.model, LlmRequest::Speech(req)).await?;
@@ -244,6 +246,7 @@ impl LiterLlmMcp {
             prompt: None,
             response_format: None,
             temperature: None,
+            extra_body: None,
         };
 
         let resp = self
@@ -316,6 +319,7 @@ impl LiterLlmMcp {
             documents: params.documents.into_iter().map(RerankDocument::Text).collect(),
             top_n: None,
             return_documents: None,
+            extra_body: None,
         };
 
         let resp = self.dispatch(&key_ctx, &params.model, LlmRequest::Rerank(req)).await?;
@@ -346,6 +350,7 @@ impl LiterLlmMcp {
             max_results: None,
             search_domain_filter: None,
             country: None,
+            extra_body: None,
         };
 
         let resp = self.dispatch(&key_ctx, &params.model, LlmRequest::Search(req)).await?;
@@ -387,6 +392,7 @@ impl LiterLlmMcp {
             document,
             pages: None,
             include_image_base64: None,
+            extra_body: None,
         };
 
         let resp = self.dispatch(&key_ctx, &params.model, LlmRequest::Ocr(req)).await?;
