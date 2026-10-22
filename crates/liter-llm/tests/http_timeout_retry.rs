@@ -249,48 +249,26 @@ async fn a_rate_limit_reply_is_still_sent_again() {
 }
 
 #[tokio::test]
-async fn a_refused_connection_is_still_tried_again() {
-    // Nothing listens at first, so the first attempt fails before any request
-    // is sent. A server starts on the same port while the client backs off
-    // (the first back-off is at least 500 ms).
-    //
-    // The socket is bound at once and listens only later. A bound socket that does not listen
-    // refuses connections, and it keeps the port, so no other process can take it in between.
-    let socket = tokio::net::TcpSocket::new_v4().expect("create socket");
-    socket.set_reuseaddr(false).expect("disable address reuse");
-    socket
-        .bind("127.0.0.1:0".parse().expect("loopback address"))
-        .expect("bind the refusing port");
-    let address = socket.local_addr().expect("refusing port address");
-    let requests = Arc::new(AtomicUsize::new(0));
-    let counter = Arc::clone(&requests);
-    tokio::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(200)).await;
-        let listener = socket.listen(16).expect("listen on the refusing port");
-        let (stream, _) = listener.accept().await.expect("accept the retried request");
-        let stream = stream.into_std().expect("convert to a blocking stream");
-        stream.set_nonblocking(false).expect("blocking stream");
-        tokio::task::spawn_blocking(move || {
-            read_request(&stream);
-            counter.fetch_add(1, Ordering::SeqCst);
+async fn a_connection_closed_without_a_reply_is_still_tried_again() {
+    // The server closes the first connection with no reply and answers the retry. The client
+    // treats every transport error that is not a timeout alike, so this covers a refused
+    // connect too, which macOS and Windows do not give a test on a port it holds.
+    let server = serve(|attempt, stream| {
+        if attempt == 0 {
+            drop(stream);
+        } else {
             respond(stream, "200 OK", REPLY);
-        })
-        .await
-        .expect("answer the retried request");
+        }
     });
-    let server = Server {
-        base_url: format!("http://{address}"),
-        requests,
-    };
     let client = client(&server, Duration::from_secs(5), 2);
 
     let result = client.chat(request()).await;
 
     assert!(
         result.is_ok(),
-        "the retry after a refused connection succeeds, got {result:?}"
+        "the retry after a closed connection succeeds, got {result:?}"
     );
-    assert_eq!(server.requests.load(Ordering::SeqCst), 1);
+    assert_eq!(server.requests.load(Ordering::SeqCst), 2);
 }
 
 #[tokio::test]
