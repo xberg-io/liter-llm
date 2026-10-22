@@ -1092,17 +1092,40 @@ impl DefaultClient {
         model: &str,
         stream: Option<bool>,
     ) -> Result<PreparedRequest> {
-        self.prepare_request_with(serializable, endpoint_fn, model, stream, |_, _| Ok(()))
+        self.prepare_request_with(
+            serializable,
+            endpoint_fn,
+            |p, body| p.transform_request(body),
+            model,
+            stream,
+            |_, _| Ok(()),
+        )
     }
 
-    /// Like [`Self::prepare_request`], with a request step for one endpoint.
+    /// Prepare an embedding request. The provider rebuilds the body in
+    /// [`Provider::transform_embedding_request`], chosen by the endpoint being called.
+    fn prepare_embedding_request(&self, req: &EmbeddingRequest) -> Result<PreparedRequest> {
+        self.prepare_request_with(
+            req,
+            |p| p.embeddings_path(),
+            |p, body| p.transform_embedding_request(body),
+            &req.model,
+            None,
+            |_, _| Ok(()),
+        )
+    }
+
+    /// [`Self::prepare_request`] with the provider's body transform for the endpoint chosen by
+    /// the caller, and a request step for one endpoint.
     ///
-    /// `endpoint_step` runs right after the provider's own `transform_request`, so a rerank
-    /// request can be reworded without any other endpoint seeing the change.
+    /// `transform_fn` is the provider's own body transform: `transform_request`, or the
+    /// embedding hook for the embeddings endpoint. `endpoint_step` runs right after it, so a
+    /// rerank request can be reworded without any other endpoint seeing the change.
     fn prepare_request_with(
         &self,
         serializable: &impl serde::Serialize,
         endpoint_fn: impl FnOnce(&dyn Provider) -> &str,
+        transform_fn: impl FnOnce(&dyn Provider, &mut serde_json::Value) -> Result<()>,
         model: &str,
         stream: Option<bool>,
         endpoint_step: impl FnOnce(&dyn Provider, &mut serde_json::Value) -> Result<()>,
@@ -1138,7 +1161,7 @@ impl DefaultClient {
                 obj.insert("max_completion_tokens".into(), max_tokens);
             }
         }
-        prov.transform_request(&mut body)?;
+        transform_fn(prov.as_ref(), &mut body)?;
         endpoint_step(prov.as_ref(), &mut body)?;
         // ~keep Whether the provider's wire format carries `stream` at all is the provider's
         // decision, recorded here by whether the key survived `transform_request`. Providers that
@@ -1509,7 +1532,7 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             // ~keep Embeddings have no stream flag; passing None prevents inserting one.
-            let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, None)?;
+            let prepared = self.prepare_embedding_request(&req)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1534,7 +1557,7 @@ impl LlmClient for DefaultClient {
                 self.response_read_options(),
             )
             .await?;
-            prepared.provider.transform_response(&mut raw)?;
+            prepared.provider.transform_embedding_response(&mut raw, &req.model)?;
             serde_json::from_value::<EmbeddingResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -1734,6 +1757,7 @@ impl LlmClient for DefaultClient {
             let prepared = self.prepare_request_with(
                 &req,
                 |p| rerank_endpoint(p, &req.model),
+                |p, body| p.transform_request(body),
                 &req.model,
                 None,
                 |resolved, body| transform_rerank_request(resolved, &req.model, body),
@@ -1955,7 +1979,7 @@ impl LlmClientRaw for DefaultClient {
 
     fn embed_raw(&self, req: EmbeddingRequest) -> BoxFuture<'_, Result<RawExchange<EmbeddingResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, None)?;
+            let prepared = self.prepare_embedding_request(&req)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -1983,7 +2007,7 @@ impl LlmClientRaw for DefaultClient {
             .await?;
 
             let raw_response = Some(raw.clone());
-            prepared.provider.transform_response(&mut raw)?;
+            prepared.provider.transform_embedding_response(&mut raw, &req.model)?;
             let data = serde_json::from_value::<EmbeddingResponse>(raw).map_err(LiterLlmError::from)?;
 
             Ok(RawExchange {
@@ -2127,6 +2151,7 @@ impl LlmClientRaw for DefaultClient {
             let prepared = self.prepare_request_with(
                 &req,
                 |p| rerank_endpoint(p, &req.model),
+                |p, body| p.transform_request(body),
                 &req.model,
                 None,
                 |resolved, body| transform_rerank_request(resolved, &req.model, body),
@@ -3122,6 +3147,65 @@ mod build_provider_tests {
         );
     }
 
+    fn cohere_client() -> DefaultClient {
+        DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("cohere/command-r"))
+            .expect("client construction should succeed")
+    }
+
+    #[test]
+    fn embedding_request_takes_the_embedding_body_of_the_provider() {
+        let req = EmbeddingRequest {
+            model: "cohere/embed-english-v3.0".into(),
+            input: crate::types::EmbeddingInput::Single("alpha".into()),
+            ..Default::default()
+        };
+
+        let prepared = cohere_client()
+            .prepare_embedding_request(&req)
+            .expect("prepare_embedding_request should not fail");
+
+        assert_eq!(prepared.url, "https://api.cohere.com/v2/embed");
+        assert_eq!(prepared.body_json["texts"], serde_json::json!(["alpha"]));
+        assert!(prepared.body_json.get("input").is_none());
+    }
+
+    #[test]
+    fn cohere_embedding_request_merges_extra_body_over_the_rebuilt_body() {
+        let req = EmbeddingRequest {
+            model: "cohere/embed-english-v3.0".into(),
+            input: crate::types::EmbeddingInput::Single("alpha".into()),
+            extra_body: Some(serde_json::json!({"input_type": "search_query"})),
+            ..Default::default()
+        };
+
+        let prepared = cohere_client()
+            .prepare_embedding_request(&req)
+            .expect("prepare_embedding_request should not fail");
+
+        assert_eq!(prepared.body_json["input_type"], "search_query");
+        assert_eq!(prepared.body_json["texts"], serde_json::json!(["alpha"]));
+        assert!(prepared.body_json.get("extra_body").is_none());
+    }
+
+    #[test]
+    fn non_embedding_bodies_with_input_are_not_rebuilt_as_embedding_bodies() {
+        let client = cohere_client();
+        let moderation = serde_json::json!({"model": "cohere/omni-moderation", "input": "some text"});
+        let speech = serde_json::json!({"model": "cohere/tts-1", "input": "hello", "voice": "alloy"});
+
+        let prepared = client
+            .prepare_request(&moderation, |p| p.moderations_path(), "cohere/omni-moderation", None)
+            .expect("moderation request should prepare");
+        assert_eq!(prepared.body_json["input"], "some text");
+        assert!(prepared.body_json.get("texts").is_none());
+
+        let prepared = client
+            .prepare_request(&speech, |p| p.audio_speech_path(), "cohere/tts-1", None)
+            .expect("speech request should prepare");
+        assert_eq!(prepared.body_json["voice"], "alloy");
+        assert_eq!(prepared.body_json["input"], "hello");
+    }
+
     #[test]
     fn extra_body_cannot_override_the_transport_controlled_stream_flag() {
         let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("gpt-4"))
@@ -4067,5 +4151,279 @@ mod build_provider_tests {
             prepared.body_json,
             serde_json::json!({"model": "model", "input": "what is rust?"})
         );
+    }
+}
+
+/// Embed and rerank calls of a client that resolves the native Cohere provider.
+///
+/// A client with a `base_url` uses a generic provider, so these tests build the client for a
+/// `cohere/` model and then point the native provider at a local server.
+#[cfg(all(test, feature = "native-http", not(target_arch = "wasm32")))]
+mod cohere_client_tests {
+    use std::borrow::Cow;
+    use std::io::{BufRead, BufReader, Read, Write};
+    use std::net::TcpListener;
+
+    use serde_json::json;
+    use serial_test::serial;
+
+    use super::*;
+    use crate::client::config::ClientConfigBuilder;
+    use crate::provider::cohere::CohereProvider;
+    use crate::provider::{OutboundPolicy, set_outbound_policy};
+    use crate::types::EmbeddingInput;
+    use crate::types::rerank::RerankDocument;
+
+    static COHERE: CohereProvider = CohereProvider;
+
+    /// The native Cohere provider at a local base URL. Each method that Cohere overrides calls
+    /// Cohere's own, so the base URL is the only difference.
+    struct LocalCohere {
+        base_url: String,
+    }
+
+    impl Provider for LocalCohere {
+        fn name(&self) -> &str {
+            COHERE.name()
+        }
+
+        fn base_url(&self) -> &str {
+            &self.base_url
+        }
+
+        fn env_var(&self) -> Option<&str> {
+            COHERE.env_var()
+        }
+
+        fn auth_header<'a>(&'a self, api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
+            COHERE.auth_header(api_key)
+        }
+
+        fn matches_model(&self, model: &str) -> bool {
+            COHERE.matches_model(model)
+        }
+
+        fn strip_model_prefix<'m>(&self, model: &'m str) -> &'m str {
+            COHERE.strip_model_prefix(model)
+        }
+
+        fn chat_completions_path(&self) -> &str {
+            COHERE.chat_completions_path()
+        }
+
+        fn embeddings_path(&self) -> &str {
+            COHERE.embeddings_path()
+        }
+
+        fn models_path(&self) -> &str {
+            COHERE.models_path()
+        }
+
+        fn rerank_path(&self) -> &str {
+            COHERE.rerank_path()
+        }
+
+        fn build_url(&self, endpoint_path: &str, model: &str) -> String {
+            COHERE
+                .build_url(endpoint_path, model)
+                .replacen(COHERE.base_url(), &self.base_url, 1)
+        }
+
+        fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
+            COHERE.transform_request(body)
+        }
+
+        fn transform_embedding_request(&self, body: &mut serde_json::Value) -> Result<()> {
+            COHERE.transform_embedding_request(body)
+        }
+
+        fn transform_embedding_response(&self, body: &mut serde_json::Value, request_model: &str) -> Result<()> {
+            COHERE.transform_embedding_response(body, request_model)
+        }
+
+        fn parse_stream_event(&self, event_data: &str) -> Result<Option<ChatCompletionChunk>> {
+            COHERE.parse_stream_event(event_data)
+        }
+
+        fn transform_response(&self, body: &mut serde_json::Value) -> Result<()> {
+            COHERE.transform_response(body)
+        }
+    }
+
+    /// A client built for `model`, with its native Cohere provider moved to `base_url`.
+    fn local_cohere_client(model: &str, base_url: String) -> DefaultClient {
+        let mut client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
+            .expect("client construction should succeed");
+        assert_eq!(
+            client.provider.name(),
+            "cohere",
+            "a cohere/ model resolves the native provider"
+        );
+        client.provider = Arc::new(LocalCohere { base_url });
+        client
+    }
+
+    /// The request line and the JSON body of each request a local server took.
+    type Requests = Vec<(String, serde_json::Value)>;
+
+    /// A local server that answers `count` requests with `reply`, one request per connection.
+    fn serve(reply: &'static str, count: usize) -> (String, std::thread::JoinHandle<Requests>) {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind the local server");
+        let base_url = format!("http://{}/v2", listener.local_addr().expect("local address"));
+        let handle = std::thread::spawn(move || {
+            (0..count)
+                .map(|_| {
+                    let (stream, _) = listener.accept().expect("accept a request");
+                    let mut reader = BufReader::new(stream);
+                    let mut request_line = String::new();
+                    reader.read_line(&mut request_line).expect("read the request line");
+                    let mut length = 0;
+                    loop {
+                        let mut line = String::new();
+                        reader.read_line(&mut line).expect("read a header line");
+                        if line.trim_end().is_empty() {
+                            break;
+                        }
+                        if let Some((name, value)) = line.split_once(':')
+                            && name.eq_ignore_ascii_case("content-length")
+                        {
+                            length = value.trim().parse().expect("a numeric content length");
+                        }
+                    }
+                    let mut body = vec![0; length];
+                    reader.read_exact(&mut body).expect("read the request body");
+                    let response = format!(
+                        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{reply}",
+                        reply.len()
+                    );
+                    reader
+                        .get_mut()
+                        .write_all(response.as_bytes())
+                        .expect("write the reply");
+                    let body = serde_json::from_slice(&body).expect("a JSON request body");
+                    (request_line.trim_end().to_owned(), body)
+                })
+                .collect()
+        });
+        (base_url, handle)
+    }
+
+    const EMBED_MODEL: &str = "cohere/embed-english-v3.0";
+    const EMBED_REPLY: &str = r#"{"id":"e1","embeddings":{"float":[[0.5,0.25]]},"texts":["alpha"],"meta":{"billed_units":{"input_tokens":3}}}"#;
+
+    fn embed_request() -> EmbeddingRequest {
+        EmbeddingRequest {
+            model: EMBED_MODEL.into(),
+            input: EmbeddingInput::Single("alpha".into()),
+            ..Default::default()
+        }
+    }
+
+    /// Revert line: call `transform_response` in place of `transform_embedding_response` in
+    /// `embed` to make this test fail.
+    #[tokio::test]
+    #[serial(outbound_policy)]
+    async fn embed_of_a_cohere_model_sends_the_cohere_body_and_names_the_reply_model() {
+        set_outbound_policy(OutboundPolicy::Off);
+        let (base_url, server) = serve(EMBED_REPLY, 1);
+
+        let reply = local_cohere_client(EMBED_MODEL, base_url)
+            .embed(embed_request())
+            .await
+            .expect("the embed call should succeed");
+        let requests = server.join().expect("join the local server");
+
+        assert_eq!(requests[0].0, "POST /v2/embed HTTP/1.1");
+        assert_eq!(requests[0].1["texts"], json!(["alpha"]));
+        assert_eq!(reply.model, EMBED_MODEL);
+        assert_eq!(reply.data.len(), 1);
+        assert_eq!(reply.data[0].embedding, vec![0.5, 0.25]);
+        assert_eq!(reply.usage.map(|usage| usage.prompt_tokens), Some(3));
+    }
+
+    /// Revert line: call `transform_response` in place of `transform_embedding_response` in
+    /// `embed_raw` to make this test fail.
+    #[tokio::test]
+    #[serial(outbound_policy)]
+    async fn embed_raw_of_a_cohere_model_sends_the_cohere_body_and_names_the_reply_model() {
+        set_outbound_policy(OutboundPolicy::Off);
+        let (base_url, server) = serve(EMBED_REPLY, 1);
+
+        let exchange = local_cohere_client(EMBED_MODEL, base_url)
+            .embed_raw(embed_request())
+            .await
+            .expect("the embed_raw call should succeed");
+        let requests = server.join().expect("join the local server");
+
+        assert_eq!(requests[0].0, "POST /v2/embed HTTP/1.1");
+        assert_eq!(exchange.raw_request["texts"], json!(["alpha"]));
+        assert_eq!(exchange.raw_response.as_ref().map(|raw| &raw["id"]), Some(&json!("e1")));
+        assert_eq!(exchange.data.model, EMBED_MODEL);
+        assert_eq!(exchange.data.data[0].embedding, vec![0.5, 0.25]);
+    }
+
+    const RERANK_MODEL: &str = "cohere/rerank-v3.5";
+    const RERANK_REPLY: &str = r#"{"id":"r1","results":[{"index":1,"relevance_score":0.9},{"index":0,"relevance_score":0.1}],"meta":{"billed_units":{"search_units":1}}}"#;
+
+    fn rerank_request() -> RerankRequest {
+        RerankRequest {
+            model: RERANK_MODEL.into(),
+            query: "what is rust?".into(),
+            documents: vec![
+                RerankDocument::Text("a fungus".into()),
+                RerankDocument::Text("a language".into()),
+            ],
+            top_n: Some(2),
+            ..Default::default()
+        }
+    }
+
+    fn assert_cohere_rerank_body(line: &str, body: &serde_json::Value) {
+        assert_eq!(line, "POST /v2/rerank HTTP/1.1");
+        assert_eq!(
+            body,
+            &json!({
+                "model": "rerank-v3.5",
+                "query": "what is rust?",
+                "documents": ["a fungus", "a language"],
+                "top_n": 2
+            })
+        );
+    }
+
+    fn assert_cohere_rerank_reply(reply: &RerankResponse) {
+        assert_eq!(reply.id.as_deref(), Some("r1"));
+        let ranked: Vec<(u32, f64)> = reply
+            .results
+            .iter()
+            .map(|result| (result.index, result.relevance_score))
+            .collect();
+        assert_eq!(ranked, vec![(1, 0.9), (0, 0.1)]);
+    }
+
+    /// Revert line: pass `transform_embedding_request` in place of `transform_request` at the
+    /// rerank call sites to make this test fail.
+    #[tokio::test]
+    #[serial(outbound_policy)]
+    async fn rerank_of_a_cohere_model_sends_the_rerank_body_and_parses_the_reply() {
+        set_outbound_policy(OutboundPolicy::Off);
+        let (base_url, server) = serve(RERANK_REPLY, 2);
+        let client = local_cohere_client(RERANK_MODEL, base_url);
+
+        let reply = client
+            .rerank(rerank_request())
+            .await
+            .expect("the rerank call should succeed");
+        let exchange = client
+            .rerank_raw(rerank_request())
+            .await
+            .expect("the rerank_raw call should succeed");
+        let requests = server.join().expect("join the local server");
+
+        assert_cohere_rerank_body(&requests[0].0, &requests[0].1);
+        assert_cohere_rerank_reply(&reply);
+        assert_cohere_rerank_body(&requests[1].0, &requests[1].1);
+        assert_eq!(exchange.raw_request, requests[1].1);
+        assert_cohere_rerank_reply(&exchange.data);
     }
 }
