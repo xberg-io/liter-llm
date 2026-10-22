@@ -2188,6 +2188,7 @@ mod route_model_tests {
             ("perplexity", Endpoint::Chat),
             ("edenai", Endpoint::Chat),
             ("edenai", Endpoint::Embedding),
+            ("modelscope", Endpoint::Image),
             ("openai", Endpoint::Search),
         ] {
             assert!(
