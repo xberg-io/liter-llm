@@ -69,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `ollama/` embed requests now send `extra_body` to `/api/embed`. The keys `truncate`, `keep_alive` and `dimensions` stay at the top level. Every other key, such as `num_ctx`, goes into `options`, and the keys of an explicit `options` object win on a conflict. Before, the embed request dropped `extra_body` (#329).
 - An error reply with a plain-text `error` field, as Ollama sends, now shows that text as the error message instead of
   the raw JSON body (#308).
 - `chat_stream_raw` now ends in `LiterLlmError::Streaming` when a stream is cut before the provider's final event, as

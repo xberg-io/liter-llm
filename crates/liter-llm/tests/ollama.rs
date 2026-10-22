@@ -1070,3 +1070,111 @@ async fn raw_stream_cut_before_the_done_line_is_an_error() {
         "got {last:?}"
     );
 }
+
+/// Send an `ollama/m` embed request with the given `extra_body` and return what the server saw.
+async fn embed_with_extra_body(model: &str, input: Value, extra_body: Value) -> Seen {
+    let reply = r#"{"model":"m","embeddings":[[0.1,0.2]],"prompt_eval_count":1}"#;
+    let (url, seen) = server(200, "application/json", reply.to_owned());
+    let mut request: EmbeddingRequest =
+        serde_json::from_value(json!({"model": model, "input": input})).expect("embed request");
+    request.extra_body = Some(extra_body);
+    client(url).embed(request).await.expect("embed succeeds");
+    let seen = seen.join().expect("server done");
+    assert_eq!(seen.request_line, "POST /api/embed HTTP/1.1");
+    seen
+}
+
+#[tokio::test]
+async fn embed_extra_body_top_level_keys_stay_at_the_top() {
+    let seen = embed_with_extra_body(
+        "ollama/m",
+        json!(["a", "b"]),
+        json!({"truncate": false, "keep_alive": "10m"}),
+    )
+    .await;
+    assert_eq!(
+        seen.body,
+        json!({"model": "m", "input": ["a", "b"], "truncate": false, "keep_alive": "10m"})
+    );
+}
+
+#[tokio::test]
+async fn embed_extra_body_bare_setting_reaches_options() {
+    let seen = embed_with_extra_body("ollama/m", json!("a"), json!({"num_ctx": 8192})).await;
+    assert_eq!(
+        seen.body,
+        json!({"model": "m", "input": "a", "options": {"num_ctx": 8192}})
+    );
+}
+
+#[tokio::test]
+async fn embed_extra_body_explicit_options_win_over_bare_settings() {
+    let extra = json!({"num_ctx": 1, "num_thread": 2, "options": {"num_ctx": 8192}});
+    let seen = embed_with_extra_body("ollama_chat/m", json!("a"), extra).await;
+    assert_eq!(
+        seen.body,
+        json!({"model": "m", "input": "a", "options": {"num_ctx": 8192, "num_thread": 2}})
+    );
+}
+
+#[tokio::test]
+async fn embed_extra_body_all_kinds_together() {
+    let extra = json!({"truncate": false, "keep_alive": 0, "options": {"num_ctx": 4096}, "num_thread": 2});
+    let seen = embed_with_extra_body("ollama/m", json!("a"), extra).await;
+    assert_eq!(
+        seen.body,
+        json!({"model": "m", "input": "a", "truncate": false, "keep_alive": 0,
+               "options": {"num_ctx": 4096, "num_thread": 2}})
+    );
+}
+
+#[tokio::test]
+async fn embed_extra_body_null_members_are_not_sent() {
+    let seen = embed_with_extra_body("ollama/m", json!("a"), json!({"keep_alive": null, "num_ctx": null})).await;
+    assert_eq!(seen.body, json!({"model": "m", "input": "a"}));
+}
+
+#[tokio::test]
+async fn embed_extra_body_key_that_names_a_request_field_replaces_it() {
+    let seen = embed_with_extra_body("ollama/m", json!("a"), json!({"model": "other", "dimensions": 7})).await;
+    assert_eq!(seen.body, json!({"model": "other", "input": "a", "dimensions": 7}));
+}
+
+#[tokio::test]
+async fn embed_extra_body_that_is_not_an_object_is_ignored() {
+    for extra in [json!("keep_alive"), json!(5), json!([1, 2]), json!(true), Value::Null] {
+        let seen = embed_with_extra_body("ollama/m", json!("a"), extra.clone()).await;
+        assert_eq!(seen.body, json!({"model": "m", "input": "a"}), "extra_body {extra}");
+    }
+}
+
+#[tokio::test]
+async fn embed_extra_body_reaches_a_hint_client_with_a_bare_model() {
+    let reply = r#"{"model":"m","embeddings":[[0.1]],"prompt_eval_count":1}"#;
+    let (url, seen) = server(200, "application/json", reply.to_owned());
+    let config = ClientConfigBuilder::new("").base_url(url).max_retries(0).build();
+    let client = DefaultClient::new(config, Some("ollama/m")).expect("client");
+    let mut request: EmbeddingRequest = serde_json::from_value(json!({"model": "m", "input": "a"})).expect("request");
+    request.extra_body = Some(json!({"num_ctx": 8192}));
+    client.embed(request).await.expect("embed succeeds");
+    let seen = seen.join().expect("server done");
+    assert_eq!(seen.request_line, "POST /api/embed HTTP/1.1");
+    assert_eq!(
+        seen.body,
+        json!({"model": "m", "input": "a", "options": {"num_ctx": 8192}})
+    );
+}
+
+#[tokio::test]
+async fn embed_extra_body_does_not_lift_multimodal_input_refusal() {
+    let (url, _seen) = server(200, "application/json", "{}".to_owned());
+    let mut request: EmbeddingRequest =
+        serde_json::from_value(json!({"model": "ollama/m", "input": [{"type": "text", "text": "a"}]}))
+            .expect("request");
+    request.extra_body = Some(json!({"truncate": false}));
+    let error = client(url)
+        .embed(request)
+        .await
+        .expect_err("multimodal input is refused");
+    assert!(matches!(error, LiterLlmError::BadRequest { .. }), "{error}");
+}
