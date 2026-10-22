@@ -3196,6 +3196,15 @@ char *literllm_create_image_request_response_format(LITERLLMAlefHandle handle);
 char *literllm_create_image_request_user(LITERLLMAlefHandle handle);
 
 /**
+ * Get the `extra_body` field from a `CreateImageRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_create_image_request_extra_body(LITERLLMAlefHandle handle);
+
+/**
  * Create a `CreateResponseRequest` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -3412,6 +3421,15 @@ double literllm_create_speech_request_speed(LITERLLMAlefHandle handle);
 int32_t literllm_create_speech_request_has_speed(LITERLLMAlefHandle handle);
 
 /**
+ * Get the `extra_body` field from a `CreateSpeechRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_create_speech_request_extra_body(LITERLLMAlefHandle handle);
+
+/**
  * Create a `CreateTranscriptionRequest` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -3498,6 +3516,15 @@ double literllm_create_transcription_request_temperature(LITERLLMAlefHandle hand
  * Pointer must be a valid handle returned by this library.
  */
 int32_t literllm_create_transcription_request_has_temperature(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `extra_body` field from a `CreateTranscriptionRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_create_transcription_request_extra_body(LITERLLMAlefHandle handle);
 
 /**
  * Create a `CustomProviderConfig` from a JSON string. Returns null on failure.
@@ -4499,6 +4526,15 @@ int32_t literllm_embedding_request_has_dimensions(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_embedding_request_user(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `extra_body` field from a `EmbeddingRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_embedding_request_extra_body(LITERLLMAlefHandle handle);
 
 /**
  * Create a `EmbeddingResponse` from a JSON string. Returns null on failure.
@@ -6692,6 +6728,15 @@ LITERLLMAlefHandle literllm_moderation_request_input(LITERLLMAlefHandle handle);
 char *literllm_moderation_request_model(LITERLLMAlefHandle handle);
 
 /**
+ * Get the `extra_body` field from a `ModerationRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_moderation_request_extra_body(LITERLLMAlefHandle handle);
+
+/**
  * Create a `ModerationResponse` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -6956,6 +7001,15 @@ int32_t literllm_ocr_request_include_image_base64(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 int32_t literllm_ocr_request_has_include_image_base64(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `extra_body` field from a `OcrRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_ocr_request_extra_body(LITERLLMAlefHandle handle);
 
 /**
  * Create a `OcrResponse` from a JSON string. Returns null on failure.
@@ -7431,6 +7485,15 @@ int32_t literllm_rerank_request_return_documents(LITERLLMAlefHandle handle);
 int32_t literllm_rerank_request_has_return_documents(LITERLLMAlefHandle handle);
 
 /**
+ * Get the `extra_body` field from a `RerankRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_rerank_request_extra_body(LITERLLMAlefHandle handle);
+
+/**
  * Create a `RerankResponse` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -7855,6 +7918,15 @@ char *literllm_search_request_search_domain_filter(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_search_request_country(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `extra_body` field from a `SearchRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_search_request_extra_body(LITERLLMAlefHandle handle);
 
 /**
  * Create a `SearchResponse` from a JSON string. Returns null on failure.

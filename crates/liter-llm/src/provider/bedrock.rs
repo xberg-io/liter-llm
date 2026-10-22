@@ -9,7 +9,7 @@ mod response;
 mod stream;
 
 use embed::{transform_bedrock_embed_request, transform_bedrock_embed_response};
-pub(crate) use stream::parse_bedrock_stream_event;
+pub(crate) use stream::{exception_error, parse_bedrock_stream_event};
 
 /// Default AWS region for Bedrock when none is specified.
 const DEFAULT_REGION: &str = "us-east-1";

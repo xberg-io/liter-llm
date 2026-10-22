@@ -16,6 +16,10 @@ pub struct RerankRequest {
     /// Include the document content in results. Defaults to false.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub return_documents: Option<bool>,
+    /// Provider-specific parameters merged into the request body, as chat's
+    /// `extra_body` is. Keys here override identically named fields.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extra_body: Option<serde_json::Value>,
 }
 
 /// A document to be reranked — either a plain string or an object with a text field.
