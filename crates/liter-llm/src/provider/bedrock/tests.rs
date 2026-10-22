@@ -1127,6 +1127,7 @@ fn rerank_arn_takes_the_partition_from_the_region() {
         ("us-west-2", "aws"),
         ("cn-north-1", "aws-cn"),
         ("us-gov-west-1", "aws-us-gov"),
+        ("eusc-de-east-1", "aws-eusc"),
     ] {
         assert_eq!(
             rerank_model_arn(region, "amazon.rerank-v1:0").unwrap(),

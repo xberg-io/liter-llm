@@ -15,9 +15,12 @@ fn document_text(document: &Value) -> Option<&str> {
         .or_else(|| document.get("text").and_then(Value::as_str))
 }
 
-/// The AWS partition of a region: `aws-cn` for `cn-` regions, `aws-us-gov` for `us-gov-` regions.
+/// The AWS partition of a region: `aws-cn` for `cn-` regions, `aws-us-gov` for `us-gov-` regions
+/// and `aws-eusc` for `eusc-` regions.
 fn partition_for_region(region: &str) -> &'static str {
-    if region.starts_with("cn-") {
+    if region.starts_with("eusc-") {
+        "aws-eusc"
+    } else if region.starts_with("cn-") {
         "aws-cn"
     } else if region.starts_with("us-gov-") {
         "aws-us-gov"
