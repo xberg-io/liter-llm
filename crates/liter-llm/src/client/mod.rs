@@ -1120,8 +1120,8 @@ impl DefaultClient {
         }
 
         let prov = self.resolve_provider_for_model(model)?;
-        // ~keep A base_url pins a provider that is not a registry entry with refused endpoints, so it is never refused.
-        provider::refuse_unrouted_endpoint(prov.name(), endpoint)?;
+        // ~keep Only a provider built from a registry entry lists refused endpoints, so a base_url or a custom provider is never refused.
+        provider::refuse_unrouted_endpoint(prov.as_ref(), endpoint)?;
         let bare_model = prov.strip_model_prefix(model).to_owned();
         // ~keep Providers such as Azure and Bedrock embed model/deployment identifiers in URLs.
         let endpoint_path = endpoint_fn(prov.as_ref());

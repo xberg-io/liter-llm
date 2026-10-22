@@ -224,7 +224,8 @@ struct ProviderEntry {
     endpoint_urls: HashMap<String, String>,
     /// Endpoints this provider has no route for, although its other endpoints work (for
     /// example a provider with an OpenAI-compatible chat endpoint and a native search API).
-    /// A call to one of them is refused before any request unless a `base_url` is set.
+    /// A call to one of them is refused before any request. Only the provider built from this
+    /// registry entry carries the list: a `base_url` or a custom provider never does.
     #[serde(default)]
     no_route_endpoints: Vec<Endpoint>,
     #[serde(default)]
@@ -487,6 +488,14 @@ pub(crate) trait Provider: Send + Sync {
 
     /// Provider name (e.g., "openai").
     fn name(&self) -> &str;
+
+    /// Endpoints this provider has no route for, although its other endpoints work.
+    ///
+    /// Only a provider built from a registry entry lists any. A custom provider, and a
+    /// provider pinned by a `base_url`, keep the default empty list, whatever their name.
+    fn unrouted_endpoints(&self) -> &[Endpoint] {
+        &[]
+    }
 
     /// Base URL (e.g., "https://api.openai.com/v1").
     fn base_url(&self) -> &str;
@@ -1023,6 +1032,7 @@ pub(crate) struct ConfigDrivenProvider {
     config: &'static ProviderConfig,
     aliases: &'static [String],
     endpoint_urls: Option<&'static HashMap<String, String>>,
+    unrouted_endpoints: &'static [Endpoint],
 }
 
 impl ConfigDrivenProvider {
@@ -1033,6 +1043,7 @@ impl ConfigDrivenProvider {
             config,
             aliases: &[],
             endpoint_urls: None,
+            unrouted_endpoints: &[],
         }
     }
 
@@ -1041,6 +1052,7 @@ impl ConfigDrivenProvider {
             config: &entry.config,
             aliases: &entry.aliases,
             endpoint_urls: Some(&entry.endpoint_urls),
+            unrouted_endpoints: &entry.no_route_endpoints,
         }
     }
 }
@@ -1048,6 +1060,10 @@ impl ConfigDrivenProvider {
 impl Provider for ConfigDrivenProvider {
     fn name(&self) -> &str {
         &self.config.name
+    }
+
+    fn unrouted_endpoints(&self) -> &[Endpoint] {
+        self.unrouted_endpoints
     }
 
     fn base_url(&self) -> &str {
@@ -1194,35 +1210,24 @@ fn unrouted_provider_error(reg: &ProviderRegistry, model: &str) -> Option<LiterL
     })
 }
 
-/// Refuse a call to an endpoint that the named provider has no route for.
+/// Refuse a call to an endpoint that the resolved provider has no route for.
 ///
-/// `provider_name` is the name of the provider that resolved for the request. The provider's
-/// other endpoints keep working. Callers skip this check when a `base_url` is set, because
-/// the caller then names the endpoint.
+/// The provider's other endpoints keep working. The list of refused endpoints belongs to the
+/// provider built from a registry entry, so a custom provider or a provider pinned by a
+/// `base_url` is never refused, whatever its name.
 ///
 /// # Errors
 ///
 /// Returns [`LiterLlmError::BadRequest`] naming the provider and the endpoint and asking for
 /// a `base_url`.
-pub(crate) fn refuse_unrouted_endpoint(provider_name: &str, endpoint: Endpoint) -> Result<()> {
-    let Ok(reg) = REGISTRY.as_ref() else {
+pub(crate) fn refuse_unrouted_endpoint(provider: &dyn Provider, endpoint: Endpoint) -> Result<()> {
+    if !provider.unrouted_endpoints().contains(&endpoint) {
         return Ok(());
-    };
-    match unrouted_endpoint_error(reg, provider_name, endpoint) {
-        Some(error) => Err(error),
-        None => Ok(()),
     }
-}
-
-fn unrouted_endpoint_error(reg: &ProviderRegistry, provider_name: &str, endpoint: Endpoint) -> Option<LiterLlmError> {
-    let entry = reg.providers.iter().find(|e| e.config.name == provider_name)?;
-    if !entry.no_route_endpoints.contains(&endpoint) {
-        return None;
-    }
-    Some(LiterLlmError::BadRequest {
+    Err(LiterLlmError::BadRequest {
         message: format!(
             "provider `{}` has no built-in route for {}; set base_url to its endpoint",
-            entry.config.name,
+            provider.name(),
             endpoint.as_str()
         ),
         status: 400,
@@ -2095,19 +2100,30 @@ mod route_model_tests {
         }
     }
 
+    /// The provider that a registry entry builds, as the router builds it.
+    fn provider_for(providers: serde_json::Value, name: &str) -> ConfigDrivenProvider {
+        let reg: &'static ProviderRegistry = Box::leak(Box::new(synthetic_registry(providers, &[])));
+        let entry = reg
+            .providers
+            .iter()
+            .find(|e| e.config.name == name)
+            .expect("entry should exist");
+        ConfigDrivenProvider::from_entry(entry)
+    }
+
     #[test]
     fn endpoint_listed_in_no_route_endpoints_is_refused_and_the_others_are_not() {
-        let reg = synthetic_registry(
+        let mixed = provider_for(
             serde_json::json!([{
                 "name": "mixed",
                 "base_url": "https://mixed.example/v1",
                 "no_route_endpoints": ["search", "audio"]
             }]),
-            &[],
+            "mixed",
         );
         for endpoint in [Endpoint::Search, Endpoint::Audio] {
-            match unrouted_endpoint_error(&reg, "mixed", endpoint) {
-                Some(LiterLlmError::BadRequest { message, status }) => {
+            match refuse_unrouted_endpoint(&mixed, endpoint) {
+                Err(LiterLlmError::BadRequest { message, status }) => {
                     assert_eq!(status, 400);
                     assert!(
                         message.contains("`mixed`")
@@ -2120,12 +2136,22 @@ mod route_model_tests {
             }
         }
         for endpoint in [Endpoint::Chat, Endpoint::Image, Endpoint::Embedding] {
-            assert!(
-                unrouted_endpoint_error(&reg, "mixed", endpoint).is_none(),
-                "{endpoint:?}"
-            );
+            assert!(refuse_unrouted_endpoint(&mixed, endpoint).is_ok(), "{endpoint:?}");
         }
-        assert!(unrouted_endpoint_error(&reg, "other", Endpoint::Search).is_none());
+        let other = provider_for(
+            serde_json::json!([{"name": "other", "base_url": "https://other.example/v1"}]),
+            "other",
+        );
+        assert!(refuse_unrouted_endpoint(&other, Endpoint::Search).is_ok());
+    }
+
+    fn builtin(name: &str) -> Box<dyn Provider> {
+        let model = if name == "openai" {
+            "gpt-4o".to_owned()
+        } else {
+            format!("{name}/m")
+        };
+        detect_builtin_provider(&model).expect("shipped provider should route")
     }
 
     #[test]
@@ -2144,7 +2170,7 @@ mod route_model_tests {
             ("modelscope", Endpoint::Image),
         ] {
             assert!(
-                refuse_unrouted_endpoint(provider, endpoint).is_err(),
+                refuse_unrouted_endpoint(builtin(provider).as_ref(), endpoint).is_err(),
                 "{provider} {endpoint:?}"
             );
         }
@@ -2157,7 +2183,7 @@ mod route_model_tests {
             ("openai", Endpoint::Search),
         ] {
             assert!(
-                refuse_unrouted_endpoint(provider, endpoint).is_ok(),
+                refuse_unrouted_endpoint(builtin(provider).as_ref(), endpoint).is_ok(),
                 "{provider} {endpoint:?}"
             );
         }

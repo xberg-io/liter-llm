@@ -15,6 +15,7 @@ use std::thread;
 use liter_llm::client::config::ClientConfigBuilder;
 use liter_llm::client::{DefaultClient, LlmClient, LlmClientRaw, ResponseClient};
 use liter_llm::error::LiterLlmError;
+use liter_llm::{AuthHeaderFormat, CustomProviderConfig, register_custom_provider, unregister_custom_provider};
 use serial_test::serial;
 
 /// Records the request line of every connection and answers with a canned reply.
@@ -734,4 +735,94 @@ async fn a_base_url_lifts_the_endpoint_refusal() {
         );
     }
     assert_eq!(target.seen().len(), outcomes.len(), "every call reaches the base_url");
+}
+
+/// Registers a custom provider and removes it on drop, so a failed assertion cannot leak it.
+struct CustomGuard(&'static str);
+
+impl CustomGuard {
+    fn register(name: &'static str, base_url: &str) -> Self {
+        register_custom_provider(CustomProviderConfig {
+            name: name.into(),
+            base_url: base_url.to_owned(),
+            auth_header: AuthHeaderFormat::Bearer,
+            model_prefixes: vec![format!("{name}/")],
+        })
+        .expect("registration should succeed");
+        CustomGuard(name)
+    }
+}
+
+impl Drop for CustomGuard {
+    fn drop(&mut self) {
+        let _ = unregister_custom_provider(self.0);
+    }
+}
+
+/// A custom provider registered under the name of a registry provider sends the call to its
+/// own `base_url`, and the registry provider of the same name is still refused.
+async fn assert_custom_provider_not_refused(
+    name: &'static str,
+    endpoint: &str,
+    calls: fn(&DefaultClient, &str) -> Calls,
+) {
+    let target = Spy::start(Some("{}"));
+    let model = format!("{name}/some-model");
+    {
+        let _custom = CustomGuard::register(name, &target.url);
+        let client = client(None, None).expect("client");
+        let outcomes = calls(&client, &model).await;
+        for (call, outcome) in &outcomes {
+            assert!(
+                !matches!(outcome, Err(LiterLlmError::BadRequest { message, .. }) if message.contains("no built-in route")),
+                "{name} {call}: a custom provider is never refused: {outcome:?}"
+            );
+        }
+        assert_eq!(
+            target.seen().len(),
+            outcomes.len(),
+            "{name}: every {endpoint} call reaches the custom base_url"
+        );
+    }
+    let proxy = ProxyGuard::install();
+    let client = client(None, None).expect("client");
+    for (call, outcome) in calls(&client, &model).await {
+        assert_endpoint_refused(&outcome, name, endpoint, call);
+    }
+    assert!(proxy.spy.seen().is_empty());
+}
+
+type Calls<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = Vec<(&'static str, liter_llm::Result<()>)>> + 'a>>;
+
+fn search_of<'a>(client: &'a DefaultClient, model: &'a str) -> Calls<'a> {
+    Box::pin(search_calls(client, model))
+}
+
+fn audio_of<'a>(client: &'a DefaultClient, model: &'a str) -> Calls<'a> {
+    Box::pin(audio_calls(client, model))
+}
+
+fn image_of<'a>(client: &'a DefaultClient, model: &'a str) -> Calls<'a> {
+    Box::pin(image_calls(client, model))
+}
+
+#[tokio::test]
+#[serial]
+async fn a_custom_provider_named_like_a_search_provider_sends_search_to_its_base_url() {
+    for name in ["brave", "perplexity", "exa_ai"] {
+        assert_custom_provider_not_refused(name, "search", search_of).await;
+    }
+}
+
+#[tokio::test]
+#[serial]
+async fn a_custom_provider_named_edenai_sends_image_and_speech_to_its_base_url() {
+    assert_custom_provider_not_refused("edenai", "image", image_of).await;
+    assert_custom_provider_not_refused("edenai", "audio", audio_of).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn a_custom_provider_named_modelscope_sends_image_to_its_base_url() {
+    assert_custom_provider_not_refused("modelscope", "image", image_of).await;
 }
