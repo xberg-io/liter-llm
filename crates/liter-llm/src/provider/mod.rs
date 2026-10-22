@@ -515,6 +515,15 @@ pub(crate) trait Provider: Send + Sync {
         "/models"
     }
 
+    /// URL of the next page of a list models reply, or `None` when the reply is the last page.
+    ///
+    /// `url` is the URL that returned `page`, and `page` is the reply before
+    /// [`Provider::transform_response`]. The client follows the URLs in order and joins the
+    /// pages. The default is `None`: the provider lists every model in one reply.
+    fn next_models_page_url(&self, _url: &str, _page: &serde_json::Value) -> Option<String> {
+        None
+    }
+
     /// Path for image generations endpoint.
     fn image_generations_path(&self) -> &str {
         "/images/generations"
