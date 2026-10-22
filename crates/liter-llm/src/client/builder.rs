@@ -277,6 +277,7 @@ impl<K, P> ClientBuilder<K, P> {
     /// Set the connect timeout (default: 10 s).
     ///
     /// A connection that does not open in this time is retried up to `max_retries` times.
+    /// Zero is an error when the client is built. Not used on `wasm32`.
     pub fn connect_timeout(mut self, timeout: Duration) -> Self {
         self.connect_timeout = timeout;
         self
@@ -469,5 +470,24 @@ impl ClientBuilder<WithApiKey, WithProvider> {
         };
 
         super::DefaultClient::new(config, hint)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::client::ClientConfigBuilder;
+
+    #[test]
+    fn the_default_connect_timeout_is_ten_seconds() {
+        assert_eq!(ClientBuilder::new().connect_timeout, Duration::from_secs(10));
+    }
+
+    #[test]
+    fn the_typed_builder_and_the_config_builder_share_the_default_connect_timeout() {
+        assert_eq!(
+            ClientBuilder::new().connect_timeout,
+            ClientConfigBuilder::new("sk-test").build().connect_timeout
+        );
     }
 }

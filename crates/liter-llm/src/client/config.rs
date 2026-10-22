@@ -21,6 +21,17 @@ pub(crate) fn validate_response_limit(limit: Option<usize>) -> Result<()> {
     Ok(())
 }
 
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) fn validate_connect_timeout(timeout: Duration) -> Result<()> {
+    if timeout.is_zero() {
+        return Err(LiterLlmError::BadRequest {
+            message: "connect_timeout must be greater than zero".into(),
+            status: 400,
+        });
+    }
+    Ok(())
+}
+
 /// Configuration for an LLM client.
 ///
 /// `api_key` is stored as a [`SecretString`] so it is zeroed on drop and never
@@ -45,7 +56,8 @@ pub struct ClientConfig {
     ///
     /// A connection that does not open in this time fails with a connect timeout. The server
     /// never saw the request, so the client sends it again, up to `max_retries` times. The request
-    /// `timeout` still ends the call when it is shorter. Not used on `wasm32`.
+    /// `timeout` still ends the call when it is shorter. Zero is an error when the client is
+    /// created. Not used on `wasm32`.
     pub connect_timeout: Duration,
     /// Maximum number of retries on 429 / 5xx responses.
     pub max_retries: u32,
@@ -336,6 +348,7 @@ impl ClientConfigBuilder {
     ///
     /// A connection that does not open in this time is retried up to `max_retries` times.
     /// A request that times out after the connection is open is sent once.
+    /// Zero is an error when the client is created. Not used on `wasm32`.
     pub fn connect_timeout(mut self, timeout: Duration) -> Self {
         self.config.connect_timeout = timeout;
         self

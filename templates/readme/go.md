@@ -266,7 +266,7 @@ if err != nil {
 
 | Key                                                                             | Description                                                              |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `api_key`, `base_url`, `model_hint`, `timeout_secs`, `max_retries`, `extra_headers` | Client settings                                                      |
+| `api_key`, `base_url`, `model_hint`, `timeout_secs`, `connect_timeout_secs`, `max_retries`, `extra_headers` | Client settings                                                      |
 | `cache`                                                                         | `max_entries`, `ttl_seconds`, `backend`, `backend_config`                |
 | `budget`                                                                        | `global_limit` and `model_limits` in USD; `enforcement` is `"hard"` or `"soft"` |
 | `rate_limit`                                                                    | `rpm`, `tpm`, `window_seconds`                                           |

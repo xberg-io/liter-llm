@@ -888,11 +888,13 @@ impl DefaultClient {
     /// API key was provided, and the provider's environment variable is unset or empty.
     /// Returns `LiterLlmError::BadRequest` if no `base_url` is set and `model_hint` names a
     /// registry provider that has no route of its own.
+    /// Returns `LiterLlmError::BadRequest` if `max_response_bytes` or `connect_timeout` is zero.
     /// Returns `LiterLlmError::InvalidHeader` if pre-validated headers somehow
     /// become invalid during client construction (extremely rare; indicates a bug).
     /// Returns `LiterLlmError::Http` if the underlying HTTP client cannot be constructed.
     pub fn new(config: ClientConfig, model_hint: Option<&str>) -> Result<Self> {
         config::validate_response_limit(config.max_response_bytes)?;
+        config::validate_connect_timeout(config.connect_timeout)?;
         let provider = build_provider(&config, model_hint)?;
         provider.validate()?;
 

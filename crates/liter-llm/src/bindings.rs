@@ -26,6 +26,7 @@ pub struct ClientOptions {
     /// Optional request timeout in seconds.
     pub timeout_secs: Option<u64>,
     /// Optional connect timeout in seconds. A connect timeout is retried up to `max_retries` times.
+    /// Zero is an error. Not used on `wasm32`.
     pub connect_timeout_secs: Option<u64>,
     /// Optional retry count for retryable provider failures.
     pub max_retries: Option<u32>,
@@ -40,7 +41,7 @@ pub struct ClientOptions {
 /// # Errors
 ///
 /// Returns [`LiterLlmError::BadRequest`] for a zero or platform-overflowing
-/// `max_response_bytes`, plus the errors documented by [`create_client`].
+/// `max_response_bytes`, a zero `connect_timeout_secs`, plus the errors documented by [`create_client`].
 #[cfg(feature = "native-http")]
 pub fn create_client_with_options(options: ClientOptions) -> Result<DefaultClient> {
     let mut builder = ClientConfigBuilder::new(options.api_key);

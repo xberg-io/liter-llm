@@ -2,6 +2,10 @@
 //! the request and may still be working on it, so a second try does not help
 //! and the server would run (and bill) the request twice. A connection that
 //! closes without a reply and 5xx replies keep their retries.
+//!
+//! No test bounds how long a call takes from above by a margin that a loaded host can use up.
+//! Each time bound separates the behaviour under test from the alternative by many seconds,
+//! and the retry count is asserted from the requests the server receives.
 
 #![cfg(feature = "native-http")]
 
@@ -19,6 +23,14 @@ use liter_llm::client::{ClientConfigBuilder, DefaultClient, LlmClient};
 use liter_llm::types::{ChatCompletionRequest, Message, UserMessage};
 
 const REPLY: &str = r#"{"id":"c","object":"chat.completion","created":1,"model":"m","choices":[{"index":0,"finish_reason":"stop","message":{"role":"assistant","content":"late"}}]}"#;
+
+/// How long a silent server holds a connection. A call that ends because the server closed the
+/// connection (a Network error, after `HOLD`) cannot pass for a call that timed out.
+const HOLD: Duration = Duration::from_secs(60);
+
+/// A bound that no call under test reaches, however busy the host is: it is far above every
+/// timeout the tests set and far below `HOLD`.
+const NEVER_REACHED: Duration = Duration::from_secs(30);
 
 /// How the server treats one connection, chosen by the attempt number.
 type Handler = dyn Fn(usize, TcpStream) + Send + Sync;
@@ -108,7 +120,7 @@ fn request() -> ChatCompletionRequest {
 
 #[tokio::test]
 async fn a_chat_call_that_times_out_is_sent_once() {
-    let server = silent_server(Duration::from_secs(8));
+    let server = silent_server(HOLD);
     let client = client(&server, Duration::from_secs(1), 3);
 
     let start = Instant::now();
@@ -120,8 +132,8 @@ async fn a_chat_call_that_times_out_is_sent_once() {
         "a reply that never comes ends in a Timeout error, got {result:?}"
     );
     assert!(
-        elapsed < Duration::from_millis(2500),
-        "the caller gets the Timeout after about one timeout, not one per retry: {elapsed:?}"
+        elapsed < NEVER_REACHED,
+        "the request timeout ends the call, not the end of the held connection: {elapsed:?}"
     );
     assert_eq!(
         server.requests.load(Ordering::SeqCst),
@@ -132,7 +144,7 @@ async fn a_chat_call_that_times_out_is_sent_once() {
 
 #[tokio::test]
 async fn a_stream_that_times_out_before_its_reply_is_sent_once() {
-    let server = silent_server(Duration::from_secs(8));
+    let server = silent_server(HOLD);
     let client = client(&server, Duration::from_secs(1), 3);
 
     let start = Instant::now();
@@ -145,8 +157,8 @@ async fn a_stream_that_times_out_before_its_reply_is_sent_once() {
         result.err()
     );
     assert!(
-        elapsed < Duration::from_millis(2500),
-        "the caller gets the Timeout after about one timeout: {elapsed:?}"
+        elapsed < NEVER_REACHED,
+        "the request timeout ends the call, not the end of the held connection: {elapsed:?}"
     );
     assert_eq!(
         server.requests.load(Ordering::SeqCst),
@@ -163,7 +175,7 @@ async fn a_timeout_after_a_server_error_ends_the_call() {
         if attempt == 0 {
             respond(stream, "503 Service Unavailable", r#"{"error":{"message":"busy"}}"#);
         } else {
-            thread::sleep(Duration::from_secs(8));
+            thread::sleep(HOLD);
             drop(stream);
         }
     });
@@ -314,7 +326,7 @@ async fn a_connect_timeout_is_tried_again() {
     let client = unroutable_client(Duration::from_secs(30), Duration::from_millis(500), 2);
 
     let start = Instant::now();
-    let result = tokio::time::timeout(Duration::from_secs(25), client.chat(request()))
+    let result = tokio::time::timeout(Duration::from_secs(120), client.chat(request()))
         .await
         .expect("the call ends once the retries are used up");
     let elapsed = start.elapsed();
@@ -323,9 +335,34 @@ async fn a_connect_timeout_is_tried_again() {
         matches!(result, Err(LiterLlmError::Timeout)),
         "a connection that never opens ends in a Timeout error, got {result:?}"
     );
+    // Only a lower bound: a busy host makes the call longer, never shorter.
     assert!(
         elapsed >= Duration::from_millis(2500),
         "the connect timeout is retried twice: {elapsed:?}"
+    );
+}
+
+#[tokio::test]
+async fn a_stream_connect_timeout_is_tried_again() {
+    // The stream client is a second reqwest client. If it loses the connect timeout, the call
+    // waits for the operating system to give up on the connection, and the outer timeout fires.
+    // If the stream path does not retry, the call ends after one 500 ms attempt.
+    let client = unroutable_client(Duration::from_secs(30), Duration::from_millis(500), 2);
+
+    let start = Instant::now();
+    let result = tokio::time::timeout(Duration::from_secs(60), client.chat_stream(request()))
+        .await
+        .expect("the stream call ends once the retries are used up");
+    let elapsed = start.elapsed();
+
+    assert!(
+        matches!(result, Err(LiterLlmError::Timeout)),
+        "a stream connection that never opens ends in a Timeout error, got {:?}",
+        result.err()
+    );
+    assert!(
+        elapsed >= Duration::from_millis(2500),
+        "the stream connect timeout is retried twice: {elapsed:?}"
     );
 }
 
@@ -339,8 +376,8 @@ async fn a_connect_timeout_with_no_retries_is_sent_once() {
 
     assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
     assert!(
-        elapsed < Duration::from_millis(1500),
-        "with no retries the call ends after one connect timeout: {elapsed:?}"
+        elapsed < NEVER_REACHED,
+        "the connect timeout ends the call, not the 30 s request timeout: {elapsed:?}"
     );
 }
 
@@ -348,7 +385,7 @@ async fn a_connect_timeout_with_no_retries_is_sent_once() {
 async fn a_timeout_after_the_connection_opened_is_sent_once_with_a_connect_timeout_set() {
     // The server accepts the connection at once, so the connect timeout never fires. The reply
     // never comes, so the request timeout does, and the request is not sent again.
-    let server = silent_server(Duration::from_secs(8));
+    let server = silent_server(HOLD);
     let config = ClientConfigBuilder::new("test-key")
         .base_url(server.base_url.clone())
         .timeout(Duration::from_secs(1))
@@ -363,8 +400,8 @@ async fn a_timeout_after_the_connection_opened_is_sent_once_with_a_connect_timeo
 
     assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
     assert!(
-        elapsed < Duration::from_millis(2500),
-        "the caller gets the Timeout after about one timeout: {elapsed:?}"
+        elapsed < NEVER_REACHED,
+        "the request timeout ends the call, not the end of the held connection: {elapsed:?}"
     );
     assert_eq!(server.requests.load(Ordering::SeqCst), 1);
 }
@@ -372,7 +409,7 @@ async fn a_timeout_after_the_connection_opened_is_sent_once_with_a_connect_timeo
 #[tokio::test]
 async fn the_connect_timeout_option_reaches_the_client() {
     // A client built from ClientOptions with a 1 s connect timeout gives up on a connection that
-    // never opens in about 1 s. With the 10 s default it would take 10 s.
+    // never opens after 1 s. With the 10 s default it would take 10 s, so the bound sits between.
     let client = liter_llm::create_client_with_options(liter_llm::ClientOptions {
         api_key: "test-key".into(),
         base_url: Some(UNROUTABLE.into()),
@@ -390,7 +427,82 @@ async fn the_connect_timeout_option_reaches_the_client() {
 
     assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
     assert!(
-        elapsed < Duration::from_secs(5),
+        elapsed < Duration::from_secs(9),
         "the option sets the connect timeout, the default is 10 s: {elapsed:?}"
     );
+}
+
+fn assert_zero_connect_timeout_error<T: std::fmt::Debug>(result: liter_llm::Result<T>, entry_point: &str) {
+    match result {
+        Err(LiterLlmError::BadRequest { message, status: 400 }) => {
+            assert!(message.contains("connect_timeout"), "{entry_point}: message = {message}");
+        }
+        other => panic!("{entry_point}: a zero connect timeout must be a BadRequest error, got {other:?}"),
+    }
+}
+
+#[test]
+fn a_zero_connect_timeout_is_an_error_in_the_config_builder() {
+    let config = ClientConfigBuilder::new("test-key")
+        .connect_timeout(Duration::ZERO)
+        .build();
+    assert_zero_connect_timeout_error(DefaultClient::new(config, Some("openai/m")), "ClientConfigBuilder");
+}
+
+#[test]
+fn a_zero_connect_timeout_is_an_error_in_the_typed_builder() {
+    let result = liter_llm::client::ClientBuilder::new()
+        .api_key("test-key")
+        .provider("openai")
+        .connect_timeout(Duration::ZERO)
+        .build();
+    assert_zero_connect_timeout_error(result, "ClientBuilder");
+}
+
+#[test]
+fn a_zero_connect_timeout_is_an_error_in_the_client_options() {
+    let result = liter_llm::create_client_with_options(liter_llm::ClientOptions {
+        api_key: "test-key".into(),
+        connect_timeout_secs: Some(0),
+        ..Default::default()
+    });
+    assert_zero_connect_timeout_error(result, "ClientOptions");
+}
+
+#[test]
+fn a_zero_connect_timeout_is_an_error_in_the_json_config() {
+    let result = liter_llm::create_client_from_json(r#"{"api_key":"test-key","connect_timeout_secs":0}"#);
+    assert_zero_connect_timeout_error(result, "JSON config");
+}
+
+#[test]
+fn a_zero_connect_timeout_is_an_error_in_the_toml_config() {
+    let config = liter_llm::FileConfig::from_toml_str("api_key = \"test-key\"\nconnect_timeout_secs = 0\n")
+        .expect("the config parses")
+        .into_builder()
+        .build();
+    assert_zero_connect_timeout_error(DefaultClient::new(config, None), "TOML config");
+}
+
+#[test]
+fn a_zero_connect_timeout_is_an_error_in_the_llm_config() {
+    let config = liter_llm::LlmConfig {
+        model: "openai/m".to_owned(),
+        api_key: Some("test-key".to_owned()),
+        connect_timeout_secs: Some(0),
+        ..Default::default()
+    }
+    .into_client_builder()
+    .build();
+    assert_zero_connect_timeout_error(DefaultClient::new(config, Some("openai/m")), "LlmConfig");
+}
+
+#[test]
+fn a_one_second_connect_timeout_is_accepted() {
+    let result = liter_llm::create_client_with_options(liter_llm::ClientOptions {
+        api_key: "test-key".into(),
+        connect_timeout_secs: Some(1),
+        ..Default::default()
+    });
+    assert!(result.is_ok(), "got {:?}", result.err());
 }

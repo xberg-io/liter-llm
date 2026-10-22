@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Java: builder setters of optional primitive fields take `Long` and have a `long` overload, so the signature changes.
 - Elixir: specs name struct types instead of `map()`.
 - Ruby: an optional string argument of the wrong type raises instead of becoming an empty string.
-- The client option `connect_timeout_secs` (Rust `connect_timeout`) sets how long the client waits for a connection to open. The default is 10 seconds; before, the connect step had no limit of its own, so this changes a public default. It is set in the client options, the TOML and JSON config files, and `LlmConfig` of every binding. A connection that does not open in time fails with `Timeout` and is retried up to `max_retries` times, because the server never saw the request. A request that times out after the connection is open is still sent once. The request `timeout_secs` ends the call first when it is shorter than the connect timeout (#341).
+- The client option `connect_timeout_secs` (Rust `connect_timeout`) sets how long the client waits for a connection to open. The default is 10 seconds; before, the connect step had no limit of its own, so this changes a public default. It is set in the client options, the TOML and JSON config files, and `LlmConfig` of every binding. A connection that does not open in time fails with `Timeout` and is retried up to `max_retries` times, because the server never saw the request. A request that times out after the connection is open is still sent once. The request `timeout_secs` ends the call first when it is shorter than the connect timeout. A value of zero is a `BadRequest` error when the client is created. `wasm32` does not use the option (#341).
 
 ### Added
 
