@@ -10,8 +10,8 @@ name: liter-llm
 
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:d6c306e983d2305d8037cb8f4e973ff21eeb0e3ed4a5ac342c4c7dbfae965836
-Source-Hash: blake3:88c87867f5079f6c8fcb582aee913cca4f6feefe541c5361d2307a9b45233f97
+Content-Hash: blake3:3e0dcb446dcc37cd4709da048b254902f8d7f825b553308c5d25074419895562
+Source-Hash: blake3:d3660ff50caaec152c20dce3dd60288dc9d9290a8e656c7f6d8bb74c7727852d
 Schema-Version: v1
 -->
 
