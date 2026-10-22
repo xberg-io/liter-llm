@@ -92,6 +92,7 @@ impl EmbeddingProvider for SelfHostedEmbeddingProvider {
             encoding_format: None,
             dimensions: Some(self.dim as u32),
             user: None,
+            extra_body: None,
         };
         let client = Arc::clone(&self.client);
         Box::pin(async move {

@@ -315,6 +315,7 @@ async fn service_embed_returns_embedding_response() {
         encoding_format: None,
         dimensions: None,
         user: None,
+        extra_body: None,
     };
     let resp = svc
         .call(LlmRequest::Embed(req))
@@ -425,6 +426,7 @@ fn request_type_labels() {
             encoding_format: None,
             dimensions: None,
             user: None,
+            extra_body: None,
         })
         .request_type(),
         "embeddings"
@@ -443,6 +445,7 @@ fn operation_name_labels() {
             encoding_format: None,
             dimensions: None,
             user: None,
+            extra_body: None,
         })
         .operation_name(),
         "embeddings"
