@@ -211,7 +211,8 @@ async fn openai_compatible_raw_stream_cut_on_an_event_boundary_is_an_error() {
 }
 
 const RESPONSE_CREATED: &str = r#"{"type":"response.created"}"#;
-const RESPONSE_DELTA: &str = r#"{"type":"response.output_text.delta","item_id":"m1","output_index":0,"content_index":0,"delta":"Hi"}"#;
+const RESPONSE_DELTA: &str =
+    r#"{"type":"response.output_text.delta","item_id":"m1","output_index":0,"content_index":0,"delta":"Hi"}"#;
 
 fn response_terminal(kind: &str) -> String {
     format!(
