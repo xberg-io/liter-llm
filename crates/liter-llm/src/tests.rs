@@ -4,6 +4,38 @@ fn init_crypto_for_unit_tests() {
     crate::ensure_crypto_provider();
 }
 
+/// A loopback port that refuses every connection and that no other process can take.
+///
+/// The socket is bound and never listens, so the operating system answers each connect with a
+/// refusal. The socket keeps the port while the value lives. A port that a test binds and then
+/// frees can go to another test process before the test connects to it. Keep the value in a
+/// named binding until the test ends.
+#[cfg(all(test, feature = "native-http"))]
+pub(crate) struct RefusedPort {
+    _socket: tokio::net::TcpSocket,
+    url: String,
+}
+
+#[cfg(all(test, feature = "native-http"))]
+impl RefusedPort {
+    pub(crate) fn new() -> Self {
+        let socket = tokio::net::TcpSocket::new_v4().expect("create socket");
+        socket.set_reuseaddr(false).expect("disable address reuse");
+        socket
+            .bind("127.0.0.1:0".parse().expect("loopback address"))
+            .expect("bind the refusing port");
+        let port = socket.local_addr().expect("refusing port address").port();
+        Self {
+            _socket: socket,
+            url: format!("http://127.0.0.1:{port}/"),
+        }
+    }
+
+    pub(crate) fn url(&self) -> &str {
+        &self.url
+    }
+}
+
 #[cfg(test)]
 mod serde_tests {
     use crate::types::*;
@@ -1596,11 +1628,9 @@ mod error_tests {
     #[cfg(feature = "native-http")]
     #[tokio::test]
     async fn reqwest_connect_failure_stays_network() {
-        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
-        let url = format!("http://{}/", listener.local_addr().expect("addr"));
-        drop(listener);
+        let port = super::RefusedPort::new();
         let client = reqwest::Client::new();
-        let err = client.get(&url).send().await.expect_err("connection refused");
+        let err = client.get(port.url()).send().await.expect_err("connection refused");
         assert!(matches!(LiterLlmError::from(err), LiterLlmError::Network { .. }));
     }
 }

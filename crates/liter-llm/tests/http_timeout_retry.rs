@@ -253,18 +253,30 @@ async fn a_refused_connection_is_still_tried_again() {
     // Nothing listens at first, so the first attempt fails before any request
     // is sent. A server starts on the same port while the client backs off
     // (the first back-off is at least 500 ms).
-    let probe = TcpListener::bind("127.0.0.1:0").expect("bind probe");
-    let address = probe.local_addr().expect("probe address");
-    drop(probe);
+    //
+    // The socket is bound at once and listens only later. A bound socket that does not listen
+    // refuses connections, and it keeps the port, so no other process can take it in between.
+    let socket = tokio::net::TcpSocket::new_v4().expect("create socket");
+    socket.set_reuseaddr(false).expect("disable address reuse");
+    socket
+        .bind("127.0.0.1:0".parse().expect("loopback address"))
+        .expect("bind the refusing port");
+    let address = socket.local_addr().expect("refusing port address");
     let requests = Arc::new(AtomicUsize::new(0));
     let counter = Arc::clone(&requests);
-    thread::spawn(move || {
-        thread::sleep(Duration::from_millis(200));
-        let listener = TcpListener::bind(address).expect("bind server on the probe port");
-        let (stream, _) = listener.accept().expect("accept the retried request");
-        read_request(&stream);
-        counter.fetch_add(1, Ordering::SeqCst);
-        respond(stream, "200 OK", REPLY);
+    tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        let listener = socket.listen(16).expect("listen on the refusing port");
+        let (stream, _) = listener.accept().await.expect("accept the retried request");
+        let stream = stream.into_std().expect("convert to a blocking stream");
+        stream.set_nonblocking(false).expect("blocking stream");
+        tokio::task::spawn_blocking(move || {
+            read_request(&stream);
+            counter.fetch_add(1, Ordering::SeqCst);
+            respond(stream, "200 OK", REPLY);
+        })
+        .await
+        .expect("answer the retried request");
     });
     let server = Server {
         base_url: format!("http://{address}"),

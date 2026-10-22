@@ -733,16 +733,7 @@ mod tests {
 
     use super::*;
     use crate::provider::{OutboundPolicy, set_outbound_policy};
-
-    /// Bind an ephemeral loopback port, then immediately release it. Connections to
-    /// the now-closed port are refused instantly (no live network, no timeout wait),
-    /// giving a deterministic, genuine `reqwest::Error` transport failure for tests.
-    fn closed_port_url() -> String {
-        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind ephemeral port");
-        let port = listener.local_addr().expect("local_addr").port();
-        drop(listener);
-        format!("http://127.0.0.1:{port}/")
-    }
+    use crate::tests::RefusedPort;
 
     fn one_shot_json_server() -> (String, std::thread::JoinHandle<()>) {
         let listener = TcpListener::bind("127.0.0.1:0").expect("bind JSON server");
@@ -813,7 +804,8 @@ mod tests {
         use tracing::instrument::WithSubscriber as _;
 
         let client = reqwest::Client::builder().no_proxy().build().expect("HTTP client");
-        let url = format!("{}path-secret-marker?key=query-secret-marker", closed_port_url());
+        let port = RefusedPort::new();
+        let url = format!("{}path-secret-marker?key=query-secret-marker", port.url());
         let warnings = RetryWarnings::default();
         let mut attempts = 0;
         let result = with_retry(&url, 1, || {
@@ -853,7 +845,8 @@ mod tests {
         // transport-level error (e.g. connection refused) immediately via `?`,
         // bypassing the retry loop entirely regardless of `max_retries`.
         let client = reqwest::Client::new();
-        let url = closed_port_url();
+        let port = RefusedPort::new();
+        let url = port.url().to_owned();
         let mut attempts = 0u32;
 
         let result = with_retry(&url, 2, || {
@@ -876,7 +869,8 @@ mod tests {
     #[serial(outbound_policy)]
     async fn with_retry_does_not_retry_transport_errors_when_max_retries_is_zero() {
         let client = reqwest::Client::new();
-        let url = closed_port_url();
+        let port = RefusedPort::new();
+        let url = port.url().to_owned();
         let mut attempts = 0u32;
 
         let result = with_retry(&url, 0, || {
@@ -898,7 +892,7 @@ mod tests {
         set_outbound_policy(OutboundPolicy::DenyPrivate);
         let result = post_json_raw(
             &reqwest::Client::new(),
-            &closed_port_url(),
+            RefusedPort::new().url(),
             None,
             &[],
             Bytes::from_static(b"{}"),
@@ -934,7 +928,7 @@ mod tests {
         set_outbound_policy(OutboundPolicy::DenyPrivate);
         let result = post_multipart(
             &reqwest::Client::new(),
-            &closed_port_url(),
+            RefusedPort::new().url(),
             None,
             &[],
             reqwest::multipart::Form::new(),
