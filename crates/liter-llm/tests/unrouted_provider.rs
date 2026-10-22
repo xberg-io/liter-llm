@@ -764,7 +764,7 @@ impl Drop for CustomGuard {
 async fn assert_custom_provider_not_refused(
     name: &'static str,
     endpoint: &str,
-    calls: fn(&DefaultClient, &str) -> Calls,
+    calls: for<'a> fn(&'a DefaultClient, &'a str) -> Calls<'a>,
 ) {
     let target = Spy::start(Some("{}"));
     let model = format!("{name}/some-model");
