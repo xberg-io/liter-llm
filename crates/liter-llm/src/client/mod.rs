@@ -246,6 +246,19 @@ pub(crate) fn chunk_has_finish_reason(chunk: &ChatCompletionChunk) -> bool {
     chunk.choices.iter().any(|choice| choice.finish_reason.is_some())
 }
 
+/// Whether a Responses event ends the reply: `response.completed`,
+/// `response.incomplete` or `response.failed`.
+///
+/// A Responses stream ends with `[DONE]` or with such an event. A stream that
+/// closes with neither was cut.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) fn response_event_is_terminal(event: &ResponseStreamEvent) -> bool {
+    matches!(
+        event,
+        ResponseStreamEvent::Completed(_) | ResponseStreamEvent::Incomplete(_) | ResponseStreamEvent::Failed(_)
+    )
+}
+
 /// Whether a provider's native chat stream protocol always ends with an event
 /// that carries a finish reason.
 ///
@@ -762,6 +775,8 @@ pub trait ResponseClient: Send + Sync {
     /// Returns a stream of `ResponseStreamEvent` items. The stream terminates
     /// when a terminal event (`response.completed`, `response.incomplete`, or
     /// `response.failed`) is yielded and the underlying connection closes.
+    /// If the connection closes before a terminal event, the stream yields one
+    /// `Streaming` error after the last event.
     ///
     /// # Errors
     ///
@@ -799,6 +814,8 @@ pub trait ResponseClient {
     /// Returns a stream of `ResponseStreamEvent` items. The stream terminates
     /// when a terminal event (`response.completed`, `response.incomplete`, or
     /// `response.failed`) is yielded and the underlying connection closes.
+    /// If the connection closes before a terminal event, the stream yields one
+    /// `Streaming` error after the last event.
     ///
     /// # Errors
     ///
@@ -2721,7 +2738,7 @@ impl ResponseClient for DefaultClient {
                     body: body_bytes,
                 },
                 parse_response_stream_event,
-                None,
+                Some(response_event_is_terminal),
                 self.response_read_options(),
             )
             .await

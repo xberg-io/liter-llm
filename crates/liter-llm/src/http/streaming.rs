@@ -483,8 +483,7 @@ fn truncation_error_at_eof(buffer: &mut String, cursor: &mut usize, pending: &mu
 fn missing_final_event_error() -> LiterLlmError {
     tracing::warn!("SSE stream ended before [DONE] or a final event; stream was truncated");
     LiterLlmError::Streaming {
-        message: "SSE stream ended before its final event ([DONE] or a chunk with a finish reason); \
-                  the response is incomplete"
+        message: "SSE stream ended before its final event; the response is incomplete"
             .to_owned(),
     }
 }
