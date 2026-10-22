@@ -498,6 +498,7 @@ async fn effective_model_none_for_speech_variant() {
         voice: "alloy".into(),
         response_format: None,
         speed: None,
+        extra_body: None,
     }))
     .await
     .expect("should succeed");

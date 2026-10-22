@@ -3887,8 +3887,8 @@ public class CreateImageRequest: CreateImageRequestRefMut {
     }
 }
 extension CreateImageRequest {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ prompt: GenericIntoRustString, _ model: Optional<GenericIntoRustString>, _ n: Optional<UInt32>, _ size: Optional<GenericIntoRustString>, _ quality: Optional<GenericIntoRustString>, _ style: Optional<GenericIntoRustString>, _ response_format: Optional<GenericIntoRustString>, _ user: Optional<GenericIntoRustString>) {
-        self.init(ptr: __swift_bridge__$CreateImageRequest$new({ let rustString = prompt.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let rustString = optionalStringIntoRustString(model) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), n.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(size) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(quality) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(style) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(response_format) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(user) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
+    public convenience init<GenericIntoRustString: IntoRustString>(_ prompt: GenericIntoRustString, _ model: Optional<GenericIntoRustString>, _ n: Optional<UInt32>, _ size: Optional<GenericIntoRustString>, _ quality: Optional<GenericIntoRustString>, _ style: Optional<GenericIntoRustString>, _ response_format: Optional<GenericIntoRustString>, _ user: Optional<GenericIntoRustString>, _ extra_body: Optional<GenericIntoRustString>) {
+        self.init(ptr: __swift_bridge__$CreateImageRequest$new({ let rustString = prompt.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let rustString = optionalStringIntoRustString(model) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), n.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(size) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(quality) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(style) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(response_format) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(user) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(extra_body) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
     }
 }
 public class CreateImageRequestRefMut: CreateImageRequestRef {
@@ -3934,6 +3934,10 @@ extension CreateImageRequestRef {
 
     public func user() -> Optional<RustString> {
         { let val = __swift_bridge__$CreateImageRequest$user(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func extraBody() -> Optional<RustString> {
+        { let val = __swift_bridge__$CreateImageRequest$extra_body(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
 extension CreateImageRequest: Vectorizable {
@@ -4112,8 +4116,8 @@ public class CreateSpeechRequest: CreateSpeechRequestRefMut {
     }
 }
 extension CreateSpeechRequest {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ input: GenericIntoRustString, _ voice: GenericIntoRustString, _ response_format: Optional<GenericIntoRustString>, _ speed: Optional<Double>) {
-        self.init(ptr: __swift_bridge__$CreateSpeechRequest$new({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = input.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = voice.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let rustString = optionalStringIntoRustString(response_format) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), speed.intoFfiRepr()))
+    public convenience init<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ input: GenericIntoRustString, _ voice: GenericIntoRustString, _ response_format: Optional<GenericIntoRustString>, _ speed: Optional<Double>, _ extra_body: Optional<GenericIntoRustString>) {
+        self.init(ptr: __swift_bridge__$CreateSpeechRequest$new({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = input.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = voice.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let rustString = optionalStringIntoRustString(response_format) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), speed.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(extra_body) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
     }
 }
 public class CreateSpeechRequestRefMut: CreateSpeechRequestRef {
@@ -4147,6 +4151,10 @@ extension CreateSpeechRequestRef {
 
     public func speed() -> Optional<Double> {
         __swift_bridge__$CreateSpeechRequest$speed(ptr).intoSwiftRepr()
+    }
+
+    public func extraBody() -> Optional<RustString> {
+        { let val = __swift_bridge__$CreateSpeechRequest$extra_body(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
 extension CreateSpeechRequest: Vectorizable {
@@ -4213,8 +4221,8 @@ public class CreateTranscriptionRequest: CreateTranscriptionRequestRefMut {
     }
 }
 extension CreateTranscriptionRequest {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ file: GenericIntoRustString, _ language: Optional<GenericIntoRustString>, _ prompt: Optional<GenericIntoRustString>, _ response_format: Optional<GenericIntoRustString>, _ temperature: Optional<Double>) {
-        self.init(ptr: __swift_bridge__$CreateTranscriptionRequest$new({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = file.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let rustString = optionalStringIntoRustString(language) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(prompt) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(response_format) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), temperature.intoFfiRepr()))
+    public convenience init<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ file: GenericIntoRustString, _ language: Optional<GenericIntoRustString>, _ prompt: Optional<GenericIntoRustString>, _ response_format: Optional<GenericIntoRustString>, _ temperature: Optional<Double>, _ extra_body: Optional<GenericIntoRustString>) {
+        self.init(ptr: __swift_bridge__$CreateTranscriptionRequest$new({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = file.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let rustString = optionalStringIntoRustString(language) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(prompt) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(response_format) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), temperature.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(extra_body) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
     }
 }
 public class CreateTranscriptionRequestRefMut: CreateTranscriptionRequestRef {
@@ -4252,6 +4260,10 @@ extension CreateTranscriptionRequestRef {
 
     public func temperature() -> Optional<Double> {
         __swift_bridge__$CreateTranscriptionRequest$temperature(ptr).intoSwiftRepr()
+    }
+
+    public func extraBody() -> Optional<RustString> {
+        { let val = __swift_bridge__$CreateTranscriptionRequest$extra_body(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
 extension CreateTranscriptionRequest: Vectorizable {
@@ -4933,8 +4945,8 @@ public class EmbeddingRequest: EmbeddingRequestRefMut {
     }
 }
 extension EmbeddingRequest {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ input: EmbeddingInput, _ encoding_format: Optional<EmbeddingFormat>, _ dimensions: Optional<UInt32>, _ user: Optional<GenericIntoRustString>) {
-        self.init(ptr: __swift_bridge__$EmbeddingRequest$new({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), {input.isOwned = false; return input.ptr;}(), { if let val = encoding_format { val.isOwned = false; return val.ptr } else { return nil } }(), dimensions.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(user) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
+    public convenience init<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ input: EmbeddingInput, _ encoding_format: Optional<EmbeddingFormat>, _ dimensions: Optional<UInt32>, _ user: Optional<GenericIntoRustString>, _ extra_body: Optional<GenericIntoRustString>) {
+        self.init(ptr: __swift_bridge__$EmbeddingRequest$new({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), {input.isOwned = false; return input.ptr;}(), { if let val = encoding_format { val.isOwned = false; return val.ptr } else { return nil } }(), dimensions.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(user) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(extra_body) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
     }
 }
 public class EmbeddingRequestRefMut: EmbeddingRequestRef {
@@ -4968,6 +4980,10 @@ extension EmbeddingRequestRef {
 
     public func user() -> Optional<RustString> {
         { let val = __swift_bridge__$EmbeddingRequest$user(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func extraBody() -> Optional<RustString> {
+        { let val = __swift_bridge__$EmbeddingRequest$extra_body(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
 extension EmbeddingRequest: Vectorizable {
@@ -7552,8 +7568,8 @@ public class ModerationRequest: ModerationRequestRefMut {
     }
 }
 extension ModerationRequest {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ input: ModerationInput, _ model: Optional<GenericIntoRustString>) {
-        self.init(ptr: __swift_bridge__$ModerationRequest$new({input.isOwned = false; return input.ptr;}(), { if let rustString = optionalStringIntoRustString(model) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
+    public convenience init<GenericIntoRustString: IntoRustString>(_ input: ModerationInput, _ model: Optional<GenericIntoRustString>, _ extra_body: Optional<GenericIntoRustString>) {
+        self.init(ptr: __swift_bridge__$ModerationRequest$new({input.isOwned = false; return input.ptr;}(), { if let rustString = optionalStringIntoRustString(model) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(extra_body) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
     }
 }
 public class ModerationRequestRefMut: ModerationRequestRef {
@@ -7575,6 +7591,10 @@ extension ModerationRequestRef {
 
     public func model() -> Optional<RustString> {
         { let val = __swift_bridge__$ModerationRequest$model(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func extraBody() -> Optional<RustString> {
+        { let val = __swift_bridge__$ModerationRequest$extra_body(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
 extension ModerationRequest: Vectorizable {
@@ -8019,6 +8039,10 @@ extension OcrRequestRef {
 
     public func includeImageBase64() -> Optional<Bool> {
         __swift_bridge__$OcrRequest$include_image_base64(ptr).intoSwiftRepr()
+    }
+
+    public func extraBody() -> Optional<RustString> {
+        { let val = __swift_bridge__$OcrRequest$extra_body(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
 extension OcrRequest: Vectorizable {
@@ -8661,8 +8685,8 @@ public class RerankRequest: RerankRequestRefMut {
     }
 }
 extension RerankRequest {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ query: GenericIntoRustString, _ documents: RustVec<RerankDocument>, _ top_n: Optional<UInt32>, _ return_documents: Optional<Bool>) {
-        self.init(ptr: __swift_bridge__$RerankRequest$new({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = query.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let val = documents; val.isOwned = false; return val.ptr }(), top_n.intoFfiRepr(), return_documents.intoFfiRepr()))
+    public convenience init<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ query: GenericIntoRustString, _ documents: RustVec<RerankDocument>, _ top_n: Optional<UInt32>, _ return_documents: Optional<Bool>, _ extra_body: Optional<GenericIntoRustString>) {
+        self.init(ptr: __swift_bridge__$RerankRequest$new({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = query.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let val = documents; val.isOwned = false; return val.ptr }(), top_n.intoFfiRepr(), return_documents.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(extra_body) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
     }
 }
 public class RerankRequestRefMut: RerankRequestRef {
@@ -8696,6 +8720,10 @@ extension RerankRequestRef {
 
     public func returnDocuments() -> Optional<Bool> {
         __swift_bridge__$RerankRequest$return_documents(ptr).intoSwiftRepr()
+    }
+
+    public func extraBody() -> Optional<RustString> {
+        { let val = __swift_bridge__$RerankRequest$extra_body(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
 extension RerankRequest: Vectorizable {
@@ -9432,6 +9460,10 @@ extension SearchRequestRef {
 
     public func country() -> Optional<RustString> {
         { let val = __swift_bridge__$SearchRequest$country(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func extraBody() -> Optional<RustString> {
+        { let val = __swift_bridge__$SearchRequest$extra_body(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
 extension SearchRequest: Vectorizable {

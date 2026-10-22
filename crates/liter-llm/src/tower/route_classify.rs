@@ -270,6 +270,7 @@ impl RouteClassifier for EmbeddingSimilarityClassifier {
                 encoding_format: None,
                 dimensions: None,
                 user: None,
+                extra_body: None,
             };
 
             let resp = match self.client.embed(embed_req).await {

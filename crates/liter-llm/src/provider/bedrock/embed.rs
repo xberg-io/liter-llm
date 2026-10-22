@@ -2,14 +2,12 @@
 
 use crate::error::Result;
 
-/// `input_type` sent for Bedrock Cohere embed models.
+/// `input_type` sent for Bedrock Cohere embed models when the caller sets none.
 ///
-/// Cohere's v3 embed models require this field, but OpenAI's `EmbeddingRequest` has
-/// no equivalent concept to map from, so a default must be chosen. `search_document`
-/// is the indexing-side value — correct for the dominant use of an embeddings
-/// endpoint. A caller embedding *queries* wants `search_query` and will get subtly
-/// mismatched vectors; that needs a provider-options passthrough to fix properly,
-/// which this constant deliberately does not fake. ~keep
+/// Cohere's v3 embed models require this field. `search_document` is the
+/// indexing-side value, which keeps requests from existing callers unchanged. A
+/// caller embedding queries sets `input_type` to `search_query` in the request's
+/// `extra_body`, which overrides this default. ~keep
 const COHERE_EMBED_DEFAULT_INPUT_TYPE: &str = "search_document";
 
 /// Convert an OpenAI-style embedding request to a Bedrock model-family `InvokeModel` body.
@@ -24,6 +22,7 @@ const COHERE_EMBED_DEFAULT_INPUT_TYPE: &str = "search_document";
 /// Supported families:
 /// - Amazon Titan (`amazon.titan-embed-*`): `{"inputText": "..."}`.
 /// - Cohere Embed (`cohere.embed-*`): `{"texts": [...], "input_type": "search_document"}`.
+///   The caller's `extra_body` overrides `input_type` and adds fields such as `truncate`.
 ///
 /// Any other model prefix is rejected with a clear error rather than guessed at.
 ///
@@ -73,15 +72,18 @@ pub(super) fn transform_bedrock_embed_request(body: &mut serde_json::Value) -> R
         if let Some(dimensions) = body.get("dimensions") {
             new_body["dimensions"] = dimensions.clone();
         }
+        crate::provider::carry_extra_body(body, &mut new_body);
         *body = new_body;
         return Ok(());
     }
 
     if model.starts_with("cohere.embed") {
-        *body = json!({
+        let mut new_body = json!({
             "texts": texts,
             "input_type": COHERE_EMBED_DEFAULT_INPUT_TYPE
         });
+        crate::provider::carry_extra_body(body, &mut new_body);
+        *body = new_body;
         return Ok(());
     }
 
