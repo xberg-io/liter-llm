@@ -116,6 +116,12 @@ where
     .await
 }
 
+/// Send a streaming POST request with the response read limits in `options`.
+///
+/// `is_final` makes the end of the stream checked: when it is `Some`, the
+/// stream must end with `[DONE]`, with an item that `is_final` accepts, or with
+/// an error. A clean close with none of these yields one `Streaming` error.
+/// `None` ends the stream on any clean close.
 #[tracing::instrument(
     name = "post_stream",
     level = "debug",
@@ -176,6 +182,12 @@ where
     .await
 }
 
+/// Send a cancellable streaming POST request with the response read limits in `options`.
+///
+/// `is_final` makes the end of the stream checked: when it is `Some`, the
+/// stream must end with `[DONE]`, with an item that `is_final` accepts, or with
+/// an error. A clean close with none of these yields one `Streaming` error.
+/// `None` ends the stream on any clean close.
 #[tracing::instrument(
     name = "post_stream_with_cancel",
     level = "debug",
@@ -469,7 +481,7 @@ fn truncation_error_at_eof(buffer: &mut String, cursor: &mut usize, pending: &mu
 /// before any final item: the connection was cut on an event boundary, so the
 /// reply is incomplete.
 fn missing_final_event_error() -> LiterLlmError {
-    tracing::error!("SSE stream ended before [DONE] or a final event; stream was truncated");
+    tracing::warn!("SSE stream ended before [DONE] or a final event; stream was truncated");
     LiterLlmError::Streaming {
         message: "SSE stream ended before its final event ([DONE] or a chunk with a finish reason); \
                   the response is incomplete"
@@ -547,6 +559,7 @@ pub(crate) fn parse_sse_line(line: &str) -> Option<Result<ChatCompletionChunk>> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::client::chunk_has_finish_reason;
 
     #[test]
     fn bytes_pool_reuses_buffer() {
@@ -786,10 +799,6 @@ mod tests {
 
 "#;
 
-    fn has_finish_reason(chunk: &ChatCompletionChunk) -> bool {
-        chunk.choices.iter().any(|choice| choice.finish_reason.is_some())
-    }
-
     /// A parser over `body`, with the end of the stream checked when `is_final` is set.
     fn checked_parser(
         body: &str,
@@ -818,7 +827,7 @@ mod tests {
     #[tokio::test]
     async fn done_sentinel_ends_a_checked_stream_cleanly() {
         let body = format!("{CONTENT_EVENT}data: [DONE]\n\n");
-        let items = drain_checked(&body, Some(has_finish_reason)).await;
+        let items = drain_checked(&body, Some(chunk_has_finish_reason)).await;
         assert_eq!(items.len(), 1, "one chunk and a clean end: {items:?}");
         assert!(items[0].is_ok());
     }
@@ -826,7 +835,7 @@ mod tests {
     #[tokio::test]
     async fn finish_reason_ends_a_checked_stream_cleanly_without_done() {
         let body = format!("{CONTENT_EVENT}{FINISH_EVENT}");
-        let items = drain_checked(&body, Some(has_finish_reason)).await;
+        let items = drain_checked(&body, Some(chunk_has_finish_reason)).await;
         assert_eq!(items.len(), 2, "two chunks and a clean end: {items:?}");
         assert!(items.iter().all(Result::is_ok));
     }
@@ -834,7 +843,7 @@ mod tests {
     #[tokio::test]
     async fn clean_close_on_an_event_boundary_without_done_is_an_error() {
         let body = format!("{CONTENT_EVENT}{CONTENT_EVENT}");
-        let items = drain_checked(&body, Some(has_finish_reason)).await;
+        let items = drain_checked(&body, Some(chunk_has_finish_reason)).await;
         assert_eq!(items.len(), 3, "two chunks and one error: {items:?}");
         assert!(items[0].is_ok() && items[1].is_ok());
         assert_missing_final_event(&items[2]);
@@ -842,14 +851,14 @@ mod tests {
 
     #[tokio::test]
     async fn empty_body_is_an_error_when_the_end_is_checked() {
-        let items = drain_checked("", Some(has_finish_reason)).await;
+        let items = drain_checked("", Some(chunk_has_finish_reason)).await;
         assert_eq!(items.len(), 1);
         assert_missing_final_event(&items[0]);
     }
 
     #[tokio::test]
     async fn missing_final_event_error_is_reported_once() {
-        let mut parser = checked_parser(CONTENT_EVENT, Some(has_finish_reason));
+        let mut parser = checked_parser(CONTENT_EVENT, Some(chunk_has_finish_reason));
         assert!(futures_util::StreamExt::next(&mut parser).await.expect("chunk").is_ok());
         assert_missing_final_event(&futures_util::StreamExt::next(&mut parser).await.expect("error"));
         assert!(futures_util::StreamExt::next(&mut parser).await.is_none());
@@ -859,7 +868,7 @@ mod tests {
     #[tokio::test]
     async fn parse_error_is_not_followed_by_a_missing_final_event_error() {
         let body = format!("{CONTENT_EVENT}data: not json\n\n");
-        let items = drain_checked(&body, Some(has_finish_reason)).await;
+        let items = drain_checked(&body, Some(chunk_has_finish_reason)).await;
         assert_eq!(items.len(), 2, "a chunk and the parse error only: {items:?}");
         assert!(items[0].is_ok());
         assert!(
@@ -872,7 +881,7 @@ mod tests {
     #[tokio::test]
     async fn mid_event_cut_on_a_checked_stream_is_reported_once_as_truncation() {
         let body = format!("{CONTENT_EVENT}data: {{\"id\":\"1\",\"choi");
-        let items = drain_checked(&body, Some(has_finish_reason)).await;
+        let items = drain_checked(&body, Some(chunk_has_finish_reason)).await;
         assert_eq!(items.len(), 2, "a chunk and one truncation error: {items:?}");
         assert!(items[0].is_ok());
         match &items[1] {
@@ -891,7 +900,7 @@ mod tests {
             Ok::<_, reqwest::Error>(Bytes::from_static(&[0xFF])),
         ]);
         let parser: Pin<Box<SseParser<_, _, _>>> =
-            Box::pin(SseParser::new(inner, json_parse, Some(has_finish_reason), None));
+            Box::pin(SseParser::new(inner, json_parse, Some(chunk_has_finish_reason), None));
         let items = futures_util::StreamExt::collect::<Vec<_>>(parser).await;
         // ~keep The reader also reports the rejected byte left pending, with or without the end check.
         assert!(items[0].is_ok());
@@ -907,7 +916,7 @@ mod tests {
     #[tokio::test]
     async fn polling_a_checked_stream_after_done_stays_ended() {
         let body = format!("{CONTENT_EVENT}data: [DONE]\n\n");
-        let mut parser = checked_parser(&body, Some(has_finish_reason));
+        let mut parser = checked_parser(&body, Some(chunk_has_finish_reason));
         assert!(
             futures_util::StreamExt::next(&mut parser)
                 .await
@@ -926,7 +935,7 @@ mod tests {
             Ok::<_, reqwest::Error>(Bytes::from(vec![b'x'; MAX_BUFFER_BYTES + 1])),
         ]);
         let parser: Pin<Box<SseParser<_, _, _>>> =
-            Box::pin(SseParser::new(inner, json_parse, Some(has_finish_reason), None));
+            Box::pin(SseParser::new(inner, json_parse, Some(chunk_has_finish_reason), None));
         let items = futures_util::StreamExt::collect::<Vec<_>>(parser).await;
         assert_eq!(items.len(), 2, "a chunk and the overflow error: {items:?}");
         assert!(items[0].is_ok());
@@ -945,7 +954,7 @@ mod tests {
             Err(transport_error),
         ]);
         let parser: Pin<Box<SseParser<_, _, _>>> =
-            Box::pin(SseParser::new(inner, json_parse, Some(has_finish_reason), None));
+            Box::pin(SseParser::new(inner, json_parse, Some(chunk_has_finish_reason), None));
         let items = futures_util::StreamExt::collect::<Vec<_>>(parser).await;
         assert_eq!(items.len(), 2, "a chunk and the transport error: {items:?}");
         assert!(items[0].is_ok());

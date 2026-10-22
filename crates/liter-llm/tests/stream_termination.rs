@@ -18,7 +18,8 @@ use std::thread;
 
 use futures_util::StreamExt;
 use liter_llm::LiterLlmError;
-use liter_llm::client::{ClientConfigBuilder, DefaultClient, LlmClient, LlmClientRaw};
+use liter_llm::client::{ClientConfigBuilder, DefaultClient, LlmClient, LlmClientRaw, ResponseClient};
+use liter_llm::types::responses::CreateResponseRequest;
 use liter_llm::types::{ChatCompletionChunk, ChatCompletionRequest, FinishReason, Message, UserMessage};
 
 /// Serve one SSE response with `body`, then close the connection.
@@ -93,6 +94,21 @@ fn sse(events: &[&str]) -> String {
     events.iter().map(|event| format!("data: {event}\n\n")).collect()
 }
 
+/// A cut stream must end in a `Streaming` error that names the provider and its own
+/// final event, as the provider wrapper words it. The generic SSE reader text, which
+/// names `[DONE]`, must not replace it.
+fn assert_truncated_by_provider(items: &[Result<ChatCompletionChunk, LiterLlmError>], provider: &str) {
+    assert_truncated(items);
+    let Some(Err(LiterLlmError::Streaming { message })) = items.last() else {
+        panic!("stream must end in a Streaming error, got {:?}", items.last());
+    };
+    assert!(
+        message.starts_with(&format!("{provider} stream ended before its final event")),
+        "the error must name the provider and its final event, got: {message}"
+    );
+    assert!(!message.contains("[DONE]"), "unexpected generic message: {message}");
+}
+
 fn assert_truncated(items: &[Result<ChatCompletionChunk, LiterLlmError>]) {
     let (last, content) = items.split_last().expect("stream yields items");
     assert!(
@@ -122,7 +138,10 @@ const ANTHROPIC_END: &str =
 
 #[tokio::test]
 async fn anthropic_stream_cut_before_message_delta_is_an_error() {
-    assert_truncated(&collect(ANTHROPIC_MODEL, sse(&[ANTHROPIC_START, ANTHROPIC_DELTA])).await);
+    assert_truncated_by_provider(
+        &collect(ANTHROPIC_MODEL, sse(&[ANTHROPIC_START, ANTHROPIC_DELTA])).await,
+        "anthropic",
+    );
 }
 
 #[tokio::test]
@@ -141,7 +160,7 @@ const GEMINI_MODEL: &str = "gemini/gemini-2.5-flash";
 #[tokio::test]
 async fn gemini_stream_cut_before_finish_reason_is_an_error() {
     let body = sse(&[r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello"}]}}]}"#]);
-    assert_truncated(&collect(GEMINI_MODEL, body).await);
+    assert_truncated_by_provider(&collect(GEMINI_MODEL, body).await, "google_ai");
 }
 
 #[tokio::test]
@@ -189,4 +208,45 @@ async fn openai_compatible_stream_with_finish_reason_and_no_done_completes() {
 #[tokio::test]
 async fn openai_compatible_raw_stream_cut_on_an_event_boundary_is_an_error() {
     assert_truncated(&collect_raw("openai/gpt-4o", sse(&[OPENAI_CONTENT, OPENAI_CONTENT])).await);
+}
+
+/// The Responses stream does not check its end: it has no finish reason on its events,
+/// so a clean close without a final event stays a clean end. Turning the check on for
+/// this call site would make the stream error here.
+#[tokio::test]
+async fn responses_stream_closed_without_a_final_event_ends_cleanly() {
+    let (client, server) = client(
+        "openai/gpt-4o",
+        sse(&[r#"{"type":"response.created"}"#, r#"{"type":"response.created"}"#]),
+    );
+    let req = CreateResponseRequest {
+        model: "gpt-4o".into(),
+        input: serde_json::json!("Hello"),
+        instructions: None,
+        tools: None,
+        temperature: None,
+        max_output_tokens: None,
+        metadata: None,
+        extra_body: None,
+        stream: None,
+    };
+    let stream = client.create_response_stream(req).await.expect("stream opens");
+    let items = stream.collect::<Vec<_>>().await;
+    server.join().expect("response server completed");
+    assert_eq!(items.len(), 2, "both events arrive: {items:?}");
+    assert!(
+        items.iter().all(Result::is_ok),
+        "a clean close must not be an error: {items:?}"
+    );
+}
+
+#[tokio::test]
+async fn anthropic_raw_stream_cut_before_message_delta_is_an_error() {
+    assert_truncated(&collect_raw(ANTHROPIC_MODEL, sse(&[ANTHROPIC_START, ANTHROPIC_DELTA])).await);
+}
+
+#[tokio::test]
+async fn gemini_raw_stream_cut_before_finish_reason_is_an_error() {
+    let body = sse(&[r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello"}]}}]}"#]);
+    assert_truncated(&collect_raw(GEMINI_MODEL, body).await);
 }

@@ -16,6 +16,10 @@ pub struct CreateSpeechRequest {
     /// Playback speed in `[0.25, 4.0]`. Defaults to 1.0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub speed: Option<f64>,
+    /// Provider-specific parameters merged into the request body, as chat's
+    /// `extra_body` is. Keys here override identically named fields.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extra_body: Option<serde_json::Value>,
 }
 
 /// Request to transcribe audio into text.
@@ -38,6 +42,10 @@ pub struct CreateTranscriptionRequest {
     /// Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub temperature: Option<f64>,
+    /// Provider-specific parameters merged into the request body, as chat's
+    /// `extra_body` is. Keys here override identically named fields.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extra_body: Option<serde_json::Value>,
 }
 
 /// Response from a transcription request.
