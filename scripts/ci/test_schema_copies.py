@@ -1,7 +1,7 @@
 """Ensure the two copies of each schema registry stay byte-equal.
 
 The crate embeds `crates/liter-llm/schemas/<name>.json` and other tooling reads
-`schemas/<name>.json`. A change to one copy only changes no other check.
+`schemas/<name>.json`. A change to one copy passes every other check.
 """
 
 from pathlib import Path
