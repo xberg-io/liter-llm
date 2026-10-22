@@ -190,5 +190,12 @@ tracing-core = "0.1"
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 reqwest = { workspace = true, features = ["gzip"] }
 
+# ~keep The wasm32 tests run in Node.js through `wasm-bindgen-test-runner`; see tests/wasm_timeout.rs.
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+js-sys = "0.3"
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = "0.4"
+wasm-bindgen-test = { workspace = true }
+
 [lints]
 workspace = true
