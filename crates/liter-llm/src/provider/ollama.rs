@@ -13,6 +13,10 @@ const PREFIXES: [&str; 2] = ["ollama/", "ollama_chat/"];
 /// puts in `extra_body` is a model setting and goes into `options`. ~keep
 const TOP_LEVEL_KEYS: &[&str] = &["keep_alive", "think", "format", "logprobs", "top_logprobs"];
 
+/// Request keys that belong at the top level of an `/api/embed` request. Every other key a caller
+/// puts in `extra_body` is a model setting and goes into `options`. ~keep
+const EMBED_TOP_LEVEL_KEYS: &[&str] = &["model", "input", "truncate", "keep_alive", "dimensions"];
+
 /// Ollama's native API (`/api/chat`, `/api/embed`, `/api/tags`).
 ///
 /// Model settings such as `num_ctx`, `top_k` and `repeat_penalty` go in `options`, where
@@ -493,13 +497,47 @@ fn embed_request(obj: &mut Map<String, Value>) -> Result<()> {
         }
         _ => return Err(bad_request("embedding input must be a string or a list of strings")),
     }
-    // The client merges `extra_body` into the rebuilt body, so `/api/embed` fields such as
-    // `truncate`, `keep_alive` and `options` reach Ollama.
-    if let Some(extra_body) = obj.remove("extra_body") {
-        native.insert("extra_body".into(), extra_body);
-    }
+    embed_extra_body(obj.remove("extra_body"), &mut native);
     *obj = native;
     Ok(())
+}
+
+/// Apply the caller's `extra_body` to a native embed request, as chat does.
+///
+/// The keys `/api/embed` takes at the top level (`model`, `input`, `truncate`, `keep_alive`,
+/// `dimensions`) replace the request's own value. Every other key is a model setting such as
+/// `num_ctx` and goes into `options`. An explicit `options` object is merged into those keys,
+/// and its keys win on a conflict. A null value sets nothing, so it is not sent. A value that is
+/// not an object stays on the body as `extra_body`, where the client drops it with a warning.
+fn embed_extra_body(extra_body: Option<Value>, native: &mut Map<String, Value>) {
+    let extra = match extra_body {
+        Some(Value::Object(extra)) => extra,
+        Some(Value::Null) | None => return,
+        Some(other) => {
+            native.insert("extra_body".into(), other);
+            return;
+        }
+    };
+    let mut options = Map::new();
+    let mut explicit = Map::new();
+    for (key, value) in extra {
+        match value {
+            Value::Null => {}
+            Value::Object(given) if key == "options" => {
+                explicit.extend(given.into_iter().filter(|(_, v)| !v.is_null()));
+            }
+            value if EMBED_TOP_LEVEL_KEYS.contains(&key.as_str()) => {
+                native.insert(key, value);
+            }
+            value => {
+                options.insert(key, value);
+            }
+        }
+    }
+    options.extend(explicit);
+    if !options.is_empty() {
+        native.insert("options".into(), Value::Object(options));
+    }
 }
 
 /// The tool calls of a native message as `(name, arguments as JSON text)`.
@@ -773,11 +811,39 @@ mod tests {
     }
 
     #[test]
-    fn embed_request_keeps_extra_body_for_the_client_to_merge() {
-        let mut body = json!({"model": "m", "input": "a", "extra_body": {"truncate": false}});
-        OllamaProvider::default().transform_request(&mut body).unwrap();
-        assert_eq!(body["extra_body"], json!({"truncate": false}));
-        assert_eq!(body["input"], "a");
+    fn embed_extra_body_follows_the_chat_rule() {
+        let cases = [
+            (
+                "top level keys",
+                json!({"truncate": false, "keep_alive": "5m"}),
+                json!({"model": "m", "input": "a", "truncate": false, "keep_alive": "5m"}),
+            ),
+            (
+                "a bare setting goes to options",
+                json!({"num_ctx": 8192}),
+                json!({"model": "m", "input": "a", "options": {"num_ctx": 8192}}),
+            ),
+            (
+                "explicit options win on a conflict",
+                json!({"num_ctx": 1, "num_thread": 2, "options": {"num_ctx": 8192}}),
+                json!({"model": "m", "input": "a", "options": {"num_ctx": 8192, "num_thread": 2}}),
+            ),
+            (
+                "null members are not sent",
+                json!({"keep_alive": null, "num_ctx": null, "options": {"top_k": null}}),
+                json!({"model": "m", "input": "a"}),
+            ),
+            (
+                "a non-object stays for the client to drop",
+                json!("x"),
+                json!({"model": "m", "input": "a", "extra_body": "x"}),
+            ),
+        ];
+        for (name, extra, expected) in cases {
+            let mut body = json!({"model": "m", "input": "a", "extra_body": extra});
+            OllamaProvider::default().transform_request(&mut body).unwrap();
+            assert_eq!(body, expected, "{name}");
+        }
     }
 
     #[test]

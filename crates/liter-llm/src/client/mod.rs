@@ -347,8 +347,8 @@ impl Stream for RequireTerminalChunk {
 /// effect for OpenAI-compatible providers, which pass `extra_body` through
 /// unchanged. The Bedrock and Vertex embed transforms differ: they rebuild the body
 /// and keep `extra_body` on it, so this merge applies the caller's keys. The Ollama
-/// embed transform does the same. The Gemini
-/// API embed transform merges them into each embed request itself. The Responses path
+/// embed transform consumes them itself: top-level keys stay, the rest go into `options`.
+/// The Gemini API embed transform merges them into each embed request itself. The Responses path
 /// ([`response_request_body`]) runs no provider transform at all, so the merged keys
 /// always reach the wire as literal OpenAI Responses fields.
 ///
@@ -3912,12 +3912,14 @@ mod build_provider_tests {
         let model = "ollama/nomic-embed-text";
         let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
             .expect("client construction should succeed");
-        let req = embed_request(model, Some(serde_json::json!({"truncate": false, "keep_alive": "5m"})));
+        let req = embed_request(model, Some(serde_json::json!({"truncate": false, "keep_alive": "5m", "num_ctx": 8192})));
 
         let prepared = client
             .prepare_request(&req, |p| p.embeddings_path(), &req.model, None)
             .expect("prepare_request should not fail");
 
+        assert_eq!(prepared.body_json["options"]["num_ctx"], 8192);
+        assert!(prepared.body_json.get("num_ctx").is_none());
         assert_eq!(prepared.body_json["truncate"], false);
         assert_eq!(prepared.body_json["keep_alive"], "5m");
         assert_eq!(prepared.body_json["input"], "what is rust?");
