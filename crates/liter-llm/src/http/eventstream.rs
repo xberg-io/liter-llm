@@ -60,6 +60,7 @@ where
         ResponseReadOptions {
             max_retries,
             max_response_bytes: None,
+            timeout: None,
         },
     )
     .await
@@ -86,7 +87,7 @@ where
     P: Fn(&str, &str) -> Result<Option<ChatCompletionChunk>> + Send + 'static,
 {
     let resp = request.send(client, options).await?;
-    let byte_stream = resp.bytes_stream();
+    let byte_stream = crate::http::deadline::idle_timeout(resp.bytes_stream(), options.timeout);
     let stream = EventStreamParser::new(byte_stream, parse_event);
     Ok(Box::pin(stream))
 }
@@ -248,9 +249,10 @@ impl<S, P> EventStreamParser<S, P> {
     }
 }
 
-impl<S, P> Stream for EventStreamParser<S, P>
+impl<S, E, P> Stream for EventStreamParser<S, P>
 where
-    S: Stream<Item = std::result::Result<bytes::Bytes, reqwest::Error>>,
+    S: Stream<Item = std::result::Result<bytes::Bytes, E>>,
+    LiterLlmError: From<E>,
     P: Fn(&str, &str) -> Result<Option<ChatCompletionChunk>>,
 {
     type Item = Result<ChatCompletionChunk>;
