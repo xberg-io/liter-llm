@@ -185,6 +185,10 @@ pub struct BedrockProvider {
     /// Explicit AWS session token, overriding `AWS_SESSION_TOKEN` when set.
     session_token: Option<String>,
     dynamic_credentials: bool,
+    /// False when no credential comes from the environment: no `AWS_BEARER_TOKEN_BEDROCK`
+    /// and no `AWS_ACCESS_KEY_ID` pair. Explicit credentials still sign; with none, requests
+    /// go out unsigned.
+    environment_credentials: bool,
 }
 
 impl BedrockProvider {
@@ -218,6 +222,7 @@ impl BedrockProvider {
             secret_access_key: None,
             session_token: None,
             dynamic_credentials: false,
+            environment_credentials: true,
         }
     }
 
@@ -259,6 +264,13 @@ impl BedrockProvider {
 
     pub(crate) fn with_dynamic_credentials(mut self, enabled: bool) -> Self {
         self.dynamic_credentials = enabled;
+        self
+    }
+
+    /// Whether credentials come from the environment. A client with a `base_url` and a bare
+    /// `bedrock` hint turns this off, so no AWS variable goes to the `base_url` host.
+    pub(crate) fn with_environment_credentials(mut self, enabled: bool) -> Self {
+        self.environment_credentials = enabled;
         self
     }
 
@@ -338,6 +350,9 @@ impl BedrockProvider {
     /// principal. Against *environment* credentials the token wins, matching the AWS
     /// SDKs. Without the feature nothing can sign, so a usable token always wins. ~keep
     fn bearer_token(&self) -> Option<String> {
+        if !self.environment_credentials {
+            return None;
+        }
         #[cfg(feature = "bedrock")]
         {
             if self.has_explicit_credential() {
@@ -347,6 +362,12 @@ impl BedrockProvider {
         std::env::var("AWS_BEARER_TOKEN_BEDROCK")
             .ok()
             .filter(|token| !token.is_empty())
+    }
+
+    /// True when no credential can sign: none comes from the environment and none was set in code.
+    #[cfg(feature = "bedrock")]
+    fn sends_unsigned(&self) -> bool {
+        !self.environment_credentials && !self.has_explicit_credential()
     }
 
     /// Whether any credential field was set in code rather than left to the environment.
@@ -433,9 +454,14 @@ impl Provider for BedrockProvider {
             if self.bearer_token().is_some() {
                 return Ok(());
             }
+            // ~keep Without environment credentials, a provider with no explicit one sends unsigned.
+            if self.sends_unsigned() {
+                return Ok(());
+            }
 
-            let has_access_key = self.access_key_id.is_some() || std::env::var("AWS_ACCESS_KEY_ID").is_ok();
-            let has_secret_key = self.secret_access_key.is_some() || std::env::var("AWS_SECRET_ACCESS_KEY").is_ok();
+            let from_env = |var: &str| self.environment_credentials && std::env::var(var).is_ok();
+            let has_access_key = self.access_key_id.is_some() || from_env("AWS_ACCESS_KEY_ID");
+            let has_secret_key = self.secret_access_key.is_some() || from_env("AWS_SECRET_ACCESS_KEY");
             // ~keep Both keys are required: sigv4_sign has no instance-profile/SSO fallback,
             // so a request missing either one can never actually be signed.
             if !has_access_key || !has_secret_key {
@@ -611,6 +637,9 @@ impl Provider for BedrockProvider {
 
         #[cfg(feature = "bedrock")]
         {
+            if self.sends_unsigned() {
+                return Ok(vec![]);
+            }
             sigv4_sign(
                 method,
                 url,
@@ -620,7 +649,7 @@ impl Provider for BedrockProvider {
                     access_key_id: self.access_key_id.as_deref(),
                     secret_access_key: self.secret_access_key.as_deref(),
                     session_token: self.session_token.as_deref(),
-                    use_environment: true,
+                    use_environment: self.environment_credentials,
                 },
             )
             .map_err(|error| {

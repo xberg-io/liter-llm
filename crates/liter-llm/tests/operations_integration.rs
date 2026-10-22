@@ -1741,17 +1741,29 @@ async fn rerank_tei_request_sends_texts_and_return_text() {
 /// A key in the environment that no request may carry.
 const KEY_FROM_ENV: &str = "key-from-the-environment";
 
-/// Sets or clears the key variables of the hinted providers; restores them on drop.
+/// Key variables of providers that a hint at a base_url wraps.
+const WRAPPED_KEY_VARS: &[&str] = &["COHERE_API_KEY", "MISTRAL_API_KEY", "GROQ_API_KEY"];
+
+/// Credential variables of the providers that keep their own type at a base_url.
+const NATIVE_KEY_VARS: &[&str] = &[
+    "ANTHROPIC_API_KEY",
+    "AZURE_OPENAI_API_KEY",
+    "GEMINI_API_KEY",
+    "AWS_BEARER_TOKEN_BEDROCK",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN",
+];
+
+/// Sets or clears key variables; restores them on drop.
 struct KeyVarGuard {
     saved: Vec<(&'static str, Option<String>)>,
 }
 
 impl KeyVarGuard {
-    const VARS: [&'static str; 3] = ["COHERE_API_KEY", "MISTRAL_API_KEY", "GROQ_API_KEY"];
-
-    fn set(value: Option<&str>) -> Self {
-        let saved = Self::VARS.iter().map(|v| (*v, std::env::var(v).ok())).collect();
-        for var in Self::VARS {
+    fn set(vars: &[&'static str], value: Option<&str>) -> Self {
+        let saved = vars.iter().map(|v| (*v, std::env::var(v).ok())).collect();
+        for &var in vars {
             // SAFETY: every test that writes the environment is `#[serial]`.
             unsafe {
                 match value {
@@ -1796,7 +1808,7 @@ fn chat_request(model: &str) -> liter_llm::types::ChatCompletionRequest {
 #[tokio::test]
 #[serial_test::serial]
 async fn a_hint_at_a_base_url_sends_no_key_from_the_environment() {
-    let _guard = KeyVarGuard::set(Some(KEY_FROM_ENV));
+    let _guard = KeyVarGuard::set(WRAPPED_KEY_VARS, Some(KEY_FROM_ENV));
     for hint in ["cohere", "mistral", "groq"] {
         let mock = MockServer::start_with_routes(vec![]);
         let client = keyless_hinted_client(&mock, hint).expect("a client without a key builds");
@@ -1822,13 +1834,140 @@ async fn a_hint_at_a_base_url_sends_no_key_from_the_environment() {
 #[test]
 #[serial_test::serial]
 fn a_hint_at_a_base_url_builds_without_a_key_variable() {
-    let _guard = KeyVarGuard::set(None);
+    let _guard = KeyVarGuard::set(WRAPPED_KEY_VARS, None);
     let mock = MockServer::start_with_routes(vec![]);
     for hint in ["cohere", "mistral", "groq"] {
         if let Err(error) = keyless_hinted_client(&mock, hint) {
             panic!("hint {hint}: a client without a key fails to build: {error}");
         }
     }
+}
+
+/// Sends one chat request from a keyless client with `hint` at a base_url, with every
+/// credential variable of Anthropic, Azure, Gemini and Bedrock set. Returns the request.
+async fn keyless_native_request(hint: &str) -> CapturedRequest {
+    let _guard = KeyVarGuard::set(NATIVE_KEY_VARS, Some(KEY_FROM_ENV));
+    let mock = MockServer::start_with_routes(vec![]);
+    let client = keyless_hinted_client(&mock, hint).expect("a client without a key builds");
+
+    let _ = client.chat(chat_request("m")).await;
+
+    let mut requests = mock.requests();
+    assert_eq!(requests.len(), 1, "hint {hint}: the request reaches the base_url host");
+    requests.remove(0)
+}
+
+/// A bare or model-name hint at a base_url keeps its provider's path and sends no
+/// credential from the environment.
+async fn assert_no_key_from_the_environment(hint: &str, path: &str) {
+    let request = keyless_native_request(hint).await;
+
+    let (route, _query) = request.path.split_once('?').unwrap_or((&request.path, ""));
+    assert_eq!(route, path, "hint {hint}: the hinted provider builds the path");
+    assert!(
+        !request.path.contains(KEY_FROM_ENV),
+        "hint {hint}: a key variable was sent in the URL"
+    );
+    let carried: Vec<_> = request
+        .headers
+        .iter()
+        .filter(|(_, value)| value.contains(KEY_FROM_ENV))
+        .collect();
+    assert!(carried.is_empty(), "hint {hint}: a key variable was sent: {carried:?}");
+    assert!(
+        !request.body.contains(KEY_FROM_ENV),
+        "hint {hint}: a key variable was sent in the body"
+    );
+}
+
+/// Revert line: drop the base_url check in `reads_environment_credentials`, and the client
+/// reads `ANTHROPIC_API_KEY` and sends it to the base_url host.
+#[tokio::test]
+#[serial_test::serial]
+async fn a_bare_anthropic_hint_at_a_base_url_sends_no_key_from_the_environment() {
+    assert_no_key_from_the_environment("anthropic", "/messages").await;
+}
+
+/// Revert line: as above.
+#[tokio::test]
+#[serial_test::serial]
+async fn a_claude_x_hint_at_a_base_url_sends_no_key_from_the_environment() {
+    assert_no_key_from_the_environment("claude-x", "/messages").await;
+}
+
+/// Revert line: as above.
+#[tokio::test]
+#[serial_test::serial]
+async fn a_claude_sonnet_4_hint_at_a_base_url_sends_no_key_from_the_environment() {
+    assert_no_key_from_the_environment("claude-sonnet-4", "/messages").await;
+}
+
+/// Revert line: as above, and the client sends `AZURE_OPENAI_API_KEY`.
+#[tokio::test]
+#[serial_test::serial]
+async fn a_bare_azure_hint_at_a_base_url_sends_no_key_from_the_environment() {
+    assert_no_key_from_the_environment("azure", "/openai/deployments/m/chat/completions").await;
+}
+
+/// Revert line: as above, and the client sends `GEMINI_API_KEY`.
+#[tokio::test]
+#[serial_test::serial]
+async fn a_bare_gemini_hint_at_a_base_url_sends_no_key_from_the_environment() {
+    assert_no_key_from_the_environment("gemini", "/models/m:generateContent").await;
+}
+
+/// Revert line: as above, and the client sends `GEMINI_API_KEY`.
+#[tokio::test]
+#[serial_test::serial]
+async fn a_bare_google_ai_hint_at_a_base_url_sends_no_key_from_the_environment() {
+    assert_no_key_from_the_environment("google_ai", "/models/m:generateContent").await;
+}
+
+/// Revert line: drop the `with_environment_credentials` call for Bedrock in `route_hint`,
+/// and the client sends `AWS_BEARER_TOKEN_BEDROCK` to the base_url host.
+#[tokio::test]
+#[serial_test::serial]
+async fn a_bare_bedrock_hint_at_a_base_url_sends_no_key_from_the_environment() {
+    assert_no_key_from_the_environment("bedrock", "/model/m/converse").await;
+}
+
+/// Revert line: drop the base_url check in `reads_environment_credentials`, and with the
+/// variables unset the client fails to build with "environment variable ANTHROPIC_API_KEY
+/// is not set".
+#[test]
+#[serial_test::serial]
+fn a_bare_or_model_name_hint_at_a_base_url_builds_without_a_key_variable() {
+    let _guard = KeyVarGuard::set(NATIVE_KEY_VARS, None);
+    let mock = MockServer::start_with_routes(vec![]);
+    for hint in [
+        "anthropic",
+        "claude-x",
+        "claude-sonnet-4",
+        "azure",
+        "gemini",
+        "google_ai",
+        "bedrock",
+    ] {
+        if let Err(error) = keyless_hinted_client(&mock, hint) {
+            panic!("hint {hint}: a client without a key fails to build: {error}");
+        }
+    }
+}
+
+/// Revert line: return `None` from `AnthropicProvider::at_base_url`, so that the wrapper
+/// carries Anthropic to the base_url, and `ANTHROPIC_API_KEY` is no longer read.
+#[tokio::test]
+#[serial_test::serial]
+async fn a_provider_prefix_hint_at_a_base_url_reads_its_key_variable() {
+    let request = keyless_native_request("anthropic/claude-x").await;
+
+    assert_eq!(request.path, "/messages");
+    let key = request
+        .headers
+        .iter()
+        .find(|(name, _)| name.eq_ignore_ascii_case("x-api-key"))
+        .map(|(_, value)| value.as_str());
+    assert_eq!(key, Some(KEY_FROM_ENV), "the key variable is the client's key");
 }
 
 /// Revert line: drop the `transform_response` forward in `BaseUrlOverride`, and Cohere's

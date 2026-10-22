@@ -98,6 +98,8 @@ A Bedrock API key (`ABSK...`, issued from the Bedrock console) is read from `AWS
 
 With the `bedrock` feature, any access-key, secret or session-token field set explicitly on the client takes precedence, since each falls back to the environment independently; the token takes precedence over `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` in the environment, matching the AWS SDKs. Without the feature an access-key pair cannot sign, so the token is used whatever else is set.
 
+With a `base_url`, the client reads these variables only for a `bedrock/<model>` hint. A bare `bedrock` hint at a `base_url` reads no AWS variable, and the client signs only with keys set on the client config.
+
 ## AWS Bedrock (STS web identity)
 
 `WebIdentityCredentialProvider` reads an OIDC JWT from a file, calls the STS `AssumeRoleWithWebIdentity` endpoint, and returns temporary AWS credentials for SigV4 signing. This is the standard flow for EKS pods using IAM Roles for Service Accounts (IRSA).
