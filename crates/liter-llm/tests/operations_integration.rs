@@ -1402,6 +1402,7 @@ fn object_document_request(model: &str) -> RerankRequest {
         ],
         top_n: Some(1),
         return_documents: Some(true),
+        extra_body: None,
     }
 }
 
