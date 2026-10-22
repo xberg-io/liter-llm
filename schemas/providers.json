@@ -2432,24 +2432,25 @@
     {
       "name": "ollama",
       "display_name": "Ollama",
-      "base_url": "http://localhost:11434/v1",
+      "$comment": "Calls Ollama's own /api/chat and /api/embed so that num_ctx, top_k and repeat_penalty in extra_body reach the model as options. Implemented in crates/liter-llm/src/provider/ollama.rs. For Ollama's OpenAI-compatible endpoint, use the openai/ prefix with the Ollama base_url.",
+      "base_url": "http://localhost:11434",
       "auth": {
         "type": "none"
       },
       "endpoints": ["chat", "embedding"],
-      "model_prefixes": ["ollama/", "ollama/deepseek-", "ollama/gpt-", "ollama/mistral-", "ollama/mixtral-"],
+      "model_prefixes": ["ollama/", "ollama_chat/"],
       "aliases": ["ollama_chat"],
       "model_count": 29,
       "capabilities": {
         "vision": true,
-        "reasoning": false,
+        "reasoning": true,
         "structured_output": true,
         "function_calling": true,
         "audio_in": false,
         "audio_out": false,
         "video_in": false
       },
-      "streaming_format": "sse"
+      "streaming_format": "ndjson"
     },
     {
       "name": "oobabooga",
