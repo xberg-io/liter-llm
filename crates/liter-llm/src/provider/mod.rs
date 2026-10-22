@@ -665,16 +665,7 @@ pub(crate) trait Provider: Send + Sync {
     /// override this to embed deployment names, model IDs, or query parameters
     /// into the URL.
     fn build_url(&self, endpoint_path: &str, _model: &str) -> String {
-        let Ok(mut base) = url::Url::parse(self.base_url()) else {
-            return format!("{}{}", self.base_url(), endpoint_path);
-        };
-        let path = format!(
-            "{}/{}",
-            base.path().trim_end_matches('/'),
-            endpoint_path.trim_start_matches('/')
-        );
-        base.set_path(&path);
-        base.into()
+        join_url(self.base_url(), endpoint_path)
     }
 
     /// Parse a single SSE event data string into a `ChatCompletionChunk`.
@@ -1268,6 +1259,20 @@ pub(crate) fn on_base_url(provider: Box<dyn Provider>, base_url: &str) -> Box<dy
         Some(rebased) => rebased,
         None => Box::new(rebased::BaseUrlOverride::new(provider, base_url)),
     }
+}
+
+/// `{base_url}{endpoint_path}`, with one `/` between the path of `base_url` and `endpoint_path`.
+pub(crate) fn join_url(base_url: &str, endpoint_path: &str) -> String {
+    let Ok(mut base) = url::Url::parse(base_url) else {
+        return format!("{base_url}{endpoint_path}");
+    };
+    let path = format!(
+        "{}/{}",
+        base.path().trim_end_matches('/'),
+        endpoint_path.trim_start_matches('/')
+    );
+    base.set_path(&path);
+    base.into()
 }
 
 /// The refusal for a model whose `provider/` prefix names a registry entry with no route.

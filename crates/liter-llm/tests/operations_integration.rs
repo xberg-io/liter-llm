@@ -1854,13 +1854,23 @@ fn chat_request(model: &str) -> liter_llm::types::ChatCompletionRequest {
     .expect("minimal chat request should deserialize")
 }
 
+/// Hints of providers that a base_url wraps, in the bare and the `provider/model` form.
+const WRAPPED_HINTS: &[&str] = &[
+    "cohere",
+    "mistral",
+    "groq",
+    "cohere/command-r-plus",
+    "mistral/mistral-large-latest",
+    "groq/llama3-8b",
+];
+
 /// Revert line: forward `env_var` to the wrapped provider in `BaseUrlOverride`, and the
-/// client reads `COHERE_API_KEY` and sends it to the `base_url` host.
+/// client reads `COHERE_API_KEY` for the `cohere/` hint and sends it to the `base_url` host.
 #[tokio::test]
 #[serial_test::serial]
 async fn a_hint_at_a_base_url_sends_no_key_from_the_environment() {
     let _guard = KeyVarGuard::set(WRAPPED_KEY_VARS, Some(KEY_FROM_ENV));
-    for hint in ["cohere", "mistral", "groq"] {
+    for hint in WRAPPED_HINTS {
         let mock = MockServer::start_with_routes(vec![]);
         let client = keyless_hinted_client(&mock, hint).expect("a client without a key builds");
 
@@ -1887,7 +1897,7 @@ async fn a_hint_at_a_base_url_sends_no_key_from_the_environment() {
 fn a_hint_at_a_base_url_builds_without_a_key_variable() {
     let _guard = KeyVarGuard::set(WRAPPED_KEY_VARS, None);
     let mock = MockServer::start_with_routes(vec![]);
-    for hint in ["cohere", "mistral", "groq"] {
+    for hint in WRAPPED_HINTS {
         if let Err(error) = keyless_hinted_client(&mock, hint) {
             panic!("hint {hint}: a client without a key fails to build: {error}");
         }
@@ -2050,4 +2060,62 @@ async fn a_cohere_chat_reply_at_a_base_url_is_rebuilt() {
     assert_eq!(reply["choices"][0]["message"]["content"], "hello");
     assert_eq!(reply["choices"][0]["finish_reason"], "stop");
     assert_eq!(reply["usage"]["total_tokens"], 5);
+}
+
+/// Revert line: drop the `build_url` of `BaseUrlOverride`, and the Cohere model list at a
+/// base_url goes to `/models` with no page size.
+#[tokio::test]
+async fn a_cohere_model_list_at_a_base_url_keeps_its_path_and_page_size() {
+    let mock = MockServer::start_with_routes(vec![MockRoute {
+        method: "GET".into(),
+        path_prefix: "/v1/models".into(),
+        status: 200,
+        body: serde_json::json!({"models": []}).to_string(),
+    }]);
+    let client = hinted_client(&mock, "cohere");
+
+    let _ = client.list_models().await;
+
+    let requests = mock.requests();
+    assert_eq!(requests.len(), 1, "one request reaches the base_url host");
+    assert_eq!(requests[0].method, "GET");
+    assert_eq!(requests[0].path, "/v1/models?page_size=1000");
+}
+
+/// Revert line: answer `/embeddings` from `embeddings_path` in `BaseUrlOverride`, or drop
+/// its `transform_embedding_request` forward, and Cohere's embed request at a base_url
+/// loses its path or its body.
+#[tokio::test]
+async fn a_cohere_embed_at_a_base_url_keeps_its_path_and_body() {
+    let mock = MockServer::start_with_routes(vec![MockRoute {
+        method: "POST".into(),
+        path_prefix: "/embed".into(),
+        status: 200,
+        body: serde_json::json!({
+            "id": "e1",
+            "embeddings": {"float": [[0.5, 0.25]]},
+            "texts": ["alpha"],
+            "meta": {"billed_units": {"input_tokens": 3}}
+        })
+        .to_string(),
+    }]);
+    let client = hinted_client(&mock, "cohere");
+
+    let resp = client
+        .embed(EmbeddingRequest {
+            model: "embed-english-v3.0".into(),
+            input: liter_llm::types::EmbeddingInput::Single("alpha".into()),
+            ..Default::default()
+        })
+        .await
+        .expect("a native Cohere embed reply parses");
+
+    let requests = mock.requests();
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].path, "/embed");
+    let sent: serde_json::Value = serde_json::from_str(&requests[0].body).expect("a JSON body");
+    assert_eq!(sent["texts"], serde_json::json!(["alpha"]));
+    assert!(sent.get("input").is_none(), "the OpenAI field is rebuilt: {sent}");
+    assert_eq!(resp.model, "embed-english-v3.0");
+    assert_eq!(resp.data[0].embedding, vec![0.5, 0.25]);
 }

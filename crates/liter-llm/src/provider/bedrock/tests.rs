@@ -1208,3 +1208,38 @@ fn foundation_model_without_a_provider_name_is_owned_by_bedrock() {
     provider().transform_response(&mut body).unwrap();
     assert_eq!(body["data"][0]["owned_by"], "bedrock");
 }
+
+/// Revert line: pass `use_environment: true` to `sigv4_sign` in `signing_headers`, and a
+/// provider without environment credentials signs with `AWS_SESSION_TOKEN` from the environment.
+#[test]
+#[serial]
+#[cfg(feature = "bedrock")]
+fn signing_without_environment_credentials_reads_no_session_token() {
+    const TOKEN: &str = "session-token-from-the-environment";
+    let prior = std::env::var("AWS_SESSION_TOKEN").ok();
+    // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
+    unsafe {
+        std::env::remove_var("AWS_BEARER_TOKEN_BEDROCK");
+        std::env::set_var("AWS_SESSION_TOKEN", TOKEN);
+    }
+    let url = "https://bedrock-runtime.us-east-1.amazonaws.com/model/foo/converse";
+    let carries_token = |environment: bool| {
+        provider()
+            .with_environment_credentials(environment)
+            .signing_headers("POST", url, b"{}")
+            .expect("explicit credentials sign")
+            .iter()
+            .any(|(_, value)| value.contains(TOKEN))
+    };
+    let without = carries_token(false);
+    let with = carries_token(true);
+    // ~keep SAFETY: as above.
+    unsafe {
+        match prior {
+            Some(value) => std::env::set_var("AWS_SESSION_TOKEN", value),
+            None => std::env::remove_var("AWS_SESSION_TOKEN"),
+        }
+    }
+    assert!(!without, "no environment credentials: the session token stays unread");
+    assert!(with, "environment credentials: the session token signs");
+}

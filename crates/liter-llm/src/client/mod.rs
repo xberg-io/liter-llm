@@ -3330,16 +3330,69 @@ mod build_provider_tests {
             let based_result = based.transform_request(&mut based_body).map_err(|e| e.to_string());
             assert_eq!(based_result, plain_result, "hint {hint}");
             assert_eq!(based_body, plain_body, "hint {hint}");
-            // ~keep Native Ollama drops a trailing `/v1` from its address: its route is `/api/chat` at the host.
-            let expected = match based.name() {
-                "ollama" => "http://gateway.test/api/chat".to_owned(),
-                "google_ai" => "http://gateway.test/v1/models/m:generateContent".to_owned(),
-                "vertex_ai" => "http://gateway.test/v1/publishers/google/models/m:generateContent".to_owned(),
-                _ => format!("http://gateway.test/v1{}", based.chat_completions_path()),
-            };
+            let expected = BASE_URL_CHAT_URLS
+                .iter()
+                .find(|(listed, _)| listed == hint)
+                .map(|(_, url)| *url)
+                .unwrap_or_else(|| panic!("hint {hint} has no expected chat URL"));
             let url = based.build_url(based.chat_completions_path(), "m");
             assert_eq!(url, expected, "hint {hint}");
         }
+    }
+
+    /// The chat URL of each routed hint at the base_url `http://gateway.test/v1`.
+    ///
+    /// Native Ollama drops a trailing `/v1` from its address: its route is `/api/chat` at the host.
+    const BASE_URL_CHAT_URLS: &[(&str, &str)] = &[
+        ("cohere", "http://gateway.test/v1/chat"),
+        ("cohere/command-r-plus", "http://gateway.test/v1/chat"),
+        ("mistral", "http://gateway.test/v1/chat/completions"),
+        (
+            "mistral/mistral-large-latest",
+            "http://gateway.test/v1/chat/completions",
+        ),
+        ("voyage", "http://gateway.test/v1/chat/completions"),
+        ("anthropic", "http://gateway.test/v1/messages"),
+        ("anthropic/claude-sonnet-4", "http://gateway.test/v1/messages"),
+        ("gemini", "http://gateway.test/v1/models/m:generateContent"),
+        (
+            "gemini/gemini-2.0-flash",
+            "http://gateway.test/v1/models/m:generateContent",
+        ),
+        ("google_ai", "http://gateway.test/v1/models/m:generateContent"),
+        (
+            "vertex_ai",
+            "http://gateway.test/v1/publishers/google/models/m:generateContent",
+        ),
+        (
+            "vertex_ai/gemini-2.0-flash",
+            "http://gateway.test/v1/publishers/google/models/m:generateContent",
+        ),
+        ("ollama", "http://gateway.test/api/chat"),
+        ("groq", "http://gateway.test/v1/chat/completions"),
+        ("fireworks_ai", "http://gateway.test/v1/chat/completions"),
+    ];
+
+    /// Revert line: drop the `environment_credentials` check from the Vertex AI default
+    /// credentials step in `DefaultClient::new`, and a bare `vertex_ai` hint at a base_url
+    /// reads the application default credentials for the base_url host.
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    fn a_bare_vertex_hint_at_a_base_url_reads_no_default_credentials() {
+        let config = ClientConfigBuilder::new("").base_url("http://gateway.test/v1").build();
+        let client = DefaultClient::new(config, Some("vertex_ai")).expect("client should build");
+        assert_eq!(client.provider.name(), "vertex_ai");
+        assert!(
+            client.config.credential_provider.is_none(),
+            "a bare hint at a base_url installs no default credentials"
+        );
+
+        let config = ClientConfigBuilder::new("").base_url("http://gateway.test/v1").build();
+        let client = DefaultClient::new(config, Some("vertex_ai/gemini-2.0-flash")).expect("client should build");
+        assert!(
+            client.config.credential_provider.is_some(),
+            "a `vertex_ai/` hint at a base_url installs the default credentials"
+        );
     }
 
     /// Revert line: read `config.base_url` instead of `config.effective_base_url()` in
