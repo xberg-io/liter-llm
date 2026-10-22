@@ -95,9 +95,10 @@ impl Deadline {
     where
         F: std::future::Future<Output = crate::error::Result<T>>,
     {
-        self.race(fut)
-            .await
-            .unwrap_or(Err(crate::error::LiterLlmError::Timeout))
+        match self.race(fut).await {
+            Ok(result) => result,
+            Err(Elapsed) => Err(crate::error::LiterLlmError::Timeout),
+        }
     }
 }
 

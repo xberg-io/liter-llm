@@ -87,15 +87,11 @@ where
 /// How a call retries and how much of the reply it reads.
 ///
 /// `timeout` is the limit of one attempt: send the request and read the reply. On native targets
-/// the HTTP client enforces the limit, so only the wasm32 build reads this field.
+/// the HTTP client enforces the limit, and the `Deadline` built from this field does nothing.
 #[derive(Clone, Copy)]
 pub(crate) struct ResponseReadOptions {
     pub max_retries: u32,
     pub max_response_bytes: Option<usize>,
-    #[cfg_attr(
-        not(target_arch = "wasm32"),
-        allow(dead_code, reason = "native clients enforce the timeout")
-    )]
     pub timeout: Option<std::time::Duration>,
 }
 
