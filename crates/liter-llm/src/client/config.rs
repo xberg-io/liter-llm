@@ -21,6 +21,17 @@ pub(crate) fn validate_response_limit(limit: Option<usize>) -> Result<()> {
     Ok(())
 }
 
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) fn validate_connect_timeout(timeout: Duration) -> Result<()> {
+    if timeout.is_zero() {
+        return Err(LiterLlmError::BadRequest {
+            message: "connect_timeout must be greater than zero".into(),
+            status: 400,
+        });
+    }
+    Ok(())
+}
+
 /// Configuration for an LLM client.
 ///
 /// `api_key` is stored as a [`SecretString`] so it is zeroed on drop and never
@@ -41,6 +52,13 @@ pub struct ClientConfig {
     /// fails when no data arrives for this long, so a stream can run for any total time while chunks
     /// keep arriving.
     pub timeout: Duration,
+    /// Connect timeout.
+    ///
+    /// A connection that does not open in this time fails with a connect timeout. The server
+    /// never saw the request, so the client sends it again, up to `max_retries` times. The request
+    /// `timeout` still ends the call when it is shorter. Zero is an error when the client is
+    /// created, on every target. `wasm32` ignores any other value.
+    pub connect_timeout: Duration,
     /// Maximum number of retries on 429 / 5xx responses.
     pub max_retries: u32,
     /// Optional maximum retained HTTP response body size; None preserves unbounded reads.
@@ -168,6 +186,7 @@ impl ClientConfig {
             api_key: SecretString::from(api_key.into()),
             base_url: None,
             timeout: Duration::from_secs(60),
+            connect_timeout: Duration::from_secs(10),
             max_retries: 3,
             max_response_bytes: None,
             extra_headers: Vec::new(),
@@ -221,6 +240,7 @@ impl std::fmt::Debug for ClientConfig {
         dbg.field("api_key", &"[redacted]")
             .field("base_url", &self.base_url)
             .field("timeout", &self.timeout)
+            .field("connect_timeout", &self.connect_timeout)
             .field("max_retries", &self.max_retries)
             .field("max_response_bytes", &self.max_response_bytes)
             .field("extra_headers", &redacted_headers)
@@ -321,6 +341,17 @@ impl ClientConfigBuilder {
     /// total time of the stream.
     pub fn timeout(mut self, timeout: Duration) -> Self {
         self.config.timeout = timeout;
+        self
+    }
+
+    /// Set the connect timeout (default: 10 s).
+    ///
+    /// A connection that does not open in this time is retried up to `max_retries` times.
+    /// A request that times out after the connection is open is sent once.
+    /// Zero is an error when the client is created, on every target. `wasm32` ignores any
+    /// other value.
+    pub fn connect_timeout(mut self, timeout: Duration) -> Self {
+        self.config.connect_timeout = timeout;
         self
     }
 

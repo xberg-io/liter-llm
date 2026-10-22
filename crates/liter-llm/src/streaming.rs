@@ -496,7 +496,7 @@ impl<S> EgressStream<S> {
             EgressMode::Passthrough
         } else {
             let encoding = match egress_format {
-                StreamFormat::Sse | StreamFormat::AwsEventStream => EgressEncoding::OpenAiSse,
+                StreamFormat::Sse | StreamFormat::AwsEventStream | StreamFormat::Ndjson => EgressEncoding::OpenAiSse,
             };
             EgressMode::ParseAndEncode(encoding)
         };

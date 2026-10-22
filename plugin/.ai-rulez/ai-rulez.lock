@@ -5,7 +5,7 @@ version = 1
 ai_rulez_version = '5.3.0'
 scope = 'all'
 outputs_pinned = true
-tree = 'sha256:9515f1989d140d95bf4d88f26cfb38bb8b215166019cac0fa9b7b3ab5ecf5c6a'
+tree = 'sha256:72b20cbba3e99a8ea2326b5d5acc6c56587d3ec80417cd65dba09e7e237fd744'
 
 [[item]]
 kind = 'command'
@@ -23,7 +23,7 @@ digest = 'sha256:2bfa1ec2a0fc33c2b3890f5ab8d2b4a94a9ca44b0391ce891f6d992edfdd26a
 kind = 'skill'
 id = 'liter-llm'
 path = 'skills/liter-llm'
-digest = 'sha256:113a36ae5f0de36206994477dd5140f4b6be2a02ffdf2bfa5fd7beb21f36139b'
+digest = 'sha256:0c44d0808b1a0625d66c5e0b163ac188f5c6b916141570bd3f7fe20ea3120b84'
 
 [[item]]
 kind = 'skill'

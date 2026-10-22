@@ -56,7 +56,8 @@ pub(crate) fn validate_sampling_param_range(
 /// The streaming wire format a provider uses for its response stream.
 ///
 /// Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
-/// a proprietary binary EventStream framing.
+/// a proprietary binary EventStream framing.  Ollama's native API streams
+/// newline-delimited JSON.
 ///
 /// Deserialized from the `streaming_format` JSON field via [`serde`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -67,6 +68,8 @@ pub enum StreamFormat {
     Sse,
     /// AWS EventStream binary framing (application/vnd.amazon.eventstream).
     AwsEventStream,
+    /// Newline-delimited JSON (application/x-ndjson): one JSON object per line.
+    Ndjson,
 }
 
 /// Static capability flags for a provider.
@@ -632,6 +635,26 @@ pub(crate) trait Provider: Send + Sync {
         Ok(())
     }
 
+    /// Transform the body of an embedding request before sending.
+    ///
+    /// The client calls this, and not [`Self::transform_request`], for the embeddings endpoint.
+    /// The default runs `transform_request`. A provider with its own embedding body overrides
+    /// it, so the choice depends on the endpoint and never on the shape of the body.
+    fn transform_embedding_request(&self, body: &mut serde_json::Value) -> Result<()> {
+        self.transform_request(body)
+    }
+
+    /// Transform the raw response JSON of an embedding request before deserialization.
+    ///
+    /// The client calls this, and not [`Self::transform_response`], for the embeddings
+    /// endpoint, after the request body is built. `request_model` is the model of the request.
+    /// The default runs `transform_response` and leaves the reply `model` as the provider sent
+    /// it. A provider whose embed reply has no `model` overrides it.
+    fn transform_embedding_response(&self, body: &mut serde_json::Value, request_model: &str) -> Result<()> {
+        let _ = request_model;
+        self.transform_response(body)
+    }
+
     /// Transform the raw response JSON before deserialization into canonical types.
     ///
     /// Providers returning non-OpenAI formats (Anthropic, Bedrock, Vertex) override
@@ -640,6 +663,13 @@ pub(crate) trait Provider: Send + Sync {
     /// unchanged).
     fn transform_response(&self, _body: &mut serde_json::Value) -> Result<()> {
         Ok(())
+    }
+
+    /// Rewrite an error built from an HTTP status reply before the caller sees it.
+    ///
+    /// The default implementation returns the error unchanged.
+    fn transform_error(&self, error: crate::error::LiterLlmError) -> crate::error::LiterLlmError {
+        error
     }
 
     /// Transform the raw rerank reply before deserialization into `RerankResponse`.
@@ -734,6 +764,26 @@ pub(crate) trait Provider: Send + Sync {
         StreamFormat::Sse
     }
 
+    /// Whether every complete chat stream from this provider ends with an event that carries a
+    /// finish reason, so a stream that ends without one was cut off.
+    ///
+    /// Default: `false`. The client then treats a clean end of the stream as a normal end, as
+    /// OpenAI-compatible servers need (#155, #295). A provider whose own stream protocol always
+    /// closes with a final event overrides this, and the client reports a stream that ends
+    /// without one as [`LiterLlmError::Streaming`](crate::error::LiterLlmError::Streaming).
+    fn stream_has_final_event(&self) -> bool {
+        false
+    }
+
+    /// Whether each chat stream event numbers its tool calls from 0.
+    ///
+    /// Default: `false`. A provider that overrides this sends each tool call once, complete, in
+    /// an event of its own, and the client continues the numbering across events and ends a
+    /// stream that made tool calls with `tool_calls`.
+    fn stream_tool_call_indexes_restart(&self) -> bool {
+        false
+    }
+
     /// Build the full URL for a streaming request.
     ///
     /// Default: delegates to [`Provider::build_url`].  Providers whose
@@ -805,6 +855,7 @@ pub mod custom;
 pub(crate) mod github_copilot;
 pub(crate) mod google_ai;
 pub(crate) mod mistral;
+pub(crate) mod ollama;
 pub mod outbound_policy;
 pub(crate) mod rerank_shape;
 pub(crate) mod vertex;
@@ -1160,6 +1211,25 @@ fn registry_entry_for_prefix<'r>(reg: &'r ProviderRegistry, prefix: &str) -> Opt
         .or_else(|| reg.providers.iter().find(|e| e.aliases.iter().any(|a| a == prefix)))
 }
 
+/// Whether the first `/`-separated segment of `model` names a provider: a registry entry by
+/// name or alias, a built-in provider, or a registered custom provider.
+///
+/// A bare model has none, and a slash alone makes no prefix: `hf.co/user/model` is bare, and
+/// so is `acme/m` until a custom provider named `acme` is registered; `openai/m` and
+/// `snowflake/m` are not.
+pub(crate) fn has_provider_prefix(model: &str) -> bool {
+    let Some((prefix, _)) = model.split_once('/') else {
+        return false;
+    };
+    // ~keep `google_ai/` is the one built-in prefix without a registry entry: it is the second
+    // name of the `gemini` provider in `detect_builtin_provider`.
+    prefix == "google_ai"
+        || REGISTRY
+            .as_ref()
+            .is_ok_and(|reg| registry_entry_for_prefix(reg, prefix).is_some())
+        || custom::is_custom_provider_prefix(prefix, model)
+}
+
 /// A registry entry has a route of its own when it names a `base_url` and is not a
 /// complex provider (complex providers need dedicated auth and request code, matched
 /// by prefix before the registry lookup in [`detect_provider`]).
@@ -1252,8 +1322,9 @@ pub(crate) fn refuse_unrouted_endpoint(provider: &dyn Provider, endpoint: Endpoi
 /// 4. Google AI Studio: `gemini/` or `google_ai/` prefix.
 /// 5. Vertex AI: `vertex_ai/` prefix.
 /// 6. AWS Bedrock: `bedrock/` prefix.
-/// 7. `"provider/"` prefix — look up the prefix in the registry.
-/// 8. Walk all registry entries and check their `model_prefixes`.
+/// 7. Ollama (native API): `ollama/` or `ollama_chat/` prefix.
+/// 8. `"provider/"` prefix — look up the prefix in the registry.
+/// 9. Walk all registry entries and check their `model_prefixes`.
 ///
 /// Returns `None` when no built-in provider matches.  Callers without a `base_url` use
 /// [`route_model`], which refuses a registry provider that has no route before the caller
@@ -1300,7 +1371,7 @@ pub(crate) fn detect_builtin_provider(model: &str) -> Option<Box<dyn Provider>> 
         return Some(Box::new(bedrock::BedrockProvider::from_env()));
     }
 
-    if model.starts_with("command-") || model.starts_with("cohere/") {
+    if cohere::CohereProvider.matches_model(model) {
         return Some(Box::new(cohere::CohereProvider));
     }
 
@@ -1310,6 +1381,10 @@ pub(crate) fn detect_builtin_provider(model: &str) -> Option<Box<dyn Provider>> 
         || model.starts_with("mistral/")
     {
         return Some(Box::new(mistral::MistralProvider));
+    }
+
+    if ollama::OllamaProvider::owns(model) {
+        return Some(Box::new(ollama::OllamaProvider::default()));
     }
 
     if model.starts_with("voyage/") {
@@ -1372,6 +1447,45 @@ pub fn complex_provider_names() -> Result<&'static HashSet<String>> {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    struct RenamingProvider;
+
+    impl Provider for RenamingProvider {
+        fn name(&self) -> &str {
+            "renaming"
+        }
+        fn base_url(&self) -> &str {
+            "https://example.invalid"
+        }
+        fn auth_header<'a>(&'a self, _api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
+            None
+        }
+        fn matches_model(&self, _model: &str) -> bool {
+            false
+        }
+        fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
+            body["renamed"] = json!(true);
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn transform_embedding_response_keeps_the_reply_model_by_default() {
+        let mut body = json!({"object": "list", "data": [], "model": ""});
+        RenamingProvider
+            .transform_embedding_response(&mut body, "request-model")
+            .expect("the default hook should not fail");
+        assert_eq!(body["model"], "");
+    }
+
+    #[test]
+    fn transform_embedding_request_runs_transform_request_by_default() {
+        let mut body = json!({"model": "m", "input": "x"});
+        RenamingProvider
+            .transform_embedding_request(&mut body)
+            .expect("the default hook should not fail");
+        assert_eq!(body["renamed"], true);
+    }
 
     /// Revert line: delete the `if value < min || value > max { ... }` check inside
     /// `validate_sampling_param_range` (or make it always return `Ok(())`) to make

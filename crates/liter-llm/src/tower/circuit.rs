@@ -535,7 +535,10 @@ mod tests {
 
     #[tokio::test]
     async fn open_circuit_rejects_requests_without_calling_inner() {
-        let p = policy(1);
+        // ~keep The backoff is far longer than any plausible pause between the two calls, so the
+        // ~keep circuit cannot half-open however busy the machine is. Half-open timing is covered
+        // ~keep by `circuit_breaker_half_opens_after_delay`.
+        let p = Arc::new(ExponentialBackoffCircuit::new(1, Duration::from_secs(3600)));
         let mock = MockClient::failing_timeout();
         let call_count = Arc::clone(&mock.call_count);
         let layer = CircuitLayer::new(Arc::clone(&p), "test");
