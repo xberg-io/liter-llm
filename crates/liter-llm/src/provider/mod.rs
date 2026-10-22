@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
+use web_time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::{LiterLlmError, Result};
 
@@ -12,6 +12,10 @@ use crate::error::{LiterLlmError, Result};
 /// Used by provider transformers to populate the `created` field in
 /// OpenAI-compatible response objects. Falls back to `0` if the system
 /// clock is before the epoch (should never happen in practice).
+///
+/// Reads the clock through `web_time`, which is `std::time` on native targets
+/// and a JavaScript `Date` clock on `wasm32-unknown-unknown`, where
+/// `std::time::SystemTime::now()` panics.
 pub(crate) fn unix_timestamp_secs() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)

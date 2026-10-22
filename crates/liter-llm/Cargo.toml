@@ -55,7 +55,7 @@ native-http = [
   "dep:gcp_auth",
 ]
 
-wasm-http = ["dep:reqwest", "dep:memchr", "dep:gloo-timers", "dep:web-time"]
+wasm-http = ["dep:reqwest", "dep:memchr", "dep:gloo-timers"]
 
 otel = ["dep:tracing-opentelemetry", "dep:opentelemetry"]
 
@@ -176,7 +176,7 @@ tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true, optional = true }
 url = { workspace = true }
 utoipa = { workspace = true, optional = true }
-web-time = { version = "1", optional = true }
+web-time = "1"
 
 [dev-dependencies]
 futures-util = { workspace = true }
