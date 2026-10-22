@@ -4788,7 +4788,7 @@ class RerankResult {
   /// Original document index in the input list.
   final PlatformInt64 index;
 
-  /// Relevance score in `[0, 1]`. Higher indicates more relevant.
+  /// Relevance score. Higher indicates more relevant. Most providers use `[0, 1]`; NVIDIA NIM sends a raw logit.
   final double relevanceScore;
 
   /// Original document content (if `return_documents` was true).
