@@ -312,6 +312,8 @@ impl<S, P, T> SseParser<S, P, T>
 where
     P: Fn(&str) -> Result<Option<T>>,
 {
+    // ~keep Only the native cancel path and the tests call `new`; on wasm32 it would be dead code.
+    #[cfg(any(test, feature = "native-http"))]
     fn new(inner: S, parse_event: P, is_final: Option<fn(&T) -> bool>, cancel: CancelField) -> Self {
         Self::new_with_framing(inner, parse_event, is_final, cancel, Framing::Sse)
     }
