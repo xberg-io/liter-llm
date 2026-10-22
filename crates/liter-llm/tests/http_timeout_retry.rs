@@ -248,6 +248,53 @@ async fn a_rate_limit_reply_is_still_sent_again() {
     assert_eq!(server.requests.load(Ordering::SeqCst), 2);
 }
 
+// macOS drops the SYN to a bound, non-listening socket, so this test runs on Linux only.
+#[cfg(target_os = "linux")]
+#[tokio::test]
+async fn a_refused_connection_is_still_tried_again() {
+    // Nothing listens at first, so the first attempt fails before any request
+    // is sent. A server starts on the same port while the client backs off
+    // (the first back-off is at least 500 ms).
+    //
+    // The socket is bound at once and listens only later. A bound socket that does not listen
+    // refuses connections, and it keeps the port, so no other process can take it in between.
+    let socket = tokio::net::TcpSocket::new_v4().expect("create socket");
+    socket.set_reuseaddr(false).expect("disable address reuse");
+    socket
+        .bind("127.0.0.1:0".parse().expect("loopback address"))
+        .expect("bind the refusing port");
+    let address = socket.local_addr().expect("refusing port address");
+    let requests = Arc::new(AtomicUsize::new(0));
+    let counter = Arc::clone(&requests);
+    tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        let listener = socket.listen(16).expect("listen on the refusing port");
+        let (stream, _) = listener.accept().await.expect("accept the retried request");
+        let stream = stream.into_std().expect("convert to a blocking stream");
+        stream.set_nonblocking(false).expect("blocking stream");
+        tokio::task::spawn_blocking(move || {
+            read_request(&stream);
+            counter.fetch_add(1, Ordering::SeqCst);
+            respond(stream, "200 OK", REPLY);
+        })
+        .await
+        .expect("answer the retried request");
+    });
+    let server = Server {
+        base_url: format!("http://{address}"),
+        requests,
+    };
+    let client = client(&server, Duration::from_secs(5), 2);
+
+    let result = client.chat(request()).await;
+
+    assert!(
+        result.is_ok(),
+        "the retry after a refused connection succeeds, got {result:?}"
+    );
+    assert_eq!(server.requests.load(Ordering::SeqCst), 1);
+}
+
 #[tokio::test]
 async fn a_connection_dropped_on_every_attempt_uses_up_the_retries() {
     // The server closes every connection with no reply. With max_retries 2 the
