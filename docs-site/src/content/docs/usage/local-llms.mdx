@@ -15,14 +15,14 @@ Liter-llm routes to any local inference engine that exposes an OpenAI-compatible
 
 | Provider                                               | Default URL                 | Prefix                    | Notes                                                                |
 | ------------------------------------------------------ | --------------------------- | ------------------------- | -------------------------------------------------------------------- |
-| [Ollama](https://ollama.ai)                            | `http://localhost:11434/v1` | `ollama/`                 | Most popular, easy setup                                             |
+| [Ollama](https://ollama.ai)                            | `http://localhost:11434`    | `ollama/`                 | Most popular, easy setup. Uses the native Ollama API                 |
 | [LM Studio](https://lmstudio.ai)                       | `http://localhost:1234/v1`  | `lmstudio/`               | GUI-based, beginner-friendly                                         |
 | [vLLM](https://docs.vllm.ai)                           | `http://localhost:8000/v1`  | `vllm/`                   | High-throughput serving                                              |
 | [llamafile](https://github.com/Mozilla-Ocho/llamafile) | `http://localhost:8080/v1`  | `llamafile/`              | Single-file executable                                               |
 
 All of these providers are registered in the [provider registry](/providers/). LocalAI and llama.cpp are also built in with the `localai/` and `llamacpp/` prefixes. For any other OpenAI-compatible server, use a [custom provider](/usage/configuration/#custom-providers) — register the prefix and base URL once, then route to it like any other provider.
 
-All listed engines also support streaming via SSE and model listing via `/v1/models`. Tool calling, vision, and multimodal inputs work through the chat endpoint where the underlying model supports them.
+Ollama is the exception to the OpenAI-compatible rule: `ollama/` calls its native API, `/api/chat` and `/api/embed`. See [Ollama's API](#ollamas-api). All other listed engines also support streaming via SSE and model listing via `/v1/models`. Tool calling, vision, and multimodal inputs work through the chat endpoint where the underlying model supports them.
 
 ## Quick Start with Ollama
 
@@ -153,17 +153,51 @@ Popular local embedding models include `all-minilm` (384 dims), `nomic-embed-tex
 
 ### Ollama
 
-Ollama runs on port 11434 by default. No additional configuration is needed:
+Ollama runs on port 11434 by default. The `ollama/` prefix (and its alias `ollama_chat/`) needs no additional configuration. To use another host, set `base_url` to the server address. One trailing `/v1` comes off before `/api/...` is appended, so an address written for the OpenAI-compatible endpoint works too:
 
 ```toml
 # liter-llm.toml
 api_key = ""
-
-[[providers]]
-name = "ollama"
-base_url = "http://localhost:11434/v1"
-model_prefixes = ["ollama/"]
+base_url = "http://ollama.internal:11434"
 ```
+
+#### Ollama's API
+
+The `ollama/` prefix calls Ollama's own API, `/api/chat` and `/api/embed`. Ollama reads the model settings `num_ctx`, `top_k` and `repeat_penalty` only on this API, so liter-llm puts every `extra_body` key except `keep_alive`, `think`, `format`, `logprobs` and `top_logprobs` into the `options` object of a chat request. An embed request keeps `model`, `input`, `truncate`, `keep_alive` and `dimensions` at the top level and puts every other `extra_body` key into `options`, `think` and `format` included. On an embed request, the keys of an explicit `options` object win over bare keys of the same name. Chat streams read newline-delimited JSON.
+
+To reach Ollama's OpenAI-compatible endpoint instead, use the `openai/` prefix and set `base_url` to the Ollama address with `/v1`:
+
+```python
+client = liter_llm.create_client_with_options(
+    liter_llm.ClientOptions(api_key="", base_url="http://localhost:11434/v1")
+)
+# model="openai/qwen2:0.5b" calls /v1/chat/completions
+```
+
+Ollama ignores `num_ctx`, `top_k` and `repeat_penalty` on that endpoint.
+
+The routing rule is: an Ollama hint always means the native API. A client built with the hint `ollama` or `ollama_chat`, or with a hint that starts with `ollama/` or `ollama_chat/`, sends every bare model such as `qwen2:0.5b` or `hf.co/user/model` to `/api/chat` and `/api/embed`, whatever `base_url` is. On such a client `list_models` reads `/api/tags`. A `base_url` that ends in `/v1` loses that suffix first. A model with another provider's prefix, such as `openai/m` or `groq/m`, goes to the OpenAI-compatible endpoint at the `base_url` as given, with the model name as given, as it did before. A provider prefix is the name of a built-in provider or of a custom provider registered with `register_custom_provider`; a prefix that names neither, such as `acme/` with no `acme` provider, makes no provider prefix, and the model is bare. The OpenAI-compatible endpoint is reached only through a provider prefix, such as `openai/`, as the hint or the model, with the Ollama `base_url`.
+
+Some request fields map to a native Ollama field:
+
+| Request field | Ollama field |
+|---|---|
+| `reasoning_effort` | `think` (`minimal` becomes `low`, `max` becomes `high`, `none` becomes `false`). A `think` key in `extra_body` wins. |
+| `logprobs`, `top_logprobs` | The same fields. A stream cannot carry them, so a stream request drops them with a warning. |
+| `max_tokens`, `max_completion_tokens`, `stop`, `seed`, `temperature`, `top_p`, `presence_penalty`, `frequency_penalty` | `options` |
+
+Ollama has no equivalent for these fields, so liter-llm drops them: `n`, `user`, `logit_bias`, `parallel_tool_calls`, `service_tier`, `store`, `stream_options`, `prediction`, and on embeddings `user` and `encoding_format`. liter-llm logs a warning for `metadata`, `audio`, `web_search_options`, a non-text `modalities` value, a `tool_choice` other than `auto`, and an `encoding_format` of `base64`.
+
+An `extra_body` key with the value `null`, at the top level or inside `options`, is not sent.
+
+liter-llm refuses some requests with a `BadRequest` error before it sends them, because Ollama's API cannot take them:
+
+| Request | What to send instead |
+|---|---|
+| An `image_url` part with an `http` or `https` URL | Download the image and send it as a base64 data URL, such as `data:image/png;base64,...`. A data URL without `;base64` is refused too. |
+| A message content part other than `text` and `image_url`, such as `input_audio` or `file` | Send text and images only, or use a provider that takes the part. |
+| Tool-call `arguments` in an assistant message that are not valid JSON | Send the arguments as a JSON object, as the model returned them. |
+| Embedding `input` that is not a string or a list of strings, such as token arrays or content parts | Send the text as a string or a list of strings. |
 
 :::note[Ollama model names]
 Ollama uses its own model naming (e.g., `llama3.2`, `qwen2:0.5b`, `codellama:13b`). Use `ollama list` to see installed models.
@@ -341,7 +375,7 @@ port = 4000
 
 [[providers]]
 name = "ollama"
-base_url = "http://ollama:11434/v1"
+base_url = "http://ollama:11434"
 model_prefixes = ["ollama/"]
 ```
 
@@ -411,14 +445,14 @@ timeout_secs = 300  # 5 minutes for initial model load
 
 When running liter-llm in Docker and a local provider on the host:
 
-- **Linux**: Use `http://host.docker.internal:11434/v1` or `http://172.17.0.1:11434/v1`
-- **macOS/Windows**: Use `http://host.docker.internal:11434/v1`
+- **Linux**: Use `http://host.docker.internal:11434` or `http://172.17.0.1:11434`
+- **macOS/Windows**: Use `http://host.docker.internal:11434`
 
 ```toml
 # liter-llm-proxy.toml (inside Docker)
 [[providers]]
 name = "ollama"
-base_url = "http://host.docker.internal:11434/v1"
+base_url = "http://host.docker.internal:11434"
 model_prefixes = ["ollama/"]
 ```
 

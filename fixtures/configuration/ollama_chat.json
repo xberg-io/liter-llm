@@ -1,0 +1,87 @@
+{
+  "id": "ollama_chat",
+  "description": "Ollama provider sends the chat to /api/chat and maps the native reply, including token counts and finish reason",
+  "docs": {
+    "topic": "configuration",
+    "stem": "ollama-chat",
+    "title": "Ollama provider sends the chat to /api/chat and maps the native reply"
+  },
+  "category": "configuration",
+  "tags": [
+    "configuration",
+    "local",
+    "ollama"
+  ],
+  "call": "chat_ollama",
+  "input": {
+    "model": "ollama/qwen2:0.5b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello"
+      }
+    ],
+    "extra_body": {
+      "num_ctx": 512,
+      "top_k": 5,
+      "repeat_penalty": 1.1
+    }
+  },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "model": "qwen2:0.5b",
+      "created_at": "2026-01-01T00:00:00Z",
+      "message": {
+        "role": "assistant",
+        "content": "Hello! How can I help you today?"
+      },
+      "done": true,
+      "done_reason": "stop",
+      "total_duration": 1000,
+      "load_duration": 100,
+      "prompt_eval_count": 5,
+      "eval_count": 8
+    }
+  },
+  "assertions": [
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "count_equals",
+      "field": "choices",
+      "value": 1
+    },
+    {
+      "type": "equals",
+      "field": "choices[0].message.content",
+      "value": "Hello! How can I help you today?"
+    },
+    {
+      "type": "equals",
+      "field": "choices[0].finish_reason",
+      "value": "stop"
+    },
+    {
+      "type": "equals",
+      "field": "model",
+      "value": "qwen2:0.5b"
+    },
+    {
+      "type": "equals",
+      "field": "usage.prompt_tokens",
+      "value": 5
+    },
+    {
+      "type": "equals",
+      "field": "usage.completion_tokens",
+      "value": 8
+    },
+    {
+      "type": "equals",
+      "field": "usage.total_tokens",
+      "value": 13
+    }
+  ]
+}

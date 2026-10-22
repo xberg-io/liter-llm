@@ -1,0 +1,65 @@
+{
+  "id": "ollama_embed",
+  "description": "Ollama provider sends the embedding to /api/embed and maps the native reply",
+  "docs": {
+    "topic": "configuration",
+    "stem": "ollama-embed",
+    "title": "Ollama provider sends the embedding to /api/embed and maps the native reply"
+  },
+  "category": "configuration",
+  "tags": [
+    "configuration",
+    "local",
+    "ollama",
+    "embed"
+  ],
+  "call": "embed_ollama",
+  "input": {
+    "model": "ollama/all-minilm",
+    "input": [
+      "Hello",
+      "World"
+    ]
+  },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "model": "all-minilm",
+      "embeddings": [
+        [
+          0.1,
+          0.2,
+          0.3
+        ],
+        [
+          0.3,
+          0.2,
+          0.1
+        ]
+      ],
+      "total_duration": 1000,
+      "load_duration": 100,
+      "prompt_eval_count": 4
+    }
+  },
+  "assertions": [
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "count_equals",
+      "field": "data",
+      "value": 2
+    },
+    {
+      "type": "equals",
+      "field": "model",
+      "value": "all-minilm"
+    },
+    {
+      "type": "equals",
+      "field": "usage.prompt_tokens",
+      "value": 4
+    }
+  ]
+}
