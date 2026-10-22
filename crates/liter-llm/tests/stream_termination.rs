@@ -279,7 +279,10 @@ async fn responses_stream_with_a_terminal_event_completes() {
     for kind in ["completed", "incomplete", "failed"] {
         let items = collect_responses(sse(&[RESPONSE_CREATED, RESPONSE_DELTA, &response_terminal(kind)])).await;
         assert_eq!(items.len(), 3, "response.{kind}: {items:?}");
-        assert!(items.iter().all(Result::is_ok), "response.{kind} must not error: {items:?}");
+        assert!(
+            items.iter().all(Result::is_ok),
+            "response.{kind} must not error: {items:?}"
+        );
     }
 }
 
