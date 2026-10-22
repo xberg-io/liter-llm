@@ -1403,8 +1403,11 @@ impl LlmClient for DefaultClient {
             let provider_name = prepared.provider.name().to_owned();
             // ~keep The provider wrapper below reports a cut stream of a native protocol
             // with the provider's own message, so the SSE reader's check stays off for it.
-            let end_check: Option<fn(&ChatCompletionChunk) -> bool> =
-                if require_terminal { None } else { Some(chunk_has_finish_reason) };
+            let end_check: Option<fn(&ChatCompletionChunk) -> bool> = if require_terminal {
+                None
+            } else {
+                Some(chunk_has_finish_reason)
+            };
 
             let stream = match prepared.provider.stream_format() {
                 provider::StreamFormat::Sse => {
