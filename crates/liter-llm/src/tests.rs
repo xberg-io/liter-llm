@@ -27,8 +27,12 @@ impl ClosingPort {
         let address = listener.local_addr().expect("closing port address");
         let listener = tokio::net::TcpListener::from_std(listener).expect("register the closing port");
         let server = tokio::spawn(async move {
-            while let Ok((stream, _)) = listener.accept().await {
-                drop(stream);
+            loop {
+                // An accept error must not end the loop: that would free the port.
+                match listener.accept().await {
+                    Ok((stream, _)) => drop(stream),
+                    Err(_) => tokio::time::sleep(std::time::Duration::from_millis(10)).await,
+                }
             }
         });
         Self {
@@ -1670,6 +1674,23 @@ mod error_tests {
             .expect("client");
         let err = client.get(&url).send().await.expect_err("request must time out");
         assert!(matches!(LiterLlmError::from(err), LiterLlmError::Timeout));
+    }
+
+    // macOS drops the SYN to a bound, non-listening socket, so this test runs on Linux only.
+    #[cfg(all(feature = "native-http", target_os = "linux"))]
+    #[tokio::test]
+    async fn reqwest_connect_failure_stays_network() {
+        let socket = tokio::net::TcpSocket::new_v4().expect("create socket");
+        socket.set_reuseaddr(false).expect("disable address reuse");
+        socket
+            .bind("127.0.0.1:0".parse().expect("loopback address"))
+            .expect("bind the refusing port");
+        let url = format!("http://{}/", socket.local_addr().expect("refusing port address"));
+        let client = reqwest::Client::new();
+        let err = client.get(&url).send().await.expect_err("connection refused");
+        assert!(err.is_connect(), "the request fails at connect: {err:?}");
+        assert!(matches!(LiterLlmError::from(err), LiterLlmError::Network { .. }));
+        drop(socket);
     }
 
     #[cfg(feature = "native-http")]
