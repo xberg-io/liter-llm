@@ -886,8 +886,8 @@ async fn capitalised_ollama_hint_is_a_plain_compatible_client() {
 }
 
 /// A custom provider registered under the name `ollama` is an OpenAI-compatible server, not the
-/// native provider: its stream keeps the compatible end-of-stream rule, whose error names `[DONE]`
-/// and not the provider, and its tool call indexes. The native provider's own cut stream is `stream_cut_before_the_done_line_is_an_error`.
+/// native provider: its stream keeps the compatible end-of-stream rule, whose error names the
+/// missing final event and not the provider, and its tool call indexes. The native provider's own cut stream is `stream_cut_before_the_done_line_is_an_error`.
 #[tokio::test]
 async fn custom_provider_named_ollama_keeps_the_compatible_stream_rules() {
     let tool_call = |arguments: &str| {
@@ -915,8 +915,8 @@ async fn custom_provider_named_ollama_keeps_the_compatible_stream_rules() {
         panic!("a compatible stream cut without [DONE] or a finish chunk must end in an error, got {last:?}");
     };
     assert!(
-        message.contains("[DONE]"),
-        "the generic reader error names [DONE]: {message}"
+        message.contains("before its final event"),
+        "the generic reader error names the missing final event: {message}"
     );
     assert!(
         !message.starts_with("ollama"),
