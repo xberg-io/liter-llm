@@ -1,9 +1,10 @@
 use std::borrow::Cow;
 
-use serde_json::{Value, json};
+use serde_json::Value;
 
 use crate::error::Result;
 use crate::provider::Provider;
+use crate::provider::rerank_shape::reshape_rerank_reply;
 
 /// Voyage AI provider.
 ///
@@ -40,38 +41,27 @@ impl Provider for VoyageProvider {
 
     /// Move the `data` array to `results`, and wrap string documents as `{ "text": ... }`.
     ///
-    /// A reply that already has a `results` value other than `null` is left alone, so a
-    /// Cohere-shaped reply still parses. A reply whose `data` is not an array is left
-    /// alone too and fails the parse as before. Items without an `index` or a
-    /// `relevance_score` stay as they are and fail the parse with an error that names
-    /// the field.
+    /// The mapping lives in [`crate::provider::rerank_shape`].
     fn transform_rerank_response(&self, body: &mut Value) -> Result<()> {
-        let Some(obj) = body.as_object_mut() else {
-            return Ok(());
-        };
-        if obj.get("results").is_some_and(|results| !results.is_null()) || !obj.get("data").is_some_and(Value::is_array)
+        reshape_rerank_reply(self.name(), body);
+        Ok(())
+    }
+
+    /// Voyage documents `top_k` for the number of results and does not list `top_n`.
+    fn transform_rerank_request(&self, body: &mut Value) -> Result<()> {
+        if let Some(obj) = body.as_object_mut()
+            && let Some(top_n) = obj.remove("top_n")
         {
-            return Ok(());
+            obj.insert("top_k".to_owned(), top_n);
         }
-        let Some(mut data) = obj.remove("data") else {
-            return Ok(());
-        };
-        if let Some(items) = data.as_array_mut() {
-            for item in items {
-                if let Some(doc) = item.get_mut("document")
-                    && let Some(text) = doc.as_str()
-                {
-                    *doc = json!({ "text": text });
-                }
-            }
-        }
-        obj.insert("results".to_owned(), data);
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
     use super::*;
 
     #[test]
@@ -140,6 +130,16 @@ mod tests {
         let mut body = original.clone();
         VoyageProvider.transform_rerank_response(&mut body).unwrap();
         assert_eq!(body, original);
+    }
+
+    #[test]
+    fn test_voyage_rerank_request_top_n_becomes_top_k() {
+        let mut body = json!({"model": "rerank-2", "query": "q", "documents": ["a"], "top_n": 1});
+        VoyageProvider.transform_rerank_request(&mut body).unwrap();
+        assert_eq!(
+            body,
+            json!({"model": "rerank-2", "query": "q", "documents": ["a"], "top_k": 1})
+        );
     }
 
     #[test]

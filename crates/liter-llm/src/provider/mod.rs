@@ -598,6 +598,16 @@ pub(crate) trait Provider: Send + Sync {
         Ok(())
     }
 
+    /// Transform the rerank request body after the common fields are set.
+    ///
+    /// Providers that name a rerank field differently from the canonical request (for
+    /// example the field that limits the number of results) override this to rename it.
+    /// It runs for rerank requests only, so it never sees a chat or embedding body.
+    /// The default is a no-op.
+    fn transform_rerank_request(&self, _body: &mut serde_json::Value) -> Result<()> {
+        Ok(())
+    }
+
     /// Build the full URL for a specific endpoint and model.
     ///
     /// Default: `{base_url}{endpoint_path}`.  Providers like Azure and Bedrock
@@ -741,6 +751,7 @@ pub(crate) mod github_copilot;
 pub(crate) mod google_ai;
 pub(crate) mod mistral;
 pub mod outbound_policy;
+pub(crate) mod rerank_shape;
 pub(crate) mod vertex;
 pub(crate) mod voyage;
 
@@ -870,6 +881,15 @@ pub(crate) struct OpenAiCompatibleProvider {
     pub hint_provider: Option<String>,
 }
 
+impl OpenAiCompatibleProvider {
+    /// The built-in provider that the client's `model_hint` names, if any.
+    fn hinted_builtin(&self) -> Option<Box<dyn Provider>> {
+        self.hint_provider
+            .as_deref()
+            .and_then(|hint| detect_builtin_provider(&format!("{hint}/")))
+    }
+}
+
 impl Provider for OpenAiCompatibleProvider {
     fn name(&self) -> &str {
         &self.name
@@ -881,14 +901,23 @@ impl Provider for OpenAiCompatibleProvider {
     /// `model_hint = "voyage"` still talks to a Voyage endpoint, whatever model name
     /// (`rerank-2` or `voyage/rerank-2`) a request carries.
     fn transform_rerank_response(&self, body: &mut serde_json::Value) -> Result<()> {
-        match self
-            .hint_provider
-            .as_deref()
-            .and_then(|hint| detect_builtin_provider(&format!("{hint}/")))
-        {
+        match self.hinted_builtin() {
             Some(named) => named.transform_rerank_response(body),
             None => Ok(()),
         }
+    }
+
+    /// Word a rerank request as the provider named by the client's `model_hint` words it.
+    fn transform_rerank_request(&self, body: &mut serde_json::Value) -> Result<()> {
+        match self.hinted_builtin() {
+            Some(named) => named.transform_rerank_request(body),
+            None => Ok(()),
+        }
+    }
+
+    /// The rerank path of the provider the client's `model_hint` names.
+    fn rerank_path(&self) -> &str {
+        rerank_shape::rerank_path_of(self.hint_provider.as_deref().unwrap_or(""))
     }
 
     fn base_url(&self) -> &str {
@@ -1008,6 +1037,18 @@ impl Provider for ConfigDrivenProvider {
             }
             _ => model,
         }
+    }
+
+    /// Reshape the rerank reply of a provider that has a row in [`rerank_shape`].
+    fn transform_rerank_response(&self, body: &mut serde_json::Value) -> Result<()> {
+        rerank_shape::reshape_rerank_reply(&self.config.name, body);
+        Ok(())
+    }
+
+    /// Word the rerank request as the provider reads it.
+    fn transform_rerank_request(&self, body: &mut serde_json::Value) -> Result<()> {
+        rerank_shape::reshape_rerank_request(&self.config.name, body);
+        Ok(())
     }
 
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
