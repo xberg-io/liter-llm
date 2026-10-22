@@ -2175,6 +2175,19 @@ mod route_model_tests {
         assert_eq!(rebased.build_url("/chat", "m"), "http://gateway.test/v1/chat");
     }
 
+    /// Revert line: drop the `next_models_page_url` forward in `BaseUrlOverride`, and a
+    /// wrapped provider that pages its model list stops after the first page.
+    #[test]
+    fn a_rebased_provider_keeps_its_model_list_paging() {
+        let paging = Box::new(super::vertex::VertexAiProvider::with_base_url("http://vertex.test"));
+        let rebased = rebased::BaseUrlOverride::new(paging, "http://gateway.test");
+        let page = serde_json::json!({"nextPageToken": "next"});
+        assert_eq!(
+            rebased.next_models_page_url("http://gateway.test/models", &page).as_deref(),
+            Some("http://gateway.test/models?pageToken=next")
+        );
+    }
+
     #[test]
     fn provider_without_auth_sends_the_key_as_bearer_at_a_base_url() {
         let local = route_hint("ollama").expect("no refusal").expect("ollama is built in");
