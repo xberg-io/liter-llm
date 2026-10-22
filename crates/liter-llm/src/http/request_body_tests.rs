@@ -251,6 +251,7 @@ async fn should_bound_final_stream_errors_without_limiting_successful_streams() 
             body: Bytes::from_static(b"{}"),
         },
         |_| Ok(None),
+        None,
         ResponseReadOptions {
             max_retries: 0,
             max_response_bytes: Some(BODY_LIMIT),
@@ -385,6 +386,7 @@ async fn should_keep_successful_stream_traffic_above_retained_body_limit() {
             body: Bytes::from_static(b"{}"),
         },
         |event| Ok(Some(serde_json::from_str(event)?)),
+        None,
         ResponseReadOptions {
             max_retries: 0,
             max_response_bytes: Some(BODY_LIMIT),
