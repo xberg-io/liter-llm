@@ -2031,6 +2031,23 @@ async fn a_provider_prefix_hint_at_a_base_url_reads_its_key_variable() {
     assert_eq!(key, Some(KEY_FROM_ENV), "the key variable is the client's key");
 }
 
+/// Revert line: return `None` from `GoogleAiProvider::at_base_url`, so that the wrapper
+/// carries Google AI to the base_url, and `GEMINI_API_KEY` is no longer read.
+#[tokio::test]
+#[serial_test::serial]
+async fn a_gemini_prefix_hint_at_a_base_url_reads_its_key_variable() {
+    let request = keyless_native_request("gemini/gemini-2.0-flash").await;
+
+    let (route, _query) = request.path.split_once('?').unwrap_or((&request.path, ""));
+    assert_eq!(route, "/models/m:generateContent");
+    let key = request
+        .headers
+        .iter()
+        .find(|(name, _)| name.eq_ignore_ascii_case("x-goog-api-key"))
+        .map(|(_, value)| value.as_str());
+    assert_eq!(key, Some(KEY_FROM_ENV), "the key variable is the client's key");
+}
+
 /// Revert line: drop the `transform_response` forward in `BaseUrlOverride`, and Cohere's
 /// native chat reply is read as an OpenAI reply, which has no `choices`.
 #[tokio::test]
