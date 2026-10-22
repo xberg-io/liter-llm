@@ -848,6 +848,26 @@ mod tests {
         assert!(err.to_string().contains("backend lost"), "got: {err}");
     }
 
+    /// A frame with two `:error-code` headers shows the last one, like a later header
+    /// overriding an earlier one. Revert line: remove `.rev()` in the `error` branch of
+    /// `decode_frame` to make this test fail.
+    #[test]
+    fn error_message_frame_with_repeated_code_shows_the_last_value() {
+        let frame = build_frame(
+            &[
+                (":message-type", "error"),
+                (":error-code", "FirstCode"),
+                (":error-code", "SecondCode"),
+                (":error-message", "backend lost"),
+            ],
+            b"",
+        );
+        let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
+        let err = decode_frame(&frame, &parse).unwrap_err();
+        assert!(err.to_string().contains("(SecondCode)"), "got: {err}");
+        assert!(!err.to_string().contains("FirstCode"), "got: {err}");
+    }
+
     #[test]
     fn unknown_exception_frame_stays_a_streaming_error() {
         let frame = build_frame(
