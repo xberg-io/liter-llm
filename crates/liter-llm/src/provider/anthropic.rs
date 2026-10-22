@@ -89,10 +89,6 @@ impl Default for AnthropicProvider {
 }
 
 impl Provider for AnthropicProvider {
-    fn at_base_url(&self, base_url: &str) -> Option<Box<dyn Provider>> {
-        Some(Box::new(Self::with_base_url(base_url)))
-    }
-
     fn name(&self) -> &str {
         "anthropic"
     }

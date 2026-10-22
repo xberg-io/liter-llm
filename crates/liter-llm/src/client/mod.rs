@@ -3159,6 +3159,40 @@ mod build_provider_tests {
         assert_eq!(plain.expect("provider should build"), "deepinfra-through-gateway");
     }
 
+    /// Revert line: read `config.base_url` instead of `config.effective_base_url()` in `route_hint`,
+    /// and an empty `base_url` keeps the custom provider from answering the hint.
+    #[test]
+    #[serial_test::serial(outbound_policy)]
+    fn a_custom_provider_takes_a_hint_when_the_base_url_is_empty() {
+        crate::provider::custom::register_custom_provider(crate::provider::custom::CustomProviderConfig {
+            name: "deepinfra-empty-base-url".into(),
+            base_url: "https://gateway.example.com/v1".into(),
+            auth_header: crate::provider::custom::AuthHeaderFormat::Bearer,
+            model_prefixes: vec!["deepinfra/".into()],
+        })
+        .expect("registration should succeed");
+        let empty_config = ClientConfigBuilder::new("test-key").base_url("").build();
+        let empty = build_provider(&empty_config, Some("deepinfra")).map(|built| built.provider.name().to_owned());
+        crate::provider::custom::unregister_custom_provider("deepinfra-empty-base-url")
+            .expect("unregister should succeed");
+
+        assert_eq!(empty.expect("provider should build"), "deepinfra-empty-base-url");
+    }
+
+    /// Revert line: return the refusal when a `base_url` is set in `build_provider`, and a hint that
+    /// names a provider with no route of its own no longer reaches the `base_url`.
+    #[test]
+    fn a_hint_with_no_route_builds_at_a_base_url_and_is_refused_without_one() {
+        let based_config = ClientConfigBuilder::new("test-key")
+            .base_url("http://localhost:8080/v1")
+            .build();
+        let based = build_provider(&based_config, Some("snowflake")).expect("a base_url supplies the route");
+        assert_eq!(based.provider.name(), "custom");
+        assert!(!based.hint_pins_provider);
+        let plain = build_provider(&ClientConfigBuilder::new("test-key").build(), Some("snowflake"));
+        assert!(plain.is_err(), "no route and no base_url is refused");
+    }
+
     #[test]
     fn extra_body_object_is_merged_and_overrides_existing_key() {
         let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("gpt-4"))
