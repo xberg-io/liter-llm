@@ -722,6 +722,16 @@ pub(crate) trait Provider: Send + Sync {
     }
 }
 
+/// Keep the caller's `extra_body` on a body a provider transform rebuilds.
+///
+/// A rebuild drops every OpenAI field. The client merges `extra_body` into the
+/// body after the provider transform, so the caller's keys must survive it.
+pub(crate) fn carry_extra_body(from: &mut serde_json::Value, to: &mut serde_json::Value) {
+    if let Some(extra_body) = from.get_mut("extra_body").map(serde_json::Value::take) {
+        to["extra_body"] = extra_body;
+    }
+}
+
 pub(crate) mod anthropic;
 pub(crate) mod azure;
 pub(crate) mod bedrock;
@@ -1830,6 +1840,7 @@ mod route_model_tests {
         "a2a",
         "amazon_nova",
         "anthropic_text",
+        "assemblyai",
         "auto_router",
         "aws_polly",
         "azure_ai",
@@ -1843,6 +1854,9 @@ mod route_model_tests {
         "databricks",
         "dataforseo",
         "datarobot",
+        "deepgram",
+        "elevenlabs",
+        "fal_ai",
         "gdc",
         "gigachat",
         "heroku",
@@ -1852,12 +1866,16 @@ mod route_model_tests {
         "petals",
         "ragflow",
         "reducto",
+        "runwayml",
         "sagemaker",
         "sagemaker_chat",
         "sap",
         "searxng",
+        "serper",
         "snowflake",
         "soniox",
+        "stability",
+        "tavily",
         "triton",
         "watsonx",
         "watsonx_text",

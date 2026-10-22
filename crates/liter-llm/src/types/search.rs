@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct SearchRequest {
-    /// The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
+    /// The model/provider to use (e.g. `"brave/web-search"`).
     pub model: String,
     /// The search query string.
     pub query: String,
@@ -19,6 +19,10 @@ pub struct SearchRequest {
     /// Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub country: Option<String>,
+    /// Provider-specific parameters merged into the request body, as chat's
+    /// `extra_body` is. Keys here override identically named fields.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extra_body: Option<serde_json::Value>,
 }
 
 /// A search response.

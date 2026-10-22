@@ -18,6 +18,10 @@ pub struct OcrRequest {
     /// Whether to include base64-encoded images of each processed page.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub include_image_base64: Option<bool>,
+    /// Provider-specific parameters merged into the request body, as chat's
+    /// `extra_body` is. Keys here override identically named fields.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extra_body: Option<serde_json::Value>,
 }
 
 /// Document input for OCR — either a URL or inline base64 data.
