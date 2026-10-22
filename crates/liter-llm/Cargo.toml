@@ -174,11 +174,16 @@ utoipa = { workspace = true, optional = true }
 web-time = { version = "1", optional = true }
 
 [dev-dependencies]
+futures-util = { workspace = true }
+serde_json = { workspace = true }
+
+# ~keep These dev-dependencies stay off wasm32: the workspace pins tokio to its `full` features,
+# ~keep whose `net` feature does not build for wasm32 (mio), and the unit tests need a native runtime.
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 ctor = "1.0"
 etcd-client = { workspace = true }
-futures-util = { workspace = true }
 jsonschema = { workspace = true }
-serde_json = { workspace = true }
+reqwest = { workspace = true, features = ["gzip"] }
 serial_test = { workspace = true }
 tempfile = { workspace = true }
 tokio = { workspace = true, features = ["test-util", "macros"] }
@@ -187,11 +192,10 @@ tokio = { workspace = true, features = ["test-util", "macros"] }
 # does not re-export.
 tracing-core = "0.1"
 
-[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-reqwest = { workspace = true, features = ["gzip"] }
-
 # ~keep The wasm32 tests run in Node.js through `wasm-bindgen-test-runner`; see tests/wasm_timeout.rs.
+# ~keep getrandom needs its `wasm_js` feature here because the test build has no liter-llm-wasm to enable it.
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
 js-sys = "0.3"
 wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = "0.4"
