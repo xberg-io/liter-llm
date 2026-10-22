@@ -157,6 +157,7 @@ tasks:
         scripts/ci/test_php_smoke.py
         scripts/ci/test_python_wheel_check.py
         scripts/ci/test_python_wheel_release_path.py
+        scripts/ci/test_schema_copies.py
 
   ci:release-version-forms:
     desc: Resolve canonical package version forms for release validation
