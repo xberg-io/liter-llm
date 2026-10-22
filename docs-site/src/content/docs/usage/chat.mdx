@@ -448,7 +448,7 @@ resp, err := client.Chat(req)
 </TabItem>
 </Tabs>
 
-Accepted values: `"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"` and `"max"`. Each provider accepts the values its models support. `"none"` turns reasoning off: it reaches OpenAI-compatible servers as `"none"`, becomes a disabled thinking block for Anthropic and Bedrock, and becomes a thinking budget of 0 for Gemini and Vertex AI. Anthropic extended thinking uses a `budget_tokens` integer instead, which maps to `reasoning_effort` when the binding converts the field.
+Accepted values: `"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"` and `"max"`. Each provider accepts the values its models support. `"none"` turns reasoning off: it reaches OpenAI-compatible servers as `"none"`, becomes `think: false` for `ollama/` models, becomes a disabled thinking block for Anthropic and Bedrock, and becomes a thinking budget of 0 for Gemini and Vertex AI. Anthropic extended thinking uses a `budget_tokens` integer instead, which maps to `reasoning_effort` when the binding converts the field.
 
 ## Structured Outputs (JSON Schema)
 

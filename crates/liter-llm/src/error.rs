@@ -411,6 +411,47 @@ impl LiterLlmError {
             _ => Self::ServerError { message, status },
         }
     }
+
+    /// Rewrite the message of an error that came from an HTTP status reply.
+    ///
+    /// Errors that carry no reply text are returned unchanged.
+    pub(crate) fn map_message(self, f: impl FnOnce(String) -> String) -> Self {
+        match self {
+            Self::Authentication { message, status } => Self::Authentication {
+                message: f(message),
+                status,
+            },
+            Self::RateLimited { message, retry_after } => Self::RateLimited {
+                message: f(message),
+                retry_after,
+            },
+            Self::BadRequest { message, status } => Self::BadRequest {
+                message: f(message),
+                status,
+            },
+            Self::ContextWindowExceeded { message } => Self::ContextWindowExceeded { message: f(message) },
+            Self::ContentPolicy { message } => Self::ContentPolicy { message: f(message) },
+            Self::NotFound { message } => Self::NotFound { message: f(message) },
+            Self::ServerError { message, status } => Self::ServerError {
+                message: f(message),
+                status,
+            },
+            Self::ServiceUnavailable {
+                message,
+                status,
+                retry_after,
+            } => Self::ServiceUnavailable {
+                message: f(message),
+                status,
+                retry_after,
+            },
+            Self::ProviderQuotaExceeded { message, status } => Self::ProviderQuotaExceeded {
+                message: f(message),
+                status,
+            },
+            other => other,
+        }
+    }
 }
 
 #[cfg_attr(alef, alef(skip))]

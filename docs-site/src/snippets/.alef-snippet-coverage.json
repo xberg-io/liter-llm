@@ -38,6 +38,8 @@
     "c/configuration/local-provider-llamacpp.md",
     "c/configuration/local-provider-ollama.md",
     "c/configuration/local-provider-vllm.md",
+    "c/configuration/ollama-chat.md",
+    "c/configuration/ollama-embed.md",
     "c/contract/binding-api-parity.md",
     "c/contract/contract-ocr.md",
     "c/contract/contract-search.md",
@@ -227,6 +229,8 @@
     "csharp/configuration/local-provider-llamacpp.md",
     "csharp/configuration/local-provider-ollama.md",
     "csharp/configuration/local-provider-vllm.md",
+    "csharp/configuration/ollama-chat.md",
+    "csharp/configuration/ollama-embed.md",
     "csharp/contract/binding-api-parity.md",
     "csharp/contract/contract-ocr.md",
     "csharp/contract/contract-search.md",
@@ -416,6 +420,8 @@
     "dart/configuration/local-provider-llamacpp.md",
     "dart/configuration/local-provider-ollama.md",
     "dart/configuration/local-provider-vllm.md",
+    "dart/configuration/ollama-chat.md",
+    "dart/configuration/ollama-embed.md",
     "dart/contract/binding-api-parity.md",
     "dart/contract/contract-ocr.md",
     "dart/contract/contract-search.md",
@@ -605,6 +611,8 @@
     "elixir/configuration/local-provider-llamacpp.md",
     "elixir/configuration/local-provider-ollama.md",
     "elixir/configuration/local-provider-vllm.md",
+    "elixir/configuration/ollama-chat.md",
+    "elixir/configuration/ollama-embed.md",
     "elixir/contract/binding-api-parity.md",
     "elixir/contract/contract-ocr.md",
     "elixir/contract/contract-search.md",
@@ -794,6 +802,8 @@
     "go/configuration/local-provider-llamacpp.md",
     "go/configuration/local-provider-ollama.md",
     "go/configuration/local-provider-vllm.md",
+    "go/configuration/ollama-chat.md",
+    "go/configuration/ollama-embed.md",
     "go/contract/binding-api-parity.md",
     "go/contract/contract-ocr.md",
     "go/contract/contract-search.md",
@@ -983,6 +993,8 @@
     "java/configuration/local-provider-llamacpp.md",
     "java/configuration/local-provider-ollama.md",
     "java/configuration/local-provider-vllm.md",
+    "java/configuration/ollama-chat.md",
+    "java/configuration/ollama-embed.md",
     "java/contract/binding-api-parity.md",
     "java/contract/contract-ocr.md",
     "java/contract/contract-search.md",
@@ -1172,6 +1184,8 @@
     "kotlin-android/configuration/local-provider-llamacpp.md",
     "kotlin-android/configuration/local-provider-ollama.md",
     "kotlin-android/configuration/local-provider-vllm.md",
+    "kotlin-android/configuration/ollama-chat.md",
+    "kotlin-android/configuration/ollama-embed.md",
     "kotlin-android/contract/binding-api-parity.md",
     "kotlin-android/contract/contract-ocr.md",
     "kotlin-android/contract/contract-search.md",
@@ -1361,6 +1375,8 @@
     "php/configuration/local-provider-llamacpp.md",
     "php/configuration/local-provider-ollama.md",
     "php/configuration/local-provider-vllm.md",
+    "php/configuration/ollama-chat.md",
+    "php/configuration/ollama-embed.md",
     "php/contract/binding-api-parity.md",
     "php/contract/contract-ocr.md",
     "php/contract/contract-search.md",
@@ -1550,6 +1566,8 @@
     "python/configuration/local-provider-llamacpp.md",
     "python/configuration/local-provider-ollama.md",
     "python/configuration/local-provider-vllm.md",
+    "python/configuration/ollama-chat.md",
+    "python/configuration/ollama-embed.md",
     "python/contract/binding-api-parity.md",
     "python/contract/contract-ocr.md",
     "python/contract/contract-search.md",
@@ -1739,6 +1757,8 @@
     "ruby/configuration/local-provider-llamacpp.md",
     "ruby/configuration/local-provider-ollama.md",
     "ruby/configuration/local-provider-vllm.md",
+    "ruby/configuration/ollama-chat.md",
+    "ruby/configuration/ollama-embed.md",
     "ruby/contract/binding-api-parity.md",
     "ruby/contract/contract-ocr.md",
     "ruby/contract/contract-search.md",
@@ -1928,6 +1948,8 @@
     "rust/configuration/local-provider-llamacpp.md",
     "rust/configuration/local-provider-ollama.md",
     "rust/configuration/local-provider-vllm.md",
+    "rust/configuration/ollama-chat.md",
+    "rust/configuration/ollama-embed.md",
     "rust/contract/binding-api-parity.md",
     "rust/contract/contract-ocr.md",
     "rust/contract/contract-search.md",
@@ -2117,6 +2139,8 @@
     "swift/configuration/local-provider-llamacpp.md",
     "swift/configuration/local-provider-ollama.md",
     "swift/configuration/local-provider-vllm.md",
+    "swift/configuration/ollama-chat.md",
+    "swift/configuration/ollama-embed.md",
     "swift/contract/binding-api-parity.md",
     "swift/contract/contract-ocr.md",
     "swift/contract/contract-search.md",
@@ -2306,6 +2330,8 @@
     "typescript/configuration/local-provider-llamacpp.md",
     "typescript/configuration/local-provider-ollama.md",
     "typescript/configuration/local-provider-vllm.md",
+    "typescript/configuration/ollama-chat.md",
+    "typescript/configuration/ollama-embed.md",
     "typescript/contract/binding-api-parity.md",
     "typescript/contract/contract-ocr.md",
     "typescript/contract/contract-search.md",
@@ -2494,6 +2520,8 @@
     "wasm/configuration/local-provider-llamacpp.md",
     "wasm/configuration/local-provider-ollama.md",
     "wasm/configuration/local-provider-vllm.md",
+    "wasm/configuration/ollama-chat.md",
+    "wasm/configuration/ollama-embed.md",
     "wasm/contract/binding-api-parity.md",
     "wasm/contract/contract-ocr.md",
     "wasm/contract/contract-search.md",
@@ -2682,6 +2710,8 @@
     "zig/configuration/local-provider-llamacpp.md",
     "zig/configuration/local-provider-ollama.md",
     "zig/configuration/local-provider-vllm.md",
+    "zig/configuration/ollama-chat.md",
+    "zig/configuration/ollama-embed.md",
     "zig/contract/binding-api-parity.md",
     "zig/contract/contract-ocr.md",
     "zig/contract/contract-search.md",
@@ -3274,6 +3304,30 @@
         "language": "c"
       },
       "path": "c/configuration/local-provider-vllm.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_chat",
+        "language": "c"
+      },
+      "path": "c/configuration/ollama-chat.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "c"
+      },
+      "path": "c/configuration/ollama-embed.md",
       "language": "c",
       "target": "c",
       "session": "c",
@@ -5550,6 +5604,30 @@
     },
     {
       "key": {
+        "fixture_id": "ollama_chat",
+        "language": "csharp"
+      },
+      "path": "csharp/configuration/ollama-chat.md",
+      "language": "csharp",
+      "target": "csharp",
+      "session": "csharp",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "csharp"
+      },
+      "path": "csharp/configuration/ollama-embed.md",
+      "language": "csharp",
+      "target": "csharp",
+      "session": "csharp",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "binding_api_parity",
         "language": "csharp"
       },
@@ -7810,6 +7888,30 @@
         "language": "dart"
       },
       "path": "dart/configuration/local-provider-vllm.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_chat",
+        "language": "dart"
+      },
+      "path": "dart/configuration/ollama-chat.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "dart"
+      },
+      "path": "dart/configuration/ollama-embed.md",
       "language": "dart",
       "target": "dart",
       "session": "dart",
@@ -10086,6 +10188,30 @@
     },
     {
       "key": {
+        "fixture_id": "ollama_chat",
+        "language": "elixir"
+      },
+      "path": "elixir/configuration/ollama-chat.md",
+      "language": "elixir",
+      "target": "elixir",
+      "session": "elixir",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "elixir"
+      },
+      "path": "elixir/configuration/ollama-embed.md",
+      "language": "elixir",
+      "target": "elixir",
+      "session": "elixir",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "binding_api_parity",
         "language": "elixir"
       },
@@ -12346,6 +12472,30 @@
         "language": "go"
       },
       "path": "go/configuration/local-provider-vllm.md",
+      "language": "go",
+      "target": "go",
+      "session": "go",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_chat",
+        "language": "go"
+      },
+      "path": "go/configuration/ollama-chat.md",
+      "language": "go",
+      "target": "go",
+      "session": "go",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "go"
+      },
+      "path": "go/configuration/ollama-embed.md",
       "language": "go",
       "target": "go",
       "session": "go",
@@ -14622,6 +14772,30 @@
     },
     {
       "key": {
+        "fixture_id": "ollama_chat",
+        "language": "java"
+      },
+      "path": "java/configuration/ollama-chat.md",
+      "language": "java",
+      "target": "java",
+      "session": "java",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "java"
+      },
+      "path": "java/configuration/ollama-embed.md",
+      "language": "java",
+      "target": "java",
+      "session": "java",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "binding_api_parity",
         "language": "java"
       },
@@ -16882,6 +17056,30 @@
         "language": "kotlin_android"
       },
       "path": "kotlin-android/configuration/local-provider-vllm.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_chat",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/configuration/ollama-chat.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/configuration/ollama-embed.md",
       "language": "kotlin",
       "target": "kotlin_android",
       "session": "kotlin_android",
@@ -19158,6 +19356,30 @@
     },
     {
       "key": {
+        "fixture_id": "ollama_chat",
+        "language": "php"
+      },
+      "path": "php/configuration/ollama-chat.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "php"
+      },
+      "path": "php/configuration/ollama-embed.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "binding_api_parity",
         "language": "php"
       },
@@ -21426,6 +21648,30 @@
     },
     {
       "key": {
+        "fixture_id": "ollama_chat",
+        "language": "python"
+      },
+      "path": "python/configuration/ollama-chat.md",
+      "language": "python",
+      "target": "python",
+      "session": "python",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "python"
+      },
+      "path": "python/configuration/ollama-embed.md",
+      "language": "python",
+      "target": "python",
+      "session": "python",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "binding_api_parity",
         "language": "python"
       },
@@ -23686,6 +23932,30 @@
         "language": "ruby"
       },
       "path": "ruby/configuration/local-provider-vllm.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_chat",
+        "language": "ruby"
+      },
+      "path": "ruby/configuration/ollama-chat.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "ruby"
+      },
+      "path": "ruby/configuration/ollama-embed.md",
       "language": "ruby",
       "target": "ruby",
       "session": "ruby",
@@ -26056,6 +26326,36 @@
         "language": "rust"
       },
       "path": "rust/configuration/local-provider-vllm.md",
+      "language": "rust",
+      "target": "rust",
+      "session": "rust",
+      "requires": [
+        "crate:serde_json",
+        "crate:tokio"
+      ],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_chat",
+        "language": "rust"
+      },
+      "path": "rust/configuration/ollama-chat.md",
+      "language": "rust",
+      "target": "rust",
+      "session": "rust",
+      "requires": [
+        "crate:serde_json",
+        "crate:tokio"
+      ],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "rust"
+      },
+      "path": "rust/configuration/ollama-embed.md",
       "language": "rust",
       "target": "rust",
       "session": "rust",
@@ -28789,6 +29089,30 @@
     },
     {
       "key": {
+        "fixture_id": "ollama_chat",
+        "language": "swift"
+      },
+      "path": "swift/configuration/ollama-chat.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "swift"
+      },
+      "path": "swift/configuration/ollama-embed.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "binding_api_parity",
         "language": "swift"
       },
@@ -31057,6 +31381,30 @@
     },
     {
       "key": {
+        "fixture_id": "ollama_chat",
+        "language": "node"
+      },
+      "path": "typescript/configuration/ollama-chat.md",
+      "language": "typescript",
+      "target": "node",
+      "session": "node",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "node"
+      },
+      "path": "typescript/configuration/ollama-embed.md",
+      "language": "typescript",
+      "target": "node",
+      "session": "node",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "binding_api_parity",
         "language": "node"
       },
@@ -33313,6 +33661,30 @@
     },
     {
       "key": {
+        "fixture_id": "ollama_chat",
+        "language": "wasm"
+      },
+      "path": "wasm/configuration/ollama-chat.md",
+      "language": "typescript",
+      "target": "wasm",
+      "session": "wasm",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "wasm"
+      },
+      "path": "wasm/configuration/ollama-embed.md",
+      "language": "typescript",
+      "target": "wasm",
+      "session": "wasm",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "binding_api_parity",
         "language": "wasm"
       },
@@ -35561,6 +35933,30 @@
         "language": "zig"
       },
       "path": "zig/configuration/local-provider-vllm.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_chat",
+        "language": "zig"
+      },
+      "path": "zig/configuration/ollama-chat.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "ollama_embed",
+        "language": "zig"
+      },
+      "path": "zig/configuration/ollama-embed.md",
       "language": "zig",
       "target": "zig",
       "session": "zig",
@@ -44291,6 +44687,126 @@
     },
     {
       "fixture_id": "ocr_url_document",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "c"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "go"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "java"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "node"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "php"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "python"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "c"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "go"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "java"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "node"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "php"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "python"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "ollama_embed",
       "language": "zig"
     },
     {
@@ -55625,6 +56141,126 @@
     },
     {
       "fixture_id": "ocr_url_document",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "c"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "go"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "java"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "node"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "php"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "python"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "ollama_chat",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "c"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "go"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "java"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "node"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "php"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "python"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "ollama_embed",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "ollama_embed",
       "language": "zig"
     },
     {

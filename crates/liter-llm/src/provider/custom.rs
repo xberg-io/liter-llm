@@ -99,25 +99,42 @@ pub fn unregister_custom_provider(name: &str) -> Result<bool> {
 /// `None` otherwise.  This is called at the **top** of `detect_provider`
 /// so custom providers always take priority over built-in ones.
 pub(crate) fn detect_custom_provider(model: &str) -> Option<Box<dyn Provider>> {
-    // ~keep A poisoned lock must not permanently disable custom-provider routing:
-    // recover the guard instead of treating every future call as "no custom providers".
-    let providers = CUSTOM_PROVIDERS.read().unwrap_or_else(|poisoned| {
-        tracing::warn!("custom provider registry lock poisoned; recovering");
-        poisoned.into_inner()
-    });
+    let providers = registry();
 
     for cfg in providers.iter() {
-        let matches = cfg
-            .model_prefixes
-            .iter()
-            .any(|prefix| model.starts_with(prefix.as_str()));
-
-        if matches {
+        if cfg.claims_model(model) {
             return Some(Box::new(CustomProvider { config: cfg.clone() }));
         }
     }
 
     None
+}
+
+/// Whether `prefix`, the first `/`-separated segment of `model`, names a registered custom
+/// provider: the provider's own name, or a model prefix of its that claims `model`.
+pub(crate) fn is_custom_provider_prefix(prefix: &str, model: &str) -> bool {
+    registry()
+        .iter()
+        .any(|cfg| cfg.name == prefix || cfg.claims_model(model))
+}
+
+/// The registered custom providers, for reading.
+fn registry() -> std::sync::RwLockReadGuard<'static, Vec<CustomProviderConfig>> {
+    // ~keep A poisoned lock must not permanently disable custom-provider routing:
+    // recover the guard instead of treating every future call as "no custom providers".
+    CUSTOM_PROVIDERS.read().unwrap_or_else(|poisoned| {
+        tracing::warn!("custom provider registry lock poisoned; recovering");
+        poisoned.into_inner()
+    })
+}
+
+impl CustomProviderConfig {
+    /// Whether one of this provider's model prefixes starts `model`.
+    fn claims_model(&self, model: &str) -> bool {
+        self.model_prefixes
+            .iter()
+            .any(|prefix| model.starts_with(prefix.as_str()))
+    }
 }
 
 /// Clear all custom providers.  Intended for test isolation only.
@@ -231,6 +248,46 @@ mod tests {
 
         let none = detect_custom_provider("gpt-4");
         assert!(none.is_none(), "should not match unrelated model");
+    }
+
+    #[test]
+    #[serial(outbound_policy)]
+    fn a_registered_custom_provider_makes_its_name_a_provider_prefix() {
+        let _guard = setup();
+        assert!(!is_custom_provider_prefix("acme", "acme/m"), "nothing registered");
+
+        register_custom_provider(CustomProviderConfig {
+            name: "acme".into(),
+            base_url: "https://api.acme.example/v1".into(),
+            auth_header: AuthHeaderFormat::Bearer,
+            model_prefixes: vec!["acme-".into()],
+        })
+        .expect("registration should succeed");
+        assert!(is_custom_provider_prefix("acme", "acme/m"), "by name");
+        assert!(
+            !is_custom_provider_prefix("acmeco", "acmeco/m"),
+            "the name is the whole segment"
+        );
+        assert!(
+            is_custom_provider_prefix("acme-7b", "acme-7b/m"),
+            "a claimed model prefix also counts"
+        );
+
+        register_custom_provider(CustomProviderConfig {
+            name: "gateway".into(),
+            base_url: "https://api.gateway.example/v1".into(),
+            auth_header: AuthHeaderFormat::Bearer,
+            model_prefixes: vec!["beta/".into()],
+        })
+        .expect("registration should succeed");
+        assert!(is_custom_provider_prefix("beta", "beta/m"), "by a claimed model prefix");
+        assert!(
+            !is_custom_provider_prefix("gamma", "gamma/m"),
+            "no provider names gamma"
+        );
+
+        assert!(unregister_custom_provider("acme").expect("unregister should succeed"));
+        assert!(!is_custom_provider_prefix("acme", "acme/m"), "gone after unregister");
     }
 
     #[test]

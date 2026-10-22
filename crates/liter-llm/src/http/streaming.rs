@@ -144,9 +144,26 @@ where
     P: Fn(&str) -> Result<Option<T>> + Send + 'static,
     T: Send + 'static,
 {
+    post_stream_framed(client, request, parse_event, is_final, options, Framing::Sse).await
+}
+
+/// Like [`post_stream_bounded`], with the line framing chosen by the caller:
+/// [`Framing::Ndjson`] reads one JSON object per line, with no `data:` prefix and no `[DONE]` line.
+pub(crate) async fn post_stream_framed<P, T>(
+    client: &reqwest::Client,
+    request: StreamingPost<'_>,
+    parse_event: P,
+    is_final: Option<fn(&T) -> bool>,
+    options: ResponseReadOptions,
+    framing: Framing,
+) -> Result<crate::client::BoxStream<'static, Result<T>>>
+where
+    P: Fn(&str) -> Result<Option<T>> + Send + 'static,
+    T: Send + 'static,
+{
     let resp = request.send(client, options).await?;
     let byte_stream = resp.bytes_stream();
-    let stream = SseParser::new(byte_stream, parse_event, is_final, None);
+    let stream = SseParser::new_with_framing(byte_stream, parse_event, is_final, None, framing);
     Ok(Box::pin(stream))
 }
 
@@ -227,6 +244,15 @@ type CancelField = Option<CancellationToken>;
 #[cfg(not(feature = "native-http"))]
 type CancelField = Option<std::convert::Infallible>;
 
+/// How the lines of a streaming response carry their payload.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Framing {
+    /// Server-Sent Events: payloads follow `data:`, and `[DONE]` ends the stream.
+    Sse,
+    /// Newline-delimited JSON: every non-empty line is a payload.
+    Ndjson,
+}
+
 pin_project! {
     /// Wraps a `bytes::Bytes` stream and yields parsed items of type `T`.
     ///
@@ -267,6 +293,7 @@ pin_project! {
         // an error already reported. A clean EOF before that is a cut stream.
         settled: bool,
         cancel: CancelField,
+        framing: Framing,
         // ~keep `fn() -> T` marker keeps `SseParser` Send/Sync regardless of `T`,
         // since the parser never actually stores a `T`; it only produces one per item.
         _marker: std::marker::PhantomData<fn() -> T>,
@@ -284,6 +311,16 @@ where
     P: Fn(&str) -> Result<Option<T>>,
 {
     fn new(inner: S, parse_event: P, is_final: Option<fn(&T) -> bool>, cancel: CancelField) -> Self {
+        Self::new_with_framing(inner, parse_event, is_final, cancel, Framing::Sse)
+    }
+
+    fn new_with_framing(
+        inner: S,
+        parse_event: P,
+        is_final: Option<fn(&T) -> bool>,
+        cancel: CancelField,
+        framing: Framing,
+    ) -> Self {
         Self {
             inner,
             buffer: String::with_capacity(4096),
@@ -294,6 +331,7 @@ where
             is_final,
             settled: false,
             cancel,
+            framing,
             _marker: std::marker::PhantomData,
         }
     }
@@ -317,7 +355,7 @@ where
         }
 
         loop {
-            match take_buffered_line(this.buffer, this.cursor, &*this.parse_event) {
+            match take_buffered_line(this.buffer, this.cursor, &*this.parse_event, *this.framing) {
                 BufferedLine::Incomplete => {}
                 BufferedLine::Consumed => continue,
                 BufferedLine::Done => {
@@ -338,7 +376,7 @@ where
             }
 
             if *this.done {
-                if let Some(error) = truncation_error_at_eof(this.buffer, this.cursor, this.pending) {
+                if let Some(error) = truncation_error_at_eof(this.buffer, this.cursor, this.pending, *this.framing) {
                     *this.settled = true;
                     return Poll::Ready(Some(Err(error)));
                 }
@@ -396,7 +434,12 @@ enum BufferedLine<T> {
 
 /// Consume the next complete line from `buffer` (starting at `cursor`) and
 /// classify it, parsing `data:` payloads with `parse_event`.
-fn take_buffered_line<T, P>(buffer: &mut String, cursor: &mut usize, parse_event: &P) -> BufferedLine<T>
+fn take_buffered_line<T, P>(
+    buffer: &mut String,
+    cursor: &mut usize,
+    parse_event: &P,
+    framing: Framing,
+) -> BufferedLine<T>
 where
     P: Fn(&str) -> Result<Option<T>>,
 {
@@ -407,7 +450,15 @@ where
 
     let line = buffer[*cursor..newline_pos].trim_end_matches('\r').trim();
 
-    let outcome = if line.is_empty() || line.starts_with(':') {
+    let outcome = if line.is_empty() {
+        BufferedLine::Consumed
+    } else if framing == Framing::Ndjson {
+        match parse_event(line) {
+            Ok(None) => BufferedLine::Consumed,
+            Ok(Some(item)) => BufferedLine::Item(Ok(item)),
+            Err(e) => BufferedLine::Item(Err(e)),
+        }
+    } else if line.starts_with(':') {
         BufferedLine::Consumed
     } else if let Some(raw) = line.strip_prefix("data:") {
         let data = raw.strip_prefix(' ').unwrap_or(raw).trim();
@@ -434,7 +485,16 @@ where
 /// Once the inner stream has ended, report any bytes left in the buffers as a
 /// truncation error, clearing the leftover data it finds. `None` means a clean
 /// end, in which case there was nothing left to clear.
-fn truncation_error_at_eof(buffer: &mut String, cursor: &mut usize, pending: &mut Vec<u8>) -> Option<LiterLlmError> {
+fn truncation_error_at_eof(
+    buffer: &mut String,
+    cursor: &mut usize,
+    pending: &mut Vec<u8>,
+    framing: Framing,
+) -> Option<LiterLlmError> {
+    let format_name = match framing {
+        Framing::Sse => "SSE",
+        Framing::Ndjson => "NDJSON",
+    };
     // ~keep Leftover bytes at EOF are an incomplete SSE line: the connection was
     // cut mid-event. That is data loss, not a clean end, so it must surface as
     // an `Err` item rather than a silent `Poll::Ready(None)` (see #44).
@@ -453,7 +513,7 @@ fn truncation_error_at_eof(buffer: &mut String, cursor: &mut usize, pending: &mu
             pending.clear();
             return Some(LiterLlmError::Streaming {
                 message: format!(
-                    "SSE stream truncated: {remaining} bytes of incomplete data at end of stream \
+                    "{format_name} stream truncated: {remaining} bytes of incomplete data at end of stream \
                      (starts with: {preview:?})"
                 ),
             });
@@ -471,7 +531,9 @@ fn truncation_error_at_eof(buffer: &mut String, cursor: &mut usize, pending: &mu
             "SSE stream ended mid-codepoint; stream was truncated"
         );
         return Some(LiterLlmError::Streaming {
-            message: format!("SSE stream truncated: {pending_len} bytes of incomplete UTF-8 at end of stream"),
+            message: format!(
+                "{format_name} stream truncated: {pending_len} bytes of incomplete UTF-8 at end of stream"
+            ),
         });
     }
     None

@@ -71,10 +71,11 @@ async fn send(client: &DefaultClient, mode: Mode) -> Result<()> {
         Mode::Stream => client.chat_stream(request).await?,
         Mode::RawStream => client.chat_stream_raw(request).await?.stream,
     };
-    // ~keep The fixture sends no events, so the typed stream reports truncation (#295) while the raw stream just ends.
+    // ~keep The fixture sends no events, so the typed stream and the raw stream both report truncation
+    // (#295, #308): Bedrock's event stream must end with a final event.
     let first = stream.next().await;
     assert!(
-        matches!(first, None | Some(Err(LiterLlmError::Streaming { .. }))),
+        matches!(first, Some(Err(LiterLlmError::Streaming { .. }))),
         "fixture sends an empty event stream, got {first:?}"
     );
     Ok(())

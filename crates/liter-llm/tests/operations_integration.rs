@@ -16,6 +16,7 @@ use std::thread;
 
 use liter_llm::client::config::ClientConfigBuilder;
 use liter_llm::client::{BatchClient, DefaultClient, FileClient, LlmClient, LlmClientRaw, ResponseClient};
+use liter_llm::types::EmbeddingRequest;
 use liter_llm::types::batch::{BatchListQuery, CreateBatchRequest};
 use liter_llm::types::files::FileListQuery;
 use liter_llm::types::rerank::{RerankDocument, RerankRequest};
@@ -1244,6 +1245,23 @@ async fn rerank_reply_that_is_not_an_object_is_a_parse_error_not_a_panic() {
     }
 }
 
+fn embedding_reply_without_a_model() -> String {
+    serde_json::json!({
+        "object": "list",
+        "data": [{"object": "embedding", "embedding": [0.5], "index": 0}],
+        "model": "",
+    })
+    .to_string()
+}
+
+fn embedding_request() -> EmbeddingRequest {
+    EmbeddingRequest {
+        model: "text-embedding-3-small".into(),
+        input: liter_llm::types::EmbeddingInput::Single("alpha".into()),
+        ..Default::default()
+    }
+}
+
 const IMAGEN_MODEL: &str = "vertex_ai/imagen-3.0-generate-002";
 
 #[tokio::test]
@@ -1536,6 +1554,39 @@ async fn rerank_reply_of_fireworks_nim_and_tei_parses_into_results() {
         let order: Vec<u32> = resp.results.iter().map(|r| r.index).collect();
         assert_eq!(order, vec![2, 0], "{model}");
     }
+}
+
+#[tokio::test]
+async fn embed_reply_with_an_empty_model_keeps_it_for_an_openai_compatible_provider() {
+    let mock = MockServer::start_with_routes(vec![MockRoute {
+        method: "POST".into(),
+        path_prefix: "/embeddings".into(),
+        status: 200,
+        body: embedding_reply_without_a_model(),
+    }]);
+    let client = build_client(&mock);
+
+    let resp = client.embed(embedding_request()).await.expect("embed should succeed");
+
+    assert_eq!(resp.model, "");
+}
+
+#[tokio::test]
+async fn embed_raw_reply_with_an_empty_model_keeps_it_for_an_openai_compatible_provider() {
+    let mock = MockServer::start_with_routes(vec![MockRoute {
+        method: "POST".into(),
+        path_prefix: "/embeddings".into(),
+        status: 200,
+        body: embedding_reply_without_a_model(),
+    }]);
+    let client = build_client(&mock);
+
+    let resp = client
+        .embed_raw(embedding_request())
+        .await
+        .expect("embed_raw should succeed");
+
+    assert_eq!(resp.data.model, "");
 }
 
 #[tokio::test]

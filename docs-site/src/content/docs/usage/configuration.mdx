@@ -324,7 +324,8 @@ Bedrock takes no API key here. Its credentials are read on every request instead
 Override `base_url` to point at a local inference server or a corporate proxy:
 
 ```toml
-# Ollama running locally
+# Ollama running locally, with the openai/ prefix. Models with the ollama/ prefix use Ollama's native API;
+# one trailing /v1 comes off the address before /api/... is appended.
 base_url = "http://localhost:11434/v1"
 ```
 
