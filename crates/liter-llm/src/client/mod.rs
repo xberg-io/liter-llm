@@ -3330,9 +3330,15 @@ mod build_provider_tests {
             let based_result = based.transform_request(&mut based_body).map_err(|e| e.to_string());
             assert_eq!(based_result, plain_result, "hint {hint}");
             assert_eq!(based_body, plain_body, "hint {hint}");
-            // ~keep Native Ollama drops a trailing `/v1` from its address, so only the host is fixed.
+            // ~keep Native Ollama drops a trailing `/v1` from its address: its route is `/api/chat` at the host.
+            let expected = match based.name() {
+                "ollama" => "http://gateway.test/api/chat".to_owned(),
+                "google_ai" => "http://gateway.test/v1/models/m:generateContent".to_owned(),
+                "vertex_ai" => "http://gateway.test/v1/publishers/google/models/m:generateContent".to_owned(),
+                _ => format!("http://gateway.test/v1{}", based.chat_completions_path()),
+            };
             let url = based.build_url(based.chat_completions_path(), "m");
-            assert!(url.starts_with("http://gateway.test/"), "hint {hint}: url = {url}");
+            assert_eq!(url, expected, "hint {hint}");
         }
     }
 
