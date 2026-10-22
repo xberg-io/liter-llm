@@ -4224,7 +4224,11 @@ mod cohere_client_tests {
     fn local_cohere_client(model: &str, base_url: String) -> DefaultClient {
         let mut client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
             .expect("client construction should succeed");
-        assert_eq!(client.provider.name(), "cohere", "a cohere/ model resolves the native provider");
+        assert_eq!(
+            client.provider.name(),
+            "cohere",
+            "a cohere/ model resolves the native provider"
+        );
         client.provider = Arc::new(LocalCohere { base_url });
         client
     }
