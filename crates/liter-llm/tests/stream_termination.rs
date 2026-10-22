@@ -255,6 +255,13 @@ async fn responses_stream_cut_before_a_terminal_event_is_an_error() {
         matches!(last, Err(LiterLlmError::Streaming { message }) if message.contains("final event")),
         "a cut Responses stream must end in a Streaming error, got {last:?}"
     );
+    let Err(LiterLlmError::Streaming { message }) = last else {
+        unreachable!("checked above")
+    };
+    assert!(
+        !message.contains("[DONE]") && !message.contains("finish reason"),
+        "the error must not name chat stream endings, got: {message}"
+    );
 }
 
 #[tokio::test]
