@@ -128,7 +128,9 @@
     "c/proxy/proxy-upstream-429.md",
     "c/proxy/proxy-upstream-500.md",
     "c/rerank/edge-rerank-empty-query.md",
+    "c/rerank/edge-rerank-fireworks-reply.md",
     "c/rerank/edge-rerank-single-doc.md",
+    "c/rerank/edge-rerank-tei-reply.md",
     "c/rerank/edge-rerank-voyage-data-reply.md",
     "c/rerank/error-rerank-auth-401.md",
     "c/rerank/error-rerank-bad-request.md",
@@ -315,7 +317,9 @@
     "csharp/proxy/proxy-upstream-429.md",
     "csharp/proxy/proxy-upstream-500.md",
     "csharp/rerank/edge-rerank-empty-query.md",
+    "csharp/rerank/edge-rerank-fireworks-reply.md",
     "csharp/rerank/edge-rerank-single-doc.md",
+    "csharp/rerank/edge-rerank-tei-reply.md",
     "csharp/rerank/edge-rerank-voyage-data-reply.md",
     "csharp/rerank/error-rerank-auth-401.md",
     "csharp/rerank/error-rerank-bad-request.md",
@@ -502,7 +506,9 @@
     "dart/proxy/proxy-upstream-429.md",
     "dart/proxy/proxy-upstream-500.md",
     "dart/rerank/edge-rerank-empty-query.md",
+    "dart/rerank/edge-rerank-fireworks-reply.md",
     "dart/rerank/edge-rerank-single-doc.md",
+    "dart/rerank/edge-rerank-tei-reply.md",
     "dart/rerank/edge-rerank-voyage-data-reply.md",
     "dart/rerank/error-rerank-auth-401.md",
     "dart/rerank/error-rerank-bad-request.md",
@@ -689,7 +695,9 @@
     "elixir/proxy/proxy-upstream-429.md",
     "elixir/proxy/proxy-upstream-500.md",
     "elixir/rerank/edge-rerank-empty-query.md",
+    "elixir/rerank/edge-rerank-fireworks-reply.md",
     "elixir/rerank/edge-rerank-single-doc.md",
+    "elixir/rerank/edge-rerank-tei-reply.md",
     "elixir/rerank/edge-rerank-voyage-data-reply.md",
     "elixir/rerank/error-rerank-auth-401.md",
     "elixir/rerank/error-rerank-bad-request.md",
@@ -876,7 +884,9 @@
     "go/proxy/proxy-upstream-429.md",
     "go/proxy/proxy-upstream-500.md",
     "go/rerank/edge-rerank-empty-query.md",
+    "go/rerank/edge-rerank-fireworks-reply.md",
     "go/rerank/edge-rerank-single-doc.md",
+    "go/rerank/edge-rerank-tei-reply.md",
     "go/rerank/edge-rerank-voyage-data-reply.md",
     "go/rerank/error-rerank-auth-401.md",
     "go/rerank/error-rerank-bad-request.md",
@@ -1063,7 +1073,9 @@
     "java/proxy/proxy-upstream-429.md",
     "java/proxy/proxy-upstream-500.md",
     "java/rerank/edge-rerank-empty-query.md",
+    "java/rerank/edge-rerank-fireworks-reply.md",
     "java/rerank/edge-rerank-single-doc.md",
+    "java/rerank/edge-rerank-tei-reply.md",
     "java/rerank/edge-rerank-voyage-data-reply.md",
     "java/rerank/error-rerank-auth-401.md",
     "java/rerank/error-rerank-bad-request.md",
@@ -1250,7 +1262,9 @@
     "kotlin-android/proxy/proxy-upstream-429.md",
     "kotlin-android/proxy/proxy-upstream-500.md",
     "kotlin-android/rerank/edge-rerank-empty-query.md",
+    "kotlin-android/rerank/edge-rerank-fireworks-reply.md",
     "kotlin-android/rerank/edge-rerank-single-doc.md",
+    "kotlin-android/rerank/edge-rerank-tei-reply.md",
     "kotlin-android/rerank/edge-rerank-voyage-data-reply.md",
     "kotlin-android/rerank/error-rerank-auth-401.md",
     "kotlin-android/rerank/error-rerank-bad-request.md",
@@ -1437,7 +1451,9 @@
     "php/proxy/proxy-upstream-429.md",
     "php/proxy/proxy-upstream-500.md",
     "php/rerank/edge-rerank-empty-query.md",
+    "php/rerank/edge-rerank-fireworks-reply.md",
     "php/rerank/edge-rerank-single-doc.md",
+    "php/rerank/edge-rerank-tei-reply.md",
     "php/rerank/edge-rerank-voyage-data-reply.md",
     "php/rerank/error-rerank-auth-401.md",
     "php/rerank/error-rerank-bad-request.md",
@@ -1624,7 +1640,9 @@
     "python/proxy/proxy-upstream-429.md",
     "python/proxy/proxy-upstream-500.md",
     "python/rerank/edge-rerank-empty-query.md",
+    "python/rerank/edge-rerank-fireworks-reply.md",
     "python/rerank/edge-rerank-single-doc.md",
+    "python/rerank/edge-rerank-tei-reply.md",
     "python/rerank/edge-rerank-voyage-data-reply.md",
     "python/rerank/error-rerank-auth-401.md",
     "python/rerank/error-rerank-bad-request.md",
@@ -1811,7 +1829,9 @@
     "ruby/proxy/proxy-upstream-429.md",
     "ruby/proxy/proxy-upstream-500.md",
     "ruby/rerank/edge-rerank-empty-query.md",
+    "ruby/rerank/edge-rerank-fireworks-reply.md",
     "ruby/rerank/edge-rerank-single-doc.md",
+    "ruby/rerank/edge-rerank-tei-reply.md",
     "ruby/rerank/edge-rerank-voyage-data-reply.md",
     "ruby/rerank/error-rerank-auth-401.md",
     "ruby/rerank/error-rerank-bad-request.md",
@@ -1998,7 +2018,9 @@
     "rust/proxy/proxy-upstream-429.md",
     "rust/proxy/proxy-upstream-500.md",
     "rust/rerank/edge-rerank-empty-query.md",
+    "rust/rerank/edge-rerank-fireworks-reply.md",
     "rust/rerank/edge-rerank-single-doc.md",
+    "rust/rerank/edge-rerank-tei-reply.md",
     "rust/rerank/edge-rerank-voyage-data-reply.md",
     "rust/rerank/error-rerank-auth-401.md",
     "rust/rerank/error-rerank-bad-request.md",
@@ -2185,7 +2207,9 @@
     "swift/proxy/proxy-upstream-429.md",
     "swift/proxy/proxy-upstream-500.md",
     "swift/rerank/edge-rerank-empty-query.md",
+    "swift/rerank/edge-rerank-fireworks-reply.md",
     "swift/rerank/edge-rerank-single-doc.md",
+    "swift/rerank/edge-rerank-tei-reply.md",
     "swift/rerank/edge-rerank-voyage-data-reply.md",
     "swift/rerank/error-rerank-auth-401.md",
     "swift/rerank/error-rerank-bad-request.md",
@@ -2371,7 +2395,9 @@
     "typescript/proxy/proxy-upstream-429.md",
     "typescript/proxy/proxy-upstream-500.md",
     "typescript/rerank/edge-rerank-empty-query.md",
+    "typescript/rerank/edge-rerank-fireworks-reply.md",
     "typescript/rerank/edge-rerank-single-doc.md",
+    "typescript/rerank/edge-rerank-tei-reply.md",
     "typescript/rerank/edge-rerank-voyage-data-reply.md",
     "typescript/rerank/error-rerank-auth-401.md",
     "typescript/rerank/error-rerank-bad-request.md",
@@ -2557,7 +2583,9 @@
     "wasm/proxy/proxy-upstream-429.md",
     "wasm/proxy/proxy-upstream-500.md",
     "wasm/rerank/edge-rerank-empty-query.md",
+    "wasm/rerank/edge-rerank-fireworks-reply.md",
     "wasm/rerank/edge-rerank-single-doc.md",
+    "wasm/rerank/edge-rerank-tei-reply.md",
     "wasm/rerank/edge-rerank-voyage-data-reply.md",
     "wasm/rerank/error-rerank-auth-401.md",
     "wasm/rerank/error-rerank-bad-request.md",
@@ -2744,7 +2772,9 @@
     "zig/proxy/proxy-upstream-429.md",
     "zig/proxy/proxy-upstream-500.md",
     "zig/rerank/edge-rerank-empty-query.md",
+    "zig/rerank/edge-rerank-fireworks-reply.md",
     "zig/rerank/edge-rerank-single-doc.md",
+    "zig/rerank/edge-rerank-tei-reply.md",
     "zig/rerank/edge-rerank-voyage-data-reply.md",
     "zig/rerank/error-rerank-auth-401.md",
     "zig/rerank/error-rerank-bad-request.md",
@@ -4332,10 +4362,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "c"
+      },
+      "path": "c/rerank/edge-rerank-fireworks-reply.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "c"
       },
       "path": "c/rerank/edge-rerank-single-doc.md",
+      "language": "c",
+      "target": "c",
+      "session": "c",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "c"
+      },
+      "path": "c/rerank/edge-rerank-tei-reply.md",
       "language": "c",
       "target": "c",
       "session": "c",
@@ -6576,10 +6630,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "csharp"
+      },
+      "path": "csharp/rerank/edge-rerank-fireworks-reply.md",
+      "language": "csharp",
+      "target": "csharp",
+      "session": "csharp",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "csharp"
       },
       "path": "csharp/rerank/edge-rerank-single-doc.md",
+      "language": "csharp",
+      "target": "csharp",
+      "session": "csharp",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "csharp"
+      },
+      "path": "csharp/rerank/edge-rerank-tei-reply.md",
       "language": "csharp",
       "target": "csharp",
       "session": "csharp",
@@ -8820,10 +8898,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "dart"
+      },
+      "path": "dart/rerank/edge-rerank-fireworks-reply.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "dart"
       },
       "path": "dart/rerank/edge-rerank-single-doc.md",
+      "language": "dart",
+      "target": "dart",
+      "session": "dart",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "dart"
+      },
+      "path": "dart/rerank/edge-rerank-tei-reply.md",
       "language": "dart",
       "target": "dart",
       "session": "dart",
@@ -11064,10 +11166,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "elixir"
+      },
+      "path": "elixir/rerank/edge-rerank-fireworks-reply.md",
+      "language": "elixir",
+      "target": "elixir",
+      "session": "elixir",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "elixir"
       },
       "path": "elixir/rerank/edge-rerank-single-doc.md",
+      "language": "elixir",
+      "target": "elixir",
+      "session": "elixir",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "elixir"
+      },
+      "path": "elixir/rerank/edge-rerank-tei-reply.md",
       "language": "elixir",
       "target": "elixir",
       "session": "elixir",
@@ -13308,10 +13434,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "go"
+      },
+      "path": "go/rerank/edge-rerank-fireworks-reply.md",
+      "language": "go",
+      "target": "go",
+      "session": "go",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "go"
       },
       "path": "go/rerank/edge-rerank-single-doc.md",
+      "language": "go",
+      "target": "go",
+      "session": "go",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "go"
+      },
+      "path": "go/rerank/edge-rerank-tei-reply.md",
       "language": "go",
       "target": "go",
       "session": "go",
@@ -15552,10 +15702,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "java"
+      },
+      "path": "java/rerank/edge-rerank-fireworks-reply.md",
+      "language": "java",
+      "target": "java",
+      "session": "java",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "java"
       },
       "path": "java/rerank/edge-rerank-single-doc.md",
+      "language": "java",
+      "target": "java",
+      "session": "java",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "java"
+      },
+      "path": "java/rerank/edge-rerank-tei-reply.md",
       "language": "java",
       "target": "java",
       "session": "java",
@@ -17796,10 +17970,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/rerank/edge-rerank-fireworks-reply.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "kotlin_android"
       },
       "path": "kotlin-android/rerank/edge-rerank-single-doc.md",
+      "language": "kotlin",
+      "target": "kotlin_android",
+      "session": "kotlin_android",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "kotlin_android"
+      },
+      "path": "kotlin-android/rerank/edge-rerank-tei-reply.md",
       "language": "kotlin",
       "target": "kotlin_android",
       "session": "kotlin_android",
@@ -20040,10 +20238,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "php"
+      },
+      "path": "php/rerank/edge-rerank-fireworks-reply.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "php"
       },
       "path": "php/rerank/edge-rerank-single-doc.md",
+      "language": "php",
+      "target": "php",
+      "session": "php",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "php"
+      },
+      "path": "php/rerank/edge-rerank-tei-reply.md",
       "language": "php",
       "target": "php",
       "session": "php",
@@ -22284,10 +22506,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "python"
+      },
+      "path": "python/rerank/edge-rerank-fireworks-reply.md",
+      "language": "python",
+      "target": "python",
+      "session": "python",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "python"
       },
       "path": "python/rerank/edge-rerank-single-doc.md",
+      "language": "python",
+      "target": "python",
+      "session": "python",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "python"
+      },
+      "path": "python/rerank/edge-rerank-tei-reply.md",
       "language": "python",
       "target": "python",
       "session": "python",
@@ -24528,10 +24774,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "ruby"
+      },
+      "path": "ruby/rerank/edge-rerank-fireworks-reply.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "ruby"
       },
       "path": "ruby/rerank/edge-rerank-single-doc.md",
+      "language": "ruby",
+      "target": "ruby",
+      "session": "ruby",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "ruby"
+      },
+      "path": "ruby/rerank/edge-rerank-tei-reply.md",
       "language": "ruby",
       "target": "ruby",
       "session": "ruby",
@@ -27139,10 +27409,40 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "rust"
+      },
+      "path": "rust/rerank/edge-rerank-fireworks-reply.md",
+      "language": "rust",
+      "target": "rust",
+      "session": "rust",
+      "requires": [
+        "crate:serde_json",
+        "crate:tokio"
+      ],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "rust"
       },
       "path": "rust/rerank/edge-rerank-single-doc.md",
+      "language": "rust",
+      "target": "rust",
+      "session": "rust",
+      "requires": [
+        "crate:serde_json",
+        "crate:tokio"
+      ],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "rust"
+      },
+      "path": "rust/rerank/edge-rerank-tei-reply.md",
       "language": "rust",
       "target": "rust",
       "session": "rust",
@@ -29569,10 +29869,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "swift"
+      },
+      "path": "swift/rerank/edge-rerank-fireworks-reply.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "swift"
       },
       "path": "swift/rerank/edge-rerank-single-doc.md",
+      "language": "swift",
+      "target": "swift",
+      "session": "swift",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "swift"
+      },
+      "path": "swift/rerank/edge-rerank-tei-reply.md",
       "language": "swift",
       "target": "swift",
       "session": "swift",
@@ -31801,10 +32125,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "node"
+      },
+      "path": "typescript/rerank/edge-rerank-fireworks-reply.md",
+      "language": "typescript",
+      "target": "node",
+      "session": "node",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "node"
       },
       "path": "typescript/rerank/edge-rerank-single-doc.md",
+      "language": "typescript",
+      "target": "node",
+      "session": "node",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "node"
+      },
+      "path": "typescript/rerank/edge-rerank-tei-reply.md",
       "language": "typescript",
       "target": "node",
       "session": "node",
@@ -34033,10 +34381,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "wasm"
+      },
+      "path": "wasm/rerank/edge-rerank-fireworks-reply.md",
+      "language": "typescript",
+      "target": "wasm",
+      "session": "wasm",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "wasm"
       },
       "path": "wasm/rerank/edge-rerank-single-doc.md",
+      "language": "typescript",
+      "target": "wasm",
+      "session": "wasm",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "wasm"
+      },
+      "path": "wasm/rerank/edge-rerank-tei-reply.md",
       "language": "typescript",
       "target": "wasm",
       "session": "wasm",
@@ -36277,10 +36649,34 @@
     },
     {
       "key": {
+        "fixture_id": "edge_rerank_fireworks_reply",
+        "language": "zig"
+      },
+      "path": "zig/rerank/edge-rerank-fireworks-reply.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
         "fixture_id": "edge_rerank_single_doc",
         "language": "zig"
       },
       "path": "zig/rerank/edge-rerank-single-doc.md",
+      "language": "zig",
+      "target": "zig",
+      "session": "zig",
+      "requires": [],
+      "side_effect": "safe"
+    },
+    {
+      "key": {
+        "fixture_id": "edge_rerank_tei_reply",
+        "language": "zig"
+      },
+      "path": "zig/rerank/edge-rerank-tei-reply.md",
       "language": "zig",
       "target": "zig",
       "session": "zig",
@@ -39938,6 +40334,66 @@
       "language": "zig"
     },
     {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "c"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "go"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "java"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "node"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "php"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "python"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "zig"
+    },
+    {
       "fixture_id": "edge_rerank_single_doc",
       "language": "c"
     },
@@ -39995,6 +40451,66 @@
     },
     {
       "fixture_id": "edge_rerank_single_doc",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "c"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "go"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "java"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "node"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "php"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "python"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
       "language": "zig"
     },
     {
@@ -51400,6 +51916,66 @@
       "language": "zig"
     },
     {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "c"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "go"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "java"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "node"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "php"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "python"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "edge_rerank_fireworks_reply",
+      "language": "zig"
+    },
+    {
       "fixture_id": "edge_rerank_single_doc",
       "language": "c"
     },
@@ -51457,6 +52033,66 @@
     },
     {
       "fixture_id": "edge_rerank_single_doc",
+      "language": "zig"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "c"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "csharp"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "dart"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "elixir"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "go"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "java"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "kotlin_android"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "node"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "php"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "python"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "ruby"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "rust"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "swift"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
+      "language": "wasm"
+    },
+    {
+      "fixture_id": "edge_rerank_tei_reply",
       "language": "zig"
     },
     {
