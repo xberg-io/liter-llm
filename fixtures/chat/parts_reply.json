@@ -62,7 +62,7 @@
     }
   ],
   "skip": {
-    "requires_language": "python",
+    "languages": ["rust", "node", "ruby", "php", "c", "go", "java", "csharp", "elixir", "wasm", "dart", "kotlin_android", "swift", "zig"],
     "reason": "Only the Python generated test reads the parts of a reply; the other bindings do not expose them as a field that generated tests can read."
   }
 }
