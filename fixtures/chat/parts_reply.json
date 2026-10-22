@@ -63,6 +63,6 @@
   ],
   "skip": {
     "languages": ["rust", "node", "ruby", "php", "c", "go", "java", "csharp", "elixir", "wasm", "dart", "kotlin_android", "swift", "zig"],
-    "reason": "Only the Python generated test reads the parts of a reply; the other bindings do not expose them as a field that generated tests can read."
+    "reason": "Only the Python generated test reads the parts of a reply. The Rust generated test does not compile (no field parts on AssistantContent). The other bindings are not tried. See xberg-io/alef#663."
   }
 }
