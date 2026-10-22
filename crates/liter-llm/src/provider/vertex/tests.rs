@@ -739,14 +739,15 @@ impl tracing::Subscriber for WarningSubscriber {
 #[test]
 fn imagen_request_warns_for_each_field_it_drops() {
     let warnings = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-    let mut body = json!({"prompt": "p", "quality": "hd", "user": "u", "n": 1});
+    let mut body = json!({"prompt": "p", "quality": "hd", "style": "vivid", "user": "u", "n": 1});
     tracing::subscriber::with_default(WarningSubscriber(warnings.clone()), || {
         provider().transform_request(&mut body).unwrap();
     });
     let warnings = warnings.lock().unwrap();
-    assert_eq!(warnings.len(), 2, "{warnings:?}");
+    assert_eq!(warnings.len(), 3, "{warnings:?}");
     assert!(warnings[0].contains("`quality`"), "{warnings:?}");
-    assert!(warnings[1].contains("`user`"), "{warnings:?}");
+    assert!(warnings[1].contains("`style`"), "{warnings:?}");
+    assert!(warnings[2].contains("`user`"), "{warnings:?}");
     assert!(body["parameters"].get("quality").is_none());
 }
 
