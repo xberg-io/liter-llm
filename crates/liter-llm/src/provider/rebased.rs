@@ -577,7 +577,12 @@ mod tests {
             .iter()
             .map(|model| (*model).to_owned())
             .chain([format!("{name}/m"), name.clone()])
-            .map(|model| (provider.matches_model(&model), provider.strip_model_prefix(&model).to_owned()))
+            .map(|model| {
+                (
+                    provider.matches_model(&model),
+                    provider.strip_model_prefix(&model).to_owned(),
+                )
+            })
             .collect();
         let bodies = [
             json!({}),

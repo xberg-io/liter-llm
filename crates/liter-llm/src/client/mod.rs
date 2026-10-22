@@ -1554,9 +1554,7 @@ fn route_hint(config: &ClientConfig, hint: &str) -> Result<Option<Box<dyn Provid
     if names_bedrock(hint) {
         let bedrock = build_bedrock_provider_config(config);
         let environment_keys = reads_environment_keys(config, &bedrock, hint);
-        return Ok(Some(Box::new(
-            bedrock.with_environment_keys(environment_keys),
-        )));
+        return Ok(Some(Box::new(bedrock.with_environment_keys(environment_keys))));
     }
     if config.effective_base_url().is_some() {
         return provider::route_builtin_hint(hint);
