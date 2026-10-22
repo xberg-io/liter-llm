@@ -110,6 +110,11 @@ etcd-key-resolver = ["dep:etcd-client"]
 # ~keep Default remains native HTTP only so downstream `cargo build` avoids heavy deps.
 default = ["native-http"]
 
+# ~keep The wasm32 build selects getrandom's `wasm_js` backend in .cargo/config.toml; the crate feature
+# ~keep must be on for the crate to build for wasm32 without `liter-llm-wasm`.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
+
 # ~keep Non-Windows uses rustls + ring to avoid aws-lc-sys as the bundled TLS provider.
 # ~keep The workspace reqwest base is TLS-agnostic; this layer supplies TLS.
 [target.'cfg(not(target_os = "windows"))'.dependencies]
@@ -193,9 +198,7 @@ tokio = { workspace = true, features = ["test-util", "macros"] }
 tracing-core = "0.1"
 
 # ~keep The wasm32 tests run in Node.js through `wasm-bindgen-test-runner`; see tests/wasm_timeout.rs.
-# ~keep getrandom needs its `wasm_js` feature here because the test build has no liter-llm-wasm to enable it.
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
-getrandom = { version = "0.3", features = ["wasm_js"] }
 js-sys = "0.3"
 wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = "0.4"

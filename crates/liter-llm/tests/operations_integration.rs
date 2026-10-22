@@ -51,6 +51,19 @@ impl MockServer {
     /// Start a mock server with configurable routes.
     /// Falls back to a 200 OK with a generic JSON response for unmatched routes.
     fn start_with_routes(routes: Vec<MockRoute>) -> Self {
+        Self::start_with_responder(move |method, full_path, _index| {
+            let path = full_path.split('?').next().unwrap_or("");
+            routes
+                .iter()
+                .find(|r| r.method == method && path.starts_with(&r.path_prefix))
+                .map(|r| (r.status, r.body.clone()))
+                .unwrap_or((200, r#"{"ok": true}"#.to_string()))
+        })
+    }
+
+    /// Start a mock server that answers each request with `responder(method, path_and_query, index)`,
+    /// where `index` counts the requests that the server has received before this one.
+    fn start_with_responder(responder: impl Fn(&str, &str, usize) -> (u16, String) + Send + 'static) -> Self {
         let listener = TcpListener::bind("127.0.0.1:0").expect("failed to bind mock server");
         let addr = format!("http://127.0.0.1:{}", listener.local_addr().unwrap().port());
         let captured: Arc<Mutex<Vec<CapturedRequest>>> = Arc::new(Mutex::new(Vec::new()));
@@ -68,7 +81,6 @@ impl MockServer {
                 let parts: Vec<&str> = request_line.trim().splitn(3, ' ').collect();
                 let method = parts.first().unwrap_or(&"").to_string();
                 let full_path = parts.get(1).unwrap_or(&"").to_string();
-                let path = full_path.split('?').next().unwrap_or("").to_string();
 
                 let mut headers = Vec::new();
                 let mut content_length: usize = 0;
@@ -93,20 +105,18 @@ impl MockServer {
                 }
                 let body = String::from_utf8_lossy(&body_buf).to_string();
 
-                captured_writer.lock().unwrap().push(CapturedRequest {
-                    method: method.clone(),
-                    path: full_path.clone(),
-                    headers,
-                    body,
-                });
+                let index = {
+                    let mut captured = captured_writer.lock().unwrap();
+                    captured.push(CapturedRequest {
+                        method: method.clone(),
+                        path: full_path.clone(),
+                        headers,
+                        body,
+                    });
+                    captured.len() - 1
+                };
 
-                let response_body = routes
-                    .iter()
-                    .find(|r| r.method == method && path.starts_with(&r.path_prefix))
-                    .map(|r| (r.status, r.body.clone()))
-                    .unwrap_or((200, r#"{"ok": true}"#.to_string()));
-
-                let (status, resp_body) = response_body;
+                let (status, resp_body) = responder(&method, &full_path, index);
                 let status_text = match status {
                     200 => "OK",
                     201 => "Created",
@@ -1232,6 +1242,242 @@ async fn rerank_reply_that_is_not_an_object_is_a_parse_error_not_a_panic() {
             "body {body}: unexpected error: {err:?}"
         );
     }
+}
+
+const IMAGEN_MODEL: &str = "vertex_ai/imagen-3.0-generate-002";
+
+#[tokio::test]
+async fn vertex_image_generate_posts_to_the_imagen_predict_path() {
+    let mock = MockServer::start_with_routes(vec![MockRoute {
+        method: "POST".into(),
+        path_prefix: "/publishers/google/models/".into(),
+        status: 200,
+        body: serde_json::json!({
+            "predictions": [
+                {"bytesBase64Encoded": "aGk=", "mimeType": "image/png"},
+                {"bytesBase64Encoded": "eW8=", "mimeType": "image/png", "prompt": "a tabby cat"}
+            ]
+        })
+        .to_string(),
+    }]);
+    let client = hinted_client(&mock, IMAGEN_MODEL);
+
+    let resp = client
+        .image_generate(liter_llm::types::CreateImageRequest {
+            prompt: "a cat".into(),
+            model: Some(IMAGEN_MODEL.into()),
+            n: Some(2),
+            size: Some("1920x1080".into()),
+            ..Default::default()
+        })
+        .await
+        .expect("an Imagen reply should parse");
+
+    let requests = mock.requests();
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].method, "POST");
+    assert_eq!(
+        requests[0].path,
+        "/publishers/google/models/imagen-3.0-generate-002:predict"
+    );
+    let sent: serde_json::Value = serde_json::from_str(&requests[0].body).unwrap();
+    assert_eq!(
+        sent,
+        serde_json::json!({
+            "instances": [{"prompt": "a cat"}],
+            "parameters": {"sampleCount": 2, "aspectRatio": "16:9"}
+        })
+    );
+    assert_eq!(resp.data.len(), 2);
+    assert_eq!(resp.data[0].b64_json.as_deref(), Some("aGk="));
+    assert_eq!(resp.data[1].revised_prompt.as_deref(), Some("a tabby cat"));
+}
+
+#[tokio::test]
+async fn vertex_image_generate_refuses_a_size_with_no_imagen_aspect_ratio() {
+    let mock = MockServer::start_with_routes(vec![]);
+    let client = hinted_client(&mock, IMAGEN_MODEL);
+
+    let err = client
+        .image_generate(liter_llm::types::CreateImageRequest {
+            prompt: "a cat".into(),
+            model: Some(IMAGEN_MODEL.into()),
+            size: Some("1000x300".into()),
+            ..Default::default()
+        })
+        .await
+        .expect_err("an aspect ratio Imagen lacks is refused before any request");
+
+    assert!(err.to_string().contains("1000x300"), "unexpected error: {err}");
+    assert!(mock.requests().is_empty());
+}
+
+#[tokio::test]
+async fn vertex_list_models_gets_the_publisher_models() {
+    let mock = MockServer::start_with_routes(vec![MockRoute {
+        method: "GET".into(),
+        path_prefix: "/v1beta1/publishers/google/models".into(),
+        status: 200,
+        body: serde_json::json!({
+            "publisherModels": [{"name": "publishers/google/models/gemini-2.0-flash", "versionId": "001"}]
+        })
+        .to_string(),
+    }]);
+    let client = hinted_client(&mock, "vertex_ai/gemini-2.0-flash");
+
+    let resp = client
+        .list_models()
+        .await
+        .expect("a publisher model listing should parse");
+
+    let requests = mock.requests();
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].method, "GET");
+    assert_eq!(requests[0].path, "/v1beta1/publishers/google/models");
+    assert_eq!(resp.data.len(), 1);
+    assert_eq!(resp.data[0].id, "gemini-2.0-flash");
+    assert_eq!(resp.data[0].owned_by, "google");
+}
+
+#[tokio::test]
+async fn vertex_image_generate_returns_no_images_when_the_safety_filter_removed_them_all() {
+    let mock = MockServer::start_with_routes(vec![MockRoute {
+        method: "POST".into(),
+        path_prefix: "/publishers/google/models/".into(),
+        status: 200,
+        body: serde_json::json!({
+            "predictions": [{"raiFilteredReason": "Image blocked by the safety filter"}]
+        })
+        .to_string(),
+    }]);
+    let client = hinted_client(&mock, IMAGEN_MODEL);
+
+    let resp = client
+        .image_generate(liter_llm::types::CreateImageRequest {
+            prompt: "a cat".into(),
+            model: Some(IMAGEN_MODEL.into()),
+            ..Default::default()
+        })
+        .await
+        .expect("a reply that the safety filter emptied is an image reply with no images");
+
+    assert!(resp.data.is_empty());
+}
+
+#[tokio::test]
+async fn vertex_list_models_follows_the_next_page_token_to_the_last_page() {
+    let mock = MockServer::start_with_responder(|_method, path, _index| {
+        let body = if path.contains("pageToken=t%2B2") {
+            serde_json::json!({"publisherModels": [{"name": "publishers/google/models/gemini-b"}]})
+        } else if path.contains("pageToken=t%2B1") {
+            serde_json::json!({
+                "publisherModels": [{"name": "publishers/meta/models/llama-a"}],
+                "nextPageToken": "t+2"
+            })
+        } else {
+            serde_json::json!({
+                "publisherModels": [{"name": "publishers/google/models/gemini-a"}],
+                "nextPageToken": "t+1"
+            })
+        };
+        (200, body.to_string())
+    });
+    let client = hinted_client(&mock, "vertex_ai/gemini-2.0-flash");
+
+    let resp = client.list_models().await.expect("a paged listing should parse");
+
+    let paths: Vec<String> = mock.requests().into_iter().map(|r| r.path).collect();
+    assert_eq!(
+        paths,
+        [
+            "/v1beta1/publishers/google/models",
+            "/v1beta1/publishers/google/models?pageToken=t%2B1",
+            "/v1beta1/publishers/google/models?pageToken=t%2B2"
+        ]
+    );
+    let ids: Vec<&str> = resp.data.iter().map(|m| m.id.as_str()).collect();
+    assert_eq!(ids, ["gemini-a", "llama-a", "gemini-b"]);
+}
+
+#[tokio::test]
+async fn list_models_that_never_ends_its_paging_is_an_error() {
+    let mock = MockServer::start_with_responder(|_method, _path, _index| {
+        (
+            200,
+            serde_json::json!({
+                "publisherModels": [{"name": "publishers/google/models/m"}],
+                "nextPageToken": "again"
+            })
+            .to_string(),
+        )
+    });
+    let client = hinted_client(&mock, "vertex_ai/gemini-2.0-flash");
+
+    let err = client
+        .list_models()
+        .await
+        .expect_err("a listing that never ends is an error");
+
+    assert!(err.to_string().contains("did not end"), "unexpected error: {err}");
+}
+
+fn bedrock_client(mock: &MockServer) -> DefaultClient {
+    let config = ClientConfigBuilder::new("unused")
+        .base_url(mock.url())
+        .max_retries(0)
+        .bedrock_credentials("AKIATESTDUMMY", "test-dummy-secret", None)
+        .build();
+    DefaultClient::new(config, Some("bedrock/amazon.rerank-v1:0")).expect("client creation should succeed")
+}
+
+#[tokio::test]
+async fn bedrock_base_url_serves_rerank() {
+    let mock = rerank_mock(
+        serde_json::json!({"results": [{"index": 2, "relevanceScore": 0.9}, {"index": 0, "relevanceScore": 0.5}]})
+            .to_string(),
+    );
+    let client = bedrock_client(&mock);
+
+    let resp = client
+        .rerank(rerank_request("bedrock/amazon.rerank-v1:0"))
+        .await
+        .expect("a Bedrock rerank reply should parse");
+
+    let requests = mock.requests();
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].method, "POST");
+    assert_eq!(requests[0].path, "/rerank");
+    let sent: serde_json::Value = serde_json::from_str(&requests[0].body).unwrap();
+    assert_eq!(sent["queries"][0]["textQuery"]["text"], "q");
+    let order: Vec<u32> = resp.results.iter().map(|r| r.index).collect();
+    assert_eq!(order, vec![2, 0]);
+}
+
+#[tokio::test]
+async fn bedrock_base_url_serves_list_models() {
+    let mock = MockServer::start_with_routes(vec![MockRoute {
+        method: "GET".into(),
+        path_prefix: "/models".into(),
+        status: 200,
+        body: serde_json::json!({
+            "modelSummaries": [{"modelId": "amazon.rerank-v1:0", "providerName": "Amazon"}]
+        })
+        .to_string(),
+    }]);
+    let client = bedrock_client(&mock);
+
+    let resp = client
+        .list_models()
+        .await
+        .expect("a Bedrock model listing should parse");
+
+    let requests = mock.requests();
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].method, "GET");
+    assert_eq!(requests[0].path, "/models");
+    assert_eq!(resp.data.len(), 1);
+    assert_eq!(resp.data[0].id, "amazon.rerank-v1:0");
+    assert_eq!(resp.data[0].owned_by, "Amazon");
 }
 
 fn rerank_json_mock(body: serde_json::Value) -> MockServer {
