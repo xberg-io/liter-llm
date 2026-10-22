@@ -39,11 +39,16 @@ use wasm_bindgen_test::wasm_bindgen_test;
 /// - `stream`: send one server-sent event at once, then five more, `millis` apart.
 /// - `stream_stall`: send one server-sent event at once, then go silent.
 /// - `headers_only`: send the headers of an event stream reply and no body.
+/// - `ollama`: answer with a native Ollama chat reply, which has no `created` field.
 const MOCK_SERVER: &str = r#"
 const http = process.getBuiltinModule('node:http');
 const chat = JSON.stringify({
   id: 'c', object: 'chat.completion', created: 1, model: 'm',
   choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'in time' } }],
+});
+const ollama = JSON.stringify({
+  model: 'qwen2:0.5b', message: { role: 'assistant', content: 'native' }, done: true, done_reason: 'stop',
+  prompt_eval_count: 3, eval_count: 2,
 });
 const models = JSON.stringify({ object: 'list', data: [] });
 const file = JSON.stringify({
@@ -64,6 +69,7 @@ const server = http.createServer((req, res) => {
       res.end(payload);
     };
     if (mode === 'silent') return;
+    if (mode === 'ollama') { json(200, ollama); return; }
     if (mode === 'late') { setTimeout(() => json(200, body), millis); return; }
     if (mode === 'busy_then_silent') { if (attempt === 0) json(503, '{"error":{"message":"busy"}}'); return; }
     if (mode === 'late_error_body') {
@@ -139,12 +145,16 @@ impl MockServer {
     }
 
     fn client(&self, timeout: Duration, max_retries: u32) -> DefaultClient {
+        self.client_for("openai", timeout, max_retries)
+    }
+
+    fn client_for(&self, model_hint: &str, timeout: Duration, max_retries: u32) -> DefaultClient {
         let config = ClientConfigBuilder::new("test-key")
             .base_url(self.base_url.clone())
             .timeout(timeout)
             .max_retries(max_retries)
             .build();
-        DefaultClient::new(config, Some("openai")).expect("create client")
+        DefaultClient::new(config, Some(model_hint)).expect("create client")
     }
 
     fn close(&self) {
@@ -526,6 +536,35 @@ async fn a_bedrock_stream_that_goes_idle_ends_with_timeout() {
 
         assert!(matches!(idle, Err(LiterLlmError::Timeout)), "got {idle:?}");
         assert!(elapsed < TIMEOUT_BOUND_MS, "the stream ended after {elapsed} ms");
+    })
+    .await;
+}
+
+/// An Ollama chat reply has no `created` field, so the provider fills it from the wall clock.
+/// `std::time::SystemTime::now()` panics on wasm32, which left the call pending for ever.
+#[wasm_bindgen_test]
+async fn an_ollama_chat_reply_gets_a_current_created_time() {
+    within(async {
+        let server = MockServer::start("ollama", 0).await;
+        let client = server.client_for("ollama/qwen2:0.5b", Duration::from_secs(3), 0);
+        let request: ChatCompletionRequest = serde_json::from_value(serde_json::json!({
+            "model": "ollama/qwen2:0.5b",
+            "messages": [{"role": "user", "content": "hi"}],
+        }))
+        .expect("chat request");
+
+        let before = (Date::now() / 1000.0) as u64;
+        let result = client.chat(request).await;
+        let after = (Date::now() / 1000.0) as u64;
+        server.close();
+
+        let reply = result.expect("an Ollama reply maps");
+        assert_eq!(reply.choices[0].message.content.as_deref(), Some("native"));
+        assert!(
+            (before..=after + 1).contains(&reply.created),
+            "created is {}, expected between {before} and {after}",
+            reply.created
+        );
     })
     .await;
 }
