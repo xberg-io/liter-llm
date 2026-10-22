@@ -37,12 +37,15 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
+      "import": "./index.mjs",
       "require": "./index.js",
       "default": "./index.js"
     }
   },
   "files": [
     "index.js",
+    "binding.cjs",
+    "index.mjs",
     "index.d.ts",
     "*.node"
   ],

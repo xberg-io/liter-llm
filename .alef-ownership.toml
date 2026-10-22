@@ -27,6 +27,8 @@ owned_paths = [
   "crates/liter-llm-ffi/cmake/liter-llm-ffi-config.cmake",
   "crates/liter-llm-node/.gitignore",
   "crates/liter-llm-node/README.md",
+  "crates/liter-llm-node/binding.cjs",
+  "crates/liter-llm-node/index.mjs",
   "crates/liter-llm-node/package.json",
   "crates/liter-llm-php/README.md",
   "crates/liter-llm-wasm/README.md",
