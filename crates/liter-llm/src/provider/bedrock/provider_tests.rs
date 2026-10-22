@@ -627,6 +627,29 @@ fn transform_response_cohere_embedding_response_normalized() {
     assert_eq!(data[1]["index"], 1);
 }
 
+/// Bedrock keeps the default embedding reply hook, which must run `transform_response`:
+/// a Titan reply has no `data` list until that step rebuilds it.
+/// Revert line: make the default `transform_embedding_response` in `provider/mod.rs`
+/// return `Ok(())` to make this test fail.
+#[test]
+#[serial]
+fn transform_embedding_response_rebuilds_a_titan_reply_through_the_default_hook() {
+    let p = provider();
+    let mut body = json!({
+        "embedding": [0.1, 0.2, 0.3],
+        "inputTextTokenCount": 4
+    });
+
+    p.transform_embedding_response(&mut body, "bedrock/amazon.titan-embed-text-v2:0")
+        .expect("transform_embedding_response should not fail");
+
+    assert_eq!(body["object"], "list");
+    assert_eq!(body["data"][0]["embedding"], json!([0.1, 0.2, 0.3]));
+    assert_eq!(body["usage"]["prompt_tokens"], 4);
+    assert_eq!(body["model"], "", "the default hook does not fill the model");
+    assert!(body.get("embedding").is_none());
+}
+
 /// Regression guard: a normal chat response (no `embedding`/`embeddings` key)
 /// must still go through the unchanged Converse response transform.
 #[test]
