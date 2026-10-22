@@ -271,6 +271,28 @@ async fn responses_stream_cut_on_an_event_boundary_reports_one_error() {
     assert!(items.last().is_some_and(Result::is_err), "{items:?}");
 }
 
+/// A body with no events at all is a cut stream: one `Streaming` error, no items.
+#[tokio::test]
+async fn responses_stream_with_an_empty_body_is_one_error() {
+    let items = collect_responses(String::new()).await;
+    assert_eq!(items.len(), 1, "{items:?}");
+    assert!(
+        matches!(&items[0], Err(LiterLlmError::Streaming { message }) if message.contains("final event")),
+        "an empty Responses body must end in a Streaming error, got {items:?}"
+    );
+}
+
+/// A body of SSE comment lines carries no event, so it ends like an empty body.
+#[tokio::test]
+async fn responses_stream_with_a_comment_only_body_is_one_error() {
+    let items = collect_responses(": keep-alive\n\n: keep-alive\n\n".to_owned()).await;
+    assert_eq!(items.len(), 1, "{items:?}");
+    assert!(
+        matches!(&items[0], Err(LiterLlmError::Streaming { message }) if message.contains("final event")),
+        "a comment-only Responses body must end in a Streaming error, got {items:?}"
+    );
+}
+
 /// OpenAI-compatible servers that front the Responses API may end with `[DONE]`; the
 /// shared SSE reader accepts that as a clean end for every stream.
 #[tokio::test]
