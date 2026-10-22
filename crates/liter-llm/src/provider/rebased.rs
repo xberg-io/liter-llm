@@ -242,8 +242,13 @@ impl Provider for BaseUrlOverride {
 mod tests {
     use std::borrow::Cow;
 
+    use serde_json::json;
+    use serial_test::serial;
+
     use super::BaseUrlOverride;
-    use crate::provider::{Provider, on_base_url, route_hint};
+    use crate::auth::Credential;
+    use crate::error::{LiterLlmError, Result};
+    use crate::provider::{Provider, StreamFormat, all_providers, on_base_url, route_builtin_hint, route_hint};
 
     /// A provider whose every path differs from the default paths.
     struct OwnPaths;
@@ -362,5 +367,393 @@ mod tests {
     fn a_base_url_that_does_not_parse_is_joined_with_the_path() {
         let cohere = hinted_at("cohere", "gateway");
         assert_eq!(cohere.build_url(cohere.chat_completions_path(), "m"), "gateway/chat");
+    }
+
+    /// A provider that answers every hook the wrapper forwards with a value other than the
+    /// default, for the hooks that no shipped provider overrides.
+    struct EveryHook;
+
+    impl Provider for EveryHook {
+        fn validate(&self) -> Result<()> {
+            Err(LiterLlmError::BadRequest {
+                message: "every-hook refuses".to_owned(),
+                status: 400,
+            })
+        }
+
+        fn name(&self) -> &str {
+            "every-hook"
+        }
+
+        fn base_url(&self) -> &str {
+            "https://own.test/v1"
+        }
+
+        fn auth_header<'a>(&'a self, api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
+            Some((Cow::Borrowed("x-every-key"), Cow::Borrowed(api_key)))
+        }
+
+        fn extra_headers(&self) -> &'static [(&'static str, &'static str)] {
+            &[("x-every-extra", "1")]
+        }
+
+        fn dynamic_headers(&self, body: &serde_json::Value) -> Vec<(String, String)> {
+            vec![("x-every-dynamic".to_owned(), body.to_string())]
+        }
+
+        fn matches_model(&self, model: &str) -> bool {
+            model.starts_with("every/")
+        }
+
+        fn strip_model_prefix<'m>(&self, model: &'m str) -> &'m str {
+            model.strip_prefix("every/").unwrap_or(model)
+        }
+
+        fn chat_completions_path(&self) -> &str {
+            "/every/chat"
+        }
+
+        fn embeddings_path(&self) -> &str {
+            "/every/embed"
+        }
+
+        fn models_path(&self) -> &str {
+            "/every/models"
+        }
+
+        fn next_models_page_url(&self, url: &str, _page: &serde_json::Value) -> Option<String> {
+            Some(format!("{url}?page=2"))
+        }
+
+        fn image_generations_path(&self) -> &str {
+            "/every/image"
+        }
+
+        fn audio_speech_path(&self) -> &str {
+            "/every/speech"
+        }
+
+        fn audio_transcriptions_path(&self) -> &str {
+            "/every/transcriptions"
+        }
+
+        fn moderations_path(&self) -> &str {
+            "/every/moderations"
+        }
+
+        fn rerank_path(&self) -> &str {
+            "/every/rerank"
+        }
+
+        fn files_path(&self) -> &str {
+            "/every/files"
+        }
+
+        fn batches_path(&self) -> &str {
+            "/every/batches"
+        }
+
+        fn responses_path(&self) -> &str {
+            "/every/responses"
+        }
+
+        fn search_path(&self) -> &str {
+            "/every/search"
+        }
+
+        fn ocr_path(&self) -> &str {
+            "/every/ocr"
+        }
+
+        fn supports_streaming(&self) -> bool {
+            false
+        }
+
+        fn transform_error(&self, error: LiterLlmError) -> LiterLlmError {
+            LiterLlmError::ServerError {
+                message: format!("every-hook: {error}"),
+                status: 502,
+            }
+        }
+
+        fn parse_stream_event(&self, event_data: &str) -> Result<Option<crate::types::ChatCompletionChunk>> {
+            Err(LiterLlmError::Streaming {
+                message: format!("every-hook: {event_data}"),
+            })
+        }
+
+        fn stream_format(&self) -> StreamFormat {
+            StreamFormat::Ndjson
+        }
+
+        fn stream_has_final_event(&self) -> bool {
+            true
+        }
+
+        fn stream_tool_call_indexes_restart(&self) -> bool {
+            true
+        }
+
+        fn signing_headers(&self, _method: &str, _url: &str, _body: &[u8]) -> Result<Vec<(String, String)>> {
+            Ok(vec![("x-every-signed".to_owned(), "static".to_owned())])
+        }
+
+        fn signing_headers_with_credential(
+            &self,
+            _method: &str,
+            _url: &str,
+            _body: &[u8],
+            credential: Option<&Credential>,
+        ) -> Result<Vec<(String, String)>> {
+            let header = if credential.is_some() {
+                "x-every-signed-per-request"
+            } else {
+                "x-every-signed-without-key"
+            };
+            Ok(vec![(header.to_owned(), "1".to_owned())])
+        }
+    }
+
+    /// What a provider answers to every hook the wrapper forwards, for fixed inputs.
+    ///
+    /// The URL is not here: a `base_url` changes its host, and the URL tests above pin it.
+    /// Signing headers keep only their names, because a signature holds the time. A
+    /// dynamic `x-request-id` keeps only its name, because it is random.
+    #[derive(Debug, PartialEq)]
+    struct Hooks {
+        name: String,
+        validate: String,
+        auth_header: Option<(String, String)>,
+        extra_headers: Vec<(String, String)>,
+        dynamic_headers: Vec<Vec<(String, String)>>,
+        signing_headers: Vec<String>,
+        signing_headers_per_request: Vec<String>,
+        models: Vec<(bool, String)>,
+        paths: Vec<String>,
+        next_models_page_url: Option<String>,
+        transform_error: String,
+        stream_events: Vec<String>,
+        stream_format: StreamFormat,
+        stream_has_final_event: bool,
+        stream_tool_call_indexes_restart: bool,
+        supports_streaming: bool,
+    }
+
+    const SIGNED_URL: &str = "https://own.test/v1/chat";
+
+    /// One stream event in the wire format of each stream parser, an error event and the end.
+    const STREAM_EVENTS: &[&str] = &[
+        r#"{"id":"c","object":"chat.completion.chunk","created":1,"model":"m","choices":[{"index":0,"delta":{"content":"hi"},"finish_reason":null}]}"#,
+        r#"{"model":"m","message":{"role":"assistant","content":"hi"},"done":false}"#,
+        r#"{"model":"m","message":{"role":"assistant","content":""},"done":true,"done_reason":"stop"}"#,
+        r#"{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"hi"}}"#,
+        r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"hi"}]},"index":0}]}"#,
+        r#"{"type":"content-delta","index":0,"delta":{"message":{"content":{"text":"hi"}}}}"#,
+        r#"{"error":{"message":"boom","type":"server_error"}}"#,
+        "[DONE]",
+    ];
+
+    const MODELS: &[&str] = &[
+        "gpt-4o",
+        "claude-3-5-sonnet",
+        "command-r-plus",
+        "gemini-1.5-pro",
+        "mistral-large-latest",
+        "llama3",
+        "anthropic.claude-v2",
+        "every/m",
+    ];
+
+    fn header_names(headers: Result<Vec<(String, String)>>) -> Vec<String> {
+        match headers {
+            Ok(headers) => headers.into_iter().map(|(name, _)| name).collect(),
+            Err(error) => vec![format!("error: {error}")],
+        }
+    }
+
+    fn hooks(provider: &dyn Provider) -> Hooks {
+        let name = provider.name().to_owned();
+        let models = MODELS
+            .iter()
+            .map(|model| (*model).to_owned())
+            .chain([format!("{name}/m"), name.clone()])
+            .map(|model| (provider.matches_model(&model), provider.strip_model_prefix(&model).to_owned()))
+            .collect();
+        let bodies = [
+            json!({}),
+            json!({"thinking": {"type": "enabled", "budget_tokens": 1024}}),
+            json!({"messages": [{"role": "tool", "content": "x"}]}),
+        ];
+        let dynamic_headers = bodies
+            .iter()
+            .map(|body| {
+                provider
+                    .dynamic_headers(body)
+                    .into_iter()
+                    .map(|(header, value)| {
+                        let value = if header.eq_ignore_ascii_case("x-request-id") {
+                            String::new()
+                        } else {
+                            value
+                        };
+                        (header, value)
+                    })
+                    .collect()
+            })
+            .collect();
+        let aws_keys = Credential::AwsCredentials {
+            access_key_id: "AKIDEXAMPLE".into(),
+            secret_access_key: "secret".into(),
+            session_token: None,
+        };
+        let bearer = Credential::BearerToken("token".into());
+        let signing_headers_per_request = [None, Some(&aws_keys), Some(&bearer)]
+            .into_iter()
+            .flat_map(|key| header_names(provider.signing_headers_with_credential("POST", SIGNED_URL, b"{}", key)))
+            .collect();
+        let paths = [
+            provider.chat_completions_path(),
+            provider.embeddings_path(),
+            provider.models_path(),
+            provider.image_generations_path(),
+            provider.audio_speech_path(),
+            provider.audio_transcriptions_path(),
+            provider.moderations_path(),
+            provider.rerank_path(),
+            provider.files_path(),
+            provider.batches_path(),
+            provider.responses_path(),
+            provider.search_path(),
+            provider.ocr_path(),
+        ]
+        .map(str::to_owned)
+        .to_vec();
+        let stream_events = STREAM_EVENTS
+            .iter()
+            .map(|event| {
+                let parsed = provider.parse_stream_event(event).map(|chunk| {
+                    chunk.map(|mut chunk| {
+                        chunk.created = 0;
+                        chunk
+                    })
+                });
+                format!("{parsed:?}")
+            })
+            .collect();
+        let error = LiterLlmError::ServerError {
+            message: r#"{"error":"boom"}"#.to_owned(),
+            status: 500,
+        };
+        Hooks {
+            validate: format!("{:?}", provider.validate()),
+            auth_header: provider
+                .auth_header("key")
+                .map(|(header, value)| (header.into_owned(), value.into_owned())),
+            extra_headers: provider
+                .extra_headers()
+                .iter()
+                .map(|(header, value)| ((*header).to_owned(), (*value).to_owned()))
+                .collect(),
+            dynamic_headers,
+            signing_headers: header_names(provider.signing_headers("POST", SIGNED_URL, b"{}")),
+            signing_headers_per_request,
+            models,
+            paths,
+            next_models_page_url: provider.next_models_page_url(
+                "https://own.test/v1/models",
+                &json!({"next_page_token": "t", "has_more": true, "last_id": "m"}),
+            ),
+            transform_error: format!("{:?}", provider.transform_error(error)),
+            stream_events,
+            stream_format: provider.stream_format(),
+            stream_has_final_event: provider.stream_has_final_event(),
+            stream_tool_call_indexes_restart: provider.stream_tool_call_indexes_restart(),
+            supports_streaming: provider.supports_streaming(),
+            name,
+        }
+    }
+
+    /// Every shipped provider a hint selects, and [`EveryHook`], answer each forwarded hook
+    /// the same with and without the wrapper. The one intended difference: a provider that
+    /// sends no key header at its own host sends the key as a bearer token at a `base_url`.
+    ///
+    /// Revert line: answer any forwarded hook in `BaseUrlOverride` with the trait default
+    /// instead of asking the wrapped provider.
+    #[test]
+    #[serial]
+    fn the_wrapper_answers_every_forwarded_hook_as_the_wrapped_provider() {
+        let mut providers: Vec<Box<dyn Provider>> = all_providers()
+            .expect("the shipped registry parses")
+            .iter()
+            .filter_map(|config| route_builtin_hint(&config.name).ok().flatten())
+            .collect();
+        providers.push(Box::new(EveryHook));
+        let names: Vec<&str> = providers.iter().map(|provider| provider.name()).collect();
+        for name in [
+            "anthropic",
+            "azure",
+            "bedrock",
+            "cohere",
+            "github_copilot",
+            "google_ai",
+            "ollama",
+            "vertex_ai",
+            "every-hook",
+        ] {
+            assert!(names.contains(&name), "{name} is not in the table");
+        }
+        assert!(providers.len() > 50, "{} providers in the table", providers.len());
+        for provider in providers {
+            let mut expected = hooks(provider.as_ref());
+            expected.auth_header = expected
+                .auth_header
+                .or_else(|| Some(("Authorization".to_owned(), "Bearer key".to_owned())));
+            let rebased = BaseUrlOverride::new(provider, "http://gateway.test/v1");
+            assert_eq!(hooks(&rebased), expected, "{}", expected.name);
+        }
+    }
+
+    /// A provider whose `build_url` returns the endpoint path as the whole URL.
+    struct UrlAsPath;
+
+    impl Provider for UrlAsPath {
+        fn name(&self) -> &str {
+            "url-as-path"
+        }
+
+        fn base_url(&self) -> &str {
+            "https://own.test/v1"
+        }
+
+        fn auth_header<'a>(&'a self, _api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
+            None
+        }
+
+        fn matches_model(&self, _model: &str) -> bool {
+            false
+        }
+
+        fn build_url(&self, endpoint_path: &str, _model: &str) -> String {
+            endpoint_path.to_owned()
+        }
+    }
+
+    /// Only a URL on the provider's own host, under its base path at a `/`, takes the
+    /// `base_url` path in place of the base path. Any other URL keeps its whole path.
+    ///
+    /// Revert line: drop the origin check or the `/` boundary check from
+    /// `BaseUrlOverride::rebase`.
+    #[test]
+    fn only_a_url_under_the_own_base_path_takes_the_base_url_path() {
+        let rebased = BaseUrlOverride::new(Box::new(UrlAsPath), "http://gateway.test/proxy");
+        for (url, expected) in [
+            ("https://own.test/v1/chat", "http://gateway.test/proxy/chat"),
+            ("https://own.test/v1", "http://gateway.test/proxy/"),
+            ("https://other.test/v1/chat", "http://gateway.test/v1/chat"),
+            ("https://own.test:8443/v1/chat", "http://gateway.test/v1/chat"),
+            ("https://own.test/v1beta/chat", "http://gateway.test/v1beta/chat"),
+        ] {
+            assert_eq!(rebased.build_url(url, "m"), expected, "{url}");
+        }
     }
 }
