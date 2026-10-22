@@ -13,10 +13,13 @@
 
 #![cfg(all(target_arch = "wasm32", feature = "wasm-http"))]
 
+use std::sync::Arc;
 use std::time::Duration;
 
 use futures_util::StreamExt;
 use js_sys::{Date, Function, Promise, Reflect};
+use secrecy::SecretString;
+use liter_llm::auth::StaticTokenProvider;
 use liter_llm::{
     ChatCompletionRequest, ClientConfigBuilder, CreateFileRequest, CreateSpeechRequest, DefaultClient, FileClient,
     LiterLlmError, LlmClient,
@@ -437,15 +440,16 @@ async fn a_stream_longer_than_the_timeout_completes_while_chunks_keep_arriving()
 async fn a_bedrock_stream_that_goes_idle_ends_with_timeout() {
     const MODEL: &str = "bedrock/anthropic.claude-3-haiku-20240307-v1:0";
     let server = MockServer::start("headers_only", 0).await;
+    // ~keep wasm32 has no environment and no SigV4 signer, so a Bedrock client authenticates with a
+    // ~keep credential provider that returns a Bedrock API key.
     let mut config = ClientConfigBuilder::new("")
         .load_env(false)
         .base_url(server.base_url.clone())
         .timeout(TIMEOUT)
         .max_retries(0)
+        .credential_provider(Arc::new(StaticTokenProvider::new(SecretString::from("bedrock-key"))))
         .build();
     config.bedrock_region = Some("us-east-1".into());
-    config.bedrock_access_key_id = Some("key".into());
-    config.bedrock_secret_access_key = Some("secret".into());
     let client = DefaultClient::new(config, Some(MODEL)).expect("create client");
     let mut request = chat_request();
     request.model = MODEL.to_owned();
