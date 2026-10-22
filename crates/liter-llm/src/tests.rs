@@ -9,7 +9,7 @@ fn init_crypto_for_unit_tests() {
 /// The port listens and closes each connection without a reply, so a request to it fails with
 /// a transport error on every platform. A bound socket that never listens is not enough: Linux
 /// refuses a connect to it, but macOS drops the SYN and the connect waits for the operating
-/// system timeout, and Windows retries it. The listener keeps the port while the value lives.
+/// system timeout. The listener keeps the port while the value lives.
 /// A port that a test binds and then frees can go to another test process before the test
 /// connects to it. Keep the value in a named binding until the test ends, inside a Tokio runtime.
 #[cfg(test)]
