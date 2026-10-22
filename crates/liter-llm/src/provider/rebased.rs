@@ -80,6 +80,10 @@ impl Provider for BaseUrlOverride {
         self.inner.models_path()
     }
 
+    fn next_models_page_url(&self, url: &str, page: &serde_json::Value) -> Option<String> {
+        self.inner.next_models_page_url(url, page)
+    }
+
     fn image_generations_path(&self) -> &str {
         self.inner.image_generations_path()
     }
