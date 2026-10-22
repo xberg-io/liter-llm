@@ -263,6 +263,16 @@ async fn responses_stream_cut_on_an_event_boundary_reports_one_error() {
     assert!(items.last().is_some_and(Result::is_err), "{items:?}");
 }
 
+/// OpenAI-compatible servers that front the Responses API may end with `[DONE]`; the
+/// shared SSE reader accepts that as a clean end for every stream.
+#[tokio::test]
+async fn responses_stream_ended_by_done_completes() {
+    let body = format!("{}data: [DONE]\n\n", sse(&[RESPONSE_CREATED, RESPONSE_DELTA]));
+    let items = collect_responses(body).await;
+    assert_eq!(items.len(), 2, "{items:?}");
+    assert!(items.iter().all(Result::is_ok), "[DONE] must not error: {items:?}");
+}
+
 #[tokio::test]
 async fn responses_stream_with_a_terminal_event_completes() {
     for kind in ["completed", "incomplete", "failed"] {
