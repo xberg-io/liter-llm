@@ -18,12 +18,12 @@ use std::time::Duration;
 
 use futures_util::StreamExt;
 use js_sys::{Date, Function, Promise, Reflect};
-use secrecy::SecretString;
 use liter_llm::auth::StaticTokenProvider;
 use liter_llm::{
     ChatCompletionRequest, ClientConfigBuilder, CreateFileRequest, CreateSpeechRequest, DefaultClient, FileClient,
     LiterLlmError, LlmClient,
 };
+use secrecy::SecretString;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::wasm_bindgen_test;
