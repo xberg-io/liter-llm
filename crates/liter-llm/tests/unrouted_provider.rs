@@ -724,12 +724,9 @@ async fn the_embedding_endpoint_of_edenai_still_sends() {
 async fn a_base_url_lifts_the_endpoint_refusal() {
     let target = Spy::start(Some("{}"));
     let client = client(Some(&target.url), None).expect("client");
-    let outcomes = [
-        search_calls(&client, "brave/some-model").await,
-        audio_calls(&client, "edenai/some-model").await,
-        image_calls(&client, "modelscope/some-model").await,
-    ]
-    .concat();
+    let mut outcomes = search_calls(&client, "brave/some-model").await;
+    outcomes.extend(audio_calls(&client, "edenai/some-model").await);
+    outcomes.extend(image_calls(&client, "modelscope/some-model").await);
     for (call, outcome) in &outcomes {
         assert!(
             !matches!(outcome, Err(LiterLlmError::BadRequest { message, .. }) if message.contains("no built-in route")),
