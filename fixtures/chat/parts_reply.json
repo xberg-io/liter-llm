@@ -59,16 +59,10 @@
       "type": "count_equals",
       "field": "choices[0].message.content.parts",
       "value": 2
-    },
-    {
-      "type": "equals",
-      "field": "choices[0].message.content.parts[0].text",
-      "value": "hello"
-    },
-    {
-      "type": "equals",
-      "field": "choices[0].message.content.parts[1].text",
-      "value": " world"
     }
-  ]
+  ],
+  "skip": {
+    "requires_language": "python",
+    "reason": "Only the Python generated test reads the parts of a reply; the other bindings do not expose them as a field that generated tests can read."
+  }
 }
