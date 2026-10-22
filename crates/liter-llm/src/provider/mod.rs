@@ -2183,7 +2183,9 @@ mod route_model_tests {
         let rebased = rebased::BaseUrlOverride::new(paging, "http://gateway.test");
         let page = serde_json::json!({"nextPageToken": "next"});
         assert_eq!(
-            rebased.next_models_page_url("http://gateway.test/models", &page).as_deref(),
+            rebased
+                .next_models_page_url("http://gateway.test/models", &page)
+                .as_deref(),
             Some("http://gateway.test/models?pageToken=next")
         );
     }
