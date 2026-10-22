@@ -2117,7 +2117,7 @@ class ClientOptions {
   final PlatformInt64? timeoutSecs;
 
   /// Optional connect timeout in seconds. A connect timeout is retried up to `max_retries` times.
-  /// Zero is an error. Not used on `wasm32`.
+  /// Zero is an error on every target. `wasm32` ignores any other value.
   final PlatformInt64? connectTimeoutSecs;
 
   /// Optional retry count for retryable provider failures.
@@ -3499,7 +3499,7 @@ class LlmConfig {
   final PlatformInt64? timeoutSecs;
 
   /// Connect timeout, in seconds. A connect timeout is retried up to `max_retries` times.
-  /// Zero is an error. Not used on `wasm32`.
+  /// Zero is an error on every target. `wasm32` ignores any other value.
   final PlatformInt64? connectTimeoutSecs;
 
   /// Maximum number of retries on 429 / 5xx responses.
