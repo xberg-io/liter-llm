@@ -345,9 +345,11 @@ async fn a_connect_timeout_is_tried_again() {
 #[tokio::test]
 async fn a_stream_connect_timeout_is_tried_again() {
     // The stream client is a second reqwest client. If it loses the connect timeout, the call
-    // waits for the operating system to give up on the connection, and the outer timeout fires.
-    // If the stream path does not retry, the call ends after one 500 ms attempt.
-    let client = unroutable_client(Duration::from_secs(30), Duration::from_millis(500), 2);
+    // waits for its read timeout, which is the request timeout, or for the operating system to
+    // give up on the connection, and the outer timeout fires. The request timeout is far above
+    // the outer timeout so that no other timer can end the call first and pass for the connect
+    // timeout. If the stream path does not retry, the call ends after one 500 ms attempt.
+    let client = unroutable_client(Duration::from_secs(600), Duration::from_millis(500), 2);
 
     let start = Instant::now();
     let result = tokio::time::timeout(Duration::from_secs(60), client.chat_stream(request()))
