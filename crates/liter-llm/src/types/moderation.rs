@@ -9,6 +9,10 @@ pub struct ModerationRequest {
     /// Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model: Option<String>,
+    /// Provider-specific parameters merged into the request body, as chat's
+    /// `extra_body` is. Keys here override identically named fields.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extra_body: Option<serde_json::Value>,
 }
 
 /// Input to the moderation endpoint — a single string or multiple strings.

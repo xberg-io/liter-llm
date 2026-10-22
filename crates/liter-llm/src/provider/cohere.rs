@@ -326,10 +326,9 @@ const MODELS_PAGE_SIZE: u32 = 1000;
 
 /// `input_type` sent with every embed request.
 ///
-/// Cohere's v3 and later embed models require this field, and `EmbeddingRequest` has no
-/// field to map it from. `search_document` is the indexing-side value, the same default as
-/// the Bedrock Cohere embed adapter. Every request sends this value: a caller cannot ask
-/// for `search_query` today.
+/// Cohere's v3 and later embed models require this field. `search_document` is the
+/// indexing-side value, the same default as the Bedrock Cohere embed adapter. A caller
+/// changes it through `extra_body`, whose keys the client merges over the rebuilt body.
 const EMBED_DEFAULT_INPUT_TYPE: &str = "search_document";
 
 /// Rebuild an OpenAI-style embedding body into Cohere's `POST /v2/embed` body.
@@ -383,6 +382,10 @@ fn transform_embed_request(body: &mut Value) -> Result<()> {
 
     if let Some(dimensions) = body.get("dimensions").filter(|d| !d.is_null()) {
         out["output_dimension"] = dimensions.clone();
+    }
+    // The client merges `extra_body` into the body after this step, so it must survive the rebuild.
+    if let Some(extra_body) = body.get("extra_body").filter(|e| !e.is_null()) {
+        out["extra_body"] = extra_body.clone();
     }
 
     *body = out;
@@ -1423,6 +1426,15 @@ mod tests {
             .transform_embedding_response(&mut body, "embed-v4.0")
             .expect("a float reply should rebuild");
         assert_eq!(body["model"], "embed-v4.0");
+    }
+
+    #[test]
+    fn test_cohere_embed_request_keeps_extra_body_for_the_client_merge() {
+        let mut body = json!({"model": "embed-v4.0", "input": "a", "extra_body": {"input_type": "search_query"}});
+        CohereProvider
+            .transform_embedding_request(&mut body)
+            .expect("a string input should rebuild");
+        assert_eq!(body["extra_body"], json!({"input_type": "search_query"}));
     }
 
     #[test]
