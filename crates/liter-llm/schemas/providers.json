@@ -495,6 +495,7 @@
         "type": "bearer",
         "env_var": "BRAVE_API_KEY"
       },
+      "no_route_endpoints": ["search"],
       "capabilities": {
         "vision": false,
         "reasoning": false,
@@ -1080,7 +1081,7 @@
     {
       "name": "duckduckgo",
       "display_name": "DuckDuckGo",
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_count": 1,
       "base_url": "https://api.duckduckgo.com",
       "auth": {
@@ -1105,7 +1106,8 @@
         "type": "bearer",
         "env_var": "EDENAI_API_KEY"
       },
-      "endpoints": ["chat", "embedding", "image", "audio"],
+      "endpoints": ["chat", "embedding"],
+      "no_route_endpoints": ["audio", "image"],
       "model_prefixes": ["edenai/"],
       "capabilities": {
         "vision": false,
@@ -1191,7 +1193,7 @@
         "type": "bearer",
         "env_var": "EXA_API_KEY"
       },
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_count": 1,
       "capabilities": {
         "vision": false,
@@ -1255,7 +1257,7 @@
         "type": "bearer",
         "env_var": "FIRECRAWL_API_KEY"
       },
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_count": 1,
       "capabilities": {
         "vision": false,
@@ -1507,7 +1509,7 @@
         "type": "bearer",
         "env_var": "GOOGLE_PSE_API_KEY"
       },
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_count": 1,
       "capabilities": {
         "vision": false,
@@ -1829,7 +1831,7 @@
         "type": "bearer",
         "env_var": "LINKUP_API_KEY"
       },
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_prefixes": ["linkup/"],
       "model_count": 2,
       "capabilities": {
@@ -2649,7 +2651,7 @@
         "type": "bearer",
         "env_var": "PARALLEL_AI_API_KEY"
       },
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_prefixes": ["parallel_ai/"],
       "model_count": 2,
       "capabilities": {
@@ -2692,7 +2694,8 @@
         "type": "bearer",
         "env_var": "PERPLEXITYAI_API_KEY"
       },
-      "endpoints": ["chat", "search"],
+      "endpoints": ["chat"],
+      "no_route_endpoints": ["search"],
       "model_prefixes": [
         "perplexity/",
         "perplexity/anthropic/claude-",

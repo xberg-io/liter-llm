@@ -1,0 +1,92 @@
+name: CI Wasm
+
+# ~keep The path filters match ci-rust.yaml: this workflow reads the same inputs (sources,
+# lockfile, toolchain pin, cargo config, task files) and adds its own file.
+on:
+  push:
+    branches: [main]
+    paths:
+      - crates/**
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+      - .cargo/**
+      - .task/**
+      - Taskfile.yml
+      - .github/workflows/ci-wasm.yaml
+  pull_request:
+    branches: [main]
+    paths:
+      - crates/**
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+      - .cargo/**
+      - .task/**
+      - Taskfile.yml
+      - .github/workflows/ci-wasm.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: ci-wasm-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  RUST_BACKTRACE: short
+  BUILD_PROFILE: ci
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+permissions:
+  contents: read
+
+jobs:
+  wasm32:
+    name: Wasm32 clippy and tests
+    if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          cache-key-prefix: rust-wasm32
+          use-sccache: "true"
+          target: wasm32-unknown-unknown
+          components: clippy
+
+      # ~keep wasm-bindgen-test-runner must match the wasm-bindgen version in Cargo.lock. A
+      # different runner version refuses to run the module.
+      - name: Read the locked wasm-bindgen version
+        id: wasm-bindgen
+        shell: bash
+        run: |
+          version=$(awk '/^name = "wasm-bindgen"$/ { getline; gsub(/[^0-9.]/, "", $0); print; exit }' Cargo.lock)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Install wasm-bindgen-test-runner
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@${{ steps.wasm-bindgen.outputs.version }}
+
+      # ~keep The tests start a mock HTTP server inside Node.js and need 22.3 or later.
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Run clippy for wasm32
+        run: task wasm:lint:check
+        shell: bash
+
+      - name: Run wasm32 tests
+        run: task wasm:test:wasm32
+        shell: bash

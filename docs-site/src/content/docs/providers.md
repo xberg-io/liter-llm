@@ -60,7 +60,7 @@ Liter-llm supports **174 providers** out of the box. Route requests to any provi
 | Deepseek | `deepseek/` | :white_check_mark: | -- | -- | -- | -- |
 | Docker Model Runner | `docker_model_runner/` | :white_check_mark: | -- | -- | -- | -- |
 | DuckDuckGo | `duckduckgo/` | -- | -- | -- | -- | -- |
-| Eden AI | `edenai/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- |
+| Eden AI | `edenai/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | ElevenLabs | `elevenlabs/` | -- | -- | -- | -- | -- |
 | Empiriolabs | `empiriolabs/` | :white_check_mark: | -- | -- | -- | -- |
 | Empower | `empower/` | :white_check_mark: | -- | -- | -- | -- |
