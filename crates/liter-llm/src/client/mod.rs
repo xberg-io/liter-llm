@@ -1162,7 +1162,6 @@ impl DefaultClient {
         self.prepare_request_with(
             serializable,
             endpoint_fn,
-            |p, body| p.transform_request(body),
             model,
             endpoint,
             stream,
@@ -1171,30 +1170,26 @@ impl DefaultClient {
     }
 
     /// Prepare an embedding request. The provider rebuilds the body in
-    /// [`Provider::transform_embedding_request`], chosen by the endpoint being called.
+    /// [`Provider::transform_embedding_request`], chosen by the embedding endpoint.
     fn prepare_embedding_request(&self, req: &EmbeddingRequest) -> Result<PreparedRequest> {
-        self.prepare_request_with(
+        self.prepare_request(
             req,
             |p| p.embeddings_path(),
-            |p, body| p.transform_embedding_request(body),
             &req.model,
             provider::Endpoint::Embedding,
             None,
-            |_, _| Ok(()),
         )
     }
 
-    /// [`Self::prepare_request`] with the provider's body transform for the endpoint chosen by
-    /// the caller, and a request step for one endpoint.
+    /// [`Self::prepare_request`] with a request step for one endpoint.
     ///
-    /// `transform_fn` is the provider's own body transform: `transform_request`, or the
-    /// embedding hook for the embeddings endpoint. `endpoint_step` runs right after it, so a
-    /// rerank request can be reworded without any other endpoint seeing the change.
+    /// The provider's own body transform is `transform_embedding_request` for the embedding
+    /// endpoint and `transform_request` for every other. `endpoint_step` runs right after it, so
+    /// a rerank request can be reworded without any other endpoint seeing the change.
     fn prepare_request_with(
         &self,
         serializable: &impl serde::Serialize,
         endpoint_fn: impl FnOnce(&dyn Provider) -> &str,
-        transform_fn: impl FnOnce(&dyn Provider, &mut serde_json::Value) -> Result<()>,
         model: &str,
         endpoint: provider::Endpoint,
         stream: Option<bool>,
@@ -1233,7 +1228,11 @@ impl DefaultClient {
                 obj.insert("max_completion_tokens".into(), max_tokens);
             }
         }
-        transform_fn(prov.as_ref(), &mut body)?;
+        if endpoint == provider::Endpoint::Embedding {
+            prov.transform_embedding_request(&mut body)?;
+        } else {
+            prov.transform_request(&mut body)?;
+        }
         endpoint_step(prov.as_ref(), &mut body)?;
         // ~keep Whether the provider's wire format carries `stream` at all is the provider's
         // decision, recorded here by whether the key survived `transform_request`. Providers that
@@ -1910,7 +1909,6 @@ impl LlmClient for DefaultClient {
             let prepared = self.prepare_request_with(
                 &req,
                 |p| rerank_endpoint(p, &req.model),
-                |p, body| p.transform_request(body),
                 &req.model,
                 provider::Endpoint::Rerank,
                 None,
@@ -2282,7 +2280,6 @@ impl LlmClientRaw for DefaultClient {
             let prepared = self.prepare_request_with(
                 &req,
                 |p| rerank_endpoint(p, &req.model),
-                |p, body| p.transform_request(body),
                 &req.model,
                 provider::Endpoint::Rerank,
                 None,
