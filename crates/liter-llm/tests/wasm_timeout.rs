@@ -18,7 +18,8 @@ use std::time::Duration;
 use futures_util::StreamExt;
 use js_sys::{Date, Function, Promise, Reflect};
 use liter_llm::{
-    ChatCompletionRequest, ClientConfigBuilder, CreateFileRequest, DefaultClient, FileClient, LiterLlmError, LlmClient,
+    ChatCompletionRequest, ClientConfigBuilder, CreateFileRequest, CreateSpeechRequest, DefaultClient, FileClient,
+    LiterLlmError, LlmClient,
 };
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
@@ -30,6 +31,7 @@ use wasm_bindgen_test::wasm_bindgen_test;
 /// - `silent`: read the request and never answer.
 /// - `late`: answer after `millis`.
 /// - `late_body`: send the headers and the start of the body, then the rest after `millis`.
+/// - `late_error_body`: send a 503 with the start of its body, then the rest after `millis`.
 /// - `busy_then_silent`: answer the first request with 503 and never answer the next ones.
 /// - `stream`: send one server-sent event at once, then five more, `millis` apart.
 /// - `stream_stall`: send one server-sent event at once, then go silent.
@@ -60,6 +62,12 @@ const server = http.createServer((req, res) => {
     if (mode === 'silent') return;
     if (mode === 'late') { setTimeout(() => json(200, body), millis); return; }
     if (mode === 'busy_then_silent') { if (attempt === 0) json(503, '{"error":{"message":"busy"}}'); return; }
+    if (mode === 'late_error_body') {
+      res.writeHead(503, { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body) });
+      res.write(body.slice(0, 10));
+      setTimeout(() => res.end(body.slice(10)), millis);
+      return;
+    }
     if (mode === 'late_body') {
       res.writeHead(200, { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body) });
       res.write(body.slice(0, 10));
@@ -144,6 +152,14 @@ fn chat_request() -> ChatCompletionRequest {
         "messages": [{"role": "user", "content": "hi"}],
     }))
     .expect("chat request")
+}
+
+fn file_request() -> CreateFileRequest {
+    serde_json::from_value(serde_json::json!({
+        "file": "YQ==",
+        "purpose": "assistants",
+    }))
+    .expect("file request")
 }
 
 const SLOW: u32 = 4000;
@@ -238,11 +254,7 @@ async fn a_get_reply_that_arrives_in_time_succeeds() {
 async fn an_upload_that_outlives_the_timeout_fails_with_timeout() {
     let server = MockServer::start("late", SLOW).await;
     let client = server.client(TIMEOUT, 0);
-    let request: CreateFileRequest = serde_json::from_value(serde_json::json!({
-        "file": "YQ==",
-        "purpose": "assistants",
-    }))
-    .expect("file request");
+    let request = file_request();
 
     let started = Date::now();
     let result = client.create_file(request).await;
@@ -254,14 +266,97 @@ async fn an_upload_that_outlives_the_timeout_fails_with_timeout() {
 }
 
 #[wasm_bindgen_test]
+async fn an_error_body_that_outlives_the_timeout_fails_with_timeout() {
+    let server = MockServer::start("late_error_body", SLOW).await;
+    let client = server.client(TIMEOUT, 0);
+
+    let started = Date::now();
+    let result = client.chat(chat_request()).await;
+    let elapsed = Date::now() - started;
+    server.close();
+
+    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+}
+
+#[wasm_bindgen_test]
+async fn an_upload_error_body_that_outlives_the_timeout_fails_with_timeout() {
+    let server = MockServer::start("late_error_body", SLOW).await;
+    let client = server.client(TIMEOUT, 0);
+
+    let started = Date::now();
+    let result = client.create_file(file_request()).await;
+    let elapsed = Date::now() - started;
+    server.close();
+
+    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+}
+
+#[wasm_bindgen_test]
+async fn a_delete_call_that_outlives_the_timeout_fails_with_timeout() {
+    let server = MockServer::start("late", SLOW).await;
+    let client = server.client(TIMEOUT, 0);
+
+    let started = Date::now();
+    let result = client.delete_file("f1").await;
+    let elapsed = Date::now() - started;
+    server.close();
+
+    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+}
+
+#[wasm_bindgen_test]
+async fn a_binary_download_that_outlives_the_timeout_fails_with_timeout() {
+    let server = MockServer::start("late", SLOW).await;
+    let client = server.client(TIMEOUT, 0);
+
+    let started = Date::now();
+    let result = client.file_content("f1").await;
+    let elapsed = Date::now() - started;
+    server.close();
+
+    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+}
+
+#[wasm_bindgen_test]
+async fn a_binary_download_that_arrives_in_time_succeeds() {
+    let server = MockServer::start("late", 100).await;
+    let client = server.client(Duration::from_secs(3), 0);
+
+    let result = client.file_content("f1").await;
+    server.close();
+
+    assert!(!result.expect("a reply inside the timeout is returned").is_empty());
+}
+
+#[wasm_bindgen_test]
+async fn a_speech_call_that_outlives_the_timeout_fails_with_timeout() {
+    let server = MockServer::start("late", SLOW).await;
+    let client = server.client(TIMEOUT, 0);
+    let request: CreateSpeechRequest = serde_json::from_value(serde_json::json!({
+        "model": "m",
+        "input": "hi",
+        "voice": "alloy",
+    }))
+    .expect("speech request");
+
+    let started = Date::now();
+    let result = client.speech(request).await;
+    let elapsed = Date::now() - started;
+    server.close();
+
+    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+}
+
+#[wasm_bindgen_test]
 async fn an_upload_reply_that_arrives_in_time_succeeds() {
     let server = MockServer::start("late", 100).await;
     let client = server.client(Duration::from_secs(3), 0);
-    let request: CreateFileRequest = serde_json::from_value(serde_json::json!({
-        "file": "YQ==",
-        "purpose": "assistants",
-    }))
-    .expect("file request");
+    let request = file_request();
 
     let result = client.create_file(request).await;
     server.close();
