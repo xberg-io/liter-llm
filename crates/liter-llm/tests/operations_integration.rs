@@ -1795,7 +1795,7 @@ const KEY_FROM_ENV: &str = "key-from-the-environment";
 /// Key variables of providers that a hint at a base_url wraps.
 const WRAPPED_KEY_VARS: &[&str] = &["COHERE_API_KEY", "MISTRAL_API_KEY", "GROQ_API_KEY"];
 
-/// Credential variables of the providers that keep their own type at a base_url.
+/// Key variables of the providers that keep their own type at a base_url.
 const NATIVE_KEY_VARS: &[&str] = &[
     "ANTHROPIC_API_KEY",
     "AZURE_OPENAI_API_KEY",
@@ -1905,7 +1905,7 @@ fn a_hint_at_a_base_url_builds_without_a_key_variable() {
 }
 
 /// Sends one chat request from a keyless client with `hint` at a base_url, with every
-/// credential variable of Anthropic, Azure, Gemini and Bedrock set. Returns the request.
+/// key variable of Anthropic, Azure, Gemini and Bedrock set. Returns the request.
 async fn keyless_native_request(hint: &str) -> CapturedRequest {
     let _guard = KeyVarGuard::set(NATIVE_KEY_VARS, Some(KEY_FROM_ENV));
     let mock = MockServer::start_with_routes(vec![]);
@@ -1919,7 +1919,7 @@ async fn keyless_native_request(hint: &str) -> CapturedRequest {
 }
 
 /// A bare or model-name hint at a base_url keeps its provider's path and sends no
-/// credential from the environment.
+/// key from the environment.
 async fn assert_no_key_from_the_environment(hint: &str, path: &str) {
     let request = keyless_native_request(hint).await;
 
@@ -1941,7 +1941,7 @@ async fn assert_no_key_from_the_environment(hint: &str, path: &str) {
     );
 }
 
-/// Revert line: drop the base_url check in `reads_environment_credentials`, and the client
+/// Revert line: drop the base_url check in `reads_environment_keys`, and the client
 /// reads `ANTHROPIC_API_KEY` and sends it to the base_url host.
 #[tokio::test]
 #[serial_test::serial]
@@ -1984,7 +1984,7 @@ async fn a_bare_google_ai_hint_at_a_base_url_sends_no_key_from_the_environment()
     assert_no_key_from_the_environment("google_ai", "/models/m:generateContent").await;
 }
 
-/// Revert line: drop the `with_environment_credentials` call for Bedrock in `route_hint`,
+/// Revert line: drop the `with_environment_keys` call for Bedrock in `route_hint`,
 /// and the client sends `AWS_BEARER_TOKEN_BEDROCK` to the base_url host.
 #[tokio::test]
 #[serial_test::serial]
@@ -1992,7 +1992,7 @@ async fn a_bare_bedrock_hint_at_a_base_url_sends_no_key_from_the_environment() {
     assert_no_key_from_the_environment("bedrock", "/model/m/converse").await;
 }
 
-/// Revert line: drop the base_url check in `reads_environment_credentials`, and with the
+/// Revert line: drop the base_url check in `reads_environment_keys`, and with the
 /// variables unset the client fails to build with "environment variable ANTHROPIC_API_KEY
 /// is not set".
 #[test]

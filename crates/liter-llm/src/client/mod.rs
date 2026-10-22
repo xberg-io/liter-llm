@@ -935,7 +935,7 @@ impl DefaultClient {
     /// the client reads the provider's designated environment variable
     /// (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) at construction time. With a
     /// `base_url`, only a hint in the `provider/model` form (`"anthropic/claude-3-5-sonnet"`)
-    /// reads a credential from the environment. A bare name (`"anthropic"`) or a model
+    /// reads a key from the environment. A bare name (`"anthropic"`) or a model
     /// name (`"claude-3-5-sonnet"`) reads none, so no key from the environment goes to the
     /// `base_url` host.
     ///
@@ -955,18 +955,18 @@ impl DefaultClient {
         let BuiltProvider {
             provider,
             hint_pins_provider,
-            environment_credentials,
+            environment_keys,
         } = build_provider(&config, model_hint)?;
         provider.validate()?;
         #[cfg(target_arch = "wasm32")]
-        let _ = environment_credentials;
+        let _ = environment_keys;
         let prefixed_model_provider = prefixed_model_provider(&config, model_hint);
 
         #[cfg(not(target_arch = "wasm32"))]
         let mut config = config;
         #[cfg(not(target_arch = "wasm32"))]
         if config.load_env
-            && environment_credentials
+            && environment_keys
             && config.api_key.expose_secret().is_empty()
             && let Some(env_var_name) = provider.env_var()
         {
@@ -987,7 +987,7 @@ impl DefaultClient {
         // ~keep Explicit tokens and credential providers stay authoritative over Workload Identity defaults.
         #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
         if config.credential_provider.is_none()
-            && environment_credentials
+            && environment_keys
             && config.api_key.expose_secret().is_empty()
             && provider.name() == "vertex_ai"
         {
@@ -1480,9 +1480,9 @@ struct BuiltProvider {
     provider: Arc<dyn Provider>,
     /// True when `model_hint` selected `provider`. A bare model name then stays on it.
     hint_pins_provider: bool,
-    /// False when the client reads no credential from the environment: its key variable,
-    /// Bedrock's AWS variables and Vertex AI's application default credentials.
-    environment_credentials: bool,
+    /// False when the client reads no key from the environment: its key variable,
+    /// Bedrock's AWS variables and Vertex AI's default Google access token.
+    environment_keys: bool,
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -1499,8 +1499,8 @@ struct BuiltProvider {
 ///    where `X` is the provider named by `model_hint` (issue #249).
 /// 3. Without a `base_url`, a hint that selects no provider, and no hint, give OpenAI.
 ///
-/// With a `base_url`, the client reads a credential from the environment only when the hint
-/// names its provider in the `provider/model` form, see [`reads_environment_credentials`].
+/// With a `base_url`, the client reads a key from the environment only when the hint
+/// names its provider in the `provider/model` form, see [`reads_environment_keys`].
 fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<BuiltProvider> {
     let hinted = match model_hint {
         Some(hint) => match (route_hint(config, hint), config.effective_base_url()) {
@@ -1512,8 +1512,8 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Bui
         None => None,
     };
     let hint_pins_provider = hinted.is_some();
-    let environment_credentials = match (hinted.as_deref(), model_hint) {
-        (Some(routed), Some(hint)) => reads_environment_credentials(config, routed, hint),
+    let environment_keys = match (hinted.as_deref(), model_hint) {
+        (Some(routed), Some(hint)) => reads_environment_keys(config, routed, hint),
         _ => true,
     };
     let provider: Arc<dyn Provider> = match (hinted, config.effective_base_url()) {
@@ -1531,31 +1531,31 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Bui
     Ok(BuiltProvider {
         provider,
         hint_pins_provider,
-        environment_credentials,
+        environment_keys,
     })
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-/// Whether a client whose hint selected `provider` reads a credential from the environment.
+/// Whether a client whose hint selected `provider` reads a key from the environment.
 ///
 /// Without a `base_url`, it does. With a `base_url`, only a hint that names the provider by
 /// its `provider/` prefix (`anthropic/claude-x`, `bedrock/m`) does: the request goes to a
 /// host the caller chose, and a bare name (`anthropic`) or a model name (`claude-x`) is
 /// read as a choice of wire format only, so it sends no key from the environment there.
-fn reads_environment_credentials(config: &ClientConfig, provider: &dyn Provider, hint: &str) -> bool {
+fn reads_environment_keys(config: &ClientConfig, provider: &dyn Provider, hint: &str) -> bool {
     config.effective_base_url().is_none() || provider.strip_model_prefix(hint) != hint
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 /// The provider that a hint selects. Bedrock is built from the client config, which
-/// carries its region and credentials. With a `base_url`, only a built-in provider answers:
+/// carries its region and AWS keys. With a `base_url`, only a built-in provider answers:
 /// a custom provider brings its own host, and the `base_url` names the host here.
 fn route_hint(config: &ClientConfig, hint: &str) -> Result<Option<Box<dyn Provider>>> {
     if names_bedrock(hint) {
         let bedrock = build_bedrock_provider_config(config);
-        let environment_credentials = reads_environment_credentials(config, &bedrock, hint);
+        let environment_keys = reads_environment_keys(config, &bedrock, hint);
         return Ok(Some(Box::new(
-            bedrock.with_environment_credentials(environment_credentials),
+            bedrock.with_environment_keys(environment_keys),
         )));
     }
     if config.effective_base_url().is_some() {
@@ -3341,25 +3341,25 @@ mod build_provider_tests {
         ("fireworks_ai", "http://gateway.test/v1/chat/completions"),
     ];
 
-    /// Revert line: drop the `environment_credentials` check from the Vertex AI default
-    /// credentials step in `DefaultClient::new`, and a bare `vertex_ai` hint at a base_url
-    /// reads the application default credentials for the base_url host.
+    /// Revert line: drop the `environment_keys` check from the Vertex AI default
+    /// token step in `DefaultClient::new`, and a bare `vertex_ai` hint at a base_url
+    /// gets the default Google access token for the base_url host.
     #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
     #[test]
-    fn a_bare_vertex_hint_at_a_base_url_reads_no_default_credentials() {
+    fn a_bare_vertex_hint_at_a_base_url_gets_no_google_token() {
         let config = ClientConfigBuilder::new("").base_url("http://gateway.test/v1").build();
         let client = DefaultClient::new(config, Some("vertex_ai")).expect("client should build");
         assert_eq!(client.provider.name(), "vertex_ai");
         assert!(
             client.config.credential_provider.is_none(),
-            "a bare hint at a base_url installs no default credentials"
+            "a bare hint at a base_url installs no default Google token source"
         );
 
         let config = ClientConfigBuilder::new("").base_url("http://gateway.test/v1").build();
         let client = DefaultClient::new(config, Some("vertex_ai/gemini-2.0-flash")).expect("client should build");
         assert!(
             client.config.credential_provider.is_some(),
-            "a `vertex_ai/` hint at a base_url installs the default credentials"
+            "a `vertex_ai/` hint at a base_url installs the default Google token source"
         );
     }
 
