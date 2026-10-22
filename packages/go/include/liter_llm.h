@@ -2893,6 +2893,30 @@ int32_t literllm_client_options_has_timeout_secs(LITERLLMAlefHandle handle);
 
 #if (defined(LITERLLM_FEATURE_NATIVE_HTTP) || defined(LITERLLM_FEATURE_WASM_HTTP))
 /**
+ * Get the `connect_timeout_secs` field from a `ClientOptions`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_client_options_connect_timeout_secs(LITERLLMAlefHandle handle);
+#endif
+
+#if (defined(LITERLLM_FEATURE_NATIVE_HTTP) || defined(LITERLLM_FEATURE_WASM_HTTP))
+/**
+ * Report whether the `connect_timeout_secs` field on a `ClientOptions` is `Some`.
+ *
+ * `literllm_client_options_connect_timeout_secs` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `literllm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_client_options_has_connect_timeout_secs(LITERLLMAlefHandle handle);
+#endif
+
+#if (defined(LITERLLM_FEATURE_NATIVE_HTTP) || defined(LITERLLM_FEATURE_WASM_HTTP))
+/**
  * Get the `max_retries` field from a `ClientOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
@@ -5457,6 +5481,26 @@ uint64_t literllm_llm_config_timeout_secs(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 int32_t literllm_llm_config_has_timeout_secs(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `connect_timeout_secs` field from a `LlmConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_llm_config_connect_timeout_secs(LITERLLMAlefHandle handle);
+
+/**
+ * Report whether the `connect_timeout_secs` field on a `LlmConfig` is `Some`.
+ *
+ * `literllm_llm_config_connect_timeout_secs` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `literllm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_llm_config_has_connect_timeout_secs(LITERLLMAlefHandle handle);
 
 /**
  * Get the `max_retries` field from a `LlmConfig`.

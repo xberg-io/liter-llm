@@ -1,0 +1,68 @@
+{
+  "id": "parts_reply",
+  "description": "Chat completion whose reply content is a list of text parts",
+  "docs": {
+    "topic": "chat",
+    "stem": "parts-reply",
+    "title": "Chat completion whose reply content is a list of text parts"
+  },
+  "category": "chat",
+  "tags": ["chat"],
+  "call": "chat",
+  "input": {
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello world"
+      }
+    ]
+  },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "id": "chatcmpl-parts001",
+      "object": "chat.completion",
+      "created": 1711000120,
+      "model": "gpt-4",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "hello"
+              },
+              {
+                "type": "text",
+                "text": " world"
+              }
+            ]
+          },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 8,
+        "completion_tokens": 2,
+        "total_tokens": 10
+      }
+    }
+  },
+  "assertions": [
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "count_equals",
+      "field": "choices[0].message.content.parts",
+      "value": 2
+    }
+  ],
+  "skip": {
+    "languages": ["rust", "node", "ruby", "php", "c", "go", "java", "csharp", "elixir", "wasm", "dart", "kotlin_android", "swift", "zig"],
+    "reason": "Only the Python generated test reads the parts of a reply. The Rust generated test does not compile (no field parts on AssistantContent). The other bindings are not tried. See xberg-io/alef#663."
+  }
+}

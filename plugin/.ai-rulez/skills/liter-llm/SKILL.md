@@ -126,7 +126,7 @@ API key; they do not select a new environment key per request.
 ## Configuration
 
 Pass basic options to `create_client(...)` (`api_key`, `base_url`,
-`timeout_secs`, `max_retries`, `model_hint`), or set the full surface in a
+`timeout_secs`, `connect_timeout_secs`, `max_retries`, `model_hint`), or set the full surface in a
 `liter-llm.toml` (SDK) / `liter-llm-proxy.toml` (proxy) — both auto-discover
 from the cwd upward.
 
@@ -156,6 +156,7 @@ tpm = 100000
 | `base_url` | from registry | Override the provider base URL. |
 | `model_hint` | none | Full provider/model used to select the client provider and credentials. |
 | `timeout_secs` | 60 | Request timeout in seconds. |
+| `connect_timeout_secs` | 10 | Connect timeout in seconds. A connection that does not open in time is retried up to `max_retries` times. Zero is an error on every target. `wasm32` ignores any other value. |
 | `max_retries` | 3 | Retries on 429/5xx with exponential backoff. |
 | `cache` | none | `max_entries`, `ttl_seconds`. |
 | `budget` | none | `global_limit`, `model_limits`, `enforcement`. |

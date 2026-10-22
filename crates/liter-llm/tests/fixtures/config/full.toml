@@ -2,6 +2,7 @@ api_key = "sk-test-full"
 base_url = "https://api.example.com/v1"
 model_hint = "openai"
 timeout_secs = 120
+connect_timeout_secs = 4
 max_retries = 5
 cooldown_secs = 30
 health_check_secs = 60

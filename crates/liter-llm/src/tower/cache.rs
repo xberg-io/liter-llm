@@ -1631,6 +1631,54 @@ mod tests {
     /// `config.ttl`. The bug was invisible because `CacheConfig::default().ttl`
     /// and `StandardCachePolicy::default().exact_ttl` are both 300s, defined
     /// independently; only a non-default value exposes it.
+    /// The hit property, apart from expiry: the TTL is far longer than any pause between the two
+    /// calls, so a stall cannot expire the entry.
+    #[tokio::test]
+    async fn configured_ttl_serves_the_second_call_from_cache() {
+        let config = CacheConfig {
+            max_entries: 10,
+            ttl: Duration::from_secs(3600),
+            backend: CacheBackend::default(),
+        };
+        let client = MockClient::ok();
+        let call_count = Arc::clone(&client.call_count);
+        let mut svc = CacheLayer::new(config).layer(LlmService::new(client));
+
+        svc.call(LlmRequest::Chat(chat_req("ttl-hit-model"))).await.unwrap();
+        svc.call(LlmRequest::Chat(chat_req("ttl-hit-model"))).await.unwrap();
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            1,
+            "second call within the TTL must be served from cache"
+        );
+    }
+
+    /// Same as above on the custom-store path.
+    #[tokio::test]
+    async fn configured_ttl_serves_the_second_call_from_cache_on_the_custom_store_path() {
+        let config = CacheConfig {
+            max_entries: 10,
+            ttl: Duration::from_secs(3600),
+            backend: CacheBackend::default(),
+        };
+        let store: Arc<dyn CacheStore> = Arc::new(InMemoryStore::new(&config));
+        let client = MockClient::ok();
+        let call_count = Arc::clone(&client.call_count);
+        let mut svc = CacheLayer::with_store_and_config(store, &config).layer(LlmService::new(client));
+
+        svc.call(LlmRequest::Chat(chat_req("ttl-hit-store-model")))
+            .await
+            .unwrap();
+        svc.call(LlmRequest::Chat(chat_req("ttl-hit-store-model")))
+            .await
+            .unwrap();
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            1,
+            "second call within the TTL must be served from cache"
+        );
+    }
+
     #[tokio::test]
     async fn configured_ttl_expires_the_entry() {
         let config = CacheConfig {
@@ -1642,13 +1690,11 @@ mod tests {
         let call_count = Arc::clone(&client.call_count);
         let mut svc = CacheLayer::new(config).layer(LlmService::new(client));
 
+        // ~keep No assertion depends on the gap between calls: a pause only makes the entry
+        // ~keep expire sooner, which is what this test waits for. The hit inside the TTL is
+        // ~keep asserted by `configured_ttl_serves_the_second_call_from_cache`.
         svc.call(LlmRequest::Chat(chat_req("ttl-model"))).await.unwrap();
-        svc.call(LlmRequest::Chat(chat_req("ttl-model"))).await.unwrap();
-        assert_eq!(
-            call_count.load(Ordering::SeqCst),
-            1,
-            "second call within the TTL must be served from cache"
-        );
+        assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
         tokio::time::sleep(Duration::from_millis(150)).await;
 
@@ -1676,13 +1722,11 @@ mod tests {
         let call_count = Arc::clone(&client.call_count);
         let mut svc = CacheLayer::with_store_and_config(store, &config).layer(LlmService::new(client));
 
+        // ~keep No assertion depends on the gap between calls: a pause only makes the entry
+        // ~keep expire sooner, which is what this test waits for. The hit inside the TTL is
+        // ~keep asserted by `configured_ttl_serves_the_second_call_from_cache`.
         svc.call(LlmRequest::Chat(chat_req("ttl-store-model"))).await.unwrap();
-        svc.call(LlmRequest::Chat(chat_req("ttl-store-model"))).await.unwrap();
-        assert_eq!(
-            call_count.load(Ordering::SeqCst),
-            1,
-            "second call within the TTL must be served from cache"
-        );
+        assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
         tokio::time::sleep(Duration::from_millis(150)).await;
 

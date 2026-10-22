@@ -765,7 +765,55 @@ mod provider_tests {
     fn detect_ollama() {
         let p = detect_provider("ollama/llama3").expect("provider should be detected");
         assert_eq!(p.name(), "ollama");
-        assert_eq!(p.base_url(), "http://localhost:11434/v1");
+        assert_eq!(p.base_url(), "http://localhost:11434");
+        assert_eq!(
+            p.chat_completions_path(),
+            "/api/chat",
+            "the native provider, not the registry entry"
+        );
+        assert_eq!(p.embeddings_path(), "/api/embed");
+        assert_eq!(p.models_path(), "/api/tags");
+    }
+
+    #[test]
+    fn a_provider_prefix_is_a_registry_name_or_alias_or_a_builtin() {
+        use crate::provider::has_provider_prefix;
+        for model in [
+            "openai/m",
+            "openai/",
+            "anthropic/m",
+            "azure/m",
+            "gemini/m",
+            "google_ai/m",
+            "vertex_ai/m",
+            "bedrock/m",
+            "cohere/m",
+            "mistral/m",
+            "voyage/m",
+            "github_copilot/m",
+            "ollama/m",
+            "ollama_chat/m",
+            "lm_studio/m",
+            "groq/m",
+            "snowflake/m",
+            "custom/m",
+            "openrouter/anthropic/claude",
+        ] {
+            assert!(has_provider_prefix(model), "{model} names a provider");
+        }
+        for model in [
+            "m",
+            "gpt-4o",
+            "claude-3-5-sonnet",
+            "llama3.1:8b",
+            "hf.co/user/model",
+            "library/llama3",
+            "/m",
+            "Openai/m",
+            "unregistered-vendor/m",
+        ] {
+            assert!(!has_provider_prefix(model), "{model} is bare");
+        }
     }
 
     #[test]

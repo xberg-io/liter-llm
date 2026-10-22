@@ -56,7 +56,8 @@ pub(crate) fn validate_sampling_param_range(
 /// The streaming wire format a provider uses for its response stream.
 ///
 /// Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
-/// a proprietary binary EventStream framing.
+/// a proprietary binary EventStream framing.  Ollama's native API streams
+/// newline-delimited JSON.
 ///
 /// Deserialized from the `streaming_format` JSON field via [`serde`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -67,6 +68,8 @@ pub enum StreamFormat {
     Sse,
     /// AWS EventStream binary framing (application/vnd.amazon.eventstream).
     AwsEventStream,
+    /// Newline-delimited JSON (application/x-ndjson): one JSON object per line.
+    Ndjson,
 }
 
 /// Static capability flags for a provider.
@@ -616,6 +619,13 @@ pub(crate) trait Provider: Send + Sync {
         Ok(())
     }
 
+    /// Rewrite an error built from an HTTP status reply before the caller sees it.
+    ///
+    /// The default implementation returns the error unchanged.
+    fn transform_error(&self, error: crate::error::LiterLlmError) -> crate::error::LiterLlmError {
+        error
+    }
+
     /// Transform the raw rerank reply before deserialization into `RerankResponse`.
     ///
     /// The canonical shape is a top-level `results` array. Providers whose rerank
@@ -708,6 +718,26 @@ pub(crate) trait Provider: Send + Sync {
         StreamFormat::Sse
     }
 
+    /// Whether every complete chat stream from this provider ends with an event that carries a
+    /// finish reason, so a stream that ends without one was cut off.
+    ///
+    /// Default: `false`. The client then treats a clean end of the stream as a normal end, as
+    /// OpenAI-compatible servers need (#155, #295). A provider whose own stream protocol always
+    /// closes with a final event overrides this, and the client reports a stream that ends
+    /// without one as [`LiterLlmError::Streaming`](crate::error::LiterLlmError::Streaming).
+    fn stream_has_final_event(&self) -> bool {
+        false
+    }
+
+    /// Whether each chat stream event numbers its tool calls from 0.
+    ///
+    /// Default: `false`. A provider that overrides this sends each tool call once, complete, in
+    /// an event of its own, and the client continues the numbering across events and ends a
+    /// stream that made tool calls with `tool_calls`.
+    fn stream_tool_call_indexes_restart(&self) -> bool {
+        false
+    }
+
     /// Build the full URL for a streaming request.
     ///
     /// Default: delegates to [`Provider::build_url`].  Providers whose
@@ -779,6 +809,7 @@ pub mod custom;
 pub(crate) mod github_copilot;
 pub(crate) mod google_ai;
 pub(crate) mod mistral;
+pub(crate) mod ollama;
 pub mod outbound_policy;
 pub(crate) mod rerank_shape;
 pub(crate) mod vertex;
@@ -1127,6 +1158,25 @@ fn registry_entry_for_prefix<'r>(reg: &'r ProviderRegistry, prefix: &str) -> Opt
         .or_else(|| reg.providers.iter().find(|e| e.aliases.iter().any(|a| a == prefix)))
 }
 
+/// Whether the first `/`-separated segment of `model` names a provider: a registry entry by
+/// name or alias, a built-in provider, or a registered custom provider.
+///
+/// A bare model has none, and a slash alone makes no prefix: `hf.co/user/model` is bare, and
+/// so is `acme/m` until a custom provider named `acme` is registered; `openai/m` and
+/// `snowflake/m` are not.
+pub(crate) fn has_provider_prefix(model: &str) -> bool {
+    let Some((prefix, _)) = model.split_once('/') else {
+        return false;
+    };
+    // ~keep `google_ai/` is the one built-in prefix without a registry entry: it is the second
+    // name of the `gemini` provider in `detect_builtin_provider`.
+    prefix == "google_ai"
+        || REGISTRY
+            .as_ref()
+            .is_ok_and(|reg| registry_entry_for_prefix(reg, prefix).is_some())
+        || custom::is_custom_provider_prefix(prefix, model)
+}
+
 /// A registry entry has a route of its own when it names a `base_url` and is not a
 /// complex provider (complex providers need dedicated auth and request code, matched
 /// by prefix before the registry lookup in [`detect_provider`]).
@@ -1195,8 +1245,9 @@ fn unrouted_provider_error(reg: &ProviderRegistry, model: &str) -> Option<LiterL
 /// 4. Google AI Studio: `gemini/` or `google_ai/` prefix.
 /// 5. Vertex AI: `vertex_ai/` prefix.
 /// 6. AWS Bedrock: `bedrock/` prefix.
-/// 7. `"provider/"` prefix — look up the prefix in the registry.
-/// 8. Walk all registry entries and check their `model_prefixes`.
+/// 7. Ollama (native API): `ollama/` or `ollama_chat/` prefix.
+/// 8. `"provider/"` prefix — look up the prefix in the registry.
+/// 9. Walk all registry entries and check their `model_prefixes`.
 ///
 /// Returns `None` when no built-in provider matches.  Callers without a `base_url` use
 /// [`route_model`], which refuses a registry provider that has no route before the caller
@@ -1253,6 +1304,10 @@ pub(crate) fn detect_builtin_provider(model: &str) -> Option<Box<dyn Provider>> 
         || model.starts_with("mistral/")
     {
         return Some(Box::new(mistral::MistralProvider));
+    }
+
+    if ollama::OllamaProvider::owns(model) {
+        return Some(Box::new(ollama::OllamaProvider::default()));
     }
 
     if model.starts_with("voyage/") {

@@ -45,6 +45,10 @@ pub struct LlmConfig {
     /// Request timeout, in seconds.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeout_secs: Option<u64>,
+    /// Connect timeout, in seconds. A connect timeout is retried up to `max_retries` times.
+    /// Zero is an error on every target. `wasm32` ignores any other value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub connect_timeout_secs: Option<u64>,
     /// Maximum number of retries on 429 / 5xx responses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_retries: Option<u32>,
@@ -235,6 +239,7 @@ impl std::fmt::Debug for LlmConfig {
             .field("api_key", &self.api_key.as_ref().map(|_| "[redacted]"))
             .field("base_url", &self.base_url)
             .field("timeout_secs", &self.timeout_secs)
+            .field("connect_timeout_secs", &self.connect_timeout_secs)
             .field("max_retries", &self.max_retries)
             .field("temperature", &self.temperature)
             .field("max_tokens", &self.max_tokens)
@@ -274,6 +279,9 @@ impl LlmConfig {
         }
         if let Some(t) = self.timeout_secs {
             builder = builder.timeout(Duration::from_secs(t));
+        }
+        if let Some(t) = self.connect_timeout_secs {
+            builder = builder.connect_timeout(Duration::from_secs(t));
         }
         if let Some(r) = self.max_retries {
             builder = builder.max_retries(r);
@@ -478,11 +486,13 @@ model_prefixes = ["my-provider/"]
             model: "gpt-4o".to_owned(),
             api_key: Some("sk-test".to_owned()),
             timeout_secs: Some(30),
+            connect_timeout_secs: Some(3),
             max_retries: Some(2),
             ..Default::default()
         };
         let client_config = config.into_client_builder().build();
         assert_eq!(client_config.timeout, Duration::from_secs(30));
+        assert_eq!(client_config.connect_timeout, Duration::from_secs(3));
         assert_eq!(client_config.max_retries, 2);
     }
 
