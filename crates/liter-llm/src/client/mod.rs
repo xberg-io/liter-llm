@@ -3081,12 +3081,16 @@ mod build_provider_tests {
     fn ollama_hint_without_base_url_uses_the_native_provider_at_the_default_address() {
         let config = ClientConfigBuilder::new("").build();
         for hint in ["ollama", "ollama_chat", "ollama/llama3"] {
-            let p = build_provider(&config, Some(hint)).expect("provider should build");
+            let p = build_provider(&config, Some(hint))
+                .expect("provider should build")
+                .provider;
             assert_eq!(p.name(), "ollama", "hint {hint}");
             assert_eq!(p.base_url(), "http://localhost:11434", "hint {hint}");
             assert_eq!(p.models_path(), "/api/tags", "hint {hint}");
         }
-        let openai = build_provider(&config, Some("openai")).expect("provider should build");
+        let openai = build_provider(&config, Some("openai"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(openai.name(), "openai");
     }
 
