@@ -294,7 +294,8 @@ where
                 // connection reset fails the whole request even though `max_retries > 0`.
                 // A timeout after the connection opened is not retried; `should_retry_transport_error`
                 // refuses it. A connect timeout is retried: the server never saw the request.
-                // ~keep reqwest does not provide `is_connect` on wasm32, so a wasm32 timeout is never a connect timeout.
+                // ~keep reqwest has no `is_connect` on wasm32. There the client deadline, not reqwest,
+                // ends a request that runs too long, so a transport error here is never a timeout.
                 #[cfg(not(target_arch = "wasm32"))]
                 let timed_out = transport_error.is_timeout() && !transport_error.is_connect();
                 #[cfg(target_arch = "wasm32")]
