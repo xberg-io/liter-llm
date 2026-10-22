@@ -3037,7 +3037,9 @@ mod build_provider_tests {
 
     #[test]
     fn rerank_reply_of_a_bedrock_model_maps_relevance_score() {
-        let provider = build_provider(&ClientConfigBuilder::new("k").build(), None).expect("provider should build");
+        let provider = build_provider(&ClientConfigBuilder::new("k").build(), None)
+            .expect("provider should build")
+            .provider;
         let mut body = serde_json::json!({"results": [{"index": 1, "relevanceScore": 0.9}]});
         transform_rerank_reply(provider.as_ref(), "bedrock/amazon.rerank-v1:0", &mut body).unwrap();
         assert_eq!(

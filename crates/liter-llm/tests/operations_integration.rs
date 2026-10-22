@@ -1810,7 +1810,10 @@ async fn a_hint_at_a_base_url_sends_no_key_from_the_environment() {
             .iter()
             .filter(|(_, value)| value.contains(KEY_FROM_ENV))
             .collect();
-        assert!(carried.is_empty(), "hint {hint}: the key variable was sent: {carried:?}");
+        assert!(
+            carried.is_empty(),
+            "hint {hint}: the key variable was sent: {carried:?}"
+        );
     }
 }
 
