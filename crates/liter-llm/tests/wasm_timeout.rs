@@ -171,6 +171,18 @@ fn file_request() -> CreateFileRequest {
     .expect("file request")
 }
 
+/// The most a test may take. A test that waits longer than this has found a call that never ends,
+/// and fails instead of hanging until the harness gives up. It is above the slowest healthy test.
+const TEST_LIMIT: Duration = Duration::from_secs(10);
+
+async fn within<F: std::future::Future<Output = ()>>(test: F) {
+    let test = std::pin::pin!(test);
+    let limit = std::pin::pin!(gloo_timers::future::sleep(TEST_LIMIT));
+    if let futures_util::future::Either::Right(_) = futures_util::future::select(test, limit).await {
+        panic!("the test did not end within {TEST_LIMIT:?}: a call that must time out never ended");
+    }
+}
+
 const SLOW: u32 = 4000;
 const TIMEOUT: Duration = Duration::from_millis(500);
 /// A call that times out must end after about one timeout, not after the slow server answers.
@@ -178,288 +190,342 @@ const TIMEOUT_BOUND_MS: f64 = 2000.0;
 
 #[wasm_bindgen_test]
 async fn a_chat_call_that_outlives_the_timeout_fails_with_timeout_and_is_sent_once() {
-    let server = MockServer::start("late", SLOW).await;
-    let client = server.client(TIMEOUT, 3);
+    within(async {
+        let server = MockServer::start("late", SLOW).await;
+        let client = server.client(TIMEOUT, 3);
 
-    let started = Date::now();
-    let result = client.chat(chat_request()).await;
-    let elapsed = Date::now() - started;
-    server.close();
+        let started = Date::now();
+        let result = client.chat(chat_request()).await;
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
-    assert_eq!(server.requests(), 1, "a timed-out request is not sent again");
+        assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+        assert_eq!(server.requests(), 1, "a timed-out request is not sent again");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_chat_reply_that_arrives_in_time_succeeds() {
-    let server = MockServer::start("late", 100).await;
-    let client = server.client(Duration::from_secs(3), 0);
+    within(async {
+        let server = MockServer::start("late", 100).await;
+        let client = server.client(Duration::from_secs(3), 0);
 
-    let result = client.chat(chat_request()).await;
-    server.close();
+        let result = client.chat(chat_request()).await;
+        server.close();
 
-    let reply = result.expect("a reply inside the timeout is returned");
-    let reply = serde_json::to_value(&reply).expect("serialize reply");
-    assert_eq!(
-        reply.pointer("/choices/0/message/content"),
-        Some(&serde_json::json!("in time")),
-        "the reply body is read in full"
-    );
+        let reply = result.expect("a reply inside the timeout is returned");
+        let reply = serde_json::to_value(&reply).expect("serialize reply");
+        assert_eq!(
+            reply.pointer("/choices/0/message/content"),
+            Some(&serde_json::json!("in time")),
+            "the reply body is read in full"
+        );
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_reply_body_that_outlives_the_timeout_fails_with_timeout() {
-    let server = MockServer::start("late_body", SLOW).await;
-    let client = server.client(TIMEOUT, 0);
+    within(async {
+        let server = MockServer::start("late_body", SLOW).await;
+        let client = server.client(TIMEOUT, 0);
 
-    let started = Date::now();
-    let result = client.chat(chat_request()).await;
-    let elapsed = Date::now() - started;
-    server.close();
+        let started = Date::now();
+        let result = client.chat(chat_request()).await;
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+        assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_timeout_after_a_server_error_ends_the_call() {
-    let server = MockServer::start("busy_then_silent", 0).await;
-    let client = server.client(TIMEOUT, 3);
+    within(async {
+        let server = MockServer::start("busy_then_silent", 0).await;
+        let client = server.client(TIMEOUT, 3);
 
-    let result = client.chat(chat_request()).await;
-    server.close();
+        let result = client.chat(chat_request()).await;
+        server.close();
 
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
-    assert_eq!(server.requests(), 2, "the 503 is retried once and the timeout is not");
+        assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+        assert_eq!(server.requests(), 2, "the 503 is retried once and the timeout is not");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_get_call_that_outlives_the_timeout_fails_with_timeout() {
-    let server = MockServer::start("late", SLOW).await;
-    let client = server.client(TIMEOUT, 0);
+    within(async {
+        let server = MockServer::start("late", SLOW).await;
+        let client = server.client(TIMEOUT, 0);
 
-    let started = Date::now();
-    let result = client.list_models().await;
-    let elapsed = Date::now() - started;
-    server.close();
+        let started = Date::now();
+        let result = client.list_models().await;
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+        assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_get_reply_that_arrives_in_time_succeeds() {
-    let server = MockServer::start("late", 100).await;
-    let client = server.client(Duration::from_secs(3), 0);
+    within(async {
+        let server = MockServer::start("late", 100).await;
+        let client = server.client(Duration::from_secs(3), 0);
 
-    let result = client.list_models().await;
-    server.close();
+        let result = client.list_models().await;
+        server.close();
 
-    assert!(result.expect("a reply inside the timeout is returned").data.is_empty());
+        assert!(result.expect("a reply inside the timeout is returned").data.is_empty());
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn an_upload_that_outlives_the_timeout_fails_with_timeout() {
-    let server = MockServer::start("late", SLOW).await;
-    let client = server.client(TIMEOUT, 0);
-    let request = file_request();
+    within(async {
+        let server = MockServer::start("late", SLOW).await;
+        let client = server.client(TIMEOUT, 0);
+        let request = file_request();
 
-    let started = Date::now();
-    let result = client.create_file(request).await;
-    let elapsed = Date::now() - started;
-    server.close();
+        let started = Date::now();
+        let result = client.create_file(request).await;
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+        assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn an_error_body_that_outlives_the_timeout_fails_with_timeout() {
-    let server = MockServer::start("late_error_body", SLOW).await;
-    let client = server.client(TIMEOUT, 0);
+    within(async {
+        let server = MockServer::start("late_error_body", SLOW).await;
+        let client = server.client(TIMEOUT, 0);
 
-    let started = Date::now();
-    let result = client.chat(chat_request()).await;
-    let elapsed = Date::now() - started;
-    server.close();
+        let started = Date::now();
+        let result = client.chat(chat_request()).await;
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+        assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn an_upload_error_body_that_outlives_the_timeout_fails_with_timeout() {
-    let server = MockServer::start("late_error_body", SLOW).await;
-    let client = server.client(TIMEOUT, 0);
+    within(async {
+        let server = MockServer::start("late_error_body", SLOW).await;
+        let client = server.client(TIMEOUT, 0);
 
-    let started = Date::now();
-    let result = client.create_file(file_request()).await;
-    let elapsed = Date::now() - started;
-    server.close();
+        let started = Date::now();
+        let result = client.create_file(file_request()).await;
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+        assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_delete_call_that_outlives_the_timeout_fails_with_timeout() {
-    let server = MockServer::start("late", SLOW).await;
-    let client = server.client(TIMEOUT, 0);
+    within(async {
+        let server = MockServer::start("late", SLOW).await;
+        let client = server.client(TIMEOUT, 0);
 
-    let started = Date::now();
-    let result = client.delete_file("f1").await;
-    let elapsed = Date::now() - started;
-    server.close();
+        let started = Date::now();
+        let result = client.delete_file("f1").await;
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+        assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_binary_download_that_outlives_the_timeout_fails_with_timeout() {
-    let server = MockServer::start("late", SLOW).await;
-    let client = server.client(TIMEOUT, 0);
+    within(async {
+        let server = MockServer::start("late", SLOW).await;
+        let client = server.client(TIMEOUT, 0);
 
-    let started = Date::now();
-    let result = client.file_content("f1").await;
-    let elapsed = Date::now() - started;
-    server.close();
+        let started = Date::now();
+        let result = client.file_content("f1").await;
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+        assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_binary_download_that_arrives_in_time_succeeds() {
-    let server = MockServer::start("late", 100).await;
-    let client = server.client(Duration::from_secs(3), 0);
+    within(async {
+        let server = MockServer::start("late", 100).await;
+        let client = server.client(Duration::from_secs(3), 0);
 
-    let result = client.file_content("f1").await;
-    server.close();
+        let result = client.file_content("f1").await;
+        server.close();
 
-    assert!(!result.expect("a reply inside the timeout is returned").is_empty());
+        assert!(!result.expect("a reply inside the timeout is returned").is_empty());
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_speech_call_that_outlives_the_timeout_fails_with_timeout() {
-    let server = MockServer::start("late", SLOW).await;
-    let client = server.client(TIMEOUT, 0);
-    let request: CreateSpeechRequest = serde_json::from_value(serde_json::json!({
-        "model": "m",
-        "input": "hi",
-        "voice": "alloy",
-    }))
-    .expect("speech request");
+    within(async {
+        let server = MockServer::start("late", SLOW).await;
+        let client = server.client(TIMEOUT, 0);
+        let request: CreateSpeechRequest = serde_json::from_value(serde_json::json!({
+            "model": "m",
+            "input": "hi",
+            "voice": "alloy",
+        }))
+        .expect("speech request");
 
-    let started = Date::now();
-    let result = client.speech(request).await;
-    let elapsed = Date::now() - started;
-    server.close();
+        let started = Date::now();
+        let result = client.speech(request).await;
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+        assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {result:?}");
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn an_upload_reply_that_arrives_in_time_succeeds() {
-    let server = MockServer::start("late", 100).await;
-    let client = server.client(Duration::from_secs(3), 0);
-    let request = file_request();
+    within(async {
+        let server = MockServer::start("late", 100).await;
+        let client = server.client(Duration::from_secs(3), 0);
+        let request = file_request();
 
-    let result = client.create_file(request).await;
-    server.close();
+        let result = client.create_file(request).await;
+        server.close();
 
-    assert_eq!(result.expect("a reply inside the timeout is returned").id, "f1");
+        assert_eq!(result.expect("a reply inside the timeout is returned").id, "f1");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_stream_with_no_reply_fails_with_timeout_and_is_sent_once() {
-    let server = MockServer::start("silent", 0).await;
-    let client = server.client(TIMEOUT, 3);
+    within(async {
+        let server = MockServer::start("silent", 0).await;
+        let client = server.client(TIMEOUT, 3);
 
-    let started = Date::now();
-    let result = client.chat_stream(chat_request()).await;
-    let elapsed = Date::now() - started;
-    server.close();
+        let started = Date::now();
+        let result = client.chat_stream(chat_request()).await;
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {:?}", result.err());
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
-    assert_eq!(server.requests(), 1, "a timed-out request is not sent again");
+        assert!(matches!(result, Err(LiterLlmError::Timeout)), "got {:?}", result.err());
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the call ended after {elapsed} ms");
+        assert_eq!(server.requests(), 1, "a timed-out request is not sent again");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_stream_that_goes_idle_ends_with_timeout() {
-    let server = MockServer::start("stream_stall", 0).await;
-    let client = server.client(TIMEOUT, 0);
+    within(async {
+        let server = MockServer::start("stream_stall", 0).await;
+        let client = server.client(TIMEOUT, 0);
 
-    let started = Date::now();
-    let mut stream = client.chat_stream(chat_request()).await.expect("stream opens");
-    let first = stream
-        .next()
-        .await
-        .expect("the first chunk arrives")
-        .expect("a healthy chunk");
-    assert_eq!(first.choices[0].delta.content.as_deref(), Some("w0 "));
-    let idle = stream.next().await.expect("the idle stream reports an error");
-    let elapsed = Date::now() - started;
-    let after = stream.next().await;
-    server.close();
+        let started = Date::now();
+        let mut stream = client.chat_stream(chat_request()).await.expect("stream opens");
+        let first = stream
+            .next()
+            .await
+            .expect("the first chunk arrives")
+            .expect("a healthy chunk");
+        assert_eq!(first.choices[0].delta.content.as_deref(), Some("w0 "));
+        let idle = stream.next().await.expect("the idle stream reports an error");
+        let elapsed = Date::now() - started;
+        let after = stream.next().await;
+        server.close();
 
-    assert!(matches!(idle, Err(LiterLlmError::Timeout)), "got {idle:?}");
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the stream ended after {elapsed} ms");
-    assert!(after.is_none(), "the stream is finished after the timeout");
+        assert!(matches!(idle, Err(LiterLlmError::Timeout)), "got {idle:?}");
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the stream ended after {elapsed} ms");
+        assert!(after.is_none(), "the stream is finished after the timeout");
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_stream_longer_than_the_timeout_completes_while_chunks_keep_arriving() {
-    // Five chunks 300 ms apart take about 1.5 s, against a 700 ms timeout.
-    let server = MockServer::start("stream", 300).await;
-    let client = server.client(Duration::from_millis(700), 0);
+    within(async {
+        // Five chunks 300 ms apart take about 1.5 s, against a 700 ms timeout.
+        let server = MockServer::start("stream", 300).await;
+        let client = server.client(Duration::from_millis(700), 0);
 
-    let started = Date::now();
-    let mut stream = client.chat_stream(chat_request()).await.expect("stream opens");
-    let mut text = String::new();
-    while let Some(item) = stream.next().await {
-        let chunk = item.expect("a healthy stream does not fail");
-        if let Some(part) = chunk.choices.first().and_then(|choice| choice.delta.content.as_deref()) {
-            text.push_str(part);
+        let started = Date::now();
+        let mut stream = client.chat_stream(chat_request()).await.expect("stream opens");
+        let mut text = String::new();
+        while let Some(item) = stream.next().await {
+            let chunk = item.expect("a healthy stream does not fail");
+            if let Some(part) = chunk.choices.first().and_then(|choice| choice.delta.content.as_deref()) {
+                text.push_str(part);
+            }
         }
-    }
-    let elapsed = Date::now() - started;
-    server.close();
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert_eq!(text, "w0 w1 w2 w3 w4 w5 ");
-    assert!(
-        elapsed > 1200.0,
-        "the stream must outlast the timeout, took {elapsed} ms"
-    );
+        assert_eq!(text, "w0 w1 w2 w3 w4 w5 ");
+        assert!(
+            elapsed > 1200.0,
+            "the stream must outlast the timeout, took {elapsed} ms"
+        );
+    })
+    .await;
 }
 
 #[wasm_bindgen_test]
 async fn a_bedrock_stream_that_goes_idle_ends_with_timeout() {
-    const MODEL: &str = "bedrock/anthropic.claude-3-haiku-20240307-v1:0";
-    let server = MockServer::start("headers_only", 0).await;
-    // ~keep wasm32 has no environment and no SigV4 signer, so a Bedrock client authenticates with a
-    // ~keep credential provider that returns a Bedrock API key.
-    let mut config = ClientConfigBuilder::new("")
-        .load_env(false)
-        .base_url(server.base_url.clone())
-        .timeout(TIMEOUT)
-        .max_retries(0)
-        .credential_provider(Arc::new(StaticTokenProvider::new(SecretString::from("bedrock-key"))))
-        .build();
-    config.bedrock_region = Some("us-east-1".into());
-    let client = DefaultClient::new(config, Some(MODEL)).expect("create client");
-    let mut request = chat_request();
-    request.model = MODEL.to_owned();
+    within(async {
+        const MODEL: &str = "bedrock/anthropic.claude-3-haiku-20240307-v1:0";
+        let server = MockServer::start("headers_only", 0).await;
+        // ~keep wasm32 has no environment and no SigV4 signer, so a Bedrock client authenticates with a
+        // ~keep credential provider that returns a Bedrock API key.
+        let mut config = ClientConfigBuilder::new("")
+            .load_env(false)
+            .base_url(server.base_url.clone())
+            .timeout(TIMEOUT)
+            .max_retries(0)
+            .credential_provider(Arc::new(StaticTokenProvider::new(SecretString::from("bedrock-key"))))
+            .build();
+        config.bedrock_region = Some("us-east-1".into());
+        let client = DefaultClient::new(config, Some(MODEL)).expect("create client");
+        let mut request = chat_request();
+        request.model = MODEL.to_owned();
 
-    let started = Date::now();
-    let mut stream = client.chat_stream(request).await.expect("stream opens");
-    let idle = stream.next().await.expect("the idle stream reports an error");
-    let elapsed = Date::now() - started;
-    server.close();
+        let started = Date::now();
+        let mut stream = client.chat_stream(request).await.expect("stream opens");
+        let idle = stream.next().await.expect("the idle stream reports an error");
+        let elapsed = Date::now() - started;
+        server.close();
 
-    assert!(matches!(idle, Err(LiterLlmError::Timeout)), "got {idle:?}");
-    assert!(elapsed < TIMEOUT_BOUND_MS, "the stream ended after {elapsed} ms");
+        assert!(matches!(idle, Err(LiterLlmError::Timeout)), "got {idle:?}");
+        assert!(elapsed < TIMEOUT_BOUND_MS, "the stream ended after {elapsed} ms");
+    })
+    .await;
 }
