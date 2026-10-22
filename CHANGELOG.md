@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `ollama/` (and its alias `ollama_chat/`) now uses Ollama's own API, `/api/chat` and `/api/embed`, instead of the
+  OpenAI-compatible path. Settings in `extra_body` such as `num_ctx`, `top_k` and `repeat_penalty` reach Ollama as
+  `options`, where Ollama applies them. Chat streams read newline-delimited JSON. The default `base_url` is now
+  `http://localhost:11434`. A `base_url` that ends in `/v1` still works: native calls strip one trailing `/v1` before
+  they append `/api/...`. An Ollama hint always means the native API: a client built with the hint `ollama` or
+  `ollama_chat`, or with a hint that starts with `ollama/` or `ollama_chat/`, sends every bare model to `/api/chat`
+  and `/api/embed` whatever `base_url` is, and its `list_models` reads `/api/tags`, which Ollama serves, instead of
+  `/models`, and sets `created` from `modified_at`. On such a client a model with another provider's prefix, such as
+  `openai/m`, `groq/m` or the name of a registered custom provider, still goes to the OpenAI-compatible endpoint at
+  the `base_url` as given, with the model name as given; a model whose name holds a slash but no provider prefix, such
+  as `hf.co/user/model`, is bare. To reach Ollama's OpenAI-compatible endpoint, use the `openai/` prefix with the
+  Ollama `base_url`. `reasoning_effort` becomes `think`, with `none` sent as `think: false`, and `logprobs` reach
+  Ollama. An `extra_body` key set to `null` is not sent. Fields Ollama has no equivalent for are dropped, as the
+  Anthropic provider does; the Ollama section of the local LLMs page lists them. A reply that only calls tools keeps
+  an empty `content`. Error text of other providers is unchanged (#308).
+- `ollama/` requests that Ollama's API cannot take now fail with `BadRequest` before they are sent (#308):
+  - An `image_url` part with an `http` or `https` URL, or a data URL without `;base64`: send the image as a base64
+    data URL.
+  - A message content part other than `text` and `image_url`: send text and images only.
+  - Tool-call `arguments` in an assistant message that are not valid JSON: send them as a JSON object.
+  - Embedding `input` that is not a string or a list of strings: send the text as strings.
 - Regenerate bindings with alef 0.112.0. The Rust, Go, Java, PHP and C streaming tests read the stream before they
   assert a mid-stream error.
 - Swift: the enum case `none` is now `none_` (the serialized value is unchanged).
@@ -23,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `StreamFormat` has a new `Ndjson` variant for providers that stream newline-delimited JSON (#308).
 - `list_catalog_models(provider)` lists the models of the built-in catalog without a network call or an API key, in
   every binding. Each entry has the full catalog name, the provider, the model, the mode, the token limits and the
   ability flags. The list is sorted by name in byte order and covers an installed catalog refresh. The optional
@@ -48,6 +70,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Send Vertex AI and Bedrock image, rerank and list-models calls to the paths those services serve. Vertex image generation goes to the Imagen `:predict` method with an `instances` and `parameters` body, and `n` and `size` become `sampleCount` and `aspectRatio`. Vertex list models reads `v1beta1/publishers/google/models` and follows `nextPageToken` to the last page. Bedrock rerank goes to `/rerank` on the `bedrock-agent-runtime` host with a `queries`, `sources` and `rerankingConfiguration` body, and its `relevanceScore` replies parse as results. Bedrock list models reads `/foundation-models` on the `bedrock` host. A `base_url` on a Bedrock client moves every call, rerank and list models included. Before, each call went to a chat-shaped path and failed with a serialization error (#332).
+- `ollama/` embed requests now send `extra_body` to `/api/embed`. The keys `truncate`, `keep_alive` and `dimensions` stay at the top level. Every other key, such as `num_ctx`, goes into `options`, and the keys of an explicit `options` object win on a conflict. Before, the embed request dropped `extra_body` (#329).
+- An error reply with a plain-text `error` field, as Ollama sends, now shows that text as the error message instead of
+  the raw JSON body (#308).
+- `chat_stream_raw` now ends in `LiterLlmError::Streaming` when a stream is cut before the provider's final event, as
+  `chat_stream` does. This covers Ollama, Anthropic, Gemini, Vertex AI, Cohere and Bedrock (#308).
 - Parse the rerank replies of `fireworks_ai/` (hits under `data`), `nvidia_nim/` (hits under `rankings`, with a `logit` for the score) and `huggingface/` Text Embeddings Inference (a bare top-level array, with a `score` and an optional `text`), so these calls return the same `results` as other providers instead of raising `SerializationError`. The reply shape follows the model prefix or the client's `model_hint`, as for Voyage. A reply that has `relevance_score` keeps it. The TEI `text` becomes the result `document`. The NIM `logit` is passed through unchanged and is not limited to `[0, 1]` (#327).
 - Send rerank requests to `nvidia_nim/` and `huggingface/` in the shape those providers document. NVIDIA NIM gets `POST /ranking` with `query` as `{"text": ...}` and the documents as `passages`. TEI gets `texts` for the documents and `return_text` for `return_documents`. Neither documents a field that limits the number of results, so `top_n` is not sent to them (#327).
 - A rerank request to a `voyage/` model, or from a client whose `model_hint` is `voyage`, now sends `top_n` as `top_k`, the field Voyage documents. Other providers keep `top_n` (#319).

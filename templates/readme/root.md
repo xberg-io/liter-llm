@@ -40,7 +40,7 @@ We credit [litellm](https://github.com/BerriAI/litellm) for proving the category
 | **Tool calling** | Parallel tools, structured outputs, and JSON-schema validation |
 | **Search & OCR** | Web search across 12 providers, document OCR across 4 |
 | **TOML configuration** | `liter-llm.toml` auto-discovery, custom providers, cache backends, and middleware config |
-| **Local LLM support** | Ollama, LM Studio, vLLM, llama.cpp, LocalAI, and llamafile via OpenAI-compatible APIs |
+| **Local LLM support** | Ollama through its native API; LM Studio, vLLM, llama.cpp, LocalAI, and llamafile through OpenAI-compatible APIs |
 
 <p align="center"><strong>⭐ <a href="https://github.com/xberg-io/liter-llm/stargazers">Star this repo</a> to show your support — it helps others discover liter-llm.</strong></p>
 

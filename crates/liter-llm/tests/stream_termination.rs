@@ -4,9 +4,9 @@
 //! or with a chunk that carries a finish reason; a clean close with neither is
 //! a cut stream (#356).
 //!
-//! Anthropic and Gemini are exercised end to end here. Cohere and Bedrock are
-//! covered by the unit tests next to the adapter, because a `base_url`
-//! override routes them through the OpenAI-compatible provider.
+//! Anthropic, Gemini and Vertex AI are exercised end to end here. Cohere and
+//! Bedrock are covered by the unit tests next to the adapter, because a
+//! `base_url` override routes them through the OpenAI-compatible provider.
 
 #![cfg(feature = "native-http")]
 
@@ -184,6 +184,23 @@ async fn gemini_stream_with_finish_reason_completes() {
         r#"{"candidates":[{"content":{"role":"model","parts":[{"text":" world"}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":3,"candidatesTokenCount":2}}"#,
     ]);
     assert_complete(&collect(GEMINI_MODEL, body).await);
+}
+
+const VERTEX_MODEL: &str = "vertex_ai/gemini-2.5-flash";
+
+#[tokio::test]
+async fn vertex_stream_cut_before_finish_reason_is_an_error() {
+    let body = sse(&[r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello"}]}}]}"#]);
+    assert_truncated(&collect(VERTEX_MODEL, body).await);
+}
+
+#[tokio::test]
+async fn vertex_stream_with_finish_reason_completes() {
+    let body = sse(&[
+        r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello"}]}}]}"#,
+        r#"{"candidates":[{"content":{"role":"model","parts":[{"text":" world"}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":3,"candidatesTokenCount":2}}"#,
+    ]);
+    assert_complete(&collect(VERTEX_MODEL, body).await);
 }
 
 const OPENAI_CONTENT: &str = r#"{"id":"c1","object":"chat.completion.chunk","created":0,"model":"gpt-4o","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":null}]}"#;
