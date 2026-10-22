@@ -645,10 +645,8 @@ async fn audio_without_a_route_sends_nothing() {
 async fn image_without_a_route_sends_nothing() {
     let proxy = ProxyGuard::install();
     let client = client(None, None).expect("client");
-    for provider in ["edenai", "modelscope"] {
-        for (call, outcome) in image_calls(&client, &format!("{provider}/some-model")).await {
-            assert_endpoint_refused(&outcome, provider, "image", call);
-        }
+    for (call, outcome) in image_calls(&client, "edenai/some-model").await {
+        assert_endpoint_refused(&outcome, "edenai", "image", call);
     }
     assert_eq!(
         proxy.spy.seen(),
@@ -678,7 +676,6 @@ async fn the_chat_endpoint_of_a_provider_with_a_refused_endpoint_still_sends() {
         ("brave", "api.search.brave.com"),
         ("perplexity", "api.perplexity.ai"),
         ("edenai", "api.edenai.run"),
-        ("modelscope", "api-inference.modelscope.cn"),
     ] {
         let chat = client
             .chat(request(serde_json::json!({
@@ -725,7 +722,7 @@ async fn a_base_url_lifts_the_endpoint_refusal() {
     let client = client(Some(&target.url), None).expect("client");
     let mut outcomes = search_calls(&client, "brave/some-model").await;
     outcomes.extend(audio_calls(&client, "edenai/some-model").await);
-    outcomes.extend(image_calls(&client, "modelscope/some-model").await);
+    outcomes.extend(image_calls(&client, "edenai/some-model").await);
     for (call, outcome) in &outcomes {
         assert!(
             !matches!(outcome, Err(LiterLlmError::BadRequest { message, .. }) if message.contains("no built-in route")),
@@ -819,12 +816,6 @@ async fn a_custom_provider_named_edenai_sends_image_and_speech_to_its_base_url()
     assert_custom_provider_not_refused("edenai", "audio", audio_of).await;
 }
 
-#[tokio::test]
-#[serial]
-async fn a_custom_provider_named_modelscope_sends_image_to_its_base_url() {
-    assert_custom_provider_not_refused("modelscope", "image", image_of).await;
-}
-
 fn assert_not_refused<T>(outcome: &liter_llm::Result<T>, provider: &str, call: &str) {
     let error = outcome.as_ref().err();
     assert!(
@@ -841,7 +832,7 @@ async fn every_chat_and_embedding_entry_point_of_a_marked_provider_sends() {
     let proxy = ProxyGuard::install();
     let client = client(None, None).expect("client");
     let mut expected = 0;
-    for provider in ["brave", "perplexity", "edenai", "modelscope"] {
+    for provider in ["brave", "perplexity", "edenai"] {
         let model = format!("{provider}/some-model");
         let chat = serde_json::json!({"model": model, "messages": [{"role": "user", "content": "hi"}]});
         assert_not_refused(&client.chat(request(chat.clone())).await, provider, "chat");

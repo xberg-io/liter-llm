@@ -2133,8 +2133,7 @@
         "type": "bearer",
         "env_var": "MODELSCOPE_API_KEY"
       },
-      "endpoints": ["chat"],
-      "no_route_endpoints": ["image"],
+      "endpoints": ["chat", "image"],
       "model_prefixes": ["modelscope/"],
       "model_count": 35,
       "capabilities": {

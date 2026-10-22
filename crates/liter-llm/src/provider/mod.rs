@@ -2177,7 +2177,6 @@ mod route_model_tests {
             ("duckduckgo", Endpoint::Search),
             ("edenai", Endpoint::Audio),
             ("edenai", Endpoint::Image),
-            ("modelscope", Endpoint::Image),
         ] {
             assert!(
                 refuse_unrouted_endpoint(builtin(provider).as_ref(), endpoint).is_err(),
@@ -2189,7 +2188,6 @@ mod route_model_tests {
             ("perplexity", Endpoint::Chat),
             ("edenai", Endpoint::Chat),
             ("edenai", Endpoint::Embedding),
-            ("modelscope", Endpoint::Chat),
             ("openai", Endpoint::Search),
         ] {
             assert!(
