@@ -26,7 +26,7 @@ pub struct ClientOptions {
     /// Optional request timeout in seconds.
     pub timeout_secs: Option<u64>,
     /// Optional connect timeout in seconds. A connect timeout is retried up to `max_retries` times.
-    /// Zero is an error. Not used on `wasm32`.
+    /// Zero is an error on every target. `wasm32` ignores any other value.
     pub connect_timeout_secs: Option<u64>,
     /// Optional retry count for retryable provider failures.
     pub max_retries: Option<u32>,

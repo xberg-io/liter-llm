@@ -46,7 +46,7 @@ pub struct LlmConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeout_secs: Option<u64>,
     /// Connect timeout, in seconds. A connect timeout is retried up to `max_retries` times.
-    /// Zero is an error. Not used on `wasm32`.
+    /// Zero is an error on every target. `wasm32` ignores any other value.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub connect_timeout_secs: Option<u64>,
     /// Maximum number of retries on 429 / 5xx responses.

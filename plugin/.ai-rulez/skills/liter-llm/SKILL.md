@@ -156,7 +156,7 @@ tpm = 100000
 | `base_url` | from registry | Override the provider base URL. |
 | `model_hint` | none | Full provider/model used to select the client provider and credentials. |
 | `timeout_secs` | 60 | Request timeout in seconds. |
-| `connect_timeout_secs` | 10 | Connect timeout in seconds. A connection that does not open in time is retried up to `max_retries` times. Zero is an error. Not used on `wasm32`. |
+| `connect_timeout_secs` | 10 | Connect timeout in seconds. A connection that does not open in time is retried up to `max_retries` times. Zero is an error on every target. `wasm32` ignores any other value. |
 | `max_retries` | 3 | Retries on 429/5xx with exponential backoff. |
 | `cache` | none | `max_entries`, `ttl_seconds`. |
 | `budget` | none | `global_limit`, `model_limits`, `enforcement`. |

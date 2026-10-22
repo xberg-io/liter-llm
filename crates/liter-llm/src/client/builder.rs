@@ -277,7 +277,8 @@ impl<K, P> ClientBuilder<K, P> {
     /// Set the connect timeout (default: 10 s).
     ///
     /// A connection that does not open in this time is retried up to `max_retries` times.
-    /// Zero is an error when the client is built. Not used on `wasm32`.
+    /// Zero is an error when the client is built, on every target. `wasm32` ignores any
+    /// other value.
     pub fn connect_timeout(mut self, timeout: Duration) -> Self {
         self.connect_timeout = timeout;
         self
@@ -489,5 +490,32 @@ mod tests {
             ClientBuilder::new().connect_timeout,
             ClientConfigBuilder::new("sk-test").build().connect_timeout
         );
+    }
+
+    // `api_key()` and `provider()` each make a new builder of another type. The value set before
+    // the call must reach the built client, not the 10 s default.
+
+    #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+    #[test]
+    fn a_connect_timeout_set_before_api_key_reaches_the_client() {
+        let client = ClientBuilder::new()
+            .provider("openai")
+            .connect_timeout(Duration::from_secs(3))
+            .api_key("sk-test")
+            .build()
+            .expect("build the client");
+        assert_eq!(client.config.connect_timeout, Duration::from_secs(3));
+    }
+
+    #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+    #[test]
+    fn a_connect_timeout_set_before_provider_reaches_the_client() {
+        let client = ClientBuilder::new()
+            .api_key("sk-test")
+            .connect_timeout(Duration::from_secs(3))
+            .provider("openai")
+            .build()
+            .expect("build the client");
+        assert_eq!(client.config.connect_timeout, Duration::from_secs(3));
     }
 }

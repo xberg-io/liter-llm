@@ -306,6 +306,9 @@ async fn a_connection_dropped_on_every_attempt_uses_up_the_retries() {
 }
 
 /// An address that drops every packet, so a connection to it never opens.
+///
+/// The tests that use it need a route to it. On a host with no route, the connect fails at once
+/// with an error that is not a `Timeout`, and these tests fail. They do not pass by mistake.
 const UNROUTABLE: &str = "http://10.255.255.1";
 
 fn unroutable_client(timeout: Duration, connect_timeout: Duration, max_retries: u32) -> DefaultClient {

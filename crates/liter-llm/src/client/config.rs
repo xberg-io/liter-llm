@@ -57,7 +57,7 @@ pub struct ClientConfig {
     /// A connection that does not open in this time fails with a connect timeout. The server
     /// never saw the request, so the client sends it again, up to `max_retries` times. The request
     /// `timeout` still ends the call when it is shorter. Zero is an error when the client is
-    /// created. Not used on `wasm32`.
+    /// created, on every target. `wasm32` ignores any other value.
     pub connect_timeout: Duration,
     /// Maximum number of retries on 429 / 5xx responses.
     pub max_retries: u32,
@@ -348,7 +348,8 @@ impl ClientConfigBuilder {
     ///
     /// A connection that does not open in this time is retried up to `max_retries` times.
     /// A request that times out after the connection is open is sent once.
-    /// Zero is an error when the client is created. Not used on `wasm32`.
+    /// Zero is an error when the client is created, on every target. `wasm32` ignores any
+    /// other value.
     pub fn connect_timeout(mut self, timeout: Duration) -> Self {
         self.config.connect_timeout = timeout;
         self
