@@ -559,11 +559,15 @@ async fn an_ollama_chat_reply_gets_a_current_created_time() {
         server.close();
 
         let reply = result.expect("an Ollama reply maps");
-        assert_eq!(reply.choices[0].message.content.as_deref(), Some("native"));
+        let created = reply.created;
+        let reply = serde_json::to_value(&reply).expect("serialize reply");
+        assert_eq!(
+            reply.pointer("/choices/0/message/content"),
+            Some(&serde_json::json!("native"))
+        );
         assert!(
-            (before..=after + 1).contains(&reply.created),
-            "created is {}, expected between {before} and {after}",
-            reply.created
+            (before..=after + 1).contains(&created),
+            "created is {created}, expected between {before} and {after}"
         );
     })
     .await;
