@@ -435,7 +435,10 @@ async fn the_connect_timeout_option_reaches_the_client() {
 fn assert_zero_connect_timeout_error<T: std::fmt::Debug>(result: liter_llm::Result<T>, entry_point: &str) {
     match result {
         Err(LiterLlmError::BadRequest { message, status: 400 }) => {
-            assert!(message.contains("connect_timeout"), "{entry_point}: message = {message}");
+            assert!(
+                message.contains("connect_timeout"),
+                "{entry_point}: message = {message}"
+            );
         }
         other => panic!("{entry_point}: a zero connect timeout must be a BadRequest error, got {other:?}"),
     }

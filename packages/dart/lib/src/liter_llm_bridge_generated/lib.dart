@@ -17,7 +17,7 @@ part 'lib.freezed.dart';
 /// **Errors:**
 ///
 /// Returns `LiterLlmError.BadRequest` for a zero or platform-overflowing
-/// `max_response_bytes`, plus the errors documented by `create_client`.
+/// `max_response_bytes`, a zero `connect_timeout_secs`, plus the errors documented by `create_client`.
 Future<DefaultClient> createClientWithOptions({
   required ClientOptions options,
 }) => RustLib.instance.api.crateCreateClientWithOptions(options: options);
@@ -2117,6 +2117,7 @@ class ClientOptions {
   final PlatformInt64? timeoutSecs;
 
   /// Optional connect timeout in seconds. A connect timeout is retried up to `max_retries` times.
+  /// Zero is an error. Not used on `wasm32`.
   final PlatformInt64? connectTimeoutSecs;
 
   /// Optional retry count for retryable provider failures.
@@ -3498,6 +3499,7 @@ class LlmConfig {
   final PlatformInt64? timeoutSecs;
 
   /// Connect timeout, in seconds. A connect timeout is retried up to `max_retries` times.
+  /// Zero is an error. Not used on `wasm32`.
   final PlatformInt64? connectTimeoutSecs;
 
   /// Maximum number of retries on 429 / 5xx responses.
