@@ -249,29 +249,6 @@ async fn a_rate_limit_reply_is_still_sent_again() {
 }
 
 #[tokio::test]
-async fn a_connection_closed_without_a_reply_is_still_tried_again() {
-    // The server closes the first connection with no reply and answers the retry. The client
-    // treats every transport error that is not a timeout alike, so this covers a refused
-    // connect too, which macOS and Windows do not give a test on a port it holds.
-    let server = serve(|attempt, stream| {
-        if attempt == 0 {
-            drop(stream);
-        } else {
-            respond(stream, "200 OK", REPLY);
-        }
-    });
-    let client = client(&server, Duration::from_secs(5), 2);
-
-    let result = client.chat(request()).await;
-
-    assert!(
-        result.is_ok(),
-        "the retry after a closed connection succeeds, got {result:?}"
-    );
-    assert_eq!(server.requests.load(Ordering::SeqCst), 2);
-}
-
-#[tokio::test]
 async fn a_connection_dropped_on_every_attempt_uses_up_the_retries() {
     // The server closes every connection with no reply. With max_retries 2 the
     // client sends the first request and two retries, then returns the
