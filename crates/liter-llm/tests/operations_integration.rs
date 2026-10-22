@@ -1735,3 +1735,126 @@ async fn rerank_tei_request_sends_texts_and_return_text() {
     );
     assert_eq!(resp.results[0].document.as_ref().map(|d| d.text.as_str()), Some("b"));
 }
+
+// ── Hinted client at a base_url: key and chat reply ──────────────────────────
+
+/// A key in the environment that no request may carry.
+const KEY_FROM_ENV: &str = "key-from-the-environment";
+
+/// Sets or clears the key variables of the hinted providers; restores them on drop.
+struct KeyVarGuard {
+    saved: Vec<(&'static str, Option<String>)>,
+}
+
+impl KeyVarGuard {
+    const VARS: [&'static str; 3] = ["COHERE_API_KEY", "MISTRAL_API_KEY", "GROQ_API_KEY"];
+
+    fn set(value: Option<&str>) -> Self {
+        let saved = Self::VARS.iter().map(|v| (*v, std::env::var(v).ok())).collect();
+        for var in Self::VARS {
+            // SAFETY: every test that writes the environment is `#[serial]`.
+            unsafe {
+                match value {
+                    Some(v) => std::env::set_var(var, v),
+                    None => std::env::remove_var(var),
+                }
+            }
+        }
+        KeyVarGuard { saved }
+    }
+}
+
+impl Drop for KeyVarGuard {
+    fn drop(&mut self) {
+        for (var, value) in &self.saved {
+            // SAFETY: as above.
+            unsafe {
+                match value {
+                    Some(v) => std::env::set_var(var, v),
+                    None => std::env::remove_var(var),
+                }
+            }
+        }
+    }
+}
+
+fn keyless_hinted_client(mock: &MockServer, hint: &str) -> liter_llm::Result<DefaultClient> {
+    let config = ClientConfigBuilder::new("").base_url(mock.url()).max_retries(0).build();
+    DefaultClient::new(config, Some(hint))
+}
+
+fn chat_request(model: &str) -> liter_llm::types::ChatCompletionRequest {
+    serde_json::from_value(serde_json::json!({
+        "model": model,
+        "messages": [{"role": "user", "content": "Hi"}]
+    }))
+    .expect("minimal chat request should deserialize")
+}
+
+/// Revert line: forward `env_var` to the wrapped provider in `BaseUrlOverride`, and the
+/// client reads `COHERE_API_KEY` and sends it to the `base_url` host.
+#[tokio::test]
+#[serial_test::serial]
+async fn a_hint_at_a_base_url_sends_no_key_from_the_environment() {
+    let _guard = KeyVarGuard::set(Some(KEY_FROM_ENV));
+    for hint in ["cohere", "mistral", "groq"] {
+        let mock = MockServer::start_with_routes(vec![]);
+        let client = keyless_hinted_client(&mock, hint).expect("a client without a key builds");
+
+        let _ = client.chat(chat_request("m")).await;
+
+        let requests = mock.requests();
+        assert_eq!(requests.len(), 1, "hint {hint}: the request reaches the base_url host");
+        let carried: Vec<_> = requests[0]
+            .headers
+            .iter()
+            .filter(|(_, value)| value.contains(KEY_FROM_ENV))
+            .collect();
+        assert!(carried.is_empty(), "hint {hint}: the key variable was sent: {carried:?}");
+    }
+}
+
+/// Revert line: as above. With the key variables unset, the client then fails to build
+/// with "environment variable COHERE_API_KEY is not set".
+#[test]
+#[serial_test::serial]
+fn a_hint_at_a_base_url_builds_without_a_key_variable() {
+    let _guard = KeyVarGuard::set(None);
+    let mock = MockServer::start_with_routes(vec![]);
+    for hint in ["cohere", "mistral", "groq"] {
+        if let Err(error) = keyless_hinted_client(&mock, hint) {
+            panic!("hint {hint}: a client without a key fails to build: {error}");
+        }
+    }
+}
+
+/// Revert line: drop the `transform_response` forward in `BaseUrlOverride`, and Cohere's
+/// native chat reply is read as an OpenAI reply, which has no `choices`.
+#[tokio::test]
+async fn a_cohere_chat_reply_at_a_base_url_is_rebuilt() {
+    let mock = MockServer::start_with_routes(vec![MockRoute {
+        method: "POST".into(),
+        path_prefix: "/chat".into(),
+        status: 200,
+        body: serde_json::json!({
+            "id": "c1",
+            "finish_reason": "COMPLETE",
+            "message": {"role": "assistant", "content": [{"type": "text", "text": "hello"}]},
+            "usage": {"billed_units": {"input_tokens": 3, "output_tokens": 2}}
+        })
+        .to_string(),
+    }]);
+    let client = hinted_client(&mock, "cohere");
+
+    let resp = client
+        .chat(chat_request("command-r-plus"))
+        .await
+        .expect("a native Cohere reply parses");
+
+    assert_eq!(mock.requests()[0].path, "/chat");
+    let reply = serde_json::to_value(&resp).expect("reply serializes");
+    assert_eq!(reply["id"], "c1");
+    assert_eq!(reply["choices"][0]["message"]["content"], "hello");
+    assert_eq!(reply["choices"][0]["finish_reason"], "stop");
+    assert_eq!(reply["usage"]["total_tokens"], 5);
+}
