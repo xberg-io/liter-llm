@@ -1141,6 +1141,12 @@ async fn embed_extra_body_key_that_names_a_request_field_replaces_it() {
 }
 
 #[tokio::test]
+async fn embed_extra_body_input_replaces_the_input_and_stays_out_of_options() {
+    let seen = embed_with_extra_body("ollama/m", json!("a"), json!({"input": "b"})).await;
+    assert_eq!(seen.body, json!({"model": "m", "input": "b"}));
+}
+
+#[tokio::test]
 async fn embed_extra_body_that_is_not_an_object_is_ignored() {
     for extra in [json!("keep_alive"), json!(5), json!([1, 2]), json!(true), Value::Null] {
         let seen = embed_with_extra_body("ollama/m", json!("a"), extra.clone()).await;

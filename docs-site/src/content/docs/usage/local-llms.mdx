@@ -163,7 +163,7 @@ base_url = "http://ollama.internal:11434"
 
 #### Ollama's API
 
-The `ollama/` prefix calls Ollama's own API, `/api/chat` and `/api/embed`. Ollama reads the model settings `num_ctx`, `top_k` and `repeat_penalty` only on this API, so liter-llm puts every `extra_body` key except `keep_alive`, `think`, `format`, `logprobs` and `top_logprobs` into the `options` object of the request. Chat streams read newline-delimited JSON.
+The `ollama/` prefix calls Ollama's own API, `/api/chat` and `/api/embed`. Ollama reads the model settings `num_ctx`, `top_k` and `repeat_penalty` only on this API, so liter-llm puts every `extra_body` key except `keep_alive`, `think`, `format`, `logprobs` and `top_logprobs` into the `options` object of a chat request. An embed request keeps `model`, `input`, `truncate`, `keep_alive` and `dimensions` at the top level and puts every other `extra_body` key into `options`, `think` and `format` included. On an embed request, the keys of an explicit `options` object win over bare keys of the same name. Chat streams read newline-delimited JSON.
 
 To reach Ollama's OpenAI-compatible endpoint instead, use the `openai/` prefix and set `base_url` to the Ollama address with `/v1`:
 

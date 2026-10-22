@@ -518,6 +518,15 @@ pub(crate) trait Provider: Send + Sync {
         "/models"
     }
 
+    /// URL of the next page of a list models reply, or `None` when the reply is the last page.
+    ///
+    /// `url` is the URL that returned `page`, and `page` is the reply before
+    /// [`Provider::transform_response`]. The client follows the URLs in order and joins the
+    /// pages. The default is `None`: the provider lists every model in one reply.
+    fn next_models_page_url(&self, _url: &str, _page: &serde_json::Value) -> Option<String> {
+        None
+    }
+
     /// Path for image generations endpoint.
     fn image_generations_path(&self) -> &str {
         "/images/generations"
@@ -1654,11 +1663,12 @@ mod tests {
             (r#""retry_after":"soon""#, Some(Duration::from_secs(9))),
             (r#""retry_after":-1"#, Some(Duration::from_secs(9))),
             (r#""retry_after":"30""#, Some(Duration::from_secs(30))),
+            (r#""retry_after":"2.5""#, Some(Duration::from_millis(2500))),
         ];
         for (inner, want) in cases {
             let payload = format!(r#"{{"error":{{"message":"x","type":"rate_limit_error",{inner}}},"retry_after":9}}"#);
             let err = mid_stream_error(&payload);
-            // The string "30" sits in the object and wins; the others fall through to 9 s.
+            // The strings "30" and "2.5" sit in the object and win; the others fall through to 9 s.
             assert_eq!(err.retry_after(), want, "{payload}");
         }
         let err = mid_stream_error(r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":1e12}}"#);
@@ -1666,7 +1676,8 @@ mod tests {
     }
 
     /// The top-level `status_code` of the OpenAI-compatible stream path counts only as an
-    /// error status, and the error object wins over it.
+    /// error status, and the error object wins over it. A string status may carry spaces.
+    /// Revert line: remove `.trim()` in `u16_field` to make the padded case fail.
     /// Revert line: remove the `filter` on the top-level value in `status_code_field` to
     /// make this test fail.
     #[test]
@@ -1678,6 +1689,7 @@ mod tests {
             ),
             (r#"{"error":{"message":"x"},"status_code":503}"#, 503),
             (r#"{"error":{"message":"x","status_code":"429"}}"#, 429),
+            (r#"{"error":{"message":"x","status_code":" 429 "}}"#, 429),
             (r#"{"error":{"message":"x","status_code":401},"status_code":503}"#, 401),
         ];
         for (payload, status) in cases {

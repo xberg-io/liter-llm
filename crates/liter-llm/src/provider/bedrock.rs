@@ -5,6 +5,7 @@ use crate::provider::{Provider, StreamFormat};
 
 mod embed;
 mod request;
+mod rerank;
 mod response;
 mod stream;
 
@@ -107,6 +108,11 @@ fn dns_suffix_for_region(region: &str) -> &'static str {
     }
 }
 
+/// The runtime base URL of a region: `https://bedrock-runtime.{region}.{dns_suffix}`.
+fn runtime_url_for_region(region: &str) -> String {
+    format!("https://bedrock-runtime.{region}.{}", dns_suffix_for_region(region))
+}
+
 /// Percent-encode a model ID for use in a URL path segment.
 ///
 /// Bedrock model IDs can contain colons and slashes that must be encoded.
@@ -192,10 +198,9 @@ impl BedrockProvider {
             .ok()
             .filter(|v| !v.is_empty())
             .map(|v| v.trim_end_matches('/').to_string());
-        let base_url = custom_base_url.clone().unwrap_or_else(|| {
-            let dns_suffix = dns_suffix_for_region(&region);
-            format!("https://bedrock-runtime.{region}.{dns_suffix}")
-        });
+        let base_url = custom_base_url
+            .clone()
+            .unwrap_or_else(|| runtime_url_for_region(&region));
         let cross_region_prefix = if custom_base_url.is_some() {
             None
         } else {
@@ -274,6 +279,8 @@ impl BedrockProvider {
     }
 
     /// Override the Bedrock runtime base URL while retaining native request transforms.
+    ///
+    /// The override moves every call, rerank and list models included.
     #[must_use]
     pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
         self.base_url = base_url.into().trim_end_matches('/').to_owned();
@@ -295,6 +302,20 @@ impl BedrockProvider {
         self.secret_access_key = secret_access_key;
         self.session_token = session_token;
         self
+    }
+
+    /// The base URL of a Bedrock service other than the runtime, derived from the region.
+    ///
+    /// Rerank is served by `bedrock-agent-runtime` and list models by `bedrock`. With a
+    /// `base_url` override, one host serves every call, and this returns `None`.
+    fn service_url(&self, service: &str) -> Option<String> {
+        (self.base_url == runtime_url_for_region(&self.region)).then(|| {
+            format!(
+                "https://{service}.{}.{}",
+                self.region,
+                dns_suffix_for_region(&self.region)
+            )
+        })
     }
 
     /// Return the AWS region this provider is configured for.
@@ -436,6 +457,9 @@ impl Provider for BedrockProvider {
     ///
     /// Chat completions map to `/model/{encoded_model}/converse`.
     /// Embeddings map to `/model/{encoded_model}/invoke`.
+    /// Rerank maps to `https://bedrock-agent-runtime.{region}.{dns_suffix}/rerank` and list models
+    /// to `https://bedrock.{region}.{dns_suffix}/foundation-models`. With a `base_url` override,
+    /// both stay on the override, like every other path.
     /// All other paths are passed through unchanged.
     ///
     /// When the `BEDROCK_CROSS_REGION` environment variable is set, the
@@ -451,6 +475,14 @@ impl Provider for BedrockProvider {
             format!("{base}/model/{encoded_model}/converse")
         } else if endpoint_path.contains("embeddings") {
             format!("{base}/model/{encoded_model}/invoke")
+        } else if endpoint_path == self.rerank_path()
+            && let Some(host) = self.service_url("bedrock-agent-runtime")
+        {
+            format!("{host}/rerank")
+        } else if endpoint_path == self.models_path()
+            && let Some(host) = self.service_url("bedrock")
+        {
+            format!("{host}/foundation-models")
         } else {
             format!("{base}{endpoint_path}")
         }
@@ -478,6 +510,9 @@ impl Provider for BedrockProvider {
     /// - `temperature` and `top_p` outside Bedrock's documented `[0.0, 1.0]` range are
     ///   rejected with a `BadRequest` error rather than forwarded and left for Bedrock to reject.
     ///
+    /// Rerank requests (`query` and `documents`, no `messages`) are translated to the
+    /// Bedrock `Rerank` format.
+    ///
     /// Embedding requests (`input` present, no `messages`) are routed to
     /// [`transform_bedrock_embed_request`] instead: Bedrock has no Converse-style
     /// unified embeddings API, so this dispatch mirrors the same
@@ -495,6 +530,10 @@ impl Provider for BedrockProvider {
         // ~keep `{"messages": []}`, silently discarding the entire `input`.
         if body.get("input").is_some() && body.get("messages").is_none() {
             return transform_bedrock_embed_request(body);
+        }
+
+        if rerank::is_rerank_request(body) {
+            return rerank::transform_rerank_request(body, &self.region);
         }
 
         request::transform_converse_request(body)
@@ -523,7 +562,17 @@ impl Provider for BedrockProvider {
             return transform_bedrock_embed_response(body);
         }
 
+        if let Some(summaries) = body.get("modelSummaries").and_then(|m| m.as_array()) {
+            *body = rerank::transform_foundation_models(summaries);
+            return Ok(());
+        }
+
         response::transform_converse_response(body)
+    }
+
+    fn transform_rerank_response(&self, body: &mut serde_json::Value) -> Result<()> {
+        rerank::transform_rerank_response(body);
+        Ok(())
     }
 
     /// Compute the authentication headers for the request.

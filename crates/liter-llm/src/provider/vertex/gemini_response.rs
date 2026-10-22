@@ -4,7 +4,7 @@ use std::sync::atomic::Ordering;
 
 use serde_json::{Value, json};
 
-use super::TOOL_CALL_COUNTER;
+use super::{TOOL_CALL_COUNTER, imagen};
 use crate::error::Result;
 
 /// Normalize a Gemini `generateContent` response to OpenAI chat completion format.
@@ -108,6 +108,12 @@ fn non_chat_response(body: &Value) -> Option<Value> {
             })
             .collect();
         return Some(json!({"object": "list", "data": data, "model": ""}));
+    }
+    if imagen::is_image_response(body) {
+        return Some(imagen::transform_imagen_response(body));
+    }
+    if let Some(models) = body.get("publisherModels").and_then(|m| m.as_array()) {
+        return Some(imagen::transform_publisher_models(models));
     }
     if let Some(predictions) = body.get("predictions").and_then(|p| p.as_array()) {
         let data: Vec<Value> = predictions

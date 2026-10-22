@@ -645,3 +645,225 @@ fn gemini_stream_chunk_without_error_still_parses() {
     let chunk = provider().parse_stream_event(event).unwrap().expect("a chunk");
     assert_eq!(chunk.choices[0].delta.content.as_deref(), Some("Hi"));
 }
+
+#[test]
+fn build_url_image_generations_uses_the_imagen_predict_method() {
+    let p = provider();
+    let url = p.build_url("/images/generations", "imagen-3.0-generate-002");
+    assert_eq!(
+        url,
+        "https://us-central1-aiplatform.googleapis.com/v1/projects/test-project/locations/us-central1/publishers/google/models/imagen-3.0-generate-002:predict"
+    );
+}
+
+#[test]
+fn build_url_list_models_uses_the_publisher_model_listing() {
+    let p = provider();
+    assert_eq!(
+        p.build_url("/models", ""),
+        "https://us-central1-aiplatform.googleapis.com/v1beta1/publishers/google/models"
+    );
+}
+
+#[test]
+fn build_url_list_models_keeps_the_host_of_a_base_url_override() {
+    let scoped = VertexAiProvider::with_base_url("https://proxy.example/v1/projects/p/locations/l/");
+    assert_eq!(
+        scoped.build_url("/models", ""),
+        "https://proxy.example/v1beta1/publishers/google/models"
+    );
+    let bare = VertexAiProvider::with_base_url("http://127.0.0.1:9000");
+    assert_eq!(
+        bare.build_url("/models", ""),
+        "http://127.0.0.1:9000/v1beta1/publishers/google/models"
+    );
+}
+
+#[test]
+fn transform_request_builds_the_imagen_body() {
+    let mut body = json!({"model": "imagen-3.0-generate-002", "prompt": "a cat", "n": 3, "size": "1024x1024"});
+    provider().transform_request(&mut body).unwrap();
+    assert_eq!(
+        body,
+        json!({
+            "instances": [{"prompt": "a cat"}],
+            "parameters": {"sampleCount": 3, "aspectRatio": "1:1"}
+        })
+    );
+}
+
+#[test]
+fn transform_request_imagen_maps_each_supported_aspect_ratio() {
+    for (size, ratio) in [
+        ("1024x1024", "1:1"),
+        ("768x1024", "3:4"),
+        ("1024x768", "4:3"),
+        ("1080x1920", "9:16"),
+        ("1920x1080", "16:9"),
+    ] {
+        let mut body = json!({"prompt": "p", "size": size});
+        provider().transform_request(&mut body).unwrap();
+        assert_eq!(body["parameters"]["aspectRatio"], ratio, "{size}");
+    }
+}
+
+#[test]
+fn transform_request_imagen_rejects_a_size_without_an_aspect_ratio_and_a_url_format() {
+    for body in [
+        json!({"prompt": "p", "size": "1000x300"}),
+        json!({"prompt": "p", "size": "large"}),
+        json!({"prompt": "p", "response_format": "url"}),
+    ] {
+        let mut body = body;
+        assert!(provider().transform_request(&mut body).is_err());
+    }
+}
+
+#[test]
+fn transform_response_maps_imagen_predictions_to_images() {
+    let mut body = json!({
+        "predictions": [
+            {"bytesBase64Encoded": "aGk=", "mimeType": "image/png", "prompt": "a tabby cat"},
+            {"raiFilteredReason": "blocked"}
+        ]
+    });
+    provider().transform_response(&mut body).unwrap();
+    let data = body["data"].as_array().unwrap();
+    assert_eq!(data.len(), 1);
+    assert_eq!(data[0]["b64_json"], "aGk=");
+    assert_eq!(data[0]["revised_prompt"], "a tabby cat");
+    assert!(body["created"].as_u64().unwrap() > 0);
+}
+
+#[test]
+fn transform_response_still_maps_embedding_predictions() {
+    let mut body = json!({"predictions": [{"embeddings": {"values": [0.5, 0.25]}}]});
+    provider().transform_response(&mut body).unwrap();
+    assert_eq!(body["data"][0]["embedding"], json!([0.5, 0.25]));
+}
+
+#[test]
+fn transform_response_maps_publisher_models_to_a_model_list() {
+    let mut body = json!({"publisherModels": [{"name": "publishers/google/models/gemini-2.0-flash"}]});
+    provider().transform_response(&mut body).unwrap();
+    assert_eq!(
+        body,
+        json!({
+            "object": "list",
+            "data": [{"id": "gemini-2.0-flash", "object": "model", "created": 0, "owned_by": "google"}]
+        })
+    );
+}
+
+#[test]
+fn chat_request_with_a_prompt_stays_a_chat_request() {
+    let mut body = json!({
+        "model": "gemini-2.0-flash",
+        "messages": [{"role": "user", "content": "hi"}],
+        "prompt": "a cat"
+    });
+    provider().transform_request(&mut body).unwrap();
+    assert!(body.get("contents").is_some());
+    assert!(body.get("instances").is_none());
+}
+
+#[test]
+fn transform_response_of_predictions_that_the_filter_removed_has_no_images() {
+    let mut body = json!({"predictions": [{"raiFilteredReason": "blocked"}, {"raiFilteredReason": "blocked"}]});
+    provider().transform_response(&mut body).unwrap();
+    assert_eq!(body["data"], json!([]));
+    assert!(body["created"].as_u64().unwrap() > 0);
+}
+
+/// Collects the messages of the warnings that a closure logs.
+struct WarningLog(std::sync::Arc<std::sync::Mutex<Vec<String>>>);
+
+impl tracing::field::Visit for WarningLog {
+    fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+        if field.name() == "message" {
+            self.0.lock().unwrap().push(format!("{value:?}"));
+        }
+    }
+}
+
+struct WarningSubscriber(std::sync::Arc<std::sync::Mutex<Vec<String>>>);
+
+impl tracing::Subscriber for WarningSubscriber {
+    fn enabled(&self, _: &tracing::Metadata<'_>) -> bool {
+        true
+    }
+    fn new_span(&self, _: &tracing::span::Attributes<'_>) -> tracing::span::Id {
+        tracing::span::Id::from_u64(1)
+    }
+    fn record(&self, _: &tracing::span::Id, _: &tracing::span::Record<'_>) {}
+    fn record_follows_from(&self, _: &tracing::span::Id, _: &tracing::span::Id) {}
+    fn event(&self, event: &tracing::Event<'_>) {
+        if *event.metadata().level() == tracing::Level::WARN {
+            event.record(&mut WarningLog(self.0.clone()));
+        }
+    }
+    fn enter(&self, _: &tracing::span::Id) {}
+    fn exit(&self, _: &tracing::span::Id) {}
+}
+
+#[test]
+fn imagen_request_warns_for_each_field_it_drops() {
+    let warnings = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let mut body = json!({"prompt": "p", "quality": "hd", "style": "vivid", "user": "u", "n": 1});
+    tracing::subscriber::with_default(WarningSubscriber(warnings.clone()), || {
+        provider().transform_request(&mut body).unwrap();
+    });
+    let warnings = warnings.lock().unwrap();
+    assert_eq!(warnings.len(), 3, "{warnings:?}");
+    assert!(warnings[0].contains("`quality`"), "{warnings:?}");
+    assert!(warnings[1].contains("`style`"), "{warnings:?}");
+    assert!(warnings[2].contains("`user`"), "{warnings:?}");
+    assert!(body["parameters"].get("quality").is_none());
+}
+
+#[test]
+fn transform_response_names_the_publisher_of_each_model() {
+    let mut body = json!({"publisherModels": [
+        {"name": "publishers/meta/models/llama-3"},
+        {"name": "gemini-bare"},
+        {}
+    ]});
+    provider().transform_response(&mut body).unwrap();
+    assert_eq!(
+        body["data"],
+        json!([
+            {"id": "llama-3", "object": "model", "created": 0, "owned_by": "meta"},
+            {"id": "gemini-bare", "object": "model", "created": 0, "owned_by": "google"},
+            {"id": "", "object": "model", "created": 0, "owned_by": "google"}
+        ])
+    );
+}
+
+#[test]
+fn next_models_page_url_adds_the_encoded_page_token() {
+    let p = provider();
+    let url = "https://h/v1beta1/publishers/google/models";
+    assert_eq!(
+        p.next_models_page_url(url, &json!({"nextPageToken": "ab+/="}))
+            .as_deref(),
+        Some("https://h/v1beta1/publishers/google/models?pageToken=ab%2B%2F%3D")
+    );
+    assert_eq!(
+        p.next_models_page_url(&format!("{url}?pageToken=old"), &json!({"nextPageToken": "new"}))
+            .as_deref(),
+        Some("https://h/v1beta1/publishers/google/models?pageToken=new")
+    );
+}
+
+#[test]
+fn next_models_page_url_is_none_on_the_last_page() {
+    let p = provider();
+    assert_eq!(
+        p.next_models_page_url("https://h/m", &json!({"publisherModels": []})),
+        None
+    );
+    assert_eq!(
+        p.next_models_page_url("https://h/m", &json!({"nextPageToken": ""})),
+        None
+    );
+}
