@@ -14,6 +14,5 @@ CRATE_COPY = ROOT / "crates" / "liter-llm" / "schemas" / "providers.json"
 def test_the_two_copies_of_providers_json_are_equal() -> None:
     """Fail when the root copy and the crate copy differ."""
     assert ROOT_COPY.read_bytes() == CRATE_COPY.read_bytes(), (
-        "schemas/providers.json and crates/liter-llm/schemas/providers.json differ; "
-        "apply the same change to both files"
+        "schemas/providers.json and crates/liter-llm/schemas/providers.json differ; apply the same change to both files"
     )
