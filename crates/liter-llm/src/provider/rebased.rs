@@ -9,7 +9,13 @@ use crate::provider::{Provider, StreamFormat, join_url};
 /// wrapped provider, so the request body, the paths, the headers and the reply handling stay
 /// those of that provider. [`Provider::build_url`] and [`Provider::build_stream_url`] take the
 /// URL the wrapped provider builds and move it to the new host, see [`Self::rebase`].
-/// [`Provider::env_var`] is not forwarded.
+///
+/// Two methods are not forwarded:
+/// - [`Provider::env_var`] answers `None`. The variable belongs to the wrapped provider's own
+///   host, so a client with no `api_key` reads no key from it for the `base_url` host.
+/// - [`Provider::unrouted_endpoints`] keeps its empty default. The wrapped provider lists the
+///   endpoints it has no route for at its own host. A `base_url` names the host of those
+///   endpoints, so no call is refused.
 pub(crate) struct BaseUrlOverride {
     inner: Box<dyn Provider>,
     base_url: String,

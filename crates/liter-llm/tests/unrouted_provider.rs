@@ -732,6 +732,24 @@ async fn a_base_url_lifts_the_endpoint_refusal() {
     assert_eq!(target.seen().len(), outcomes.len(), "every call reaches the base_url");
 }
 
+#[tokio::test]
+#[serial]
+async fn a_base_url_lifts_the_endpoint_refusal_for_a_hinted_provider() {
+    let target = Spy::start(Some("{}"));
+    let brave = client(Some(&target.url), Some("brave/brave")).expect("client");
+    let mut outcomes = search_calls(&brave, "web-search").await;
+    let edenai = client(Some(&target.url), Some("edenai/edenai")).expect("client");
+    outcomes.extend(audio_calls(&edenai, "some-model").await);
+    outcomes.extend(image_calls(&edenai, "some-model").await);
+    for (call, outcome) in &outcomes {
+        assert!(
+            !matches!(outcome, Err(LiterLlmError::BadRequest { message, .. }) if message.contains("no built-in route")),
+            "{call}: a base_url lifts the refusal for a hinted provider: {outcome:?}"
+        );
+    }
+    assert_eq!(target.seen().len(), outcomes.len(), "every call reaches the base_url");
+}
+
 /// Registers a custom provider and removes it on drop, so a failed assertion cannot leak it.
 struct CustomGuard(&'static str);
 
