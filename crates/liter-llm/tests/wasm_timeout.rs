@@ -572,3 +572,42 @@ async fn an_ollama_chat_reply_gets_a_current_created_time() {
     })
     .await;
 }
+
+#[wasm_bindgen_test]
+async fn a_github_copilot_chat_request_builds_its_request_id() {
+    within(async {
+        let server = MockServer::start("late", 0).await;
+        let client = server.client_for("github_copilot/gpt-4o", Duration::from_secs(3), 0);
+        let request: ChatCompletionRequest = serde_json::from_value(serde_json::json!({
+            "model": "github_copilot/gpt-4o",
+            "messages": [{"role": "user", "content": "hi"}],
+        }))
+        .expect("chat request");
+        let result = client.chat(request).await;
+        server.close();
+        result.expect("a Copilot request is sent and answered");
+    })
+    .await;
+}
+
+#[wasm_bindgen_test]
+fn a_realtime_rate_limit_event_without_reset_gets_a_future_reset_time() {
+    use liter_llm::{OpenAiRealtimeTranslator, RealtimeEvent, RealtimeTranslator};
+    let before = Date::now() as i64;
+    let event = OpenAiRealtimeTranslator
+        .translate_inbound(serde_json::json!({
+            "type": "rate_limits.updated",
+            "rate_limits": [{ "name": "requests", "remaining": 3 }],
+        }))
+        .expect("translate");
+    let after = Date::now() as i64;
+    match event {
+        RealtimeEvent::RateLimitsUpdated { reset_at_unix_ms, .. } => {
+            assert!(
+                (before + 60_000..=after + 60_000).contains(&reset_at_unix_ms),
+                "reset is {reset_at_unix_ms}, expected about {before} plus 60000"
+            );
+        }
+        other => panic!("expected RateLimitsUpdated, got {other:?}"),
+    }
+}
