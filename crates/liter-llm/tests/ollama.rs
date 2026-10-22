@@ -886,8 +886,8 @@ async fn capitalised_ollama_hint_is_a_plain_compatible_client() {
 }
 
 /// A custom provider registered under the name `ollama` is an OpenAI-compatible server, not the
-/// native provider: its stream keeps the lenient end-of-stream rule and its tool call indexes.
-/// The native provider's own cut stream is `stream_cut_before_the_done_line_is_an_error`.
+/// native provider: its stream keeps the compatible end-of-stream rule, whose error names `[DONE]`
+/// and not the provider, and its tool call indexes. The native provider's own cut stream is `stream_cut_before_the_done_line_is_an_error`.
 #[tokio::test]
 async fn custom_provider_named_ollama_keeps_the_compatible_stream_rules() {
     let tool_call = |arguments: &str| {
@@ -910,10 +910,16 @@ async fn custom_provider_named_ollama_keeps_the_compatible_stream_rules() {
     let items = stream.collect::<Vec<_>>().await;
     let seen = seen.join().expect("server done");
     assert_eq!(seen.request_line, "POST /v1/chat/completions HTTP/1.1");
-    let chunks: Vec<_> = items
-        .into_iter()
-        .collect::<Result<_, _>>()
-        .expect("a stream that ends without a finish chunk ends cleanly");
+    let (last, content) = items.split_last().expect("stream yields items");
+    let Err(LiterLlmError::Streaming { message }) = last else {
+        panic!("a compatible stream cut without [DONE] or a finish chunk must end in an error, got {last:?}");
+    };
+    assert!(message.contains("[DONE]"), "the generic reader error names [DONE]: {message}");
+    assert!(!message.starts_with("ollama"), "not the native provider's error: {message}");
+    let chunks: Vec<_> = content
+        .iter()
+        .map(|item| item.as_ref().expect("content before the cut arrives"))
+        .collect();
     let calls: Vec<_> = chunks
         .iter()
         .flat_map(|c| c.choices.iter())
