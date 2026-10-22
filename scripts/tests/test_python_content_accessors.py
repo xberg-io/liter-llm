@@ -1,7 +1,7 @@
-"""Verify the Python reply content exposes its text and parts through a real chat call.
+"""Verify the Python reply content and embedding input expose their values through the documented getters.
 
-Run with the liter-llm package installed, for example:
-    uv run --project e2e/python python -m pytest -q scripts/tests/test_python_content_accessors.py
+The test builds a real chat call against a local stub server. Task `python:e2e:test` runs it with the
+generated Python e2e suite, after the package is built.
 """
 
 import asyncio
@@ -76,11 +76,50 @@ class ContentAccessorTests(unittest.TestCase):
         assert content.parts is None
 
     def test_parts_reply_gives_parts_and_no_text(self) -> None:
-        """A reply whose content is a list of parts has .parts with both parts and .text of None."""
+        """A reply whose content is a list of parts has .parts with both part values and .text of None."""
         content = self._content(PARTS)
         assert content.text is None
         assert content.parts is not None
-        assert len(content.parts) == 2
+        assert [part["text"] for part in content.parts] == ["hello", " world"]
+        assert "".join(part["text"] for part in content.parts) == "hello world"
+
+    def test_empty_text_reply_gives_empty_text(self) -> None:
+        """An empty string is a text reply: .text is the empty string, not None."""
+        content = self._content("")
+        assert content.text == ""
+        assert content.parts is None
+
+    def test_empty_parts_reply_gives_empty_parts(self) -> None:
+        """An empty list is a parts reply: .parts is the empty list, not None."""
+        content = self._content([])
+        assert content.text is None
+        assert content.parts == []
+
+
+class EmbeddingInputAccessorTests(unittest.TestCase):
+    """An embedding input must give back the string or the list of strings it holds."""
+
+    def test_single_input_gives_single_and_no_multiple(self) -> None:
+        """An input built from one string has .single equal to the string and .multiple of None."""
+        value = liter_llm.EmbeddingInput.from_single("alpha")
+        assert value.single == "alpha"
+        assert value.multiple is None
+
+    def test_multiple_input_gives_multiple_and_no_single(self) -> None:
+        """An input built from a list of strings has .multiple equal to the list and .single of None."""
+        value = liter_llm.EmbeddingInput.from_multiple(["alpha", "beta"])
+        assert value.multiple == ["alpha", "beta"]
+        assert value.single is None
+
+    def test_empty_inputs_keep_their_kind(self) -> None:
+        """An empty string stays a single input and an empty list stays a multiple input."""
+        assert liter_llm.EmbeddingInput.from_single("").single == ""
+        assert liter_llm.EmbeddingInput.from_multiple([]).multiple == []
+
+    def test_constructor_reads_the_value_by_its_shape(self) -> None:
+        """The constructor reads a plain string or list by its JSON shape, so the matching getter returns it."""
+        assert liter_llm.EmbeddingInput("alpha").single == "alpha"
+        assert liter_llm.EmbeddingInput(["alpha", "beta"]).multiple == ["alpha", "beta"]
 
 
 if __name__ == "__main__":
