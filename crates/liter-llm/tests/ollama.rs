@@ -914,8 +914,14 @@ async fn custom_provider_named_ollama_keeps_the_compatible_stream_rules() {
     let Err(LiterLlmError::Streaming { message }) = last else {
         panic!("a compatible stream cut without [DONE] or a finish chunk must end in an error, got {last:?}");
     };
-    assert!(message.contains("[DONE]"), "the generic reader error names [DONE]: {message}");
-    assert!(!message.starts_with("ollama"), "not the native provider's error: {message}");
+    assert!(
+        message.contains("[DONE]"),
+        "the generic reader error names [DONE]: {message}"
+    );
+    assert!(
+        !message.starts_with("ollama"),
+        "not the native provider's error: {message}"
+    );
     let chunks: Vec<_> = content
         .iter()
         .map(|item| item.as_ref().expect("content before the cut arrives"))
