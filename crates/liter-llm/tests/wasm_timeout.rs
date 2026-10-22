@@ -35,6 +35,7 @@ use wasm_bindgen_test::wasm_bindgen_test;
 /// - `busy_then_silent`: answer the first request with 503 and never answer the next ones.
 /// - `stream`: send one server-sent event at once, then five more, `millis` apart.
 /// - `stream_stall`: send one server-sent event at once, then go silent.
+/// - `headers_only`: send the headers of an event stream reply and no body.
 const MOCK_SERVER: &str = r#"
 const http = process.getBuiltinModule('node:http');
 const chat = JSON.stringify({
@@ -72,6 +73,11 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body) });
       res.write(body.slice(0, 10));
       setTimeout(() => res.end(body.slice(10)), millis);
+      return;
+    }
+    if (mode === 'headers_only') {
+      res.writeHead(200, { 'content-type': 'application/vnd.amazon.eventstream' });
+      res.flushHeaders();
       return;
     }
     res.writeHead(200, { 'content-type': 'text/event-stream' });
@@ -425,4 +431,31 @@ async fn a_stream_longer_than_the_timeout_completes_while_chunks_keep_arriving()
         elapsed > 1200.0,
         "the stream must outlast the timeout, took {elapsed} ms"
     );
+}
+
+#[wasm_bindgen_test]
+async fn a_bedrock_stream_that_goes_idle_ends_with_timeout() {
+    const MODEL: &str = "bedrock/anthropic.claude-3-haiku-20240307-v1:0";
+    let server = MockServer::start("headers_only", 0).await;
+    let mut config = ClientConfigBuilder::new("")
+        .load_env(false)
+        .base_url(server.base_url.clone())
+        .timeout(TIMEOUT)
+        .max_retries(0)
+        .build();
+    config.bedrock_region = Some("us-east-1".into());
+    config.bedrock_access_key_id = Some("key".into());
+    config.bedrock_secret_access_key = Some("secret".into());
+    let client = DefaultClient::new(config, Some(MODEL)).expect("create client");
+    let mut request = chat_request();
+    request.model = MODEL.to_owned();
+
+    let started = Date::now();
+    let mut stream = client.chat_stream(request).await.expect("stream opens");
+    let idle = stream.next().await.expect("the idle stream reports an error");
+    let elapsed = Date::now() - started;
+    server.close();
+
+    assert!(matches!(idle, Err(LiterLlmError::Timeout)), "got {idle:?}");
+    assert!(elapsed < TIMEOUT_BOUND_MS, "the stream ended after {elapsed} ms");
 }
