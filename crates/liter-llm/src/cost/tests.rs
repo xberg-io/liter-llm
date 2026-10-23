@@ -405,11 +405,17 @@ fn zero_priced_non_embedding_rows_are_marked_unknown() {
     for model in ["image_generation-model", "video_generation-model", "chat-model"] {
         let info = model_info_in(&registry.models, model).unwrap_or_else(|| panic!("{model} must resolve"));
         assert!(!info.price_known, "{model} must not be presented as free");
-        assert_eq!(compute_cost_in(&registry.models, model, 1_000_000, 0, 0, 1_000_000), None);
+        assert_eq!(
+            compute_cost_in(&registry.models, model, 1_000_000, 0, 0, 1_000_000),
+            None
+        );
     }
 
     let embedding = model_info_in(&registry.models, "embedding-model").expect("embedding-model must resolve");
-    assert!(embedding.price_known, "a zero-rate embedding model is a known, free price");
+    assert!(
+        embedding.price_known,
+        "a zero-rate embedding model is a known, free price"
+    );
 }
 
 /// The same rule holds for every row of the embedded catalog.
@@ -422,7 +428,11 @@ fn embedded_catalog_has_no_zero_priced_non_embedding_model_marked_known() {
         if zero_rates && pricing.mode.as_deref() != Some("embedding") {
             zero_priced += 1;
             assert_eq!(pricing.price_known, Some(false), "{key} must not be presented as free");
-            assert_eq!(compute_cost_in(&catalog.models, key, 1_000_000, 0, 0, 1_000_000), None, "{key}");
+            assert_eq!(
+                compute_cost_in(&catalog.models, key, 1_000_000, 0, 0, 1_000_000),
+                None,
+                "{key}"
+            );
         }
     }
     assert!(zero_priced > 0, "the embedded catalog holds unpriced models");
