@@ -368,18 +368,74 @@ fn unpriced_model_resolves_with_unknown_cost_and_full_metadata() {
     assert_eq!(cost, None, "unpriced model must not be presented as free");
 }
 
+/// A catalog row with zero rates is "price unknown" unless it is an embedding
+/// model. The fixture names its own rows, so the scheduled models.dev sync
+/// cannot remove the models this test depends on.
 #[test]
-fn zero_priced_non_embedding_models_are_marked_unknown() {
-    for model in [
-        "gpt-image-1",
-        "veo-3.1-generate-preview",
-        "lyria-3-clip-preview",
-        "gemma-4-26b-a4b-it",
-    ] {
-        let info = model_info(model).unwrap_or_else(|| panic!("catalog model {model} must resolve"));
+fn zero_priced_non_embedding_rows_are_marked_unknown() {
+    let row = |mode: &str, pricing: &str| {
+        format!(
+            r#""{mode}-model": {{
+                {pricing}
+                "limit": {{ "context": 1000, "output": 100 }},
+                "mode": "{mode}",
+                "capabilities": {{
+                    "vision": false, "function_calling": false, "reasoning": false,
+                    "structured_output": false, "audio_input": false, "audio_output": false,
+                    "prompt_caching": false
+                }}
+            }}"#
+        )
+    };
+    let zero = r#""pricing": { "input_cost_per_token": 0.0, "output_cost_per_token": 0.0 },"#;
+    let catalog = format!(
+        r#"{{
+            "$provenance": {{ "source": "test", "source_sha256": "{}", "fetched": "2026-10-23", "library_version": "0" }},
+            "$schema_version": 1,
+            "providers": {{ "openai": {{ "models": {{ {}, {}, {}, {} }} }} }}
+        }}"#,
+        "0".repeat(64),
+        row("image_generation", zero),
+        row("video_generation", zero),
+        row("chat", ""),
+        row("embedding", zero),
+    );
+    let registry = registry_from_catalog_str(&catalog).expect("fixture catalog must parse");
+
+    for model in ["image_generation-model", "video_generation-model", "chat-model"] {
+        let info = model_info_in(&registry.models, model).unwrap_or_else(|| panic!("{model} must resolve"));
         assert!(!info.price_known, "{model} must not be presented as free");
-        assert_eq!(completion_cost(model, 1_000_000, 1_000_000), None);
+        assert_eq!(
+            compute_cost_in(&registry.models, model, 1_000_000, 0, 0, 1_000_000),
+            None
+        );
     }
+
+    let embedding = model_info_in(&registry.models, "embedding-model").expect("embedding-model must resolve");
+    assert!(
+        embedding.price_known,
+        "a zero-rate embedding model is a known, free price"
+    );
+}
+
+/// The same rule holds for every row of the embedded catalog.
+#[test]
+fn embedded_catalog_has_no_zero_priced_non_embedding_model_marked_known() {
+    let catalog = embedded_catalog().expect("embedded catalog must parse");
+    let mut zero_priced = 0;
+    for (key, pricing) in &catalog.models {
+        let zero_rates = pricing.input_cost_per_token == 0.0 && pricing.output_cost_per_token == 0.0;
+        if zero_rates && pricing.mode.as_deref() != Some("embedding") {
+            zero_priced += 1;
+            assert_eq!(pricing.price_known, Some(false), "{key} must not be presented as free");
+            assert_eq!(
+                compute_cost_in(&catalog.models, key, 1_000_000, 0, 0, 1_000_000),
+                None,
+                "{key}"
+            );
+        }
+    }
+    assert!(zero_priced > 0, "the embedded catalog holds unpriced models");
 }
 
 /// A primary-provider ("openai") model resolves both via its combined
