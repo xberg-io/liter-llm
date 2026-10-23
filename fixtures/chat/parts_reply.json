@@ -72,7 +72,7 @@
     }
   ],
   "skip": {
-    "languages": ["csharp", "dart", "kotlin_android", "php", "ruby"],
-    "reason": "The generated test for these bindings drops the parts assertions with a skipped comment and checks only that the reply is not null: C# and Dart and Kotlin do not lower a field that crosses a tagged-union variant, PHP lowers the content enum to a string, and Ruby returns it as a Hash. No alef issue covers these gaps yet."
+    "languages": ["go", "c", "zig", "elixir", "wasm", "csharp", "dart", "kotlin_android", "php", "ruby"],
+    "reason": "C#, Dart, Kotlin, PHP and Ruby generate a test that drops the parts assertions with a skipped comment, see xberg-io/alef#682. Go, C, Zig, Elixir and WASM generate a test that reads the parts at a path the binding does not have and fails, see xberg-io/alef#684."
   }
 }
