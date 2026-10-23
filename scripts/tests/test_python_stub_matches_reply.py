@@ -1,7 +1,7 @@
 """Verify the Python type stub describes the chat reply a caller gets.
 
-Run with the liter-llm package installed, for example:
-    uv run --project e2e/python python -m pytest -q scripts/tests/test_python_stub_matches_reply.py
+Task `python:e2e:test` runs it with the generated Python e2e suite, after the package is built. To run it alone:
+    cd e2e/python && uv run --no-sync pytest ../../scripts/tests/test_python_stub_matches_reply.py -q
 """
 
 import ast
