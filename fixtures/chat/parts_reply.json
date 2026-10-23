@@ -70,9 +70,5 @@
       "field": "choices[0].message.content.parts[1].text",
       "value": " world"
     }
-  ],
-  "skip": {
-    "languages": ["go", "c", "zig", "elixir", "wasm", "swift", "java", "csharp", "dart", "kotlin_android", "php", "ruby"],
-    "reason": "C#, Dart, Kotlin, PHP and Ruby generate a test that drops the parts assertions with a skipped comment, see xberg-io/alef#682. Go, C, Zig, Elixir, WASM, Swift and Java generate a test that reads the parts at a path or accessor the binding does not have, see xberg-io/alef#684. The Java build also fails the checkstyle MethodLength check, see xberg-io/alef#685."
-  }
+  ]
 }
