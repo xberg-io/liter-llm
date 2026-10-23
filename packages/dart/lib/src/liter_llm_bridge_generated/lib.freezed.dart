@@ -2384,7 +2384,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-    return 'CatalogRefreshError.disabled()';
+  return "catalog refresh is disabled";
 }
 
 
@@ -2492,7 +2492,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'CatalogRefreshError.fetch(url: $url, message: $message)';
+  return "failed to fetch catalog from " + url.toString() + ": " + message.toString() + "";
 }
 
 
@@ -2561,7 +2561,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'CatalogRefreshError.parse(message: $message)';
+  return "failed to parse catalog JSON: " + message.toString() + "";
 }
 
 
@@ -2630,7 +2630,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'CatalogRefreshError.cache(path: $path, message: $message)';
+  return "catalog cache I/O error at " + path.toString() + ": " + message.toString() + "";
 }
 
 
@@ -2699,7 +2699,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'CatalogRefreshError.integrity(message: $message)';
+  return "catalog integrity check failed: " + message.toString() + "";
 }
 
 
@@ -4243,7 +4243,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.authentication(message: $message, status: $status)';
+  return "authentication failed: " + message.toString() + "";
 }
 
 
@@ -4313,7 +4313,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.rateLimited(message: $message, retryAfter: $retryAfter)';
+  return "rate limited: " + message.toString() + "";
 }
 
 
@@ -4383,7 +4383,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.badRequest(message: $message, status: $status)';
+  return "bad request: " + message.toString() + "";
 }
 
 
@@ -4452,7 +4452,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.contextWindowExceeded(message: $message)';
+  return "context window exceeded: " + message.toString() + "";
 }
 
 
@@ -4520,7 +4520,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.contentPolicy(message: $message)';
+  return "content policy violation: " + message.toString() + "";
 }
 
 
@@ -4588,7 +4588,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.notFound(message: $message)';
+  return "not found: " + message.toString() + "";
 }
 
 
@@ -4657,7 +4657,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.serverError(message: $message, status: $status)';
+  return "server error: " + message.toString() + "";
 }
 
 
@@ -4728,7 +4728,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.serviceUnavailable(message: $message, status: $status, retryAfter: $retryAfter)';
+  return "service unavailable: " + message.toString() + "";
 }
 
 
@@ -4791,7 +4791,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-    return 'LiterLlmError.timeout()';
+  return "request timeout";
 }
 
 
@@ -4830,7 +4830,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.network(message: $message)';
+  return "network error: " + message.toString() + "";
 }
 
 
@@ -4898,7 +4898,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.streaming(message: $message)';
+  return "streaming error: " + message.toString() + "";
 }
 
 
@@ -4967,7 +4967,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.endpointNotSupported(endpoint: $endpoint, provider: $provider)';
+  return "provider " + provider.toString() + " does not support " + endpoint.toString() + "";
 }
 
 
@@ -5106,7 +5106,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.serialization(field0: $field0)';
+  return field0.toString();
 }
 
 
@@ -5175,7 +5175,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.budgetExceeded(message: $message, model: $model)';
+  return "budget exceeded: " + message.toString() + "";
 }
 
 
@@ -5244,7 +5244,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.hookRejected(message: $message)';
+  return "hook rejected: " + message.toString() + "";
 }
 
 
@@ -5312,7 +5312,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.internalError(message: $message)';
+  return "internal error: " + message.toString() + "";
 }
 
 
@@ -5381,7 +5381,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.outboundForbidden(url: $url, reason: $reason)';
+  return "outbound request to " + url.toString() + " forbidden: " + reason.toString() + "";
 }
 
 
@@ -5450,7 +5450,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.idempotencyConflict(key: $key)';
+  return "idempotency conflict: key '" + key.toString() + "' was already used with a different request body";
 }
 
 
@@ -5518,7 +5518,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.idempotencyInFlight(key: $key)';
+  return "idempotency key '" + key.toString() + "' is currently in-flight; retry after the first request completes";
 }
 
 
@@ -5587,7 +5587,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'LiterLlmError.providerQuotaExceeded(message: $message, status: $status)';
+  return "provider quota exceeded: " + message.toString() + "";
 }
 
 
