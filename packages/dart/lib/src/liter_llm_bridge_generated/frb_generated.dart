@@ -1071,7 +1071,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               serializer,
             );
             sse_encode_box_autoadd_chat_completion_request(req, serializer);
-            sse_encode_StreamSink_chat_completion_chunk_Sse(sink, serializer);
+            sse_encode_StreamSink_CustomSerializer_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAlefStreamDefaultClientChatStream_Sse(
+              sink,
+              serializer,
+            );
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
@@ -6906,6 +6909,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ChatCompletionChunk
+  dco_decode_CustomSerializer_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAlefStreamDefaultClientChatStream(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return switch (dco_decode_alef_stream_default_client_chat_stream_wire(
+      raw,
+    )) {
+      AlefStreamDefaultClientChatStreamWire_Item(:final value) => value,
+      AlefStreamDefaultClientChatStreamWire_Error(:final error) => throw error,
+      AlefStreamDefaultClientChatStreamWire_NativeFailure(:final message) =>
+        throw StateError(message),
+    };
+  }
+
+  @protected
   Map<String, String> dco_decode_Map_String_String_None(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return Map.fromEntries(
@@ -6934,7 +6953,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   RustStreamSink<ChatCompletionChunk>
-  dco_decode_StreamSink_chat_completion_chunk_Sse(dynamic raw) {
+  dco_decode_StreamSink_CustomSerializer_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAlefStreamDefaultClientChatStream_Sse(
+    dynamic raw,
+  ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     throw UnimplementedError();
   }
@@ -6963,6 +6984,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         );
       case 3:
         return AlefBridgeErrorWire_NativeFailure(
+          message: dco_decode_String(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  AlefStreamDefaultClientChatStreamWire
+  dco_decode_alef_stream_default_client_chat_stream_wire(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return AlefStreamDefaultClientChatStreamWire_Item(
+          value: dco_decode_box_autoadd_chat_completion_chunk(raw[1]),
+        );
+      case 1:
+        return AlefStreamDefaultClientChatStreamWire_Error(
+          error: dco_decode_box_autoadd_liter_llm_error(raw[1]),
+        );
+      case 2:
+        return AlefStreamDefaultClientChatStreamWire_NativeFailure(
           message: dco_decode_String(raw[1]),
         );
       default:
@@ -7226,6 +7269,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_catalog_refresh_error(raw);
+  }
+
+  @protected
+  ChatCompletionChunk dco_decode_box_autoadd_chat_completion_chunk(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_chat_completion_chunk(raw);
   }
 
   @protected
@@ -9867,6 +9918,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ChatCompletionChunk
+  sse_decode_CustomSerializer_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAlefStreamDefaultClientChatStream(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_alef_stream_default_client_chat_stream_wire(
+      deserializer,
+    );
+    return switch (inner) {
+      AlefStreamDefaultClientChatStreamWire_Item(:final value) => value,
+      AlefStreamDefaultClientChatStreamWire_Error(:final error) => throw error,
+      AlefStreamDefaultClientChatStreamWire_NativeFailure(:final message) =>
+        throw StateError(message),
+    };
+  }
+
+  @protected
   Map<String, String> sse_decode_Map_String_String_None(
     SseDeserializer deserializer,
   ) {
@@ -9898,7 +9966,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   RustStreamSink<ChatCompletionChunk>
-  sse_decode_StreamSink_chat_completion_chunk_Sse(
+  sse_decode_StreamSink_CustomSerializer_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAlefStreamDefaultClientChatStream_Sse(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -9934,6 +10002,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 3:
         var var_message = sse_decode_String(deserializer);
         return AlefBridgeErrorWire_NativeFailure(message: var_message);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  AlefStreamDefaultClientChatStreamWire
+  sse_decode_alef_stream_default_client_chat_stream_wire(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_value = sse_decode_box_autoadd_chat_completion_chunk(
+          deserializer,
+        );
+        return AlefStreamDefaultClientChatStreamWire_Item(value: var_value);
+      case 1:
+        var var_error = sse_decode_box_autoadd_liter_llm_error(deserializer);
+        return AlefStreamDefaultClientChatStreamWire_Error(error: var_error);
+      case 2:
+        var var_message = sse_decode_String(deserializer);
+        return AlefStreamDefaultClientChatStreamWire_NativeFailure(
+          message: var_message,
+        );
       default:
         throw UnimplementedError('');
     }
@@ -10234,6 +10329,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_catalog_refresh_error(deserializer));
+  }
+
+  @protected
+  ChatCompletionChunk sse_decode_box_autoadd_chat_completion_chunk(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_chat_completion_chunk(deserializer));
   }
 
   @protected
@@ -13700,6 +13803,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void
+  sse_encode_CustomSerializer_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAlefStreamDefaultClientChatStream(
+    ChatCompletionChunk self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_alef_stream_default_client_chat_stream_wire(
+      AlefStreamDefaultClientChatStreamWire.item(value: self),
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_Map_String_String_None(
     Map<String, String> self,
     SseSerializer serializer,
@@ -13737,7 +13853,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_StreamSink_chat_completion_chunk_Sse(
+  void
+  sse_encode_StreamSink_CustomSerializer_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAlefStreamDefaultClientChatStream_Sse(
     RustStreamSink<ChatCompletionChunk> self,
     SseSerializer serializer,
   ) {
@@ -13745,7 +13862,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(
       self.setupAndSerialize(
         codec: SseCodec(
-          decodeSuccessData: sse_decode_chat_completion_chunk,
+          decodeSuccessData:
+              sse_decode_CustomSerializer_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAlefStreamDefaultClientChatStream,
           decodeErrorData: sse_decode_AnyhowException,
         ),
       ),
@@ -13777,6 +13895,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(message, serializer);
       case AlefBridgeErrorWire_NativeFailure(message: final message):
         sse_encode_i_32(3, serializer);
+        sse_encode_String(message, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_alef_stream_default_client_chat_stream_wire(
+    AlefStreamDefaultClientChatStreamWire self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case AlefStreamDefaultClientChatStreamWire_Item(value: final value):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_chat_completion_chunk(value, serializer);
+      case AlefStreamDefaultClientChatStreamWire_Error(error: final error):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_liter_llm_error(error, serializer);
+      case AlefStreamDefaultClientChatStreamWire_NativeFailure(
+        message: final message,
+      ):
+        sse_encode_i_32(2, serializer);
         sse_encode_String(message, serializer);
     }
   }
@@ -14039,6 +14178,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_catalog_refresh_error(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_chat_completion_chunk(
+    ChatCompletionChunk self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_chat_completion_chunk(self, serializer);
   }
 
   @protected

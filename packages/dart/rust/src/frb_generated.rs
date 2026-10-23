@@ -193,48 +193,25 @@ fn wire__crate__DefaultClient_chat_stream_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "DefaultClient_chat_stream",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "DefaultClient_chat_stream", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that =
-                <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_req = <crate::ChatCompletionRequest>::sse_decode(&mut deserializer);
-            let api_sink =
-                <StreamSink<crate::ChatCompletionChunk, flutter_rust_bridge::for_generated::SseCodec>>::sse_decode(
-                    &mut deserializer,
-                );
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let mut api_that_guard = None;
-                    let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(&api_that, 0, false),
-                    ]);
-                    for i in decode_indices_ {
-                        match i {
-                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                            _ => unreachable!(),
-                        }
-                    }
-                    let api_that_guard = api_that_guard.unwrap();
-                    let output_ok = Ok::<_, ()>({
-                        crate::DefaultClient::chat_stream(&*api_that_guard, api_req, api_sink);
-                    })?;
-                    std::result::Result::Ok(output_ok)
-                })())
+            let api_that = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>>::sse_decode(&mut deserializer);
+let api_req = <crate::ChatCompletionRequest>::sse_decode(&mut deserializer);
+let api_sink = <StreamSink<AlefStreamDefaultClientChatStream,flutter_rust_bridge::for_generated::SseCodec>>::sse_decode(&mut deserializer);deserializer.end(); move |context|  {
+                    transform_result_sse::<_, ()>((move ||  {
+                        let mut api_that_guard = None;
+let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(&api_that, 0, false)]);
+        for i in decode_indices_ {
+            match i {
+                0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                _ => unreachable!(),
             }
-        },
-    )
+        }
+        let api_that_guard = api_that_guard.unwrap();
+ let output_ok = Ok::<_, ()>({ crate::DefaultClient::chat_stream(&*api_that_guard, api_req, api_sink); })?;   std::result::Result::Ok(output_ok)
+                    })())
+                } })
 }
 fn wire__crate__DefaultClient_create_batch_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
@@ -6578,6 +6555,14 @@ impl SseDecode for AlefBridgeError {
     }
 }
 
+impl SseDecode for AlefStreamDefaultClientChatStream {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <crate::AlefStreamDefaultClientChatStreamWire>::sse_decode(deserializer);
+        return crate::alef_decode_stream_default_client_chat_stream(inner);
+    }
+}
+
 impl SseDecode for std::collections::HashMap<String, String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -6602,7 +6587,7 @@ impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
     }
 }
 
-impl SseDecode for StreamSink<crate::ChatCompletionChunk, flutter_rust_bridge::for_generated::SseCodec> {
+impl SseDecode for StreamSink<AlefStreamDefaultClientChatStream, flutter_rust_bridge::for_generated::SseCodec> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <String>::sse_decode(deserializer);
@@ -6638,6 +6623,30 @@ impl SseDecode for crate::AlefBridgeErrorWire {
             3 => {
                 let mut var_message = <String>::sse_decode(deserializer);
                 return crate::AlefBridgeErrorWire::NativeFailure { message: var_message };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseDecode for crate::AlefStreamDefaultClientChatStreamWire {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_value = <crate::ChatCompletionChunk>::sse_decode(deserializer);
+                return crate::AlefStreamDefaultClientChatStreamWire::Item { value: var_value };
+            }
+            1 => {
+                let mut var_error = <crate::LiterLlmError>::sse_decode(deserializer);
+                return crate::AlefStreamDefaultClientChatStreamWire::Error { error: var_error };
+            }
+            2 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::AlefStreamDefaultClientChatStreamWire::NativeFailure { message: var_message };
             }
             _ => {
                 unimplemented!("");
@@ -10277,6 +10286,20 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<AlefBridgeError>> for AlefBrid
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<AlefStreamDefaultClientChatStream> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        crate::alef_encode_stream_default_client_chat_stream(self.0).into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<AlefStreamDefaultClientChatStream> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<AlefStreamDefaultClientChatStream>>
+    for AlefStreamDefaultClientChatStream
+{
+    fn into_into_dart(self) -> FrbWrapper<AlefStreamDefaultClientChatStream> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::AlefBridgeErrorWire {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -10301,6 +10324,33 @@ impl flutter_rust_bridge::IntoDart for crate::AlefBridgeErrorWire {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::AlefBridgeErrorWire {}
 impl flutter_rust_bridge::IntoIntoDart<crate::AlefBridgeErrorWire> for crate::AlefBridgeErrorWire {
     fn into_into_dart(self) -> crate::AlefBridgeErrorWire {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::AlefStreamDefaultClientChatStreamWire {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::AlefStreamDefaultClientChatStreamWire::Item { value } => {
+                [0.into_dart(), value.into_into_dart().into_dart()].into_dart()
+            }
+            crate::AlefStreamDefaultClientChatStreamWire::Error { error } => {
+                [1.into_dart(), error.into_into_dart().into_dart()].into_dart()
+            }
+            crate::AlefStreamDefaultClientChatStreamWire::NativeFailure { message } => {
+                [2.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::AlefStreamDefaultClientChatStreamWire {}
+impl flutter_rust_bridge::IntoIntoDart<crate::AlefStreamDefaultClientChatStreamWire>
+    for crate::AlefStreamDefaultClientChatStreamWire
+{
+    fn into_into_dart(self) -> crate::AlefStreamDefaultClientChatStreamWire {
         self
     }
 }
@@ -12838,6 +12888,16 @@ impl SseEncode for AlefBridgeError {
     }
 }
 
+impl SseEncode for AlefStreamDefaultClientChatStream {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::AlefStreamDefaultClientChatStreamWire>::sse_encode(
+            crate::alef_encode_stream_default_client_chat_stream(self),
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for std::collections::HashMap<String, String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -12861,7 +12921,7 @@ impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
     }
 }
 
-impl SseEncode for StreamSink<crate::ChatCompletionChunk, flutter_rust_bridge::for_generated::SseCodec> {
+impl SseEncode for StreamSink<AlefStreamDefaultClientChatStream, flutter_rust_bridge::for_generated::SseCodec> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         unimplemented!("")
@@ -12893,6 +12953,29 @@ impl SseEncode for crate::AlefBridgeErrorWire {
             }
             crate::AlefBridgeErrorWire::NativeFailure { message } => {
                 <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseEncode for crate::AlefStreamDefaultClientChatStreamWire {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::AlefStreamDefaultClientChatStreamWire::Item { value } => {
+                <i32>::sse_encode(0, serializer);
+                <crate::ChatCompletionChunk>::sse_encode(value, serializer);
+            }
+            crate::AlefStreamDefaultClientChatStreamWire::Error { error } => {
+                <i32>::sse_encode(1, serializer);
+                <crate::LiterLlmError>::sse_encode(error, serializer);
+            }
+            crate::AlefStreamDefaultClientChatStreamWire::NativeFailure { message } => {
+                <i32>::sse_encode(2, serializer);
                 <String>::sse_encode(message, serializer);
             }
             _ => {
