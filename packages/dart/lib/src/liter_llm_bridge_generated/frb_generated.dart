@@ -11,10 +11,12 @@ import 'dart:core' as _DartCore;
 import 'dart:core';
 import 'dart:async';
 import 'dart:convert';
+
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'lib.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
@@ -6998,11 +7000,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     switch (raw[0]) {
       case 0:
         return AlefStreamDefaultClientChatStreamWire_Item(
-          value: dco_decode_box_autoadd_chat_completion_chunk(raw[1]),
+          value: dco_decode_box_chat_completion_chunk(raw[1]),
         );
       case 1:
         return AlefStreamDefaultClientChatStreamWire_Error(
-          error: dco_decode_box_autoadd_liter_llm_error(raw[1]),
+          error: dco_decode_box_liter_llm_error(raw[1]),
         );
       case 2:
         return AlefStreamDefaultClientChatStreamWire_NativeFailure(
@@ -7269,14 +7271,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_catalog_refresh_error(raw);
-  }
-
-  @protected
-  ChatCompletionChunk dco_decode_box_autoadd_chat_completion_chunk(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_chat_completion_chunk(raw);
   }
 
   @protected
@@ -7600,6 +7594,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   WaitForBatchConfig dco_decode_box_autoadd_wait_for_batch_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_wait_for_batch_config(raw);
+  }
+
+  @protected
+  ChatCompletionChunk dco_decode_box_chat_completion_chunk(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_chat_completion_chunk(raw);
+  }
+
+  @protected
+  LiterLlmError dco_decode_box_liter_llm_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_liter_llm_error(raw);
   }
 
   @protected
@@ -10017,12 +10023,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_value = sse_decode_box_autoadd_chat_completion_chunk(
-          deserializer,
-        );
+        var var_value = sse_decode_box_chat_completion_chunk(deserializer);
         return AlefStreamDefaultClientChatStreamWire_Item(value: var_value);
       case 1:
-        var var_error = sse_decode_box_autoadd_liter_llm_error(deserializer);
+        var var_error = sse_decode_box_liter_llm_error(deserializer);
         return AlefStreamDefaultClientChatStreamWire_Error(error: var_error);
       case 2:
         var var_message = sse_decode_String(deserializer);
@@ -10329,14 +10333,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_catalog_refresh_error(deserializer));
-  }
-
-  @protected
-  ChatCompletionChunk sse_decode_box_autoadd_chat_completion_chunk(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_chat_completion_chunk(deserializer));
   }
 
   @protected
@@ -10730,6 +10726,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_wait_for_batch_config(deserializer));
+  }
+
+  @protected
+  ChatCompletionChunk sse_decode_box_chat_completion_chunk(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_chat_completion_chunk(deserializer));
+  }
+
+  @protected
+  LiterLlmError sse_decode_box_liter_llm_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_liter_llm_error(deserializer));
   }
 
   @protected
@@ -13908,10 +13918,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     switch (self) {
       case AlefStreamDefaultClientChatStreamWire_Item(value: final value):
         sse_encode_i_32(0, serializer);
-        sse_encode_box_autoadd_chat_completion_chunk(value, serializer);
+        sse_encode_box_chat_completion_chunk(value, serializer);
       case AlefStreamDefaultClientChatStreamWire_Error(error: final error):
         sse_encode_i_32(1, serializer);
-        sse_encode_box_autoadd_liter_llm_error(error, serializer);
+        sse_encode_box_liter_llm_error(error, serializer);
       case AlefStreamDefaultClientChatStreamWire_NativeFailure(
         message: final message,
       ):
@@ -14178,15 +14188,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_catalog_refresh_error(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_chat_completion_chunk(
-    ChatCompletionChunk self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_chat_completion_chunk(self, serializer);
   }
 
   @protected
@@ -14640,6 +14641,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_wait_for_batch_config(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_chat_completion_chunk(
+    ChatCompletionChunk self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_chat_completion_chunk(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_liter_llm_error(
+    LiterLlmError self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_liter_llm_error(self, serializer);
   }
 
   @protected

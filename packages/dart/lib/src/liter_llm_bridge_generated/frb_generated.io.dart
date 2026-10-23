@@ -6,8 +6,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
+
 import 'frb_generated.dart';
 import 'lib.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
@@ -153,9 +155,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CatalogRefreshError dco_decode_box_autoadd_catalog_refresh_error(dynamic raw);
-
-  @protected
-  ChatCompletionChunk dco_decode_box_autoadd_chat_completion_chunk(dynamic raw);
 
   @protected
   ChatCompletionRequest dco_decode_box_autoadd_chat_completion_request(
@@ -322,6 +321,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   WaitForBatchConfig dco_decode_box_autoadd_wait_for_batch_config(dynamic raw);
+
+  @protected
+  ChatCompletionChunk dco_decode_box_chat_completion_chunk(dynamic raw);
+
+  @protected
+  LiterLlmError dco_decode_box_liter_llm_error(dynamic raw);
 
   @protected
   BudgetConfig dco_decode_budget_config(dynamic raw);
@@ -1113,11 +1118,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  ChatCompletionChunk sse_decode_box_autoadd_chat_completion_chunk(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   ChatCompletionRequest sse_decode_box_autoadd_chat_completion_request(
     SseDeserializer deserializer,
   );
@@ -1350,6 +1350,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   WaitForBatchConfig sse_decode_box_autoadd_wait_for_batch_config(
     SseDeserializer deserializer,
   );
+
+  @protected
+  ChatCompletionChunk sse_decode_box_chat_completion_chunk(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LiterLlmError sse_decode_box_liter_llm_error(SseDeserializer deserializer);
 
   @protected
   BudgetConfig sse_decode_budget_config(SseDeserializer deserializer);
@@ -2333,12 +2341,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_box_autoadd_chat_completion_chunk(
-    ChatCompletionChunk self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_box_autoadd_chat_completion_request(
     ChatCompletionRequest self,
     SseSerializer serializer,
@@ -2635,6 +2637,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_wait_for_batch_config(
     WaitForBatchConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_chat_completion_chunk(
+    ChatCompletionChunk self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_liter_llm_error(
+    LiterLlmError self,
     SseSerializer serializer,
   );
 

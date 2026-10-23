@@ -6637,11 +6637,11 @@ impl SseDecode for crate::AlefStreamDefaultClientChatStreamWire {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
-                let mut var_value = <crate::ChatCompletionChunk>::sse_decode(deserializer);
+                let mut var_value = <Box<crate::ChatCompletionChunk>>::sse_decode(deserializer);
                 return crate::AlefStreamDefaultClientChatStreamWire::Item { value: var_value };
             }
             1 => {
-                let mut var_error = <crate::LiterLlmError>::sse_decode(deserializer);
+                let mut var_error = <Box<crate::LiterLlmError>>::sse_decode(deserializer);
                 return crate::AlefStreamDefaultClientChatStreamWire::Error { error: var_error };
             }
             2 => {
@@ -6905,6 +6905,20 @@ impl SseDecode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u8().unwrap() != 0
+    }
+}
+
+impl SseDecode for Box<crate::ChatCompletionChunk> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        return Box::new(<crate::ChatCompletionChunk>::sse_decode(deserializer));
+    }
+}
+
+impl SseDecode for Box<crate::LiterLlmError> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        return Box::new(<crate::LiterLlmError>::sse_decode(deserializer));
     }
 }
 
@@ -12968,11 +12982,11 @@ impl SseEncode for crate::AlefStreamDefaultClientChatStreamWire {
         match self {
             crate::AlefStreamDefaultClientChatStreamWire::Item { value } => {
                 <i32>::sse_encode(0, serializer);
-                <crate::ChatCompletionChunk>::sse_encode(value, serializer);
+                <Box<crate::ChatCompletionChunk>>::sse_encode(value, serializer);
             }
             crate::AlefStreamDefaultClientChatStreamWire::Error { error } => {
                 <i32>::sse_encode(1, serializer);
-                <crate::LiterLlmError>::sse_encode(error, serializer);
+                <Box<crate::LiterLlmError>>::sse_encode(error, serializer);
             }
             crate::AlefStreamDefaultClientChatStreamWire::NativeFailure { message } => {
                 <i32>::sse_encode(2, serializer);
@@ -13183,6 +13197,20 @@ impl SseEncode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_u8(self as _).unwrap();
+    }
+}
+
+impl SseEncode for Box<crate::ChatCompletionChunk> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::ChatCompletionChunk>::sse_encode(*self, serializer);
+    }
+}
+
+impl SseEncode for Box<crate::LiterLlmError> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::LiterLlmError>::sse_encode(*self, serializer);
     }
 }
 
