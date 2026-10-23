@@ -8,6 +8,7 @@ use crate::types::ChatCompletionChunk;
 mod gemini_request;
 mod gemini_response;
 mod gemini_stream;
+mod imagen;
 
 pub(crate) use gemini_request::transform_gemini_request;
 pub(crate) use gemini_response::transform_gemini_response;
@@ -144,6 +145,10 @@ impl VertexAiProvider {
 }
 
 impl Provider for VertexAiProvider {
+    fn at_base_url(&self, base_url: &str) -> Option<Box<dyn Provider>> {
+        Some(Box::new(Self::with_base_url(base_url)))
+    }
+
     fn name(&self) -> &str {
         "vertex_ai"
     }
@@ -192,6 +197,8 @@ impl Provider for VertexAiProvider {
     ///
     /// Chat completions → `{base}/publishers/google/models/{model}:generateContent`
     /// Embeddings       → `{base}/publishers/google/models/{model}:predict`
+    /// Image generation → `{base}/publishers/google/models/{model}:predict` (Imagen)
+    /// List models      → `{host}/v1beta1/publishers/google/models`
     /// Other paths      → `{base}{endpoint_path}`
     fn build_url(&self, endpoint_path: &str, model: &str) -> String {
         let base = self.base_url();
@@ -201,16 +208,35 @@ impl Provider for VertexAiProvider {
         let base = base.trim_end_matches('/');
         if endpoint_path.contains("chat/completions") {
             format!("{base}/publishers/google/models/{model}:generateContent")
-        } else if endpoint_path.contains("embeddings") {
+        } else if endpoint_path.contains("embeddings") || endpoint_path.contains("images/generations") {
             format!("{base}/publishers/google/models/{model}:predict")
+        } else if endpoint_path == self.models_path() {
+            // ~keep Publisher models are listed per publisher, not per project and location, and
+            // ~keep only the `v1beta1` API has the call. Cut the project scope off the base.
+            let origin = base.split_once("/v1/projects/").map_or(base, |(origin, _)| origin);
+            format!("{origin}/v1beta1/publishers/google/models")
         } else {
             format!("{base}{endpoint_path}")
         }
     }
 
+    /// Vertex pages the publisher model listing with `nextPageToken`; the last page has none.
+    fn next_models_page_url(&self, url: &str, page: &serde_json::Value) -> Option<String> {
+        let token = page
+            .get("nextPageToken")
+            .and_then(|t| t.as_str())
+            .filter(|t| !t.is_empty())?;
+        let without_query = url.split_once('?').map_or(url, |(before, _)| before);
+        let token: String = url::form_urlencoded::byte_serialize(token.as_bytes()).collect();
+        Some(format!("{without_query}?pageToken={token}"))
+    }
+
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
         if body.get("input").is_some() && body.get("messages").is_none() {
             return transform_vertex_embed_request(body);
+        }
+        if imagen::is_image_request(body) {
+            return imagen::transform_imagen_request(body);
         }
         transform_gemini_request(body)
     }
@@ -244,6 +270,8 @@ impl Provider for VertexAiProvider {
 ///
 /// OpenAI: `{"model": "...", "input": "text"}`
 /// Gemini: `{"content": {"parts": [{"text": "text"}]}}`
+///
+/// The keys of the caller's `extra_body` merge into every embed request.
 fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
     use crate::error::LiterLlmError;
     use serde_json::json;
@@ -270,7 +298,7 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
         .and_then(serde_json::Value::as_str)
         .unwrap_or_default();
     let dimensions = body.get("dimensions").and_then(serde_json::Value::as_u64);
-    let requests: Vec<_> = texts
+    let mut requests: Vec<_> = texts
         .into_iter()
         .map(|text| {
             let mut request = json!({
@@ -284,6 +312,20 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
         })
         .collect();
 
+    match body.get_mut("extra_body").map(serde_json::Value::take) {
+        Some(serde_json::Value::Object(fields)) => {
+            // `taskType`, `title` and `outputDimensionality` belong to each embed
+            // request; the batch body holds only `requests`.
+            for request in &mut requests {
+                if let Some(request) = request.as_object_mut() {
+                    request.extend(fields.clone());
+                }
+            }
+        }
+        Some(serde_json::Value::Null) | None => {}
+        Some(_) => tracing::warn!("ignoring non-object extra_body; it cannot be merged into the request body"),
+    }
+
     *body = json!({"requests": requests});
     Ok(())
 }
@@ -291,7 +333,11 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
 /// Transform an OpenAI embedding request to Vertex AI `:predict` format.
 ///
 /// OpenAI: `{"model": "...", "input": "text"}`
-/// Vertex: `{"instances": [{"content": "text"}]}`
+/// Vertex: `{"instances": [{"content": "text"}], "parameters": {"outputDimensionality": N}}`
+///
+/// `parameters` is present only when the caller sets `dimensions`. The caller's
+/// `extra_body` stays on the rebuilt body so the client can merge it. Keys of
+/// `extra_body.parameters` join `outputDimensionality` instead of replacing it.
 fn transform_vertex_embed_request(body: &mut serde_json::Value) -> Result<()> {
     use crate::error::LiterLlmError;
     use serde_json::json;
@@ -314,7 +360,21 @@ fn transform_vertex_embed_request(body: &mut serde_json::Value) -> Result<()> {
     };
 
     let instances: Vec<_> = texts.into_iter().map(|text| json!({"content": text})).collect();
-    *body = json!({"instances": instances});
+    let dimensions = body.get("dimensions").and_then(serde_json::Value::as_u64);
+    let mut new_body = json!({"instances": instances});
+    crate::provider::carry_extra_body(body, &mut new_body);
+    if let Some(dimensions) = dimensions {
+        let mut parameters = serde_json::Map::new();
+        parameters.insert("outputDimensionality".into(), json!(dimensions));
+        // The client merge replaces `parameters` as a whole. Fold the caller's
+        // `parameters` keys over `outputDimensionality` here so `dimensions` survives.
+        if let Some(serde_json::Value::Object(extra)) = new_body.pointer_mut("/extra_body/parameters") {
+            parameters.extend(std::mem::take(extra));
+            *extra = parameters.clone();
+        }
+        new_body["parameters"] = serde_json::Value::Object(parameters);
+    }
+    *body = new_body;
     Ok(())
 }
 

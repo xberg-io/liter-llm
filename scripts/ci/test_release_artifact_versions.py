@@ -6,12 +6,20 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import tomllib
 import yaml
+from packaging.version import Version
 from prepare_go_release_assets import prepare
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/publish.yaml"
 SHA = "3fa1947f35968d15eeef7e3056c7f3c7563e4a14"
+
+
+@pytest.fixture
+def canonical_version() -> str:
+    with (ROOT / "Cargo.toml").open("rb") as manifest:
+        return tomllib.load(manifest)["workspace"]["package"]["version"]
 
 
 def workflow_jobs() -> dict:
@@ -55,6 +63,14 @@ def version_forms(tmp_path: Path, version: str, **overrides: str) -> dict[str, s
     return dict(pairs)
 
 
+def current_dry_run_forms(tmp_path: Path, canonical: str) -> tuple[str, dict[str, str]]:
+    version = f"{canonical}-dryrun-{SHA[:7]}"
+    forms = version_forms(tmp_path, version)
+    assert forms["artifact_version"] == canonical
+    assert forms["pypi_version"] == str(Version(canonical))
+    return version, forms
+
+
 def run_hermes_guard(tmp_path: Path, expected: str, actual: str) -> subprocess.CompletedProcess:
     steps = workflow_jobs()["publish-plugin-hermes"]["steps"]
     guards = [step for step in steps if step.get("name") == "Assert the plugin bundle matches the release"]
@@ -86,17 +102,18 @@ def go_expected_version(forms: dict[str, str], version: str) -> str:
     return outputs[expression[len(prefix) : -3]]
 
 
-def test_synthesized_dry_run_validates_current_hermes_manifest(tmp_path: Path) -> None:
-    forms = version_forms(tmp_path, "2.2.5-dryrun-3fa1947")
-    result = run_hermes_guard(tmp_path, forms["pypi_version"], "2.2.5")
+def test_synthesized_dry_run_validates_current_hermes_manifest(tmp_path: Path, canonical_version: str) -> None:
+    _, forms = current_dry_run_forms(tmp_path, canonical_version)
+    expected = str(Version(canonical_version))
+    result = run_hermes_guard(tmp_path, forms["pypi_version"], expected)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "matches the release at 2.2.5" in result.stdout
+    assert f"matches the release at {expected}" in result.stdout
 
 
-def test_synthesized_dry_run_matches_actual_go_archive_name(tmp_path: Path) -> None:
-    version = "2.2.5-dryrun-3fa1947"
-    forms = version_forms(tmp_path, version)
-    archive = tmp_path / "liter-llm-go-v2.2.5-linux-x86_64-musl.tar.gz"
+def test_synthesized_dry_run_matches_actual_go_archive_name(tmp_path: Path, canonical_version: str) -> None:
+    version, forms = current_dry_run_forms(tmp_path, canonical_version)
+    assert go_expected_version(forms, version) == canonical_version
+    archive = tmp_path / f"liter-llm-go-v{canonical_version}-linux-x86_64-musl.tar.gz"
     archive.write_bytes(b"synthetic opaque native payload")
     prepare(tmp_path, "liter-llm", go_expected_version(forms, version))
     alias = tmp_path / "liter-llm-go-linux-x86_64-musl.tar.gz"
@@ -128,28 +145,40 @@ def test_real_tag_versions_preserve_ecosystem_spelling(
     [
         {"steps.meta.outputs.dry_run": "false"},
         {"steps.meta.outputs.is_tag": "false"},
-        {"inputs.tag || github.event.client_payload.tag": "v2.2.5-dryrun-3fa1947"},
+        {"inputs.tag || github.event.client_payload.tag": "v{canonical}-dryrun-{sha}"},
         {"steps.meta.outputs.target_sha": "a" * 40},
-        {"steps.meta.outputs.tag": "v2.2.5-custom"},
+        {"steps.meta.outputs.tag": "v{canonical}-custom"},
     ],
 )
-def test_arbitrary_ref_or_explicit_tag_is_not_normalized(tmp_path: Path, overrides: dict[str, str]) -> None:
-    version = "2.2.5-dryrun-3fa1947"
-    forms = version_forms(tmp_path, version, **overrides)
+def test_arbitrary_ref_or_explicit_tag_is_not_normalized(
+    tmp_path: Path, canonical_version: str, overrides: dict[str, str]
+) -> None:
+    baseline = tmp_path / "baseline"
+    baseline.mkdir()
+    version, _ = current_dry_run_forms(baseline, canonical_version)
+    current_overrides = {
+        key: value.format(canonical=canonical_version, sha=SHA[:7]) for key, value in overrides.items()
+    }
+    forms = version_forms(tmp_path, version, **current_overrides)
     assert forms["artifact_version"] == version
 
 
-def test_stale_hermes_manifest_still_fails_synthesized_dry_run(tmp_path: Path) -> None:
-    forms = version_forms(tmp_path, "2.2.5-dryrun-3fa1947")
-    result = run_hermes_guard(tmp_path, forms["pypi_version"], "2.2.4")
+def test_stale_hermes_manifest_still_fails_synthesized_dry_run(tmp_path: Path, canonical_version: str) -> None:
+    _, forms = current_dry_run_forms(tmp_path, canonical_version)
+    expected = str(Version(canonical_version))
+    stale = "0.0.0" if expected != "0.0.0" else "0.0.1"
+    assert stale != expected
+    result = run_hermes_guard(tmp_path, forms["pypi_version"], stale)
     assert result.returncode == 1
-    assert "declares 2.2.4 but the release is 2.2.5" in result.stdout
+    assert f"declares {stale} but the release is {expected}" in result.stdout
 
 
-def test_wrong_go_archive_version_still_fails_synthesized_dry_run(tmp_path: Path) -> None:
-    version = "2.2.5-dryrun-3fa1947"
-    forms = version_forms(tmp_path, version)
-    (tmp_path / "liter-llm-go-v2.2.4-linux-x86_64-musl.tar.gz").write_bytes(b"old opaque payload")
+def test_wrong_go_archive_version_still_fails_synthesized_dry_run(tmp_path: Path, canonical_version: str) -> None:
+    version, forms = current_dry_run_forms(tmp_path, canonical_version)
+    assert go_expected_version(forms, version) == canonical_version
+    stale = "0.0.0" if canonical_version != "0.0.0" else "0.0.1"
+    assert stale != canonical_version
+    (tmp_path / f"liter-llm-go-v{stale}-linux-x86_64-musl.tar.gz").write_bytes(b"old opaque payload")
     with pytest.raises(ValueError, match="No Go release archives"):
         prepare(tmp_path, "liter-llm", go_expected_version(forms, version))
     assert not (tmp_path / "liter-llm-go-linux-x86_64-musl.tar.gz").exists()

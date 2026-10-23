@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
+use web_time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::{LiterLlmError, Result};
 
@@ -12,6 +12,10 @@ use crate::error::{LiterLlmError, Result};
 /// Used by provider transformers to populate the `created` field in
 /// OpenAI-compatible response objects. Falls back to `0` if the system
 /// clock is before the epoch (should never happen in practice).
+///
+/// Reads the clock through `web_time`, which is `std::time` on native targets
+/// and a JavaScript `Date` clock on `wasm32-unknown-unknown`, where
+/// `std::time::SystemTime::now()` panics.
 pub(crate) fn unix_timestamp_secs() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -56,7 +60,8 @@ pub(crate) fn validate_sampling_param_range(
 /// The streaming wire format a provider uses for its response stream.
 ///
 /// Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
-/// a proprietary binary EventStream framing.
+/// a proprietary binary EventStream framing.  Ollama's native API streams
+/// newline-delimited JSON.
 ///
 /// Deserialized from the `streaming_format` JSON field via [`serde`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -67,6 +72,8 @@ pub enum StreamFormat {
     Sse,
     /// AWS EventStream binary framing (application/vnd.amazon.eventstream).
     AwsEventStream,
+    /// Newline-delimited JSON (application/x-ndjson): one JSON object per line.
+    Ndjson,
 }
 
 /// Static capability flags for a provider.
@@ -175,6 +182,38 @@ struct RegionalEndpointConfig {
     docs_root: String,
 }
 
+/// A kind of API call that the generic OpenAI-shaped route can carry.
+///
+/// Names the endpoints a provider can list in `no_route_endpoints` in providers.json.
+/// `Audio` covers both speech and transcription; `Image` covers image generation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum Endpoint {
+    Chat,
+    Embedding,
+    Image,
+    Audio,
+    Moderation,
+    Rerank,
+    Search,
+    Ocr,
+}
+
+impl Endpoint {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Chat => "chat",
+            Self::Embedding => "embedding",
+            Self::Image => "image",
+            Self::Audio => "audio",
+            Self::Moderation => "moderation",
+            Self::Rerank => "rerank",
+            Self::Search => "search",
+            Self::Ocr => "ocr",
+        }
+    }
+}
+
 /// Internal JSON shape: each provider entry with capability flags and streaming
 /// format, stored separately from the public [`ProviderConfig`] schema.
 #[derive(Debug, Deserialize)]
@@ -190,6 +229,12 @@ struct ProviderEntry {
     /// endpoint kind; currently only `rerank` is consulted.
     #[serde(default)]
     endpoint_urls: HashMap<String, String>,
+    /// Endpoints this provider has no route for, although its other endpoints work (for
+    /// example a provider with an OpenAI-compatible chat endpoint and a native search API).
+    /// A call to one of them is refused before any request. Only the provider built from this
+    /// registry entry carries the list: a `base_url` or a custom provider never does.
+    #[serde(default)]
+    no_route_endpoints: Vec<Endpoint>,
     #[serde(default)]
     capabilities: ProviderCapabilities,
     /// Protocol-specific base URLs available in each supported region.
@@ -317,12 +362,108 @@ fn status_for_error_kind(code: Option<&str>, kind: Option<&str>) -> u16 {
     match kind {
         Some("rate_limit_error") => 429,
         Some("authentication_error") => 401,
+        Some("billing_error") => 402,
         Some("permission_error") => 403,
         Some("not_found_error") => 404,
+        Some("request_too_large") => 413,
         Some("server_error" | "api_error") => 500,
+        Some("timeout_error") => 504,
         Some("overloaded_error") => 529,
         _ => 400,
     }
+}
+
+/// A JSON number, or a string that holds a whole number, as a `u16`.
+fn u16_field(value: &serde_json::Value) -> Option<u16> {
+    let number = match value {
+        serde_json::Value::String(s) => s.trim().parse::<u64>().ok()?,
+        other => other.as_u64()?,
+    };
+    u16::try_from(number).ok()
+}
+
+/// The payload `status_code` of an error event, if it fits a `u16`. The error
+/// object is read first, as a number or a string that holds a number, and its
+/// value is kept as is, even outside the error range. The top level of the event
+/// is the fallback and counts only as an error status (400 to 599), because the
+/// top level is not part of any documented error shape.
+pub(crate) fn status_code_field(event: &serde_json::Value) -> Option<u16> {
+    event.pointer("/error/status_code").and_then(u16_field).or_else(|| {
+        event
+            .get("status_code")
+            .and_then(u16_field)
+            .filter(|s| (400..=599).contains(s))
+    })
+}
+
+/// The HTTP status of a Google error object (Gemini and Vertex AI). The numeric
+/// `code` decides when it is an error status (400 to 599), as a number or a
+/// string. Otherwise the canonical `status` name decides, as in Google's error
+/// model. `None` when neither gives an error status.
+pub(crate) fn google_error_status(event: &serde_json::Value) -> Option<u16> {
+    let from_code = event
+        .pointer("/error/code")
+        .and_then(u16_field)
+        .filter(|s| (400..=599).contains(s));
+    from_code.or_else(
+        || match event.pointer("/error/status").and_then(serde_json::Value::as_str)? {
+            "INVALID_ARGUMENT" | "FAILED_PRECONDITION" | "OUT_OF_RANGE" => Some(400),
+            "UNAUTHENTICATED" => Some(401),
+            "PERMISSION_DENIED" => Some(403),
+            "NOT_FOUND" => Some(404),
+            "ABORTED" | "ALREADY_EXISTS" => Some(409),
+            "RESOURCE_EXHAUSTED" => Some(429),
+            "CANCELLED" => Some(499),
+            "UNKNOWN" | "INTERNAL" | "DATA_LOSS" => Some(500),
+            "UNIMPLEMENTED" => Some(501),
+            "UNAVAILABLE" => Some(503),
+            "DEADLINE_EXCEEDED" => Some(504),
+            _ => None,
+        },
+    )
+}
+
+/// The `retry_after` of an error event, in seconds, read from the error object
+/// first, then from the top level of the event. A value is a number or a string
+/// that holds a number, like the `Retry-After` header. A negative, non-finite or
+/// unreadable value is skipped, so the next place still gets read.
+fn retry_after_field(event: &serde_json::Value) -> Option<std::time::Duration> {
+    let seconds = |value: &serde_json::Value| -> Option<std::time::Duration> {
+        let secs = match value {
+            serde_json::Value::String(s) => s.trim().parse::<f64>().ok()?,
+            other => other.as_f64()?,
+        };
+        std::time::Duration::try_from_secs_f64(secs).ok()
+    };
+    [event.pointer("/error/retry_after"), event.get("retry_after")]
+        .into_iter()
+        .flatten()
+        .find_map(seconds)
+}
+
+/// Build the error for an error event inside a stream, or `None` when the event
+/// carries no `error` object. Every provider's stream parser calls this, so an
+/// error event is the same kind mid-stream as the same body in an HTTP reply.
+///
+/// `status` is the HTTP status the provider put in the payload. With `None`, the
+/// error code or type gives one (see `status_for_error_kind`).
+pub(crate) fn stream_error_event(event: &serde_json::Value, status: Option<u16>) -> Option<LiterLlmError> {
+    let error = event.get("error")?;
+    let text = |key: &str| error.get(key).and_then(serde_json::Value::as_str);
+    let message = text("message").unwrap_or("provider returned an error mid-stream");
+    let status = status.unwrap_or_else(|| status_for_error_kind(text("code"), text("type")));
+    if !(400..=599).contains(&status) {
+        return Some(LiterLlmError::BadRequest {
+            message: message.to_string(),
+            status,
+        });
+    }
+    let body = serde_json::json!({ "error": { "message": message, "code": text("code") } });
+    Some(LiterLlmError::from_status(
+        status,
+        &body.to_string(),
+        retry_after_field(event),
+    ))
 }
 
 /// A provider defines how to reach an LLM API endpoint.
@@ -355,8 +496,28 @@ pub(crate) trait Provider: Send + Sync {
     /// Provider name (e.g., "openai").
     fn name(&self) -> &str;
 
+    /// Endpoints this provider has no route for, although its other endpoints work.
+    ///
+    /// Only a provider built from a registry entry lists any. A custom provider, and a
+    /// provider pinned by a `base_url`, keep the default empty list, whatever their name.
+    fn unrouted_endpoints(&self) -> &[Endpoint] {
+        &[]
+    }
+
     /// Base URL (e.g., "https://api.openai.com/v1").
     fn base_url(&self) -> &str;
+
+    /// This provider, sent to `base_url` instead of its own host.
+    ///
+    /// A `base_url` on the client changes only the host that receives the request. The
+    /// request body, the path and the reply handling stay those of this provider.
+    /// A provider whose URL is not `{base_url}{path}` (Azure, Google AI Studio, Vertex AI,
+    /// Bedrock) or whose base URL is private state overrides this method. The default
+    /// returns `None`, and [`on_base_url`] then wraps the provider so that only its host changes.
+    fn at_base_url(&self, base_url: &str) -> Option<Box<dyn Provider>> {
+        let _ = base_url;
+        None
+    }
 
     /// Build the authorization header as `Some((header-name, header-value))`.
     ///
@@ -417,6 +578,15 @@ pub(crate) trait Provider: Send + Sync {
     /// Path for list models endpoint.
     fn models_path(&self) -> &str {
         "/models"
+    }
+
+    /// URL of the next page of a list models reply, or `None` when the reply is the last page.
+    ///
+    /// `url` is the URL that returned `page`, and `page` is the reply before
+    /// [`Provider::transform_response`]. The client follows the URLs in order and joins the
+    /// pages. The default is `None`: the provider lists every model in one reply.
+    fn next_models_page_url(&self, _url: &str, _page: &serde_json::Value) -> Option<String> {
+        None
     }
 
     /// Path for image generations endpoint.
@@ -481,6 +651,26 @@ pub(crate) trait Provider: Send + Sync {
         Ok(())
     }
 
+    /// Transform the body of an embedding request before sending.
+    ///
+    /// The client calls this, and not [`Self::transform_request`], for the embeddings endpoint.
+    /// The default runs `transform_request`. A provider with its own embedding body overrides
+    /// it, so the choice depends on the endpoint and never on the shape of the body.
+    fn transform_embedding_request(&self, body: &mut serde_json::Value) -> Result<()> {
+        self.transform_request(body)
+    }
+
+    /// Transform the raw response JSON of an embedding request before deserialization.
+    ///
+    /// The client calls this, and not [`Self::transform_response`], for the embeddings
+    /// endpoint, after the request body is built. `request_model` is the model of the request.
+    /// The default runs `transform_response` and leaves the reply `model` as the provider sent
+    /// it. A provider whose embed reply has no `model` overrides it.
+    fn transform_embedding_response(&self, body: &mut serde_json::Value, request_model: &str) -> Result<()> {
+        let _ = request_model;
+        self.transform_response(body)
+    }
+
     /// Transform the raw response JSON before deserialization into canonical types.
     ///
     /// Providers returning non-OpenAI formats (Anthropic, Bedrock, Vertex) override
@@ -489,6 +679,13 @@ pub(crate) trait Provider: Send + Sync {
     /// unchanged).
     fn transform_response(&self, _body: &mut serde_json::Value) -> Result<()> {
         Ok(())
+    }
+
+    /// Rewrite an error built from an HTTP status reply before the caller sees it.
+    ///
+    /// The default implementation returns the error unchanged.
+    fn transform_error(&self, error: crate::error::LiterLlmError) -> crate::error::LiterLlmError {
+        error
     }
 
     /// Transform the raw rerank reply before deserialization into `RerankResponse`.
@@ -502,22 +699,23 @@ pub(crate) trait Provider: Send + Sync {
         Ok(())
     }
 
+    /// Transform the rerank request body after the common fields are set.
+    ///
+    /// Providers that name a rerank field differently from the canonical request (for
+    /// example the field that limits the number of results) override this to rename it.
+    /// It runs for rerank requests only, so it never sees a chat or embedding body.
+    /// The default is a no-op.
+    fn transform_rerank_request(&self, _body: &mut serde_json::Value) -> Result<()> {
+        Ok(())
+    }
+
     /// Build the full URL for a specific endpoint and model.
     ///
     /// Default: `{base_url}{endpoint_path}`.  Providers like Azure and Bedrock
     /// override this to embed deployment names, model IDs, or query parameters
     /// into the URL.
     fn build_url(&self, endpoint_path: &str, _model: &str) -> String {
-        let Ok(mut base) = url::Url::parse(self.base_url()) else {
-            return format!("{}{}", self.base_url(), endpoint_path);
-        };
-        let path = format!(
-            "{}/{}",
-            base.path().trim_end_matches('/'),
-            endpoint_path.trim_start_matches('/')
-        );
-        base.set_path(&path);
-        base.into()
+        join_url(self.base_url(), endpoint_path)
     }
 
     /// Parse a single SSE event data string into a `ChatCompletionChunk`.
@@ -553,23 +751,9 @@ pub(crate) trait Provider: Send + Sync {
         // range keeps its raw number in a bad-request error. With no usable status,
         // `status_for_error_kind` reads one from the error code or type.
         if let Ok(value) = serde_json::from_str::<serde_json::Value>(event_data)
-            && let Some(error) = value.get("error")
+            && let Some(err) = stream_error_event(&value, status_code_field(&value))
         {
-            let text = |key: &str| error.get(key).and_then(serde_json::Value::as_str);
-            let message = text("message").unwrap_or("provider returned an error mid-stream");
-            let status = error
-                .get("status_code")
-                .and_then(serde_json::Value::as_u64)
-                .and_then(|s| u16::try_from(s).ok())
-                .unwrap_or_else(|| status_for_error_kind(text("code"), text("type")));
-            if !(400..=599).contains(&status) {
-                return Err(LiterLlmError::BadRequest {
-                    message: message.to_string(),
-                    status,
-                });
-            }
-            let body = serde_json::json!({ "error": { "message": message, "code": text("code") } });
-            return Err(LiterLlmError::from_status(status, &body.to_string(), None));
+            return Err(err);
         }
 
         serde_json::from_str::<crate::types::ChatCompletionChunk>(event_data)
@@ -585,6 +769,26 @@ pub(crate) trait Provider: Send + Sync {
     /// non-SSE framing (e.g. AWS Bedrock EventStream).
     fn stream_format(&self) -> StreamFormat {
         StreamFormat::Sse
+    }
+
+    /// Whether every complete chat stream from this provider ends with an event that carries a
+    /// finish reason, so a stream that ends without one was cut off.
+    ///
+    /// Default: `false`. The client then treats a clean end of the stream as a normal end, as
+    /// OpenAI-compatible servers need (#155, #295). A provider whose own stream protocol always
+    /// closes with a final event overrides this, and the client reports a stream that ends
+    /// without one as [`LiterLlmError::Streaming`](crate::error::LiterLlmError::Streaming).
+    fn stream_has_final_event(&self) -> bool {
+        false
+    }
+
+    /// Whether each chat stream event numbers its tool calls from 0.
+    ///
+    /// Default: `false`. A provider that overrides this sends each tool call once, complete, in
+    /// an event of its own, and the client continues the numbering across events and ends a
+    /// stream that made tool calls with `tool_calls`.
+    fn stream_tool_call_indexes_restart(&self) -> bool {
+        false
     }
 
     /// Build the full URL for a streaming request.
@@ -640,6 +844,16 @@ pub(crate) trait Provider: Send + Sync {
     }
 }
 
+/// Keep the caller's `extra_body` on a body a provider transform rebuilds.
+///
+/// A rebuild drops every OpenAI field. The client merges `extra_body` into the
+/// body after the provider transform, so the caller's keys must survive it.
+pub(crate) fn carry_extra_body(from: &mut serde_json::Value, to: &mut serde_json::Value) {
+    if let Some(extra_body) = from.get_mut("extra_body").map(serde_json::Value::take) {
+        to["extra_body"] = extra_body;
+    }
+}
+
 pub(crate) mod anthropic;
 pub(crate) mod azure;
 pub(crate) mod bedrock;
@@ -648,7 +862,10 @@ pub mod custom;
 pub(crate) mod github_copilot;
 pub(crate) mod google_ai;
 pub(crate) mod mistral;
+pub(crate) mod ollama;
 pub mod outbound_policy;
+pub(crate) mod rebased;
+pub(crate) mod rerank_shape;
 pub(crate) mod vertex;
 pub(crate) mod voyage;
 
@@ -666,6 +883,20 @@ pub(crate) use outbound_policy::{authenticated_outbound_client, configure_creden
 pub(crate) struct OpenAiProvider;
 
 impl Provider for OpenAiProvider {
+    /// OpenAI's request format at another host is the generic OpenAI-compatible provider.
+    ///
+    /// The `max_tokens` rename to `max_completion_tokens` belongs to OpenAI's own service. A
+    /// local server or a gateway at `base_url` keeps the `max_tokens` the caller sent.
+    fn at_base_url(&self, base_url: &str) -> Option<Box<dyn Provider>> {
+        Some(Box::new(OpenAiCompatibleProvider {
+            name: "custom".into(),
+            base_url: base_url.to_owned(),
+            env_var: None,
+            model_prefixes: vec![],
+            hint_provider: Some("openai".into()),
+        }))
+    }
+
     fn name(&self) -> &str {
         "openai"
     }
@@ -783,22 +1014,6 @@ impl Provider for OpenAiCompatibleProvider {
         &self.name
     }
 
-    /// Read a rerank reply as the provider named by the client's `model_hint` words it.
-    ///
-    /// The `base_url` only says where to send the request. A client built with
-    /// `model_hint = "voyage"` still talks to a Voyage endpoint, whatever model name
-    /// (`rerank-2` or `voyage/rerank-2`) a request carries.
-    fn transform_rerank_response(&self, body: &mut serde_json::Value) -> Result<()> {
-        match self
-            .hint_provider
-            .as_deref()
-            .and_then(|hint| detect_builtin_provider(&format!("{hint}/")))
-        {
-            Some(named) => named.transform_rerank_response(body),
-            None => Ok(()),
-        }
-    }
-
     fn base_url(&self) -> &str {
         &self.base_url
     }
@@ -865,6 +1080,7 @@ pub(crate) struct ConfigDrivenProvider {
     config: &'static ProviderConfig,
     aliases: &'static [String],
     endpoint_urls: Option<&'static HashMap<String, String>>,
+    unrouted_endpoints: &'static [Endpoint],
 }
 
 impl ConfigDrivenProvider {
@@ -875,6 +1091,7 @@ impl ConfigDrivenProvider {
             config,
             aliases: &[],
             endpoint_urls: None,
+            unrouted_endpoints: &[],
         }
     }
 
@@ -883,6 +1100,7 @@ impl ConfigDrivenProvider {
             config: &entry.config,
             aliases: &entry.aliases,
             endpoint_urls: Some(&entry.endpoint_urls),
+            unrouted_endpoints: &entry.no_route_endpoints,
         }
     }
 }
@@ -892,12 +1110,21 @@ impl Provider for ConfigDrivenProvider {
         &self.config.name
     }
 
+    fn unrouted_endpoints(&self) -> &[Endpoint] {
+        self.unrouted_endpoints
+    }
+
     fn base_url(&self) -> &str {
         self.config.base_url.as_deref().unwrap_or("")
     }
 
     fn env_var(&self) -> Option<&str> {
         self.config.auth.as_ref().and_then(|a| a.env_var.as_deref())
+    }
+
+    /// The rerank path of the provider: `/ranking` for NVIDIA NIM, `/rerank` for the rest.
+    fn rerank_path(&self) -> &str {
+        rerank_shape::rerank_path_of(&self.config.name)
     }
 
     fn build_url(&self, endpoint_path: &str, _model: &str) -> String {
@@ -916,6 +1143,18 @@ impl Provider for ConfigDrivenProvider {
             }
             _ => model,
         }
+    }
+
+    /// Reshape the rerank reply of a provider that has a row in [`rerank_shape`].
+    fn transform_rerank_response(&self, body: &mut serde_json::Value) -> Result<()> {
+        rerank_shape::reshape_rerank_reply(&self.config.name, body);
+        Ok(())
+    }
+
+    /// Word the rerank request as the provider reads it.
+    fn transform_rerank_request(&self, body: &mut serde_json::Value) -> Result<()> {
+        rerank_shape::reshape_rerank_request(&self.config.name, body);
+        Ok(())
     }
 
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
@@ -965,6 +1204,25 @@ fn registry_entry_for_prefix<'r>(reg: &'r ProviderRegistry, prefix: &str) -> Opt
         .or_else(|| reg.providers.iter().find(|e| e.aliases.iter().any(|a| a == prefix)))
 }
 
+/// Whether the first `/`-separated segment of `model` names a provider: a registry entry by
+/// name or alias, a built-in provider, or a registered custom provider.
+///
+/// A bare model has none, and a slash alone makes no prefix: `hf.co/user/model` is bare, and
+/// so is `acme/m` until a custom provider named `acme` is registered; `openai/m` and
+/// `snowflake/m` are not.
+pub(crate) fn has_provider_prefix(model: &str) -> bool {
+    let Some((prefix, _)) = model.split_once('/') else {
+        return false;
+    };
+    // ~keep `google_ai/` is the one built-in prefix without a registry entry: it is the second
+    // name of the `gemini` provider in `detect_builtin_provider`.
+    prefix == "google_ai"
+        || REGISTRY
+            .as_ref()
+            .is_ok_and(|reg| registry_entry_for_prefix(reg, prefix).is_some())
+        || custom::is_custom_provider_prefix(prefix, model)
+}
+
 /// A registry entry has a route of its own when it names a `base_url` and is not a
 /// complex provider (complex providers need dedicated auth and request code, matched
 /// by prefix before the registry lookup in [`detect_provider`]).
@@ -984,7 +1242,21 @@ fn has_route(reg: &ProviderRegistry, entry: &ProviderEntry) -> bool {
 ///
 /// Returns [`LiterLlmError::BadRequest`] naming the provider and asking for a `base_url`.
 pub(crate) fn route_model(model: &str) -> Result<Option<Box<dyn Provider>>> {
-    if let Some(provider) = detect_provider(model) {
+    route_detected(model, detect_provider(model))
+}
+
+/// Like [`route_model`], but skips custom providers: only a built-in provider is selected.
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] naming the provider and asking for a `base_url`.
+fn route_builtin_model(model: &str) -> Result<Option<Box<dyn Provider>>> {
+    route_detected(model, detect_builtin_provider(model))
+}
+
+/// `detected`, or the refusal for a model whose prefix names a registry provider with no route.
+fn route_detected(model: &str, detected: Option<Box<dyn Provider>>) -> Result<Option<Box<dyn Provider>>> {
+    if let Some(provider) = detected {
         return Ok(Some(provider));
     }
     if let Ok(reg) = REGISTRY.as_ref()
@@ -995,17 +1267,69 @@ pub(crate) fn route_model(model: &str) -> Result<Option<Box<dyn Provider>>> {
     Ok(None)
 }
 
-/// Refuse a bare `model_hint` that names a registry provider with no route.
+/// The provider that a client's `model_hint` selects, or `None` when the hint names none.
 ///
-/// A hint such as `snowflake` is checked like the `snowflake/` prefix of a model. It never
-/// selects a provider: a hint that has a route keeps falling back to [`OpenAiProvider`].
+/// This is the one rule that turns a hint into a route. A bare provider name (`cohere`) and
+/// the `provider/model` form (`cohere/command-r-plus`) select the same provider, and so does
+/// a model name that [`detect_provider`] knows (`command-r-plus`). A `base_url` plays no part
+/// in the choice: it changes only the host, see [`on_base_url`].
 ///
 /// # Errors
 ///
-/// Returns [`LiterLlmError::BadRequest`] naming the provider and asking for a `base_url`.
-pub(crate) fn refuse_unrouted_hint(hint: &str) -> Result<()> {
-    route_model(&format!("{hint}/"))?;
-    Ok(())
+/// Returns [`LiterLlmError::BadRequest`] when the hint names a registry provider that has no
+/// route of its own.
+pub(crate) fn route_hint(hint: &str) -> Result<Option<Box<dyn Provider>>> {
+    route_hint_with(hint, route_model)
+}
+
+/// Like [`route_hint`], but selects only a built-in provider.
+///
+/// A client with a `base_url` uses this: the `base_url` names the host, and the hint names
+/// only the wire format. A custom provider brings its own host, so it never answers a hint there.
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] when the hint names a registry provider that has no
+/// route of its own. A caller with a `base_url` treats that as "no built-in provider".
+pub(crate) fn route_builtin_hint(hint: &str) -> Result<Option<Box<dyn Provider>>> {
+    route_hint_with(hint, route_builtin_model)
+}
+
+/// Selects the provider that a model name designates.
+type ModelRoute = fn(&str) -> Result<Option<Box<dyn Provider>>>;
+
+/// The hint read as a model name first, then a bare hint read as the `hint/` prefix.
+fn route_hint_with(hint: &str, route: ModelRoute) -> Result<Option<Box<dyn Provider>>> {
+    if let Some(provider) = route(hint)? {
+        return Ok(Some(provider));
+    }
+    if hint.contains('/') {
+        return Ok(None);
+    }
+    route(&format!("{hint}/"))
+}
+
+/// Send `provider` to `base_url`: the provider keeps its request body, its paths and its
+/// reply handling, and only the host changes.
+pub(crate) fn on_base_url(provider: Box<dyn Provider>, base_url: &str) -> Box<dyn Provider> {
+    match provider.at_base_url(base_url) {
+        Some(rebased) => rebased,
+        None => Box::new(rebased::BaseUrlOverride::new(provider, base_url)),
+    }
+}
+
+/// `{base_url}{endpoint_path}`, with one `/` between the path of `base_url` and `endpoint_path`.
+pub(crate) fn join_url(base_url: &str, endpoint_path: &str) -> String {
+    let Ok(mut base) = url::Url::parse(base_url) else {
+        return format!("{base_url}{endpoint_path}");
+    };
+    let path = format!(
+        "{}/{}",
+        base.path().trim_end_matches('/'),
+        endpoint_path.trim_start_matches('/')
+    );
+    base.set_path(&path);
+    base.into()
 }
 
 /// The refusal for a model whose `provider/` prefix names a registry entry with no route.
@@ -1024,6 +1348,30 @@ fn unrouted_provider_error(reg: &ProviderRegistry, model: &str) -> Option<LiterL
     })
 }
 
+/// Refuse a call to an endpoint that the resolved provider has no route for.
+///
+/// The provider's other endpoints keep working. The list of refused endpoints belongs to the
+/// provider built from a registry entry, so a custom provider or a provider pinned by a
+/// `base_url` is never refused, whatever its name.
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] naming the provider and the endpoint and asking for
+/// a `base_url`.
+pub(crate) fn refuse_unrouted_endpoint(provider: &dyn Provider, endpoint: Endpoint) -> Result<()> {
+    if !provider.unrouted_endpoints().contains(&endpoint) {
+        return Ok(());
+    }
+    Err(LiterLlmError::BadRequest {
+        message: format!(
+            "provider `{}` has no built-in route for {}; set base_url to its endpoint",
+            provider.name(),
+            endpoint.as_str()
+        ),
+        status: 400,
+    })
+}
+
 /// Detect which provider to use based on model name.
 ///
 /// Strategy:
@@ -1033,8 +1381,9 @@ fn unrouted_provider_error(reg: &ProviderRegistry, model: &str) -> Option<LiterL
 /// 4. Google AI Studio: `gemini/` or `google_ai/` prefix.
 /// 5. Vertex AI: `vertex_ai/` prefix.
 /// 6. AWS Bedrock: `bedrock/` prefix.
-/// 7. `"provider/"` prefix — look up the prefix in the registry.
-/// 8. Walk all registry entries and check their `model_prefixes`.
+/// 7. Ollama (native API): `ollama/` or `ollama_chat/` prefix.
+/// 8. `"provider/"` prefix — look up the prefix in the registry.
+/// 9. Walk all registry entries and check their `model_prefixes`.
 ///
 /// Returns `None` when no built-in provider matches.  Callers without a `base_url` use
 /// [`route_model`], which refuses a registry provider that has no route before the caller
@@ -1081,7 +1430,7 @@ pub(crate) fn detect_builtin_provider(model: &str) -> Option<Box<dyn Provider>> 
         return Some(Box::new(bedrock::BedrockProvider::from_env()));
     }
 
-    if model.starts_with("command-") || model.starts_with("cohere/") {
+    if cohere::CohereProvider.matches_model(model) {
         return Some(Box::new(cohere::CohereProvider));
     }
 
@@ -1091,6 +1440,10 @@ pub(crate) fn detect_builtin_provider(model: &str) -> Option<Box<dyn Provider>> 
         || model.starts_with("mistral/")
     {
         return Some(Box::new(mistral::MistralProvider));
+    }
+
+    if ollama::OllamaProvider::owns(model) {
+        return Some(Box::new(ollama::OllamaProvider::default()));
     }
 
     if model.starts_with("voyage/") {
@@ -1153,6 +1506,45 @@ pub fn complex_provider_names() -> Result<&'static HashSet<String>> {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    struct RenamingProvider;
+
+    impl Provider for RenamingProvider {
+        fn name(&self) -> &str {
+            "renaming"
+        }
+        fn base_url(&self) -> &str {
+            "https://example.invalid"
+        }
+        fn auth_header<'a>(&'a self, _api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
+            None
+        }
+        fn matches_model(&self, _model: &str) -> bool {
+            false
+        }
+        fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
+            body["renamed"] = json!(true);
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn transform_embedding_response_keeps_the_reply_model_by_default() {
+        let mut body = json!({"object": "list", "data": [], "model": ""});
+        RenamingProvider
+            .transform_embedding_response(&mut body, "request-model")
+            .expect("the default hook should not fail");
+        assert_eq!(body["model"], "");
+    }
+
+    #[test]
+    fn transform_embedding_request_runs_transform_request_by_default() {
+        let mut body = json!({"model": "m", "input": "x"});
+        RenamingProvider
+            .transform_embedding_request(&mut body)
+            .expect("the default hook should not fail");
+        assert_eq!(body["renamed"], true);
+    }
 
     /// Revert line: delete the `if value < min || value > max { ... }` check inside
     /// `validate_sampling_param_range` (or make it always return `Ok(())`) to make
@@ -1395,6 +1787,137 @@ mod tests {
             .expect_err("a mid-stream error object must not decode as a chunk")
     }
 
+    /// Revert line: drop the `retry_after_field` argument of `from_status` in
+    /// `stream_error_event` to make this test fail. The delay is read from the error
+    /// object, then from the top level of the event.
+    #[test]
+    fn parse_stream_event_reads_retry_after_from_error_event() {
+        use std::time::Duration;
+        let cases = [
+            (
+                r#"{"error":{"message":"slow down","type":"rate_limit_error","retry_after":7}}"#,
+                Some(Duration::from_secs(7)),
+            ),
+            (
+                r#"{"error":{"message":"slow down","type":"rate_limit_error"},"retry_after":3}"#,
+                Some(Duration::from_secs(3)),
+            ),
+            (
+                r#"{"error":{"message":"slow down","type":"rate_limit_error","retry_after":1.5}}"#,
+                Some(Duration::from_millis(1500)),
+            ),
+            // The error object wins over the top level.
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":7},"retry_after":3}"#,
+                Some(Duration::from_secs(7)),
+            ),
+            (r#"{"error":{"message":"x","type":"rate_limit_error"}}"#, None),
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":-4}}"#,
+                None,
+            ),
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":"soon"}}"#,
+                None,
+            ),
+            // A string that holds a number reads like the `Retry-After` header.
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":"30"}}"#,
+                Some(Duration::from_secs(30)),
+            ),
+            // An unusable value in the error object does not hide the top level.
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":-4},"retry_after":5}"#,
+                Some(Duration::from_secs(5)),
+            ),
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":"soon"},"retry_after":"6"}"#,
+                Some(Duration::from_secs(6)),
+            ),
+        ];
+        for (payload, want) in cases {
+            let err = mid_stream_error(payload);
+            assert!(
+                matches!(err, LiterLlmError::RateLimited { .. }),
+                "{payload}: got {err:?}"
+            );
+            assert_eq!(err.retry_after(), want, "{payload}");
+        }
+    }
+
+    /// A null, string or negative `retry_after` in the error object does not hide a valid
+    /// top-level value, and a numeric string reads as seconds. Huge values are not capped,
+    /// like a `Retry-After` header on the HTTP path.
+    /// Revert line: change `find_map(seconds)` to `next().and_then(seconds)` to make this
+    /// test fail.
+    #[test]
+    fn parse_stream_event_retry_after_edge_inputs() {
+        use std::time::Duration;
+        let cases = [
+            (r#""retry_after":null"#, Some(Duration::from_secs(9))),
+            (r#""retry_after":"soon""#, Some(Duration::from_secs(9))),
+            (r#""retry_after":-1"#, Some(Duration::from_secs(9))),
+            (r#""retry_after":"30""#, Some(Duration::from_secs(30))),
+            (r#""retry_after":"2.5""#, Some(Duration::from_millis(2500))),
+        ];
+        for (inner, want) in cases {
+            let payload = format!(r#"{{"error":{{"message":"x","type":"rate_limit_error",{inner}}},"retry_after":9}}"#);
+            let err = mid_stream_error(&payload);
+            // The strings "30" and "2.5" sit in the object and win; the others fall through to 9 s.
+            assert_eq!(err.retry_after(), want, "{payload}");
+        }
+        let err = mid_stream_error(r#"{"error":{"message":"x","type":"rate_limit_error","retry_after":1e12}}"#);
+        assert_eq!(err.retry_after(), Some(Duration::from_secs(1_000_000_000_000)));
+    }
+
+    /// The top-level `status_code` of the OpenAI-compatible stream path counts only as an
+    /// error status, and the error object wins over it. A string status may carry spaces.
+    /// Revert line: remove `.trim()` in `u16_field` to make the padded case fail.
+    /// Revert line: remove the `filter` on the top-level value in `status_code_field` to
+    /// make this test fail.
+    #[test]
+    fn parse_stream_event_top_level_status_code_edge_inputs() {
+        let cases = [
+            (
+                r#"{"error":{"message":"x","type":"rate_limit_error"},"status_code":200}"#,
+                429,
+            ),
+            (r#"{"error":{"message":"x"},"status_code":503}"#, 503),
+            (r#"{"error":{"message":"x","status_code":"429"}}"#, 429),
+            (r#"{"error":{"message":"x","status_code":" 429 "}}"#, 429),
+            (r#"{"error":{"message":"x","status_code":401},"status_code":503}"#, 401),
+        ];
+        for (payload, status) in cases {
+            let err = mid_stream_error(payload);
+            assert_eq!(err.status_code(), status, "{payload}: {err:?}");
+        }
+    }
+
+    /// Revert line: remove the `billing_error`, `request_too_large` and `timeout_error`
+    /// arms of `status_for_error_kind` to make this test fail. Each Anthropic error type
+    /// gives the status that the Anthropic API documents for it.
+    #[test]
+    fn parse_stream_event_anthropic_error_types_keep_their_status() {
+        for (kind, status) in [
+            ("billing_error", 402),
+            ("request_too_large", 413),
+            ("timeout_error", 504),
+        ] {
+            let err = mid_stream_error(&format!(r#"{{"error":{{"message":"m","type":"{kind}"}}}}"#));
+            assert_eq!(err.status_code(), status, "{kind}: {err:?}");
+        }
+        let err = mid_stream_error(r#"{"error":{"message":"m","type":"timeout_error"}}"#);
+        assert!(matches!(err, LiterLlmError::ServiceUnavailable { .. }), "got: {err:?}");
+    }
+
+    /// An overloaded error event keeps its delay too: the 529 kind carries `retry_after`.
+    #[test]
+    fn parse_stream_event_reads_retry_after_on_overloaded_event() {
+        let err = mid_stream_error(r#"{"error":{"message":"busy","type":"overloaded_error","retry_after":2}}"#);
+        assert!(matches!(err, LiterLlmError::ServiceUnavailable { .. }), "got: {err:?}");
+        assert_eq!(err.retry_after(), Some(std::time::Duration::from_secs(2)));
+    }
+
     /// Revert line: in `parse_stream_event`, build `BadRequest` directly instead of
     /// calling `LiterLlmError::from_status` to make this test fail.
     #[test]
@@ -1620,6 +2143,7 @@ mod route_model_tests {
         "a2a",
         "amazon_nova",
         "anthropic_text",
+        "assemblyai",
         "auto_router",
         "aws_polly",
         "azure_ai",
@@ -1633,6 +2157,9 @@ mod route_model_tests {
         "databricks",
         "dataforseo",
         "datarobot",
+        "deepgram",
+        "elevenlabs",
+        "fal_ai",
         "gdc",
         "gigachat",
         "heroku",
@@ -1642,12 +2169,16 @@ mod route_model_tests {
         "petals",
         "ragflow",
         "reducto",
+        "runwayml",
         "sagemaker",
         "sagemaker_chat",
         "sap",
         "searxng",
+        "serper",
         "snowflake",
         "soniox",
+        "stability",
+        "tavily",
         "triton",
         "watsonx",
         "watsonx_text",
@@ -1751,6 +2282,95 @@ mod route_model_tests {
         }
     }
 
+    /// The provider that a registry entry builds, as the router builds it.
+    fn provider_for(providers: serde_json::Value, name: &str) -> ConfigDrivenProvider {
+        let reg: &'static ProviderRegistry = Box::leak(Box::new(synthetic_registry(providers, &[])));
+        let entry = reg
+            .providers
+            .iter()
+            .find(|e| e.config.name == name)
+            .expect("entry should exist");
+        ConfigDrivenProvider::from_entry(entry)
+    }
+
+    #[test]
+    fn endpoint_listed_in_no_route_endpoints_is_refused_and_the_others_are_not() {
+        let mixed = provider_for(
+            serde_json::json!([{
+                "name": "mixed",
+                "base_url": "https://mixed.example/v1",
+                "no_route_endpoints": ["search", "audio"]
+            }]),
+            "mixed",
+        );
+        for endpoint in [Endpoint::Search, Endpoint::Audio] {
+            match refuse_unrouted_endpoint(&mixed, endpoint) {
+                Err(LiterLlmError::BadRequest { message, status }) => {
+                    assert_eq!(status, 400);
+                    assert_eq!(
+                        message,
+                        format!(
+                            "provider `mixed` has no built-in route for {}; set base_url to its endpoint",
+                            endpoint.as_str()
+                        )
+                    );
+                }
+                other => panic!("{endpoint:?}: expected a refusal, got {other:?}"),
+            }
+        }
+        for endpoint in [Endpoint::Chat, Endpoint::Image, Endpoint::Embedding] {
+            assert!(refuse_unrouted_endpoint(&mixed, endpoint).is_ok(), "{endpoint:?}");
+        }
+        let other = provider_for(
+            serde_json::json!([{"name": "other", "base_url": "https://other.example/v1"}]),
+            "other",
+        );
+        assert!(refuse_unrouted_endpoint(&other, Endpoint::Search).is_ok());
+    }
+
+    fn builtin(name: &str) -> Box<dyn Provider> {
+        let model = if name == "openai" {
+            "gpt-4o".to_owned()
+        } else {
+            format!("{name}/m")
+        };
+        detect_builtin_provider(&model).expect("shipped provider should route")
+    }
+
+    #[test]
+    fn shipped_registry_marks_each_provider_endpoint_pair_without_a_route() {
+        for (provider, endpoint) in [
+            ("brave", Endpoint::Search),
+            ("perplexity", Endpoint::Search),
+            ("exa_ai", Endpoint::Search),
+            ("firecrawl", Endpoint::Search),
+            ("linkup", Endpoint::Search),
+            ("parallel_ai", Endpoint::Search),
+            ("google_pse", Endpoint::Search),
+            ("duckduckgo", Endpoint::Search),
+            ("edenai", Endpoint::Audio),
+            ("edenai", Endpoint::Image),
+        ] {
+            assert!(
+                refuse_unrouted_endpoint(builtin(provider).as_ref(), endpoint).is_err(),
+                "{provider} {endpoint:?}"
+            );
+        }
+        for (provider, endpoint) in [
+            ("brave", Endpoint::Chat),
+            ("perplexity", Endpoint::Chat),
+            ("edenai", Endpoint::Chat),
+            ("edenai", Endpoint::Embedding),
+            ("modelscope", Endpoint::Image),
+            ("openai", Endpoint::Search),
+        ] {
+            assert!(
+                refuse_unrouted_endpoint(builtin(provider).as_ref(), endpoint).is_ok(),
+                "{provider} {endpoint:?}"
+            );
+        }
+    }
+
     #[test]
     fn registry_entry_with_base_url_that_is_not_complex_has_a_route() {
         let reg = synthetic_registry(
@@ -1779,11 +2399,15 @@ mod route_model_tests {
     #[test]
     fn bare_hint_is_refused_like_its_prefix() {
         for hint in ["snowflake", "watsonx", "hosted_vllm"] {
-            match refuse_unrouted_hint(hint) {
+            match route_hint(hint) {
                 Err(LiterLlmError::BadRequest { message, .. }) => {
                     assert!(message.contains(&format!("`{hint}`")), "{message}");
                 }
-                other => panic!("{hint}: expected a refusal, got {other:?}"),
+                Err(error) => panic!("{hint}: expected a bad request, got {error:?}"),
+                Ok(routed) => panic!(
+                    "{hint}: expected a refusal, got {:?}",
+                    routed.map(|provider| provider.name().to_owned())
+                ),
             }
         }
     }
@@ -1791,8 +2415,90 @@ mod route_model_tests {
     #[test]
     fn bare_hint_with_a_route_or_no_registry_entry_is_accepted() {
         for hint in ["anthropic", "groq", "ollama", "gpt-4o", "some-local-model"] {
-            assert!(refuse_unrouted_hint(hint).is_ok(), "{hint}");
+            assert!(route_hint(hint).is_ok(), "{hint}");
         }
+    }
+
+    #[test]
+    fn bare_hint_and_slash_hint_select_the_same_provider() {
+        for (bare, slash) in [
+            ("cohere", "cohere/command-r-plus"),
+            ("mistral", "mistral/mistral-large-latest"),
+            ("voyage", "voyage/rerank-2"),
+            ("anthropic", "anthropic/claude-sonnet-4"),
+            ("gemini", "gemini/gemini-2.0-flash"),
+            ("vertex_ai", "vertex_ai/gemini-2.0-flash"),
+            ("ollama", "ollama/llama3"),
+            ("groq", "groq/llama3-8b"),
+        ] {
+            let bare_name = route_hint(bare).expect("no refusal").map(|p| p.name().to_owned());
+            let slash_name = route_hint(slash).expect("no refusal").map(|p| p.name().to_owned());
+            assert!(bare_name.is_some(), "{bare} selects a provider");
+            assert_eq!(bare_name, slash_name, "{bare} and {slash}");
+        }
+    }
+
+    #[test]
+    fn openai_at_a_base_url_is_the_generic_provider() {
+        let provider = route_hint("gpt-5").expect("no refusal").expect("gpt-5 names OpenAI");
+        let rebased = on_base_url(provider, "http://localhost:8080/v1");
+        assert_eq!(rebased.name(), "custom");
+        assert_eq!(rebased.strip_model_prefix("openai/gpt-5"), "gpt-5");
+        assert_eq!(rebased.strip_model_prefix("custom/my-model"), "my-model");
+        assert_eq!(rebased.strip_model_prefix("anthropic/claude-x"), "anthropic/claude-x");
+    }
+
+    #[test]
+    fn hint_that_names_no_provider_selects_none() {
+        for hint in ["llama3.1:8b", "some-local-model", "not-a-provider/model"] {
+            assert!(route_hint(hint).expect("no refusal").is_none(), "{hint}");
+        }
+    }
+
+    #[test]
+    fn on_base_url_changes_only_the_host() {
+        let provider = route_hint("cohere").expect("no refusal").expect("cohere is built in");
+        let rebased = on_base_url(provider, "http://gateway.test/v1/");
+        assert_eq!(rebased.name(), "cohere");
+        assert_eq!(rebased.chat_completions_path(), "/chat");
+        assert_eq!(rebased.build_url("/chat", "m"), "http://gateway.test/v1/chat");
+    }
+
+    /// Revert line: drop the `next_models_page_url` forward in `BaseUrlOverride`, and a
+    /// wrapped provider that pages its model list stops after the first page.
+    #[test]
+    fn a_rebased_provider_keeps_its_model_list_paging() {
+        let paging = Box::new(super::vertex::VertexAiProvider::with_base_url("http://vertex.test"));
+        let rebased = rebased::BaseUrlOverride::new(paging, "http://gateway.test");
+        let page = serde_json::json!({"nextPageToken": "next"});
+        assert_eq!(
+            rebased
+                .next_models_page_url("http://gateway.test/models", &page)
+                .as_deref(),
+            Some("http://gateway.test/models?pageToken=next")
+        );
+    }
+
+    #[test]
+    fn provider_without_auth_sends_the_key_as_bearer_at_a_base_url() {
+        let local = route_hint("lmstudio")
+            .expect("no refusal")
+            .expect("lmstudio is built in");
+        assert!(
+            local.auth_header("k").is_none(),
+            "lmstudio sends no key at its own host"
+        );
+        let rebased = on_base_url(local, "http://gateway.test/v1");
+        let (name, value) = rebased.auth_header("k").expect("a key at a base_url is sent");
+        assert_eq!((name.as_ref(), value.as_ref()), ("Authorization", "Bearer k"));
+    }
+
+    #[test]
+    fn provider_with_auth_keeps_its_header_at_a_base_url() {
+        let provider = route_hint("cohere").expect("no refusal").expect("cohere is built in");
+        let rebased = on_base_url(provider, "http://gateway.test/v1");
+        let (name, value) = rebased.auth_header("k").expect("cohere sends a key");
+        assert_eq!((name.as_ref(), value.as_ref()), ("Authorization", "Bearer k"));
     }
 
     #[test]

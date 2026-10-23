@@ -1,6 +1,8 @@
 pub(crate) mod retry;
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) mod deadline;
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub(crate) mod eventstream;
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub(crate) mod request;

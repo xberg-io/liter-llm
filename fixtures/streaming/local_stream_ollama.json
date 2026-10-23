@@ -1,16 +1,16 @@
 {
   "id": "local_stream_ollama",
-  "description": "Streaming chat completion via Ollama local provider with SSE chunks",
+  "description": "Streaming chat completion through the OpenAI-compatible endpoint of a local Ollama server, with SSE chunks",
   "docs": {
     "topic": "streaming",
     "stem": "local-stream-ollama",
-    "title": "Streaming chat completion via Ollama local provider with SSE chunks"
+    "title": "Streaming chat completion through the OpenAI-compatible endpoint of a local Ollama server, with SSE chunks"
   },
   "category": "streaming",
   "tags": ["streaming", "local", "ollama"],
   "call": "chat_stream",
   "input": {
-    "model": "ollama/qwen2:0.5b",
+    "model": "openai/qwen2:0.5b",
     "messages": [
       {
         "role": "user",

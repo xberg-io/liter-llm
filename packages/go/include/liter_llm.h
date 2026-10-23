@@ -2893,6 +2893,30 @@ int32_t literllm_client_options_has_timeout_secs(LITERLLMAlefHandle handle);
 
 #if (defined(LITERLLM_FEATURE_NATIVE_HTTP) || defined(LITERLLM_FEATURE_WASM_HTTP))
 /**
+ * Get the `connect_timeout_secs` field from a `ClientOptions`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_client_options_connect_timeout_secs(LITERLLMAlefHandle handle);
+#endif
+
+#if (defined(LITERLLM_FEATURE_NATIVE_HTTP) || defined(LITERLLM_FEATURE_WASM_HTTP))
+/**
+ * Report whether the `connect_timeout_secs` field on a `ClientOptions` is `Some`.
+ *
+ * `literllm_client_options_connect_timeout_secs` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `literllm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_client_options_has_connect_timeout_secs(LITERLLMAlefHandle handle);
+#endif
+
+#if (defined(LITERLLM_FEATURE_NATIVE_HTTP) || defined(LITERLLM_FEATURE_WASM_HTTP))
+/**
  * Get the `max_retries` field from a `ClientOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
@@ -3196,6 +3220,15 @@ char *literllm_create_image_request_response_format(LITERLLMAlefHandle handle);
 char *literllm_create_image_request_user(LITERLLMAlefHandle handle);
 
 /**
+ * Get the `extra_body` field from a `CreateImageRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_create_image_request_extra_body(LITERLLMAlefHandle handle);
+
+/**
  * Create a `CreateResponseRequest` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -3412,6 +3445,15 @@ double literllm_create_speech_request_speed(LITERLLMAlefHandle handle);
 int32_t literllm_create_speech_request_has_speed(LITERLLMAlefHandle handle);
 
 /**
+ * Get the `extra_body` field from a `CreateSpeechRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_create_speech_request_extra_body(LITERLLMAlefHandle handle);
+
+/**
  * Create a `CreateTranscriptionRequest` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -3498,6 +3540,15 @@ double literllm_create_transcription_request_temperature(LITERLLMAlefHandle hand
  * Pointer must be a valid handle returned by this library.
  */
 int32_t literllm_create_transcription_request_has_temperature(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `extra_body` field from a `CreateTranscriptionRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_create_transcription_request_extra_body(LITERLLMAlefHandle handle);
 
 /**
  * Create a `CustomProviderConfig` from a JSON string. Returns null on failure.
@@ -4501,6 +4552,15 @@ int32_t literllm_embedding_request_has_dimensions(LITERLLMAlefHandle handle);
 char *literllm_embedding_request_user(LITERLLMAlefHandle handle);
 
 /**
+ * Get the `extra_body` field from a `EmbeddingRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_embedding_request_extra_body(LITERLLMAlefHandle handle);
+
+/**
  * Create a `EmbeddingResponse` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -5421,6 +5481,26 @@ uint64_t literllm_llm_config_timeout_secs(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 int32_t literllm_llm_config_has_timeout_secs(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `connect_timeout_secs` field from a `LlmConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_llm_config_connect_timeout_secs(LITERLLMAlefHandle handle);
+
+/**
+ * Report whether the `connect_timeout_secs` field on a `LlmConfig` is `Some`.
+ *
+ * `literllm_llm_config_connect_timeout_secs` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `literllm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_llm_config_has_connect_timeout_secs(LITERLLMAlefHandle handle);
 
 /**
  * Get the `max_retries` field from a `LlmConfig`.
@@ -6692,6 +6772,15 @@ LITERLLMAlefHandle literllm_moderation_request_input(LITERLLMAlefHandle handle);
 char *literllm_moderation_request_model(LITERLLMAlefHandle handle);
 
 /**
+ * Get the `extra_body` field from a `ModerationRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_moderation_request_extra_body(LITERLLMAlefHandle handle);
+
+/**
  * Create a `ModerationResponse` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -6956,6 +7045,15 @@ int32_t literllm_ocr_request_include_image_base64(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 int32_t literllm_ocr_request_has_include_image_base64(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `extra_body` field from a `OcrRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_ocr_request_extra_body(LITERLLMAlefHandle handle);
 
 /**
  * Create a `OcrResponse` from a JSON string. Returns null on failure.
@@ -7431,6 +7529,15 @@ int32_t literllm_rerank_request_return_documents(LITERLLMAlefHandle handle);
 int32_t literllm_rerank_request_has_return_documents(LITERLLMAlefHandle handle);
 
 /**
+ * Get the `extra_body` field from a `RerankRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_rerank_request_extra_body(LITERLLMAlefHandle handle);
+
+/**
  * Create a `RerankResponse` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -7855,6 +7962,15 @@ char *literllm_search_request_search_domain_filter(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_search_request_country(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `extra_body` field from a `SearchRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_search_request_extra_body(LITERLLMAlefHandle handle);
 
 /**
  * Create a `SearchResponse` from a JSON string. Returns null on failure.

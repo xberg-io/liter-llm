@@ -1,11 +1,12 @@
 //! A chat stream cut off before the provider's final event must not look like
 //! a complete response (#295). Protocols that always end with a finish reason
-//! surface truncation as an error; OpenAI-compatible streams stay lenient
-//! because some servers omit `[DONE]` (#155).
+//! surface truncation as an error. OpenAI-compatible streams end with `[DONE]`
+//! or with a chunk that carries a finish reason; a clean close with neither is
+//! a cut stream (#356).
 //!
-//! Anthropic and Gemini are exercised end to end here. Cohere and Bedrock are
-//! covered by the unit tests next to the adapter, because a `base_url`
-//! override routes them through the OpenAI-compatible provider.
+//! Anthropic, Gemini and Vertex AI are exercised end to end here. Cohere and
+//! Bedrock are covered by the unit tests next to the adapter, because a
+//! `base_url` override routes them through the OpenAI-compatible provider.
 
 #![cfg(feature = "native-http")]
 
@@ -17,7 +18,8 @@ use std::thread;
 
 use futures_util::StreamExt;
 use liter_llm::LiterLlmError;
-use liter_llm::client::{ClientConfigBuilder, DefaultClient, LlmClient};
+use liter_llm::client::{ClientConfigBuilder, DefaultClient, LlmClient, LlmClientRaw, ResponseClient};
+use liter_llm::types::responses::{CreateResponseRequest, ResponseStreamEvent};
 use liter_llm::types::{ChatCompletionChunk, ChatCompletionRequest, FinishReason, Message, UserMessage};
 
 /// Serve one SSE response with `body`, then close the connection.
@@ -75,8 +77,36 @@ async fn collect(model: &str, body: String) -> Vec<Result<ChatCompletionChunk, L
     items
 }
 
+/// Drain the raw stream of `chat_stream_raw`, which takes the same SSE path.
+async fn collect_raw(model: &str, body: String) -> Vec<Result<ChatCompletionChunk, LiterLlmError>> {
+    let (client, server) = client(model, body);
+    let stream = client
+        .chat_stream_raw(request(model))
+        .await
+        .expect("raw stream opens")
+        .stream;
+    let items = stream.collect::<Vec<_>>().await;
+    server.join().expect("response server completed");
+    items
+}
+
 fn sse(events: &[&str]) -> String {
     events.iter().map(|event| format!("data: {event}\n\n")).collect()
+}
+
+/// A cut stream must end in a `Streaming` error that names the provider and its own
+/// final event, as the provider wrapper words it. The generic SSE reader text, which
+/// names `[DONE]`, must not replace it.
+fn assert_truncated_by_provider(items: &[Result<ChatCompletionChunk, LiterLlmError>], provider: &str) {
+    assert_truncated(items);
+    let Some(Err(LiterLlmError::Streaming { message })) = items.last() else {
+        panic!("stream must end in a Streaming error, got {:?}", items.last());
+    };
+    assert!(
+        message.starts_with(&format!("{provider} stream ended before its final event")),
+        "the error must name the provider and its final event, got: {message}"
+    );
+    assert!(!message.contains("[DONE]"), "unexpected generic message: {message}");
 }
 
 fn assert_truncated(items: &[Result<ChatCompletionChunk, LiterLlmError>]) {
@@ -108,7 +138,10 @@ const ANTHROPIC_END: &str =
 
 #[tokio::test]
 async fn anthropic_stream_cut_before_message_delta_is_an_error() {
-    assert_truncated(&collect(ANTHROPIC_MODEL, sse(&[ANTHROPIC_START, ANTHROPIC_DELTA])).await);
+    assert_truncated_by_provider(
+        &collect(ANTHROPIC_MODEL, sse(&[ANTHROPIC_START, ANTHROPIC_DELTA])).await,
+        "anthropic",
+    );
 }
 
 #[tokio::test]
@@ -127,7 +160,7 @@ const GEMINI_MODEL: &str = "gemini/gemini-2.5-flash";
 #[tokio::test]
 async fn gemini_stream_cut_before_finish_reason_is_an_error() {
     let body = sse(&[r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello"}]}}]}"#]);
-    assert_truncated(&collect(GEMINI_MODEL, body).await);
+    assert_truncated_by_provider(&collect(GEMINI_MODEL, body).await, "google_ai");
 }
 
 #[tokio::test]
@@ -153,10 +186,159 @@ async fn gemini_stream_with_finish_reason_completes() {
     assert_complete(&collect(GEMINI_MODEL, body).await);
 }
 
+const VERTEX_MODEL: &str = "vertex_ai/gemini-2.5-flash";
+
 #[tokio::test]
-async fn openai_compatible_stream_without_done_stays_lenient() {
+async fn vertex_stream_cut_before_finish_reason_is_an_error() {
+    let body = sse(&[r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello"}]}}]}"#]);
+    assert_truncated(&collect(VERTEX_MODEL, body).await);
+}
+
+#[tokio::test]
+async fn vertex_stream_with_finish_reason_completes() {
     let body = sse(&[
-        r#"{"id":"c1","object":"chat.completion.chunk","created":0,"model":"gpt-4o","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":null}]}"#,
+        r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello"}]}}]}"#,
+        r#"{"candidates":[{"content":{"role":"model","parts":[{"text":" world"}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":3,"candidatesTokenCount":2}}"#,
     ]);
+    assert_complete(&collect(VERTEX_MODEL, body).await);
+}
+
+const OPENAI_CONTENT: &str = r#"{"id":"c1","object":"chat.completion.chunk","created":0,"model":"gpt-4o","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":null}]}"#;
+const OPENAI_FINISH: &str = r#"{"id":"c1","object":"chat.completion.chunk","created":0,"model":"gpt-4o","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}"#;
+
+#[tokio::test]
+async fn openai_compatible_stream_cut_on_an_event_boundary_is_an_error() {
+    assert_truncated(&collect("openai/gpt-4o", sse(&[OPENAI_CONTENT, OPENAI_CONTENT])).await);
+}
+
+#[tokio::test]
+async fn openai_compatible_stream_with_done_completes() {
+    let body = format!("{}data: [DONE]\n\n", sse(&[OPENAI_CONTENT]));
     assert_complete(&collect("openai/gpt-4o", body).await);
+}
+
+#[tokio::test]
+async fn openai_compatible_stream_with_finish_reason_and_no_done_completes() {
+    assert_complete(&collect("openai/gpt-4o", sse(&[OPENAI_CONTENT, OPENAI_FINISH])).await);
+}
+
+#[tokio::test]
+async fn openai_compatible_raw_stream_cut_on_an_event_boundary_is_an_error() {
+    assert_truncated(&collect_raw("openai/gpt-4o", sse(&[OPENAI_CONTENT, OPENAI_CONTENT])).await);
+}
+
+const RESPONSE_CREATED: &str = r#"{"type":"response.created"}"#;
+const RESPONSE_DELTA: &str =
+    r#"{"type":"response.output_text.delta","item_id":"m1","output_index":0,"content_index":0,"delta":"Hi"}"#;
+
+fn response_terminal(kind: &str) -> String {
+    format!(
+        r#"{{"type":"response.{kind}","response":{{"id":"r1","object":"response","created_at":1,"model":"gpt-4o","status":"{kind}","output":[]}}}}"#
+    )
+}
+
+/// Drain the Responses stream of `body`, returning every item it yielded.
+async fn collect_responses(body: String) -> Vec<Result<ResponseStreamEvent, LiterLlmError>> {
+    let (client, server) = client("openai/gpt-4o", body);
+    let req = CreateResponseRequest {
+        model: "gpt-4o".into(),
+        input: serde_json::json!("Hello"),
+        instructions: None,
+        tools: None,
+        temperature: None,
+        max_output_tokens: None,
+        metadata: None,
+        extra_body: None,
+        stream: None,
+    };
+    let stream = client.create_response_stream(req).await.expect("stream opens");
+    let items = stream.collect::<Vec<_>>().await;
+    server.join().expect("response server completed");
+    items
+}
+
+/// A Responses stream that closes before `response.completed`, `response.incomplete`
+/// or `response.failed` ends in one `Streaming` error after the last event.
+#[tokio::test]
+async fn responses_stream_cut_before_a_terminal_event_is_an_error() {
+    let items = collect_responses(sse(&[RESPONSE_CREATED, RESPONSE_DELTA, RESPONSE_DELTA])).await;
+    let (last, content) = items.split_last().expect("stream yields items");
+    assert_eq!(content.len(), 3, "every event before the cut arrives: {items:?}");
+    assert!(
+        content.iter().all(Result::is_ok),
+        "content before the cut must still arrive: {items:?}"
+    );
+    assert!(
+        matches!(last, Err(LiterLlmError::Streaming { message }) if message.contains("final event")),
+        "a cut Responses stream must end in a Streaming error, got {last:?}"
+    );
+    let Err(LiterLlmError::Streaming { message }) = last else {
+        unreachable!("checked above")
+    };
+    assert!(
+        !message.contains("[DONE]") && !message.contains("finish reason"),
+        "the error must not name chat stream endings, got: {message}"
+    );
+}
+
+#[tokio::test]
+async fn responses_stream_cut_on_an_event_boundary_reports_one_error() {
+    let items = collect_responses(sse(&[RESPONSE_CREATED])).await;
+    assert_eq!(items.iter().filter(|item| item.is_err()).count(), 1, "{items:?}");
+    assert!(items.last().is_some_and(Result::is_err), "{items:?}");
+}
+
+/// A body with no events at all is a cut stream: one `Streaming` error, no items.
+#[tokio::test]
+async fn responses_stream_with_an_empty_body_is_one_error() {
+    let items = collect_responses(String::new()).await;
+    assert_eq!(items.len(), 1, "{items:?}");
+    assert!(
+        matches!(&items[0], Err(LiterLlmError::Streaming { message }) if message.contains("final event")),
+        "an empty Responses body must end in a Streaming error, got {items:?}"
+    );
+}
+
+/// A body of SSE comment lines carries no event, so it ends like an empty body.
+#[tokio::test]
+async fn responses_stream_with_a_comment_only_body_is_one_error() {
+    let items = collect_responses(": keep-alive\n\n: keep-alive\n\n".to_owned()).await;
+    assert_eq!(items.len(), 1, "{items:?}");
+    assert!(
+        matches!(&items[0], Err(LiterLlmError::Streaming { message }) if message.contains("final event")),
+        "a comment-only Responses body must end in a Streaming error, got {items:?}"
+    );
+}
+
+/// OpenAI-compatible servers that front the Responses API may end with `[DONE]`; the
+/// shared SSE reader accepts that as a clean end for every stream.
+#[tokio::test]
+async fn responses_stream_ended_by_done_completes() {
+    let body = format!("{}data: [DONE]\n\n", sse(&[RESPONSE_CREATED, RESPONSE_DELTA]));
+    let items = collect_responses(body).await;
+    assert_eq!(items.len(), 2, "{items:?}");
+    assert!(items.iter().all(Result::is_ok), "[DONE] must not error: {items:?}");
+}
+
+#[tokio::test]
+async fn responses_stream_with_a_terminal_event_completes() {
+    for kind in ["completed", "incomplete", "failed"] {
+        let items = collect_responses(sse(&[RESPONSE_CREATED, RESPONSE_DELTA, &response_terminal(kind)])).await;
+        assert_eq!(items.len(), 3, "response.{kind}: {items:?}");
+        assert!(
+            items.iter().all(Result::is_ok),
+            "response.{kind} must not error: {items:?}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn anthropic_raw_stream_cut_before_message_delta_is_an_error() {
+    assert_truncated(&collect_raw(ANTHROPIC_MODEL, sse(&[ANTHROPIC_START, ANTHROPIC_DELTA])).await);
+}
+
+#[tokio::test]
+async fn gemini_raw_stream_cut_before_finish_reason_is_an_error() {
+    let body = sse(&[r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hello"}]}}]}"#]);
+    assert_truncated(&collect_raw(GEMINI_MODEL, body).await);
 }

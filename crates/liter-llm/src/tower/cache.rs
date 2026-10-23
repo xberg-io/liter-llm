@@ -878,10 +878,16 @@ pub(crate) fn strategy_key(strategy: &dyn CacheKeyStrategy, req: &LlmRequest) ->
         }
         LlmRequestKind::Embed(r) => {
             let input = serde_json::to_string(&r.input).ok()?;
-            let params = serde_json::json!({
+            let mut params = serde_json::json!({
                 "dimensions": r.dimensions,
                 "encoding_format": r.encoding_format,
             });
+            // ~keep `extra_body` can change the vectors (for example `input_type`), so it is part
+            // ~keep of the key. It is added only when set, which keeps the key of a request
+            // ~keep without it identical to the key before the field existed.
+            if let Some(extra_body) = &r.extra_body {
+                params["extra_body"] = extra_body.clone();
+            }
             (r.model.as_str().to_owned(), input, params.to_string(), req_tenant, None)
         }
         _ => return None,
@@ -1625,6 +1631,54 @@ mod tests {
     /// `config.ttl`. The bug was invisible because `CacheConfig::default().ttl`
     /// and `StandardCachePolicy::default().exact_ttl` are both 300s, defined
     /// independently; only a non-default value exposes it.
+    /// The hit property, apart from expiry: the TTL is far longer than any pause between the two
+    /// calls, so a stall cannot expire the entry.
+    #[tokio::test]
+    async fn configured_ttl_serves_the_second_call_from_cache() {
+        let config = CacheConfig {
+            max_entries: 10,
+            ttl: Duration::from_secs(3600),
+            backend: CacheBackend::default(),
+        };
+        let client = MockClient::ok();
+        let call_count = Arc::clone(&client.call_count);
+        let mut svc = CacheLayer::new(config).layer(LlmService::new(client));
+
+        svc.call(LlmRequest::Chat(chat_req("ttl-hit-model"))).await.unwrap();
+        svc.call(LlmRequest::Chat(chat_req("ttl-hit-model"))).await.unwrap();
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            1,
+            "second call within the TTL must be served from cache"
+        );
+    }
+
+    /// Same as above on the custom-store path.
+    #[tokio::test]
+    async fn configured_ttl_serves_the_second_call_from_cache_on_the_custom_store_path() {
+        let config = CacheConfig {
+            max_entries: 10,
+            ttl: Duration::from_secs(3600),
+            backend: CacheBackend::default(),
+        };
+        let store: Arc<dyn CacheStore> = Arc::new(InMemoryStore::new(&config));
+        let client = MockClient::ok();
+        let call_count = Arc::clone(&client.call_count);
+        let mut svc = CacheLayer::with_store_and_config(store, &config).layer(LlmService::new(client));
+
+        svc.call(LlmRequest::Chat(chat_req("ttl-hit-store-model")))
+            .await
+            .unwrap();
+        svc.call(LlmRequest::Chat(chat_req("ttl-hit-store-model")))
+            .await
+            .unwrap();
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            1,
+            "second call within the TTL must be served from cache"
+        );
+    }
+
     #[tokio::test]
     async fn configured_ttl_expires_the_entry() {
         let config = CacheConfig {
@@ -1636,13 +1690,11 @@ mod tests {
         let call_count = Arc::clone(&client.call_count);
         let mut svc = CacheLayer::new(config).layer(LlmService::new(client));
 
+        // ~keep No assertion depends on the gap between calls: a pause only makes the entry
+        // ~keep expire sooner, which is what this test waits for. The hit inside the TTL is
+        // ~keep asserted by `configured_ttl_serves_the_second_call_from_cache`.
         svc.call(LlmRequest::Chat(chat_req("ttl-model"))).await.unwrap();
-        svc.call(LlmRequest::Chat(chat_req("ttl-model"))).await.unwrap();
-        assert_eq!(
-            call_count.load(Ordering::SeqCst),
-            1,
-            "second call within the TTL must be served from cache"
-        );
+        assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
         tokio::time::sleep(Duration::from_millis(150)).await;
 
@@ -1670,13 +1722,11 @@ mod tests {
         let call_count = Arc::clone(&client.call_count);
         let mut svc = CacheLayer::with_store_and_config(store, &config).layer(LlmService::new(client));
 
+        // ~keep No assertion depends on the gap between calls: a pause only makes the entry
+        // ~keep expire sooner, which is what this test waits for. The hit inside the TTL is
+        // ~keep asserted by `configured_ttl_serves_the_second_call_from_cache`.
         svc.call(LlmRequest::Chat(chat_req("ttl-store-model"))).await.unwrap();
-        svc.call(LlmRequest::Chat(chat_req("ttl-store-model"))).await.unwrap();
-        assert_eq!(
-            call_count.load(Ordering::SeqCst),
-            1,
-            "second call within the TTL must be served from cache"
-        );
+        assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
         tokio::time::sleep(Duration::from_millis(150)).await;
 
@@ -2068,5 +2118,42 @@ mod tests {
             "changing `response_format` must change the cache key"
         );
         assert_ne!(base_key.0, seed_key.0, "changing `seed` must change the cache key");
+    }
+
+    /// `extra_body` can change an embedding (for example `input_type`), so two
+    /// requests that differ only there must not share a cache entry.
+    #[test]
+    fn embed_cache_key_changes_with_extra_body() {
+        use crate::types::{EmbeddingInput, EmbeddingRequest};
+
+        let embed = |extra_body: Option<serde_json::Value>| {
+            LlmRequest::Embed(EmbeddingRequest {
+                model: "bedrock/cohere.embed-english-v3".into(),
+                input: EmbeddingInput::Single("what is rust?".into()),
+                extra_body,
+                ..Default::default()
+            })
+        };
+        let strategy = ExactHashStrategy;
+
+        let none = strategy_key(&strategy, &embed(None)).expect("embed request is cacheable");
+        let none_again = strategy_key(&strategy, &embed(None)).expect("embed request is cacheable");
+        let query = strategy_key(
+            &strategy,
+            &embed(Some(serde_json::json!({"input_type": "search_query"}))),
+        )
+        .expect("embed request is cacheable");
+        let document = strategy_key(
+            &strategy,
+            &embed(Some(serde_json::json!({"input_type": "search_document"}))),
+        )
+        .expect("embed request is cacheable");
+
+        assert_eq!(none.0, none_again.0, "equal requests share a key");
+        assert_ne!(none.0, query.0, "setting `extra_body` must change the cache key");
+        assert_ne!(
+            query.0, document.0,
+            "a different `input_type` must change the cache key"
+        );
     }
 }

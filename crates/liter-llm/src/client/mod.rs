@@ -184,6 +184,8 @@ fn provider_auth_header(provider: &dyn Provider, api_key: &str) -> Option<(Strin
 struct ChatStreamState {
     usage: Option<Usage>,
     model: String,
+    /// Tool calls already streamed, so later chunks continue the index numbering.
+    tool_calls_seen: u32,
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -208,6 +210,13 @@ fn parse_chat_stream_event(
         Some(chunk) => chunk,
         None => return Ok(None),
     };
+    if provider.stream_tool_call_indexes_restart() {
+        let mut state = state.lock().map_err(|_| LiterLlmError::InternalError {
+            message: "chat stream state lock poisoned".into(),
+        })?;
+        provider::ollama::number_stream_tool_calls(&mut chunk, &mut state.tool_calls_seen);
+        return Ok(Some(chunk));
+    }
     if !matches!(provider.name(), "anthropic" | "google_ai" | "vertex_ai") {
         return Ok(Some(chunk));
     }
@@ -237,17 +246,46 @@ fn parse_chat_stream_event(
     Ok(Some(chunk))
 }
 
+/// Whether a chat chunk ends the reply: some choice carries a finish reason.
+///
+/// An SSE chat stream ends with `[DONE]` or with such a chunk. A stream that
+/// closes with neither was cut.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) fn chunk_has_finish_reason(chunk: &ChatCompletionChunk) -> bool {
+    chunk.choices.iter().any(|choice| choice.finish_reason.is_some())
+}
+
+/// Whether a Responses event ends the reply: `response.completed`,
+/// `response.incomplete` or `response.failed`.
+///
+/// A Responses stream ends with `[DONE]` or with such an event. A stream that
+/// closes with neither was cut.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) fn response_event_is_terminal(event: &ResponseStreamEvent) -> bool {
+    matches!(
+        event,
+        ResponseStreamEvent::Completed(_) | ResponseStreamEvent::Incomplete(_) | ResponseStreamEvent::Failed(_)
+    )
+}
+
 /// Whether a provider's native chat stream protocol always ends with an event
 /// that carries a finish reason.
 ///
 /// Anthropic (`message_delta` with `stop_reason`), Gemini/Vertex
-/// (`finishReason`), Cohere (`message-end`) and Bedrock (`messageStop`) all do,
+/// (`finishReason`), Cohere (`message-end`), Ollama's native API (`done: true`) and
+/// Bedrock (`messageStop`) all do,
 /// so a stream from them that ends without one was cut off. OpenAI-compatible
-/// servers are not held to this: some omit `[DONE]` or end with non-standard
-/// metadata events (#155), and a clean EOF there stays a normal end (#295).
+/// servers may end with `[DONE]` alone, so this wrapper does not hold them to a
+/// finish reason; the SSE reader reports one that closes with neither (#356).
+/// The reader's check is off for the providers this returns `true` for, so the
+/// cut stream of a native protocol keeps the error that names the provider.
+///
+/// Ollama is found by the capability its native provider declares and Bedrock by its event
+/// stream framing, so a custom provider that borrows either name keeps the lenient rule.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 fn requires_terminal_chat_chunk(provider: &dyn Provider) -> bool {
     matches!(provider.name(), "anthropic" | "google_ai" | "vertex_ai" | "cohere")
+        || provider.stream_has_final_event()
         || matches!(provider.stream_format(), provider::StreamFormat::AwsEventStream)
 }
 
@@ -293,7 +331,7 @@ impl Stream for RequireTerminalChunk {
         }
         match self.inner.as_mut().poll_next(cx) {
             Poll::Ready(Some(Ok(chunk))) => {
-                if chunk.choices.iter().any(|choice| choice.finish_reason.is_some()) {
+                if chunk_has_finish_reason(&chunk) {
                     self.finished = true;
                 }
                 Poll::Ready(Some(Ok(chunk)))
@@ -331,7 +369,10 @@ impl Stream for RequireTerminalChunk {
 /// Vertex, Bedrock) already strip it inside their own `transform_request`, so by the
 /// time this runs there is nothing left for them to merge; there it only has an
 /// effect for OpenAI-compatible providers, which pass `extra_body` through
-/// unchanged. That caveat is chat-path-only: the Responses path
+/// unchanged. The Bedrock and Vertex embed transforms differ: they rebuild the body
+/// and keep `extra_body` on it, so this merge applies the caller's keys. The Ollama
+/// embed transform consumes them itself: top-level keys stay, the rest go into `options`.
+/// The Gemini API embed transform merges them into each embed request itself. The Responses path
 /// ([`response_request_body`]) runs no provider transform at all, so the merged keys
 /// always reach the wire as literal OpenAI Responses fields.
 ///
@@ -749,6 +790,8 @@ pub trait ResponseClient: Send + Sync {
     /// Returns a stream of `ResponseStreamEvent` items. The stream terminates
     /// when a terminal event (`response.completed`, `response.incomplete`, or
     /// `response.failed`) is yielded and the underlying connection closes.
+    /// If the connection closes before a terminal event, the stream yields one
+    /// `Streaming` error after the last event.
     ///
     /// # Errors
     ///
@@ -786,6 +829,8 @@ pub trait ResponseClient {
     /// Returns a stream of `ResponseStreamEvent` items. The stream terminates
     /// when a terminal event (`response.completed`, `response.incomplete`, or
     /// `response.failed`) is yielded and the underlying connection closes.
+    /// If the connection closes before a terminal event, the stream yields one
+    /// `Streaming` error after the last event.
     ///
     /// # Errors
     ///
@@ -828,12 +873,18 @@ pub struct DefaultClient {
     /// Provider resolved at construction; shared via Arc so streaming closures
     /// can capture an owned reference without requiring `unsafe`.
     provider: Arc<dyn Provider>,
+    /// True when the `model_hint` selected `provider`: a model name without a `provider/`
+    /// prefix then stays on it, instead of picking a provider by name pattern.
+    hint_pins_provider: bool,
     /// Pre-computed auth header `(name, value)` — avoids `format!("Bearer {key}")`
     /// on every request.  `None` when the provider requires no authentication.
     cached_auth_header: Option<(String, String)>,
     /// Pre-computed static extra headers — avoids converting `&'static str` pairs
     /// to `(String, String)` on every request.
     cached_extra_headers: Vec<(String, String)>,
+    /// The OpenAI-compatible endpoint at `base_url` for a model with another provider's
+    /// prefix, on a client whose hint named Ollama. `None` for every other client.
+    prefixed_model_provider: Option<Arc<dyn Provider>>,
     /// Tower middleware stack installed by [`create_client_from_json`](crate::create_client_from_json).
     ///
     /// ~keep The managed client wraps a separate `DefaultClient` whose own `managed` is `None`,
@@ -864,21 +915,29 @@ impl DefaultClient {
         http::request::ResponseReadOptions {
             max_retries: self.config.max_retries,
             max_response_bytes: self.config.max_response_bytes,
+            timeout: Some(self.config.timeout),
         }
     }
 
     /// Build a client.
     ///
     /// Constructs an HTTP client with the given configuration and provider hint.
-    /// If `model_hint` is provided, its prefix determines the default provider
-    /// (e.g. `"groq/llama3-70b"` selects Groq; `"claude-3-5-sonnet"` defaults to OpenAI).
-    /// Pass `None` to use OpenAI as the default. The hint does not constrain
-    /// per-request routing — individual requests can override the provider via
-    /// their own model prefix.
+    /// `model_hint` selects the provider by its bare name (`"groq"`), by the
+    /// `provider/model` form (`"groq/llama3-70b"`) or by a model name the client knows
+    /// (`"claude-3-5-sonnet"` selects Anthropic). A `base_url` changes only the host
+    /// that the selected provider sends its requests to. Pass `None`, or a hint that
+    /// names no provider, to use OpenAI (or a generic OpenAI-compatible provider when
+    /// `base_url` is set). A request model with a `provider/` prefix can still
+    /// override the provider for that request, unless a `base_url` is set. A request model
+    /// without a prefix stays on the provider the hint selected.
     ///
     /// When `config.load_env` is true (the default), and no API key was provided,
     /// the client reads the provider's designated environment variable
-    /// (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) at construction time.
+    /// (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) at construction time. With a
+    /// `base_url`, only a hint in the `provider/model` form (`"anthropic/claude-3-5-sonnet"`)
+    /// reads a key from the environment. A bare name (`"anthropic"`) or a model
+    /// name (`"claude-3-5-sonnet"`) reads none, so no key from the environment goes to the
+    /// `base_url` host.
     ///
     /// # Errors
     ///
@@ -886,18 +945,28 @@ impl DefaultClient {
     /// API key was provided, and the provider's environment variable is unset or empty.
     /// Returns `LiterLlmError::BadRequest` if no `base_url` is set and `model_hint` names a
     /// registry provider that has no route of its own.
+    /// Returns `LiterLlmError::BadRequest` if `max_response_bytes` or `connect_timeout` is zero.
     /// Returns `LiterLlmError::InvalidHeader` if pre-validated headers somehow
     /// become invalid during client construction (extremely rare; indicates a bug).
     /// Returns `LiterLlmError::Http` if the underlying HTTP client cannot be constructed.
     pub fn new(config: ClientConfig, model_hint: Option<&str>) -> Result<Self> {
         config::validate_response_limit(config.max_response_bytes)?;
-        let provider = build_provider(&config, model_hint)?;
+        config::validate_connect_timeout(config.connect_timeout)?;
+        let BuiltProvider {
+            provider,
+            hint_pins_provider,
+            environment_keys,
+        } = build_provider(&config, model_hint)?;
         provider.validate()?;
+        #[cfg(target_arch = "wasm32")]
+        let _ = environment_keys;
+        let prefixed_model_provider = prefixed_model_provider(&config, model_hint);
 
         #[cfg(not(target_arch = "wasm32"))]
         let mut config = config;
         #[cfg(not(target_arch = "wasm32"))]
         if config.load_env
+            && environment_keys
             && config.api_key.expose_secret().is_empty()
             && let Some(env_var_name) = provider.env_var()
         {
@@ -918,6 +987,7 @@ impl DefaultClient {
         // ~keep Explicit tokens and credential providers stay authoritative over Workload Identity defaults.
         #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
         if config.credential_provider.is_none()
+            && environment_keys
             && config.api_key.expose_secret().is_empty()
             && provider.name() == "vertex_ai"
         {
@@ -948,11 +1018,14 @@ impl DefaultClient {
             #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
             let builder = crate::provider::configure_outbound_client_builder(builder, config.transport.dns_cache_ttl);
             #[cfg(not(target_arch = "wasm32"))]
+            let builder = builder.connect_timeout(config.connect_timeout);
+            #[cfg(not(target_arch = "wasm32"))]
             let builder = if stream {
                 builder.read_timeout(config.timeout)
             } else {
                 builder.timeout(config.timeout)
             };
+            // ~keep The wasm32 client has no builder timeout: `http::deadline` applies `timeout` per call.
             #[cfg(target_arch = "wasm32")]
             let _ = stream;
             #[cfg(not(target_arch = "wasm32"))]
@@ -974,8 +1047,10 @@ impl DefaultClient {
             http,
             http_stream,
             provider,
+            hint_pins_provider,
             cached_auth_header,
             cached_extra_headers,
+            prefixed_model_provider,
             managed: None,
         })
     }
@@ -986,8 +1061,33 @@ impl DefaultClient {
     /// construction-time default, the detected provider is returned.  Otherwise
     /// the construction-time provider is reused (zero allocation).
     fn resolve_provider_for_model(&self, model: &str) -> Result<Arc<dyn Provider>> {
-        // ~keep A base_url override pins the construction-time provider for mock/proxy endpoints.
-        if self.config.base_url.is_some() {
+        if let Some(base_url) = self.config.effective_base_url() {
+            // ~keep The `ollama/` prefix names a wire format, not a host, so it wins over a base_url
+            // override: the override then becomes the Ollama server address. Without an override the
+            // prefix goes through `detect_provider`, where a registered custom provider wins.
+            if provider::ollama::OllamaProvider::owns(model) {
+                return Ok(Arc::new(provider::ollama::OllamaProvider::with_base_url(
+                    base_url.to_owned(),
+                )));
+            }
+            // ~keep Only a bare model goes to the native API of a client hinted at Ollama. A model
+            // with another provider's prefix goes to the OpenAI-compatible endpoint at the base_url,
+            // as it did before the native provider existed.
+            if let Some(compatible) = &self.prefixed_model_provider
+                && provider::has_provider_prefix(model)
+            {
+                return Ok(Arc::clone(compatible));
+            }
+        }
+        // ~keep A base_url override pins the construction-time provider for mock/proxy endpoints. A
+        // client hinted at Ollama is pinned to the native API like any other provider: a bare model
+        // goes to `/api/chat` whatever the base_url is.
+        if self.config.effective_base_url().is_some() {
+            return Ok(Arc::clone(&self.provider));
+        }
+        // ~keep A hint chose the provider, so a model name without a `provider/` prefix stays on it.
+        // ~keep Otherwise a `gemini-` model under a `vertex_ai` hint would reach Google AI Studio.
+        if self.hint_pins_provider && !model.contains('/') {
             return Ok(Arc::clone(&self.provider));
         }
         // ~keep Keep the construction-time provider when it already matches the model.
@@ -1009,7 +1109,7 @@ impl DefaultClient {
     /// so a model for another provider is not sent to that provider's endpoint.
     /// Does nothing when a `base_url` is set.
     fn refuse_unrouted_model(&self, model: &str) -> Result<()> {
-        if self.config.base_url.is_none() {
+        if self.config.effective_base_url().is_none() {
             provider::route_model(model)?;
         }
         Ok(())
@@ -1070,6 +1170,9 @@ impl DefaultClient {
     /// path (e.g. `|p| p.chat_completions_path()`), ensuring the path comes
     /// from the correct provider when per-request routing overrides the default.
     ///
+    /// `endpoint` names the kind of call, so a provider that has no route for it is refused
+    /// before any request is built.
+    ///
     /// `stream` is inserted into the body **before** `transform_request` runs,
     /// so providers can inspect the final body state in one pass.
     fn prepare_request(
@@ -1077,7 +1180,37 @@ impl DefaultClient {
         serializable: &impl serde::Serialize,
         endpoint_fn: impl FnOnce(&dyn Provider) -> &str,
         model: &str,
+        endpoint: provider::Endpoint,
         stream: Option<bool>,
+    ) -> Result<PreparedRequest> {
+        self.prepare_request_with(serializable, endpoint_fn, model, endpoint, stream, |_, _| Ok(()))
+    }
+
+    /// Prepare an embedding request. The provider rebuilds the body in
+    /// [`Provider::transform_embedding_request`], chosen by the embedding endpoint.
+    fn prepare_embedding_request(&self, req: &EmbeddingRequest) -> Result<PreparedRequest> {
+        self.prepare_request(
+            req,
+            |p| p.embeddings_path(),
+            &req.model,
+            provider::Endpoint::Embedding,
+            None,
+        )
+    }
+
+    /// [`Self::prepare_request`] with a request step for one endpoint.
+    ///
+    /// The provider's own body transform is `transform_embedding_request` for the embedding
+    /// endpoint and `transform_request` for every other. `endpoint_step` runs right after it, so
+    /// a rerank request can be reworded without any other endpoint seeing the change.
+    fn prepare_request_with(
+        &self,
+        serializable: &impl serde::Serialize,
+        endpoint_fn: impl FnOnce(&dyn Provider) -> &str,
+        model: &str,
+        endpoint: provider::Endpoint,
+        stream: Option<bool>,
+        endpoint_step: impl FnOnce(&dyn Provider, &mut serde_json::Value) -> Result<()>,
     ) -> Result<PreparedRequest> {
         if model.is_empty() {
             return Err(LiterLlmError::BadRequest {
@@ -1087,6 +1220,8 @@ impl DefaultClient {
         }
 
         let prov = self.resolve_provider_for_model(model)?;
+        // ~keep Only a provider built from a registry entry lists refused endpoints, so a base_url or a custom provider is never refused.
+        provider::refuse_unrouted_endpoint(prov.as_ref(), endpoint)?;
         let bare_model = prov.strip_model_prefix(model).to_owned();
         // ~keep Providers such as Azure and Bedrock embed model/deployment identifiers in URLs.
         let endpoint_path = endpoint_fn(prov.as_ref());
@@ -1110,7 +1245,12 @@ impl DefaultClient {
                 obj.insert("max_completion_tokens".into(), max_tokens);
             }
         }
-        prov.transform_request(&mut body)?;
+        if endpoint == provider::Endpoint::Embedding {
+            prov.transform_embedding_request(&mut body)?;
+        } else {
+            prov.transform_request(&mut body)?;
+        }
+        endpoint_step(prov.as_ref(), &mut body)?;
         // ~keep Whether the provider's wire format carries `stream` at all is the provider's
         // decision, recorded here by whether the key survived `transform_request`. Providers that
         // rebuild the body into a native format (Vertex/Gemini `generateContent`, Bedrock
@@ -1184,6 +1324,93 @@ impl DefaultClient {
         headers.extend(self.provider.dynamic_headers(body_json));
         Ok(headers)
     }
+
+    /// Send a prepared chat request and read the reply as a stream of chunks. `chat_stream` and
+    /// `chat_stream_raw` both use it, so a stream cut before the provider's final event is an
+    /// error on both.
+    async fn send_chat_stream(
+        &self,
+        model: &str,
+        prepared: PreparedRequest,
+    ) -> Result<BoxStream<'static, Result<ChatCompletionChunk>>> {
+        // ~keep Streaming endpoints can differ from non-streaming provider URLs.
+        let bare_model = prepared.provider.strip_model_prefix(model);
+        let url = prepared
+            .provider
+            .build_stream_url(prepared.provider.chat_completions_path(), bare_model);
+
+        let (auth_header, credential) = self
+            .resolve_auth_header_for_provider(prepared.provider.as_ref())
+            .await?;
+        let all_headers = self.all_headers_for_provider(
+            prepared.provider.as_ref(),
+            credential.as_ref(),
+            "POST",
+            &url,
+            &prepared.body_json,
+            &prepared.body_bytes,
+        )?;
+        let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
+        let auth = auth_header.as_ref().map(str_pair);
+        let require_terminal = requires_terminal_chat_chunk(prepared.provider.as_ref());
+        let provider_name = prepared.provider.name().to_owned();
+        // ~keep The provider wrapper below reports a cut stream of a native protocol
+        // with the provider's own message, so the SSE reader's check stays off for it.
+        let end_check: Option<fn(&ChatCompletionChunk) -> bool> = if require_terminal {
+            None
+        } else {
+            Some(chunk_has_finish_reason)
+        };
+
+        let stream = match prepared.provider.stream_format() {
+            format @ (provider::StreamFormat::Sse | provider::StreamFormat::Ndjson) => {
+                let framing = match format {
+                    provider::StreamFormat::Ndjson => http::streaming::Framing::Ndjson,
+                    _ => http::streaming::Framing::Sse,
+                };
+                let provider = Arc::clone(&prepared.provider);
+                let state = std::sync::Mutex::new(ChatStreamState {
+                    model: model.to_owned(),
+                    ..Default::default()
+                });
+                let parse_event = move |data: &str| parse_chat_stream_event(provider.as_ref(), &state, data);
+                http::streaming::post_stream_framed(
+                    &self.http_stream,
+                    http::request::StreamingPost {
+                        url: &url,
+                        auth_header: auth,
+                        extra_headers: &extra,
+                        body: prepared.body_bytes,
+                    },
+                    parse_event,
+                    end_check,
+                    self.response_read_options(),
+                    framing,
+                )
+                .await
+                .map_err(|e| prepared.provider.transform_error(e))?
+            }
+            provider::StreamFormat::AwsEventStream => {
+                http::eventstream::post_eventstream_bounded(
+                    &self.http_stream,
+                    http::request::StreamingPost {
+                        url: &url,
+                        auth_header: auth,
+                        extra_headers: &extra,
+                        body: prepared.body_bytes,
+                    },
+                    provider::bedrock::parse_bedrock_stream_event,
+                    self.response_read_options(),
+                )
+                .await?
+            }
+        };
+        Ok(if require_terminal {
+            RequireTerminalChunk::wrap(stream, provider_name)
+        } else {
+            stream
+        })
+    }
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -1208,89 +1435,159 @@ fn model_uses_max_completion_tokens(model: &str) -> bool {
 /// leaves it unchanged, so a gateway that normalizes replies is not affected. Rerank replies
 /// never pass through the chat transform of the provider.
 fn transform_rerank_reply(resolved: &dyn Provider, model: &str, raw: &mut serde_json::Value) -> Result<()> {
-    // ~keep Only the `provider/` prefix names a provider here. A bare model such as `rerank-2` can
-    // ~keep match a registry model prefix of a provider that has no rerank step, and that match
-    // ~keep would hide the provider the client names through its `model_hint`.
-    let named = model
-        .split_once('/')
-        .and_then(|(prefix, _)| provider::detect_builtin_provider(&format!("{prefix}/")));
-    match named {
+    match rerank_wire_provider(model) {
         Some(named) => named.transform_rerank_response(raw),
         None => resolved.transform_rerank_response(raw),
     }
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// Word a rerank request for the provider that reads it.
+///
+/// The provider is chosen as for the reply: the `provider/` prefix of the model, else the
+/// provider the request resolved to, which for a client with a `base_url` and a
+/// `model_hint` follows the hint.
+fn transform_rerank_request(resolved: &dyn Provider, model: &str, body: &mut serde_json::Value) -> Result<()> {
+    match rerank_wire_provider(model) {
+        Some(named) => named.transform_rerank_request(body),
+        None => resolved.transform_rerank_request(body),
+    }
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// The rerank path for `model`, chosen as for the request and the reply: the `provider/`
+/// prefix of the model, else the provider the request resolved to.
+fn rerank_endpoint<'a>(resolved: &'a dyn Provider, model: &str) -> &'a str {
+    match rerank_wire_provider(model) {
+        Some(named) => provider::rerank_shape::rerank_path_of(named.name()),
+        None => resolved.rerank_path(),
+    }
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// The built-in provider that the `provider/` prefix of a rerank model names.
+fn rerank_wire_provider(model: &str) -> Option<Box<dyn Provider>> {
+    // ~keep Only the `provider/` prefix names a provider here. A bare model such as `rerank-2` can
+    // ~keep match a registry model prefix of a provider that has no rerank step, and that match
+    // ~keep would hide the provider the client names through its `model_hint`.
+    model
+        .split_once('/')
+        .and_then(|(prefix, _)| provider::detect_builtin_provider(&format!("{prefix}/")))
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// The provider a client resolves at construction, and whether its hint chose it.
+struct BuiltProvider {
+    provider: Arc<dyn Provider>,
+    /// True when `model_hint` selected `provider`. A bare model name then stays on it.
+    hint_pins_provider: bool,
+    /// False when the client reads no key from the environment: its key variable,
+    /// Bedrock's AWS variables and Vertex AI's default Google access token.
+    environment_keys: bool,
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
 /// Resolve the provider to use for all requests on this client.
 ///
-/// Priority:
-/// 1. Explicit `base_url` in config:
-///    - If `model_hint` identifies a provider with a non-standard URL format
-///      (Azure embeds the deployment name and `?api-version=…`), construct
-///      that provider with the override (issue #83).
-///    - Otherwise, treat the override as a generic OpenAI-compatible endpoint
-///      (LM Studio, Ollama, vLLM, gateways, etc.).  Models are sent verbatim
-///      except for a leading `custom/` and a leading `X/` where `X` is the
-///      provider named by `model_hint` (issue #249).
-/// 2. `model_hint` -> auto-detect by model name prefix.
-/// 3. Default -> OpenAI.
-fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<Arc<dyn Provider>> {
-    if let Some(ref base_url) = config.base_url {
-        if let Some(model) = model_hint
-            && model.starts_with("azure/")
-        {
-            return Ok(Arc::new(provider::azure::AzureProvider::with_base_url(
-                base_url.clone(),
-            )));
-        }
-        if let Some(model) = model_hint
-            && model.starts_with("anthropic/")
-        {
-            return Ok(Arc::new(provider::anthropic::AnthropicProvider::with_base_url(
-                base_url.clone(),
-            )));
-        }
-        if let Some(model) = model_hint
-            && (model.starts_with("gemini/") || model.starts_with("google_ai/"))
-        {
-            return Ok(Arc::new(provider::google_ai::GoogleAiProvider::with_base_url(
-                base_url.clone(),
-            )));
-        }
-        if let Some(model) = model_hint
-            && model.starts_with("vertex_ai/")
-        {
-            return Ok(Arc::new(provider::vertex::VertexAiProvider::with_base_url(
-                base_url.clone(),
-            )));
-        }
-        if let Some(model) = model_hint
-            && model.starts_with("bedrock/")
-        {
-            return Ok(Arc::new(
-                build_bedrock_provider_config(config).with_base_url(base_url.clone()),
-            ));
-        }
-        return Ok(Arc::new(OpenAiCompatibleProvider {
+/// One rule decides the route, and `base_url` plays no part in it:
+/// 1. `model_hint` selects a built-in provider, by its bare name (`cohere`), by the
+///    `provider/model` form (`cohere/command-r-plus`) or by a model name it knows. A hint
+///    that names a registry provider with no route is refused, unless a `base_url` supplies one.
+/// 2. A `base_url` changes only the host. The selected provider keeps its request body, its
+///    paths and its reply handling. A hint that selects no provider, and no hint, give a
+///    generic OpenAI-compatible provider at the `base_url` (LM Studio, Ollama, vLLM,
+///    gateways). Models are sent verbatim except for a leading `custom/` and a leading `X/`
+///    where `X` is the provider named by `model_hint` (issue #249).
+/// 3. Without a `base_url`, a hint that selects no provider, and no hint, give OpenAI.
+///
+/// With a `base_url`, the client reads a key from the environment only when the hint
+/// names its provider in the `provider/model` form, see [`reads_environment_keys`].
+fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Result<BuiltProvider> {
+    let hinted = match model_hint {
+        Some(hint) => match (route_hint(config, hint), config.effective_base_url()) {
+            (Ok(routed), _) => routed,
+            // ~keep A registry provider with no route of its own is reachable through a `base_url`.
+            (Err(_), Some(_)) => None,
+            (Err(error), None) => return Err(error),
+        },
+        None => None,
+    };
+    let hint_pins_provider = hinted.is_some();
+    let environment_keys = match (hinted.as_deref(), model_hint) {
+        (Some(routed), Some(hint)) => reads_environment_keys(config, routed, hint),
+        _ => true,
+    };
+    let provider: Arc<dyn Provider> = match (hinted, config.effective_base_url()) {
+        (Some(routed), Some(base_url)) => Arc::from(provider::on_base_url(routed, base_url)),
+        (Some(routed), None) => Arc::from(routed),
+        (None, Some(base_url)) => Arc::new(OpenAiCompatibleProvider {
             name: "custom".into(),
-            base_url: base_url.clone(),
+            base_url: base_url.to_owned(),
             env_var: None,
             model_prefixes: vec![],
             hint_provider: model_hint.and_then(provider::hint_provider_name),
-        }));
-    }
+        }),
+        (None, None) => Arc::new(OpenAiProvider),
+    };
+    Ok(BuiltProvider {
+        provider,
+        hint_pins_provider,
+        environment_keys,
+    })
+}
 
-    if let Some(model) = model_hint {
-        if model.starts_with("bedrock/") {
-            return Ok(build_bedrock_provider(config));
-        }
-        if let Some(p) = provider::route_model(model)? {
-            return Ok(Arc::from(p));
-        }
-        provider::refuse_unrouted_hint(model)?;
-    }
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// Whether a client whose hint selected `provider` reads a key from the environment.
+///
+/// Without a `base_url`, it does. With a `base_url`, only a hint that names the provider by
+/// its `provider/` prefix (`anthropic/claude-x`, `bedrock/m`) does: the request goes to a
+/// host the caller chose, and a bare name (`anthropic`) or a model name (`claude-x`) is
+/// read as a choice of wire format only, so it sends no key from the environment there.
+fn reads_environment_keys(config: &ClientConfig, provider: &dyn Provider, hint: &str) -> bool {
+    config.effective_base_url().is_none() || provider.strip_model_prefix(hint) != hint
+}
 
-    Ok(Arc::new(OpenAiProvider))
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// The provider that a hint selects. Bedrock is built from the client config, which
+/// carries its region and AWS keys. With a `base_url`, only a built-in provider answers:
+/// a custom provider brings its own host, and the `base_url` names the host here.
+fn route_hint(config: &ClientConfig, hint: &str) -> Result<Option<Box<dyn Provider>>> {
+    if names_bedrock(hint) {
+        let bedrock = build_bedrock_provider_config(config);
+        let environment_keys = reads_environment_keys(config, &bedrock, hint);
+        return Ok(Some(Box::new(bedrock.with_environment_keys(environment_keys))));
+    }
+    if config.effective_base_url().is_some() {
+        return provider::route_builtin_hint(hint);
+    }
+    provider::route_hint(hint)
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+/// True for `bedrock` and `bedrock/...`.
+fn names_bedrock(hint_or_model: &str) -> bool {
+    hint_or_model == "bedrock" || hint_or_model.starts_with("bedrock/")
+}
+
+/// The provider for a model with another provider's prefix on a client whose hint names Ollama
+/// and whose `base_url` is set.
+///
+/// Only a bare model goes to the native API on such a client. A model such as `openai/m` or
+/// `groq/m` goes to the OpenAI-compatible endpoint at the `base_url`, where a client without the
+/// hint sends it, with the model name as given. `None` for every other client.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn prefixed_model_provider(config: &ClientConfig, model_hint: Option<&str>) -> Option<Arc<dyn Provider>> {
+    let base_url = config.effective_base_url()?;
+    model_hint.filter(|hint| provider::ollama::OllamaProvider::names_hint(hint))?;
+    Some(Arc::new(OpenAiCompatibleProvider {
+        name: "custom".into(),
+        base_url: base_url.to_owned(),
+        env_var: None,
+        model_prefixes: vec![],
+        // ~keep No hint provider: the native provider owns every `ollama/` and `ollama_chat/`
+        // model before this provider sees one, so there is no hint prefix left to strip.
+        hint_provider: None,
+    }))
 }
 
 /// Build a [`provider::bedrock::BedrockProvider`] from `config`, threading
@@ -1314,6 +1611,10 @@ fn build_bedrock_provider_config(config: &ClientConfig) -> provider::bedrock::Be
     .with_dynamic_credentials(config.credential_provider.is_some())
 }
 
+/// The most pages that list models follows. A provider that never ends its paging is an error.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+const MAX_MODEL_LIST_PAGES: usize = 100;
+
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 impl LlmClient for DefaultClient {
     fn chat(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<ChatCompletionResponse>> {
@@ -1323,7 +1624,13 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             // ~keep Pass stream=false so providers can transform non-streaming chat correctly.
-            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))?;
+            let prepared = self.prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(false),
+            )?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1347,7 +1654,8 @@ impl LlmClient for DefaultClient {
                 prepared.body_bytes,
                 self.response_read_options(),
             )
-            .await?;
+            .await
+            .map_err(|e| prepared.provider.transform_error(e))?;
             prepared.provider.transform_response(&mut raw)?;
             let mut response = serde_json::from_value::<ChatCompletionResponse>(raw).map_err(LiterLlmError::from)?;
             attribute_chat_model(prepared.provider.as_ref(), &mut response.model, &req.model);
@@ -1365,71 +1673,15 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             // ~keep Prepare first for validation/transforms, then override with provider stream URL.
-            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))?;
-
-            // ~keep Streaming endpoints can differ from non-streaming provider URLs.
-            let bare_model = prepared.provider.strip_model_prefix(&req.model);
-            let url = prepared
-                .provider
-                .build_stream_url(prepared.provider.chat_completions_path(), bare_model);
-
-            let (auth_header, credential) = self
-                .resolve_auth_header_for_provider(prepared.provider.as_ref())
-                .await?;
-            let all_headers = self.all_headers_for_provider(
-                prepared.provider.as_ref(),
-                credential.as_ref(),
-                "POST",
-                &url,
-                &prepared.body_json,
-                &prepared.body_bytes,
+            let prepared = self.prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(true),
             )?;
-            let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
-            let auth = auth_header.as_ref().map(str_pair);
-            let require_terminal = requires_terminal_chat_chunk(prepared.provider.as_ref());
-            let provider_name = prepared.provider.name().to_owned();
 
-            let stream = match prepared.provider.stream_format() {
-                provider::StreamFormat::Sse => {
-                    let provider = Arc::clone(&prepared.provider);
-                    let state = std::sync::Mutex::new(ChatStreamState {
-                        model: req.model.clone(),
-                        ..Default::default()
-                    });
-                    let parse_event = move |data: &str| parse_chat_stream_event(provider.as_ref(), &state, data);
-                    http::streaming::post_stream_bounded(
-                        &self.http_stream,
-                        http::request::StreamingPost {
-                            url: &url,
-                            auth_header: auth,
-                            extra_headers: &extra,
-                            body: prepared.body_bytes,
-                        },
-                        parse_event,
-                        self.response_read_options(),
-                    )
-                    .await?
-                }
-                provider::StreamFormat::AwsEventStream => {
-                    http::eventstream::post_eventstream_bounded(
-                        &self.http_stream,
-                        http::request::StreamingPost {
-                            url: &url,
-                            auth_header: auth,
-                            extra_headers: &extra,
-                            body: prepared.body_bytes,
-                        },
-                        provider::bedrock::parse_bedrock_stream_event,
-                        self.response_read_options(),
-                    )
-                    .await?
-                }
-            };
-            Ok(if require_terminal {
-                RequireTerminalChunk::wrap(stream, provider_name)
-            } else {
-                stream
-            })
+            self.send_chat_stream(&req.model, prepared).await
         })
     }
 
@@ -1440,7 +1692,7 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             // ~keep Embeddings have no stream flag; passing None prevents inserting one.
-            let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, None)?;
+            let prepared = self.prepare_embedding_request(&req)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1464,8 +1716,9 @@ impl LlmClient for DefaultClient {
                 prepared.body_bytes,
                 self.response_read_options(),
             )
-            .await?;
-            prepared.provider.transform_response(&mut raw)?;
+            .await
+            .map_err(|e| prepared.provider.transform_error(e))?;
+            prepared.provider.transform_embedding_response(&mut raw, &req.model)?;
             serde_json::from_value::<EmbeddingResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -1477,23 +1730,33 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             // ~keep list_models has no model string, so use the construction-time provider.
-            let url = self.provider.build_url(self.provider.models_path(), "");
-            let (auth_header, credential) = self.resolve_auth_header().await?;
-            let auth = auth_header.as_ref().map(str_pair);
-            let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
-            let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
+            let mut url = self.provider.build_url(self.provider.models_path(), "");
+            let mut listing: Option<ModelsListResponse> = None;
+            for _ in 0..MAX_MODEL_LIST_PAGES {
+                let (auth_header, credential) = self.resolve_auth_header().await?;
+                let auth = auth_header.as_ref().map(str_pair);
+                let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
+                let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let mut raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
-            self.provider.transform_response(&mut raw)?;
-            serde_json::from_value::<ModelsListResponse>(raw).map_err(LiterLlmError::from)
+                let mut raw =
+                    http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                        .await
+                        .map_err(|e| self.provider.transform_error(e))?;
+                let next_url = self.provider.next_models_page_url(&url, &raw);
+                self.provider.transform_response(&mut raw)?;
+                let page = serde_json::from_value::<ModelsListResponse>(raw).map_err(LiterLlmError::from)?;
+                match listing.as_mut() {
+                    Some(listing) => listing.data.extend(page.data),
+                    None => listing = Some(page),
+                }
+                match next_url {
+                    Some(next_url) => url = next_url,
+                    None => return Ok(listing.unwrap_or_default()),
+                }
+            }
+            Err(LiterLlmError::InternalError {
+                message: format!("the model list did not end after {MAX_MODEL_LIST_PAGES} pages"),
+            })
         })
     }
 
@@ -1504,7 +1767,13 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             let model = req.model.as_deref().unwrap_or_default();
-            let prepared = self.prepare_request(&req, |p| p.image_generations_path(), model, None)?;
+            let prepared = self.prepare_request(
+                &req,
+                |p| p.image_generations_path(),
+                model,
+                provider::Endpoint::Image,
+                None,
+            )?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1540,7 +1809,13 @@ impl LlmClient for DefaultClient {
             return managed.speech(req);
         }
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.audio_speech_path(), &req.model, None)?;
+            let prepared = self.prepare_request(
+                &req,
+                |p| p.audio_speech_path(),
+                &req.model,
+                provider::Endpoint::Audio,
+                None,
+            )?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1574,7 +1849,13 @@ impl LlmClient for DefaultClient {
             return managed.transcribe(req);
         }
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.audio_transcriptions_path(), &req.model, None)?;
+            let prepared = self.prepare_request(
+                &req,
+                |p| p.audio_transcriptions_path(),
+                &req.model,
+                provider::Endpoint::Audio,
+                None,
+            )?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1611,7 +1892,13 @@ impl LlmClient for DefaultClient {
         }
         Box::pin(async move {
             let model = req.model.as_deref().unwrap_or_default();
-            let prepared = self.prepare_request(&req, |p| p.moderations_path(), model, None)?;
+            let prepared = self.prepare_request(
+                &req,
+                |p| p.moderations_path(),
+                model,
+                provider::Endpoint::Moderation,
+                None,
+            )?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1647,7 +1934,14 @@ impl LlmClient for DefaultClient {
             return managed.rerank(req);
         }
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.rerank_path(), &req.model, None)?;
+            let prepared = self.prepare_request_with(
+                &req,
+                |p| rerank_endpoint(p, &req.model),
+                &req.model,
+                provider::Endpoint::Rerank,
+                None,
+                |resolved, body| transform_rerank_request(resolved, &req.model, body),
+            )?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1683,7 +1977,8 @@ impl LlmClient for DefaultClient {
             return managed.search(req);
         }
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.search_path(), &req.model, None)?;
+            let prepared =
+                self.prepare_request(&req, |p| p.search_path(), &req.model, provider::Endpoint::Search, None)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1719,7 +2014,7 @@ impl LlmClient for DefaultClient {
             return managed.ocr(req);
         }
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.ocr_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.ocr_path(), &req.model, provider::Endpoint::Ocr, None)?;
 
             let (auth_header, credential) = self
                 .resolve_auth_header_for_provider(prepared.provider.as_ref())
@@ -1754,7 +2049,13 @@ impl LlmClient for DefaultClient {
 impl LlmClientRaw for DefaultClient {
     fn chat_raw(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<RawExchange<ChatCompletionResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))?;
+            let prepared = self.prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(false),
+            )?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -1779,7 +2080,8 @@ impl LlmClientRaw for DefaultClient {
                 prepared.body_bytes,
                 self.response_read_options(),
             )
-            .await?;
+            .await
+            .map_err(|e| prepared.provider.transform_error(e))?;
 
             let raw_response = Some(raw.clone());
             prepared.provider.transform_response(&mut raw)?;
@@ -1799,72 +2101,23 @@ impl LlmClientRaw for DefaultClient {
         req: ChatCompletionRequest,
     ) -> BoxFuture<'_, Result<RawStreamExchange<BoxStream<'static, Result<ChatCompletionChunk>>>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))?;
+            let prepared = self.prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(true),
+            )?;
             let raw_request = prepared.body_json.clone();
 
-            let bare_model = prepared.provider.strip_model_prefix(&req.model);
-            let url = prepared
-                .provider
-                .build_stream_url(prepared.provider.chat_completions_path(), bare_model);
-
-            let (auth_header, credential) = self
-                .resolve_auth_header_for_provider(prepared.provider.as_ref())
-                .await?;
-            let all_headers = self.all_headers_for_provider(
-                prepared.provider.as_ref(),
-                credential.as_ref(),
-                "POST",
-                &url,
-                &prepared.body_json,
-                &prepared.body_bytes,
-            )?;
-            let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
-            let auth = auth_header.as_ref().map(str_pair);
-
-            let stream = match prepared.provider.stream_format() {
-                provider::StreamFormat::Sse => {
-                    let provider = Arc::clone(&prepared.provider);
-                    let state = std::sync::Mutex::new(ChatStreamState {
-                        model: req.model.clone(),
-                        ..Default::default()
-                    });
-                    let parse_event = move |data: &str| parse_chat_stream_event(provider.as_ref(), &state, data);
-                    http::streaming::post_stream_bounded(
-                        &self.http_stream,
-                        http::request::StreamingPost {
-                            url: &url,
-                            auth_header: auth,
-                            extra_headers: &extra,
-                            body: prepared.body_bytes,
-                        },
-                        parse_event,
-                        self.response_read_options(),
-                    )
-                    .await?
-                }
-                provider::StreamFormat::AwsEventStream => {
-                    http::eventstream::post_eventstream_bounded(
-                        &self.http_stream,
-                        http::request::StreamingPost {
-                            url: &url,
-                            auth_header: auth,
-                            extra_headers: &extra,
-                            body: prepared.body_bytes,
-                        },
-                        provider::bedrock::parse_bedrock_stream_event,
-                        self.response_read_options(),
-                    )
-                    .await?
-                }
-            };
-
+            let stream = self.send_chat_stream(&req.model, prepared).await?;
             Ok(RawStreamExchange { stream, raw_request })
         })
     }
 
     fn embed_raw(&self, req: EmbeddingRequest) -> BoxFuture<'_, Result<RawExchange<EmbeddingResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, None)?;
+            let prepared = self.prepare_embedding_request(&req)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -1889,10 +2142,11 @@ impl LlmClientRaw for DefaultClient {
                 prepared.body_bytes,
                 self.response_read_options(),
             )
-            .await?;
+            .await
+            .map_err(|e| prepared.provider.transform_error(e))?;
 
             let raw_response = Some(raw.clone());
-            prepared.provider.transform_response(&mut raw)?;
+            prepared.provider.transform_embedding_response(&mut raw, &req.model)?;
             let data = serde_json::from_value::<EmbeddingResponse>(raw).map_err(LiterLlmError::from)?;
 
             Ok(RawExchange {
@@ -1906,7 +2160,13 @@ impl LlmClientRaw for DefaultClient {
     fn image_generate_raw(&self, req: CreateImageRequest) -> BoxFuture<'_, Result<RawExchange<ImagesResponse>>> {
         Box::pin(async move {
             let model = req.model.as_deref().unwrap_or_default();
-            let prepared = self.prepare_request(&req, |p| p.image_generations_path(), model, None)?;
+            let prepared = self.prepare_request(
+                &req,
+                |p| p.image_generations_path(),
+                model,
+                provider::Endpoint::Image,
+                None,
+            )?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -1950,7 +2210,13 @@ impl LlmClientRaw for DefaultClient {
         req: CreateTranscriptionRequest,
     ) -> BoxFuture<'_, Result<RawExchange<TranscriptionResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.audio_transcriptions_path(), &req.model, None)?;
+            let prepared = self.prepare_request(
+                &req,
+                |p| p.audio_transcriptions_path(),
+                &req.model,
+                provider::Endpoint::Audio,
+                None,
+            )?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -1992,7 +2258,13 @@ impl LlmClientRaw for DefaultClient {
     fn moderate_raw(&self, req: ModerationRequest) -> BoxFuture<'_, Result<RawExchange<ModerationResponse>>> {
         Box::pin(async move {
             let model = req.model.as_deref().unwrap_or_default();
-            let prepared = self.prepare_request(&req, |p| p.moderations_path(), model, None)?;
+            let prepared = self.prepare_request(
+                &req,
+                |p| p.moderations_path(),
+                model,
+                provider::Endpoint::Moderation,
+                None,
+            )?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -2033,7 +2305,14 @@ impl LlmClientRaw for DefaultClient {
 
     fn rerank_raw(&self, req: RerankRequest) -> BoxFuture<'_, Result<RawExchange<RerankResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.rerank_path(), &req.model, None)?;
+            let prepared = self.prepare_request_with(
+                &req,
+                |p| rerank_endpoint(p, &req.model),
+                &req.model,
+                provider::Endpoint::Rerank,
+                None,
+                |resolved, body| transform_rerank_request(resolved, &req.model, body),
+            )?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -2074,7 +2353,8 @@ impl LlmClientRaw for DefaultClient {
 
     fn search_raw(&self, req: SearchRequest) -> BoxFuture<'_, Result<RawExchange<SearchResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.search_path(), &req.model, None)?;
+            let prepared =
+                self.prepare_request(&req, |p| p.search_path(), &req.model, provider::Endpoint::Search, None)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -2115,7 +2395,7 @@ impl LlmClientRaw for DefaultClient {
 
     fn ocr_raw(&self, req: OcrRequest) -> BoxFuture<'_, Result<RawExchange<OcrResponse>>> {
         Box::pin(async move {
-            let prepared = self.prepare_request(&req, |p| p.ocr_path(), &req.model, None)?;
+            let prepared = self.prepare_request(&req, |p| p.ocr_path(), &req.model, provider::Endpoint::Ocr, None)?;
             let raw_request = prepared.body_json.clone();
 
             let (auth_header, credential) = self
@@ -2190,6 +2470,7 @@ impl FileClient for DefaultClient {
                 &extra,
                 form,
                 self.config.max_response_bytes,
+                Some(self.config.timeout),
             )
             .await?;
             serde_json::from_value::<FileObject>(raw).map_err(LiterLlmError::from)
@@ -2209,15 +2490,8 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<FileObject>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2235,15 +2509,8 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "DELETE", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::delete_json_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::delete_json_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<DeleteResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2275,15 +2542,8 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<FileListResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2301,15 +2561,7 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            http::request::get_binary_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await
+            http::request::get_binary_bounded(&self.http, &url, auth, &extra, self.response_read_options()).await
         })
     }
 }
@@ -2353,15 +2605,8 @@ impl BatchClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<BatchObject>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2390,15 +2635,8 @@ impl BatchClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<BatchListResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2643,6 +2881,7 @@ impl ResponseClient for DefaultClient {
                     body: body_bytes,
                 },
                 parse_response_stream_event,
+                Some(response_event_is_terminal),
                 self.response_read_options(),
             )
             .await
@@ -2660,15 +2899,8 @@ impl ResponseClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(
-                &self.http,
-                &url,
-                auth,
-                &extra,
-                self.config.max_retries,
-                self.config.max_response_bytes,
-            )
-            .await?;
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                .await?;
             serde_json::from_value::<ResponseObject>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2755,6 +2987,24 @@ mod stream_termination_tests {
             &provider::anthropic::AnthropicProvider::default()
         ));
         assert!(requires_terminal_chat_chunk(&provider::cohere::CohereProvider));
+        assert!(requires_terminal_chat_chunk(
+            &provider::ollama::OllamaProvider::default()
+        ));
+        // ~keep Ollama is found by the capability of its native provider, not by its name: a
+        // custom provider called `ollama` is an OpenAI-compatible server.
+        let named_ollama = OpenAiCompatibleProvider {
+            name: "ollama".into(),
+            base_url: "http://localhost:11434/v1".into(),
+            env_var: None,
+            model_prefixes: vec![],
+            hint_provider: None,
+        };
+        assert!(!requires_terminal_chat_chunk(&named_ollama));
+        assert!(!named_ollama.stream_tool_call_indexes_restart());
+        // ~keep Bedrock is found by its event stream framing, not by its name.
+        let bedrock = provider::bedrock::BedrockProvider::from_config(Some("us-east-1".into()), None, None, None, None);
+        assert_eq!(bedrock.stream_format(), provider::StreamFormat::AwsEventStream);
+        assert!(requires_terminal_chat_chunk(&bedrock));
         assert!(!requires_terminal_chat_chunk(
             provider::detect_provider("openai/gpt-4o")
                 .expect("OpenAI is a built-in provider")
@@ -2853,7 +3103,9 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("https://resourceA.cognitiveservices.azure.com")
             .build();
-        let p = build_provider(&config, Some("azure/gpt-5-mini")).expect("provider should build");
+        let p = build_provider(&config, Some("azure/gpt-5-mini"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(p.name(), "azure");
         let url = p.build_url("/chat/completions", "gpt-5-mini");
         assert!(
@@ -2863,11 +3115,43 @@ mod build_provider_tests {
     }
 
     #[test]
+    fn ollama_hint_without_base_url_uses_the_native_provider_at_the_default_address() {
+        let config = ClientConfigBuilder::new("").build();
+        for hint in ["ollama", "ollama_chat", "ollama/llama3"] {
+            let p = build_provider(&config, Some(hint))
+                .expect("provider should build")
+                .provider;
+            assert_eq!(p.name(), "ollama", "hint {hint}");
+            assert_eq!(p.base_url(), "http://localhost:11434", "hint {hint}");
+            assert_eq!(p.models_path(), "/api/tags", "hint {hint}");
+        }
+        let openai = build_provider(&config, Some("openai"))
+            .expect("provider should build")
+            .provider;
+        assert_eq!(openai.name(), "openai");
+    }
+
+    #[test]
+    fn empty_base_url_on_an_ollama_model_uses_the_default_address() {
+        let config = ClientConfigBuilder::new("test-key").base_url("").build();
+        for hint in [Some("ollama"), Some("ollama/llama3")] {
+            let client = DefaultClient::new(config.clone(), hint).expect("client should build");
+            let p = client
+                .resolve_provider_for_model("ollama/llama3")
+                .expect("provider should resolve");
+            assert_eq!(p.name(), "ollama", "hint {hint:?}");
+            assert_eq!(p.base_url(), "http://localhost:11434", "hint {hint:?}");
+        }
+    }
+
+    #[test]
     fn non_azure_model_with_base_url_uses_openai_compatible() {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:11434/v1")
             .build();
-        let p = build_provider(&config, Some("llama3.1:8b")).expect("provider should build");
+        let p = build_provider(&config, Some("llama3.1:8b"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(p.name(), "custom");
         let url = p.build_url("/chat/completions", "llama3.1:8b");
         assert_eq!(url, "http://localhost:11434/v1/chat/completions");
@@ -2878,7 +3162,9 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:11434/v1?token=secret")
             .build();
-        let provider = build_provider(&config, Some("local-model")).expect("provider should build");
+        let provider = build_provider(&config, Some("local-model"))
+            .expect("provider should build")
+            .provider;
         let url = provider.build_url("/chat/completions", "local-model");
         assert_eq!(url, "http://localhost:11434/v1/chat/completions?token=secret");
     }
@@ -2895,7 +3181,9 @@ mod build_provider_tests {
             ("vertex_ai/gemini-2.5-flash", "vertex_ai", ":generateContent"),
             ("bedrock/anthropic.claude-v2", "bedrock", "/model/"),
         ] {
-            let provider = build_provider(&config, Some(model)).expect("provider should build");
+            let provider = build_provider(&config, Some(model))
+                .expect("provider should build")
+                .provider;
             let bare_model = provider.strip_model_prefix(model);
             let url = provider.build_url(provider.chat_completions_path(), bare_model);
             assert_eq!(provider.name(), expected_name);
@@ -2918,16 +3206,31 @@ mod build_provider_tests {
     }
 
     #[test]
+    fn rerank_reply_of_a_bedrock_model_maps_relevance_score() {
+        let provider = build_provider(&ClientConfigBuilder::new("k").build(), None)
+            .expect("provider should build")
+            .provider;
+        let mut body = serde_json::json!({"results": [{"index": 1, "relevanceScore": 0.9}]});
+        transform_rerank_reply(provider.as_ref(), "bedrock/amazon.rerank-v1:0", &mut body).unwrap();
+        assert_eq!(
+            body,
+            serde_json::json!({"results": [{"index": 1, "relevance_score": 0.9}]})
+        );
+    }
+
+    #[test]
     fn rerank_reply_follows_the_hint_of_a_client_with_a_base_url() {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:8080/v1")
             .build();
-        let provider = build_provider(&config, Some("voyage")).expect("provider should build");
+        let provider = build_provider(&config, Some("voyage"))
+            .expect("provider should build")
+            .provider;
         let mut body = serde_json::json!({"data": [{"index": 0, "relevance_score": 0.5}]});
         transform_rerank_reply(provider.as_ref(), "rerank-2", &mut body).unwrap();
         assert!(body.get("results").is_some() && body.get("data").is_none());
 
-        let unhinted = build_provider(&config, None).expect("provider should build");
+        let unhinted = build_provider(&config, None).expect("provider should build").provider;
         let mut body = serde_json::json!({"data": [{"index": 0, "relevance_score": 0.5}]});
         transform_rerank_reply(unhinted.as_ref(), "rerank-2", &mut body).unwrap();
         assert!(body.get("results").is_none() && body.get("data").is_some());
@@ -2939,7 +3242,9 @@ mod build_provider_tests {
             .base_url("http://localhost:11434/v1")
             .build();
 
-        let hinted = build_provider(&config, Some("openai")).expect("provider should build");
+        let hinted = build_provider(&config, Some("openai"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(hinted.strip_model_prefix("openai/gpt-4o-mini"), "gpt-4o-mini");
         assert_eq!(hinted.strip_model_prefix("custom/my-model"), "my-model");
         assert_eq!(hinted.strip_model_prefix("anthropic/claude-x"), "anthropic/claude-x");
@@ -2947,10 +3252,12 @@ mod build_provider_tests {
         assert_eq!(hinted.strip_model_prefix("llama3.1:8b"), "llama3.1:8b");
         assert_eq!(hinted.strip_model_prefix("openai/"), "openai/");
 
-        let hinted_with_model = build_provider(&config, Some("openai/gpt-4o-mini")).expect("provider should build");
+        let hinted_with_model = build_provider(&config, Some("openai/gpt-4o-mini"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(hinted_with_model.strip_model_prefix("openai/gpt-4o"), "gpt-4o");
 
-        let unhinted = build_provider(&config, None).expect("provider should build");
+        let unhinted = build_provider(&config, None).expect("provider should build").provider;
         assert_eq!(unhinted.strip_model_prefix("openai/gpt-4o-mini"), "openai/gpt-4o-mini");
         assert_eq!(unhinted.strip_model_prefix("custom/my-model"), "my-model");
     }
@@ -2958,7 +3265,9 @@ mod build_provider_tests {
     #[test]
     fn no_base_url_falls_through_to_detect_provider() {
         let config = ClientConfigBuilder::new("test-key").build();
-        let p = build_provider(&config, Some("azure/gpt-4o")).expect("provider should build");
+        let p = build_provider(&config, Some("azure/gpt-4o"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(p.name(), "azure");
     }
 
@@ -2967,7 +3276,9 @@ mod build_provider_tests {
         let config = ClientConfigBuilder::new("test-key")
             .base_url("https://proxy.internal/anthropic/")
             .build();
-        let p = build_provider(&config, Some("anthropic/claude-3-5-sonnet-20241022")).expect("provider should build");
+        let p = build_provider(&config, Some("anthropic/claude-3-5-sonnet-20241022"))
+            .expect("provider should build")
+            .provider;
         assert_eq!(p.name(), "anthropic");
         assert_eq!(p.base_url(), "https://proxy.internal/anthropic");
     }
@@ -2982,6 +3293,245 @@ mod build_provider_tests {
             provider::anthropic::AnthropicProvider::default().base_url(),
             "https://api.anthropic.com/v1"
         );
+    }
+
+    /// Every hint form that names a provider: the bare name and the `provider/model` form.
+    const ROUTED_HINTS: &[(&str, &str)] = &[
+        ("cohere", "cohere"),
+        ("cohere/command-r-plus", "cohere"),
+        ("mistral", "mistral"),
+        ("mistral/mistral-large-latest", "mistral"),
+        ("voyage", "voyage"),
+        ("anthropic", "anthropic"),
+        ("anthropic/claude-sonnet-4", "anthropic"),
+        ("gemini", "google_ai"),
+        ("gemini/gemini-2.0-flash", "google_ai"),
+        ("google_ai", "google_ai"),
+        ("vertex_ai", "vertex_ai"),
+        ("vertex_ai/gemini-2.0-flash", "vertex_ai"),
+        ("ollama", "ollama"),
+        ("groq", "groq"),
+        ("fireworks_ai", "fireworks_ai"),
+    ];
+
+    /// Revert line: make the `model_hint` branch in `build_provider` read only a
+    /// slash-form hint, or skip the hint when a `base_url` is set, and the bare names
+    /// below route to OpenAI or to the generic provider again.
+    #[test]
+    fn a_bare_hint_and_a_slash_hint_select_the_same_provider() {
+        let config = ClientConfigBuilder::new("test-key").build();
+        for (hint, expected) in ROUTED_HINTS {
+            let provider = build_provider(&config, Some(hint))
+                .expect("provider should build")
+                .provider;
+            assert_eq!(provider.name(), *expected, "hint {hint}");
+        }
+    }
+
+    /// Revert line: send a hint with a `base_url` to the generic OpenAI-compatible provider
+    /// (the `return Ok(Arc::new(OpenAiCompatibleProvider { .. }))` branch for every hint) and
+    /// the provider name, the path and the transformed body differ from the no-`base_url` route.
+    #[test]
+    fn base_url_changes_only_the_host_of_the_hinted_route() {
+        let body = || {
+            serde_json::json!({
+                "model": "m",
+                "messages": [{"role": "user", "content": "hi"}],
+                "top_p": 0.5,
+                "max_completion_tokens": 16,
+                "stream": false,
+                "stream_options": {"include_usage": true},
+            })
+        };
+        let plain_config = ClientConfigBuilder::new("test-key").build();
+        let based_config = ClientConfigBuilder::new("test-key")
+            .base_url("http://gateway.test/v1")
+            .build();
+        for (hint, _) in ROUTED_HINTS {
+            let plain = build_provider(&plain_config, Some(hint))
+                .expect("provider should build")
+                .provider;
+            let based = build_provider(&based_config, Some(hint))
+                .expect("provider should build")
+                .provider;
+            assert_eq!(based.name(), plain.name(), "hint {hint}");
+            assert_eq!(
+                based.chat_completions_path(),
+                plain.chat_completions_path(),
+                "hint {hint}"
+            );
+            let (mut plain_body, mut based_body) = (body(), body());
+            let plain_result = plain.transform_request(&mut plain_body).map_err(|e| e.to_string());
+            let based_result = based.transform_request(&mut based_body).map_err(|e| e.to_string());
+            assert_eq!(based_result, plain_result, "hint {hint}");
+            assert_eq!(based_body, plain_body, "hint {hint}");
+            let expected = BASE_URL_CHAT_URLS
+                .iter()
+                .find(|(listed, _)| listed == hint)
+                .map(|(_, url)| *url)
+                .unwrap_or_else(|| panic!("hint {hint} has no expected chat URL"));
+            let url = based.build_url(based.chat_completions_path(), "m");
+            assert_eq!(url, expected, "hint {hint}");
+        }
+    }
+
+    /// The chat URL of each routed hint at the base_url `http://gateway.test/v1`.
+    ///
+    /// Native Ollama drops a trailing `/v1` from its address: its route is `/api/chat` at the host.
+    const BASE_URL_CHAT_URLS: &[(&str, &str)] = &[
+        ("cohere", "http://gateway.test/v1/chat"),
+        ("cohere/command-r-plus", "http://gateway.test/v1/chat"),
+        ("mistral", "http://gateway.test/v1/chat/completions"),
+        (
+            "mistral/mistral-large-latest",
+            "http://gateway.test/v1/chat/completions",
+        ),
+        ("voyage", "http://gateway.test/v1/chat/completions"),
+        ("anthropic", "http://gateway.test/v1/messages"),
+        ("anthropic/claude-sonnet-4", "http://gateway.test/v1/messages"),
+        ("gemini", "http://gateway.test/v1/models/m:generateContent"),
+        (
+            "gemini/gemini-2.0-flash",
+            "http://gateway.test/v1/models/m:generateContent",
+        ),
+        ("google_ai", "http://gateway.test/v1/models/m:generateContent"),
+        (
+            "vertex_ai",
+            "http://gateway.test/v1/publishers/google/models/m:generateContent",
+        ),
+        (
+            "vertex_ai/gemini-2.0-flash",
+            "http://gateway.test/v1/publishers/google/models/m:generateContent",
+        ),
+        ("ollama", "http://gateway.test/api/chat"),
+        ("groq", "http://gateway.test/v1/chat/completions"),
+        ("fireworks_ai", "http://gateway.test/v1/chat/completions"),
+    ];
+
+    /// Revert line: drop the `environment_keys` check from the Vertex AI default
+    /// token step in `DefaultClient::new`, and a bare `vertex_ai` hint at a base_url
+    /// gets the default Google access token for the base_url host.
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    fn a_bare_vertex_hint_at_a_base_url_gets_no_google_token() {
+        let config = ClientConfigBuilder::new("").base_url("http://gateway.test/v1").build();
+        let client = DefaultClient::new(config, Some("vertex_ai")).expect("client should build");
+        assert_eq!(client.provider.name(), "vertex_ai");
+        assert!(
+            client.config.credential_provider.is_none(),
+            "a bare hint at a base_url installs no default Google token source"
+        );
+
+        let config = ClientConfigBuilder::new("").base_url("http://gateway.test/v1").build();
+        let client = DefaultClient::new(config, Some("vertex_ai/gemini-2.0-flash")).expect("client should build");
+        assert!(
+            client.config.credential_provider.is_some(),
+            "a `vertex_ai/` hint at a base_url installs the default Google token source"
+        );
+    }
+
+    /// Revert line: read `config.base_url` instead of `config.effective_base_url()` in
+    /// `build_provider` and an empty `base_url` rebases the hinted provider onto an empty host.
+    #[test]
+    fn an_empty_base_url_routes_like_an_unset_one() {
+        let plain_config = ClientConfigBuilder::new("test-key").build();
+        let empty_config = ClientConfigBuilder::new("test-key").base_url("").build();
+        for (hint, _) in ROUTED_HINTS {
+            let plain = build_provider(&plain_config, Some(hint))
+                .expect("provider should build")
+                .provider;
+            let empty = build_provider(&empty_config, Some(hint))
+                .expect("provider should build")
+                .provider;
+            assert_eq!(empty.name(), plain.name(), "hint {hint}");
+            assert_eq!(empty.base_url(), plain.base_url(), "hint {hint}");
+            assert_eq!(
+                empty.chat_completions_path(),
+                plain.chat_completions_path(),
+                "hint {hint}"
+            );
+        }
+        let client = DefaultClient::new(empty_config, Some("cohere")).expect("client should build");
+        let routed = client
+            .resolve_provider_for_model("voyage/rerank-2")
+            .expect("provider resolves");
+        assert_eq!(routed.name(), "voyage", "an empty base_url pins no provider");
+    }
+
+    /// Revert line: drop the `hint_pins_provider` early return in `resolve_provider_for_model`
+    /// and a bare model name picks its provider by name pattern again (a `gemini-` model
+    /// goes to Google AI Studio under a `vertex_ai` or `groq` hint).
+    #[test]
+    fn a_bare_model_stays_on_the_hinted_provider() {
+        let config = ClientConfigBuilder::new("test-key").build();
+        let client = DefaultClient::new(config, Some("groq")).expect("client should build");
+        for model in ["llama3-8b", "gemini-2.0-flash", "claude-sonnet-4"] {
+            let provider = client.resolve_provider_for_model(model).expect("provider resolves");
+            assert_eq!(provider.name(), "groq", "model {model}");
+        }
+        let provider = client
+            .resolve_provider_for_model("anthropic/claude-sonnet-4")
+            .expect("provider resolves");
+        assert_eq!(provider.name(), "anthropic");
+    }
+
+    /// Revert line: route the hint through `provider::route_hint` when a `base_url` is set,
+    /// and the custom provider that claims `deepinfra/` takes the hint at the `base_url`.
+    #[test]
+    #[serial_test::serial(outbound_policy)]
+    fn a_custom_provider_does_not_take_a_hint_at_a_base_url() {
+        crate::provider::custom::register_custom_provider(crate::provider::custom::CustomProviderConfig {
+            name: "deepinfra-through-gateway".into(),
+            base_url: "https://gateway.example.com/v1".into(),
+            auth_header: crate::provider::custom::AuthHeaderFormat::Bearer,
+            model_prefixes: vec!["deepinfra/".into()],
+        })
+        .expect("registration should succeed");
+        let based_config = ClientConfigBuilder::new("test-key")
+            .base_url("http://localhost:8080/v1")
+            .build();
+        let based = build_provider(&based_config, Some("deepinfra")).map(|built| built.provider.name().to_owned());
+        let plain = build_provider(&ClientConfigBuilder::new("test-key").build(), Some("deepinfra"))
+            .map(|built| built.provider.name().to_owned());
+        crate::provider::custom::unregister_custom_provider("deepinfra-through-gateway")
+            .expect("unregister should succeed");
+
+        assert_eq!(based.expect("provider should build"), "deepinfra");
+        assert_eq!(plain.expect("provider should build"), "deepinfra-through-gateway");
+    }
+
+    /// Revert line: read `config.base_url` instead of `config.effective_base_url()` in `route_hint`,
+    /// and an empty `base_url` keeps the custom provider from answering the hint.
+    #[test]
+    #[serial_test::serial(outbound_policy)]
+    fn a_custom_provider_takes_a_hint_when_the_base_url_is_empty() {
+        crate::provider::custom::register_custom_provider(crate::provider::custom::CustomProviderConfig {
+            name: "deepinfra-empty-base-url".into(),
+            base_url: "https://gateway.example.com/v1".into(),
+            auth_header: crate::provider::custom::AuthHeaderFormat::Bearer,
+            model_prefixes: vec!["deepinfra/".into()],
+        })
+        .expect("registration should succeed");
+        let empty_config = ClientConfigBuilder::new("test-key").base_url("").build();
+        let empty = build_provider(&empty_config, Some("deepinfra")).map(|built| built.provider.name().to_owned());
+        crate::provider::custom::unregister_custom_provider("deepinfra-empty-base-url")
+            .expect("unregister should succeed");
+
+        assert_eq!(empty.expect("provider should build"), "deepinfra-empty-base-url");
+    }
+
+    /// Revert line: return the refusal when a `base_url` is set in `build_provider`, and a hint that
+    /// names a provider with no route of its own no longer reaches the `base_url`.
+    #[test]
+    fn a_hint_with_no_route_builds_at_a_base_url_and_is_refused_without_one() {
+        let based_config = ClientConfigBuilder::new("test-key")
+            .base_url("http://localhost:8080/v1")
+            .build();
+        let based = build_provider(&based_config, Some("snowflake")).expect("a base_url supplies the route");
+        assert_eq!(based.provider.name(), "custom");
+        assert!(!based.hint_pins_provider);
+        let plain = build_provider(&ClientConfigBuilder::new("test-key").build(), Some("snowflake"));
+        assert!(plain.is_err(), "no route and no base_url is refused");
     }
 
     #[test]
@@ -2999,7 +3549,13 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(false),
+            )
             .expect("prepare_request should not fail");
 
         assert!(
@@ -3011,6 +3567,104 @@ mod build_provider_tests {
             prepared.body_json["model"], "extra-body-override",
             "extra_body keys must override identically named top-level keys"
         );
+    }
+
+    fn cohere_client() -> DefaultClient {
+        DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("cohere/command-r"))
+            .expect("client construction should succeed")
+    }
+
+    #[test]
+    fn embedding_request_takes_the_embedding_body_of_the_provider() {
+        let req = EmbeddingRequest {
+            model: "cohere/embed-english-v3.0".into(),
+            input: crate::types::EmbeddingInput::Single("alpha".into()),
+            ..Default::default()
+        };
+
+        let prepared = cohere_client()
+            .prepare_embedding_request(&req)
+            .expect("prepare_embedding_request should not fail");
+
+        assert_eq!(prepared.url, "https://api.cohere.com/v2/embed");
+        assert_eq!(prepared.body_json["texts"], serde_json::json!(["alpha"]));
+        assert!(prepared.body_json.get("input").is_none());
+    }
+
+    #[test]
+    fn cohere_embedding_request_merges_extra_body_over_the_rebuilt_body() {
+        let req = EmbeddingRequest {
+            model: "cohere/embed-english-v3.0".into(),
+            input: crate::types::EmbeddingInput::Single("alpha".into()),
+            extra_body: Some(serde_json::json!({"input_type": "search_query"})),
+            ..Default::default()
+        };
+
+        let prepared = cohere_client()
+            .prepare_embedding_request(&req)
+            .expect("prepare_embedding_request should not fail");
+
+        assert_eq!(prepared.body_json["input_type"], "search_query");
+        assert_eq!(prepared.body_json["texts"], serde_json::json!(["alpha"]));
+        assert!(prepared.body_json.get("extra_body").is_none());
+    }
+
+    #[test]
+    fn non_embedding_bodies_with_input_are_not_rebuilt_as_embedding_bodies() {
+        let client = cohere_client();
+        let moderation = serde_json::json!({"model": "cohere/omni-moderation", "input": "some text"});
+        let speech = serde_json::json!({"model": "cohere/tts-1", "input": "hello", "voice": "alloy"});
+
+        let prepared = client
+            .prepare_request(
+                &moderation,
+                |p| p.moderations_path(),
+                "cohere/omni-moderation",
+                provider::Endpoint::Moderation,
+                None,
+            )
+            .expect("moderation request should prepare");
+        assert_eq!(prepared.body_json["input"], "some text");
+        assert!(prepared.body_json.get("texts").is_none());
+
+        let prepared = client
+            .prepare_request(
+                &speech,
+                |p| p.audio_speech_path(),
+                "cohere/tts-1",
+                provider::Endpoint::Audio,
+                None,
+            )
+            .expect("speech request should prepare");
+        assert_eq!(prepared.body_json["voice"], "alloy");
+        assert_eq!(prepared.body_json["input"], "hello");
+    }
+
+    #[test]
+    fn cohere_chat_request_takes_the_chat_body_of_the_provider() {
+        // Revert line: in `prepare_request_with`, run `transform_embedding_request` for every
+        // endpoint (or for `Endpoint::Chat`) to make this fail: the embed transform rejects a
+        // chat body, and the chat transform's `top_p` rename to `p` never runs.
+        let client = cohere_client();
+        let req = ChatCompletionRequest {
+            model: "cohere/command-r".into(),
+            messages: vec![],
+            top_p: Some(0.5),
+            ..Default::default()
+        };
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                None,
+            )
+            .expect("a Cohere chat request should prepare");
+
+        assert_eq!(prepared.body_json["p"], serde_json::json!(0.5));
+        assert!(prepared.body_json.get("top_p").is_none());
     }
 
     #[test]
@@ -3025,7 +3679,13 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(true),
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3047,7 +3707,13 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(false),
+            )
             .expect("prepare_request should not fail");
 
         assert!(
@@ -3075,7 +3741,13 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(false),
+            )
             .expect("prepare_request should not fail");
 
         assert!(
@@ -3365,7 +4037,13 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(false),
+            )
             .expect("prepare_request should not fail");
 
         assert!(
@@ -3390,7 +4068,13 @@ mod build_provider_tests {
         };
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(true),
+            )
             .expect("prepare_request should not fail");
 
         assert!(
@@ -3424,7 +4108,13 @@ mod build_provider_tests {
         let req = reasoning_none_request(model);
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(false),
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(prepared.body_json["thinking"], serde_json::json!({"type": "disabled"}));
@@ -3444,7 +4134,13 @@ mod build_provider_tests {
         let req = reasoning_none_request(model);
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(false),
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3462,7 +4158,13 @@ mod build_provider_tests {
         let req = reasoning_none_request("vertex_ai/gemini-2.5-flash");
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(false),
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3480,7 +4182,13 @@ mod build_provider_tests {
         let req = reasoning_none_request(model);
 
         let prepared = client
-            .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(false),
+            )
             .expect("prepare_request should not fail");
 
         assert_eq!(
@@ -3504,7 +4212,13 @@ mod build_provider_tests {
 
         for streaming in [false, true] {
             let prepared = client
-                .prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(streaming))
+                .prepare_request(
+                    &req,
+                    |p| p.chat_completions_path(),
+                    &req.model,
+                    provider::Endpoint::Chat,
+                    Some(streaming),
+                )
                 .expect("prepare_request should not fail");
             assert_eq!(
                 prepared.body_json["stream"], streaming,
@@ -3535,6 +4249,7 @@ mod build_provider_tests {
                 &req,
                 |provider| provider.chat_completions_path(),
                 &req.model,
+                provider::Endpoint::Chat,
                 Some(true),
             )
             .expect("prepare_request should not fail");
@@ -3556,6 +4271,7 @@ mod build_provider_tests {
                 &req,
                 |provider| provider.chat_completions_path(),
                 &req.model,
+                provider::Endpoint::Chat,
                 Some(false),
             )
             .expect("prepare_request should not fail");
@@ -3580,6 +4296,7 @@ mod build_provider_tests {
                 &req,
                 |provider| provider.chat_completions_path(),
                 &req.model,
+                provider::Endpoint::Chat,
                 Some(false),
             )
             .expect("prepare_request should not fail");
@@ -3612,5 +4329,721 @@ mod build_provider_tests {
         let details = usage.prompt_tokens_details.expect("cache details");
         assert_eq!(details.cached_tokens, 200);
         assert_eq!(details.cache_creation_tokens, 100);
+    }
+
+    fn embed_request(model: &str, extra_body: Option<serde_json::Value>) -> EmbeddingRequest {
+        EmbeddingRequest {
+            model: model.into(),
+            input: crate::types::EmbeddingInput::Single("what is rust?".into()),
+            extra_body,
+            ..Default::default()
+        }
+    }
+
+    fn bedrock_embed_client(model: &str) -> DefaultClient {
+        let config = ClientConfigBuilder::new("test-key")
+            .bedrock_credentials("test-access-key", "test-secret-key", None)
+            .build();
+        DefaultClient::new(config, Some(model)).expect("client construction should succeed")
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn bedrock_cohere_embed_keeps_search_document_when_the_caller_sets_no_input_type() {
+        let model = "bedrock/cohere.embed-english-v3";
+        let client = bedrock_embed_client(model);
+        let req = embed_request(model, None);
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
+            .expect("prepare_request should not fail");
+
+        assert_eq!(prepared.body_json["input_type"], "search_document");
+        assert_eq!(prepared.body_json["texts"], serde_json::json!(["what is rust?"]));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn bedrock_cohere_embed_takes_input_type_and_other_fields_from_extra_body() {
+        let model = "bedrock/cohere.embed-english-v3";
+        let client = bedrock_embed_client(model);
+        let req = embed_request(
+            model,
+            Some(serde_json::json!({"input_type": "search_query", "truncate": "END"})),
+        );
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
+            .expect("prepare_request should not fail");
+
+        assert_eq!(prepared.body_json["input_type"], "search_query");
+        assert_eq!(prepared.body_json["truncate"], "END");
+        assert!(prepared.body_json.get("extra_body").is_none());
+        let sent: serde_json::Value = serde_json::from_slice(&prepared.body_bytes).expect("body bytes are JSON");
+        assert_eq!(sent, prepared.body_json, "the signed bytes carry the merged body");
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn bedrock_titan_embed_takes_extra_body_fields() {
+        let model = "bedrock/amazon.titan-embed-text-v2:0";
+        let client = bedrock_embed_client(model);
+        let req = embed_request(model, Some(serde_json::json!({"normalize": false})));
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
+            .expect("prepare_request should not fail");
+
+        assert_eq!(prepared.body_json["inputText"], "what is rust?");
+        assert_eq!(prepared.body_json["normalize"], false);
+        assert!(prepared.body_json.get("extra_body").is_none());
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_sends_dimensions_as_output_dimensionality() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = EmbeddingRequest {
+            dimensions: Some(256),
+            ..embed_request("vertex_ai/text-embedding-005", None)
+        };
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["parameters"],
+            serde_json::json!({"outputDimensionality": 256})
+        );
+        assert_eq!(
+            prepared.body_json["instances"],
+            serde_json::json!([{"content": "what is rust?"}])
+        );
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_without_dimensions_sends_no_parameters() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = embed_request("vertex_ai/text-embedding-005", None);
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
+            .expect("prepare_request should not fail");
+
+        assert!(prepared.body_json.get("parameters").is_none());
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_takes_extra_body_fields() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = embed_request(
+            "vertex_ai/text-embedding-005",
+            Some(serde_json::json!({"parameters": {"autoTruncate": false}})),
+        );
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["parameters"],
+            serde_json::json!({"autoTruncate": false})
+        );
+        assert!(prepared.body_json.get("extra_body").is_none());
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_keeps_dimensions_when_extra_body_sets_parameters() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = EmbeddingRequest {
+            dimensions: Some(256),
+            ..embed_request(
+                "vertex_ai/text-embedding-005",
+                Some(serde_json::json!({"parameters": {"autoTruncate": false}})),
+            )
+        };
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["parameters"],
+            serde_json::json!({"outputDimensionality": 256, "autoTruncate": false})
+        );
+        assert!(prepared.body_json.get("extra_body").is_none());
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_embed_extra_body_parameters_override_the_dimensions_key() {
+        let _guard = VertexProjectGuard::set();
+        let client = vertex_client();
+        let req = EmbeddingRequest {
+            dimensions: Some(256),
+            ..embed_request(
+                "vertex_ai/text-embedding-005",
+                Some(serde_json::json!({"parameters": {"outputDimensionality": 512, "autoTruncate": false}})),
+            )
+        };
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json["parameters"],
+            serde_json::json!({"outputDimensionality": 512, "autoTruncate": false})
+        );
+    }
+
+    #[test]
+    fn gemini_api_embed_takes_extra_body_fields_in_each_request() {
+        for model in ["gemini/text-embedding-004", "google_ai/text-embedding-004"] {
+            let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
+                .expect("client construction should succeed");
+            let req = EmbeddingRequest {
+                input: crate::types::EmbeddingInput::Multiple(vec!["one".into(), "two".into()]),
+                dimensions: Some(128),
+                ..embed_request(
+                    model,
+                    Some(serde_json::json!({"taskType": "RETRIEVAL_QUERY", "title": "doc"})),
+                )
+            };
+
+            let prepared = client
+                .prepare_request(
+                    &req,
+                    |p| p.embeddings_path(),
+                    &req.model,
+                    provider::Endpoint::Embedding,
+                    None,
+                )
+                .expect("prepare_request should not fail");
+
+            let requests = prepared.body_json["requests"].as_array().expect("requests array");
+            assert_eq!(requests.len(), 2, "{model}");
+            for request in requests {
+                assert_eq!(request["taskType"], "RETRIEVAL_QUERY", "{model}");
+                assert_eq!(request["title"], "doc", "{model}");
+                assert_eq!(request["outputDimensionality"], 128, "{model}");
+            }
+            assert!(prepared.body_json.get("extra_body").is_none(), "{model}");
+            assert!(prepared.body_json.get("taskType").is_none(), "{model}");
+        }
+    }
+
+    #[test]
+    fn ollama_embed_takes_extra_body_fields() {
+        let model = "ollama/nomic-embed-text";
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
+            .expect("client construction should succeed");
+        let req = embed_request(
+            model,
+            Some(serde_json::json!({"truncate": false, "keep_alive": "5m", "num_ctx": 8192})),
+        );
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
+            .expect("prepare_request should not fail");
+
+        assert_eq!(prepared.body_json["options"]["num_ctx"], 8192);
+        assert!(prepared.body_json.get("num_ctx").is_none());
+        assert_eq!(prepared.body_json["truncate"], false);
+        assert_eq!(prepared.body_json["keep_alive"], "5m");
+        assert_eq!(prepared.body_json["input"], "what is rust?");
+        assert!(prepared.body_json.get("extra_body").is_none());
+    }
+
+    /// Every non-chat request type accepts `extra_body` and sends its keys as body fields.
+    #[test]
+    fn non_chat_requests_merge_extra_body_into_the_provider_body() {
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("openai/model"))
+            .expect("client construction should succeed");
+        let extra = Some(serde_json::json!({"provider_option": "value"}));
+        let model = "openai/model";
+
+        let bodies = vec![
+            (
+                "embed",
+                client.prepare_request(
+                    &embed_request(model, extra.clone()),
+                    |p| p.embeddings_path(),
+                    model,
+                    provider::Endpoint::Embedding,
+                    None,
+                ),
+            ),
+            (
+                "rerank",
+                client.prepare_request(
+                    &RerankRequest {
+                        model: model.into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.rerank_path(),
+                    model,
+                    provider::Endpoint::Rerank,
+                    None,
+                ),
+            ),
+            (
+                "image",
+                client.prepare_request(
+                    &CreateImageRequest {
+                        prompt: "a cat".into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.image_generations_path(),
+                    model,
+                    provider::Endpoint::Image,
+                    None,
+                ),
+            ),
+            (
+                "speech",
+                client.prepare_request(
+                    &CreateSpeechRequest {
+                        model: model.into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.audio_speech_path(),
+                    model,
+                    provider::Endpoint::Audio,
+                    None,
+                ),
+            ),
+            (
+                "transcription",
+                client.prepare_request(
+                    &CreateTranscriptionRequest {
+                        model: model.into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.audio_transcriptions_path(),
+                    model,
+                    provider::Endpoint::Audio,
+                    None,
+                ),
+            ),
+            (
+                "moderation",
+                client.prepare_request(
+                    &ModerationRequest {
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.moderations_path(),
+                    model,
+                    provider::Endpoint::Moderation,
+                    None,
+                ),
+            ),
+            (
+                "search",
+                client.prepare_request(
+                    &SearchRequest {
+                        model: model.into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.search_path(),
+                    model,
+                    provider::Endpoint::Search,
+                    None,
+                ),
+            ),
+            (
+                "ocr",
+                client.prepare_request(
+                    &OcrRequest {
+                        model: model.into(),
+                        extra_body: extra.clone(),
+                        ..Default::default()
+                    },
+                    |p| p.ocr_path(),
+                    model,
+                    provider::Endpoint::Ocr,
+                    None,
+                ),
+            ),
+        ];
+
+        assert_eq!(bodies.len(), 8);
+        for (kind, prepared) in bodies {
+            let prepared = prepared.unwrap_or_else(|e| panic!("{kind}: prepare_request failed: {e}"));
+            assert_eq!(prepared.body_json["provider_option"], "value", "{kind}: key is merged");
+            assert!(
+                prepared.body_json.get("extra_body").is_none(),
+                "{kind}: wrapper is removed"
+            );
+        }
+    }
+
+    #[test]
+    fn non_chat_request_without_extra_body_is_unchanged() {
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("openai/model"))
+            .expect("client construction should succeed");
+        let req = embed_request("openai/model", None);
+
+        let prepared = client
+            .prepare_request(
+                &req,
+                |p| p.embeddings_path(),
+                &req.model,
+                provider::Endpoint::Embedding,
+                None,
+            )
+            .expect("prepare_request should not fail");
+
+        assert_eq!(
+            prepared.body_json,
+            serde_json::json!({"model": "model", "input": "what is rust?"})
+        );
+    }
+}
+
+/// Embed and rerank calls of a client that resolves the native Cohere provider.
+///
+/// A client with a `base_url` uses a generic provider, so these tests build the client for a
+/// `cohere/` model and then point the native provider at a local server.
+#[cfg(all(test, feature = "native-http", not(target_arch = "wasm32")))]
+mod cohere_client_tests {
+    use std::borrow::Cow;
+    use std::io::{BufRead, BufReader, Read, Write};
+    use std::net::TcpListener;
+
+    use serde_json::json;
+    use serial_test::serial;
+
+    use super::*;
+    use crate::client::config::ClientConfigBuilder;
+    use crate::provider::cohere::CohereProvider;
+    use crate::provider::{OutboundPolicy, set_outbound_policy};
+    use crate::types::EmbeddingInput;
+    use crate::types::rerank::RerankDocument;
+
+    static COHERE: CohereProvider = CohereProvider;
+
+    /// The native Cohere provider at a local base URL. Each method that Cohere overrides calls
+    /// Cohere's own, so the base URL is the only difference.
+    struct LocalCohere {
+        base_url: String,
+    }
+
+    impl Provider for LocalCohere {
+        fn name(&self) -> &str {
+            COHERE.name()
+        }
+
+        fn base_url(&self) -> &str {
+            &self.base_url
+        }
+
+        fn env_var(&self) -> Option<&str> {
+            COHERE.env_var()
+        }
+
+        fn auth_header<'a>(&'a self, api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
+            COHERE.auth_header(api_key)
+        }
+
+        fn matches_model(&self, model: &str) -> bool {
+            COHERE.matches_model(model)
+        }
+
+        fn strip_model_prefix<'m>(&self, model: &'m str) -> &'m str {
+            COHERE.strip_model_prefix(model)
+        }
+
+        fn chat_completions_path(&self) -> &str {
+            COHERE.chat_completions_path()
+        }
+
+        fn embeddings_path(&self) -> &str {
+            COHERE.embeddings_path()
+        }
+
+        fn models_path(&self) -> &str {
+            COHERE.models_path()
+        }
+
+        fn rerank_path(&self) -> &str {
+            COHERE.rerank_path()
+        }
+
+        fn build_url(&self, endpoint_path: &str, model: &str) -> String {
+            COHERE
+                .build_url(endpoint_path, model)
+                .replacen(COHERE.base_url(), &self.base_url, 1)
+        }
+
+        fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
+            COHERE.transform_request(body)
+        }
+
+        fn transform_embedding_request(&self, body: &mut serde_json::Value) -> Result<()> {
+            COHERE.transform_embedding_request(body)
+        }
+
+        fn transform_embedding_response(&self, body: &mut serde_json::Value, request_model: &str) -> Result<()> {
+            COHERE.transform_embedding_response(body, request_model)
+        }
+
+        fn parse_stream_event(&self, event_data: &str) -> Result<Option<ChatCompletionChunk>> {
+            COHERE.parse_stream_event(event_data)
+        }
+
+        fn transform_response(&self, body: &mut serde_json::Value) -> Result<()> {
+            COHERE.transform_response(body)
+        }
+    }
+
+    /// A client built for `model`, with its native Cohere provider moved to `base_url`.
+    fn local_cohere_client(model: &str, base_url: String) -> DefaultClient {
+        let mut client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
+            .expect("client construction should succeed");
+        assert_eq!(
+            client.provider.name(),
+            "cohere",
+            "a cohere/ model resolves the native provider"
+        );
+        client.provider = Arc::new(LocalCohere { base_url });
+        client
+    }
+
+    /// The request line and the JSON body of each request a local server took.
+    type Requests = Vec<(String, serde_json::Value)>;
+
+    /// A local server that answers `count` requests with `reply`, one request per connection.
+    fn serve(reply: &'static str, count: usize) -> (String, std::thread::JoinHandle<Requests>) {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind the local server");
+        let base_url = format!("http://{}/v2", listener.local_addr().expect("local address"));
+        let handle = std::thread::spawn(move || {
+            (0..count)
+                .map(|_| {
+                    let (stream, _) = listener.accept().expect("accept a request");
+                    let mut reader = BufReader::new(stream);
+                    let mut request_line = String::new();
+                    reader.read_line(&mut request_line).expect("read the request line");
+                    let mut length = 0;
+                    loop {
+                        let mut line = String::new();
+                        reader.read_line(&mut line).expect("read a header line");
+                        if line.trim_end().is_empty() {
+                            break;
+                        }
+                        if let Some((name, value)) = line.split_once(':')
+                            && name.eq_ignore_ascii_case("content-length")
+                        {
+                            length = value.trim().parse().expect("a numeric content length");
+                        }
+                    }
+                    let mut body = vec![0; length];
+                    reader.read_exact(&mut body).expect("read the request body");
+                    let response = format!(
+                        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{reply}",
+                        reply.len()
+                    );
+                    reader
+                        .get_mut()
+                        .write_all(response.as_bytes())
+                        .expect("write the reply");
+                    let body = serde_json::from_slice(&body).expect("a JSON request body");
+                    (request_line.trim_end().to_owned(), body)
+                })
+                .collect()
+        });
+        (base_url, handle)
+    }
+
+    const EMBED_MODEL: &str = "cohere/embed-english-v3.0";
+    const EMBED_REPLY: &str = r#"{"id":"e1","embeddings":{"float":[[0.5,0.25]]},"texts":["alpha"],"meta":{"billed_units":{"input_tokens":3}}}"#;
+
+    fn embed_request() -> EmbeddingRequest {
+        EmbeddingRequest {
+            model: EMBED_MODEL.into(),
+            input: EmbeddingInput::Single("alpha".into()),
+            ..Default::default()
+        }
+    }
+
+    /// Revert line: call `transform_response` in place of `transform_embedding_response` in
+    /// `embed` to make this test fail.
+    #[tokio::test]
+    #[serial(outbound_policy)]
+    async fn embed_of_a_cohere_model_sends_the_cohere_body_and_names_the_reply_model() {
+        set_outbound_policy(OutboundPolicy::Off);
+        let (base_url, server) = serve(EMBED_REPLY, 1);
+
+        let reply = local_cohere_client(EMBED_MODEL, base_url)
+            .embed(embed_request())
+            .await
+            .expect("the embed call should succeed");
+        let requests = server.join().expect("join the local server");
+
+        assert_eq!(requests[0].0, "POST /v2/embed HTTP/1.1");
+        assert_eq!(requests[0].1["texts"], json!(["alpha"]));
+        assert_eq!(reply.model, EMBED_MODEL);
+        assert_eq!(reply.data.len(), 1);
+        assert_eq!(reply.data[0].embedding, vec![0.5, 0.25]);
+        assert_eq!(reply.usage.map(|usage| usage.prompt_tokens), Some(3));
+    }
+
+    /// Revert line: call `transform_response` in place of `transform_embedding_response` in
+    /// `embed_raw` to make this test fail.
+    #[tokio::test]
+    #[serial(outbound_policy)]
+    async fn embed_raw_of_a_cohere_model_sends_the_cohere_body_and_names_the_reply_model() {
+        set_outbound_policy(OutboundPolicy::Off);
+        let (base_url, server) = serve(EMBED_REPLY, 1);
+
+        let exchange = local_cohere_client(EMBED_MODEL, base_url)
+            .embed_raw(embed_request())
+            .await
+            .expect("the embed_raw call should succeed");
+        let requests = server.join().expect("join the local server");
+
+        assert_eq!(requests[0].0, "POST /v2/embed HTTP/1.1");
+        assert_eq!(exchange.raw_request["texts"], json!(["alpha"]));
+        assert_eq!(exchange.raw_response.as_ref().map(|raw| &raw["id"]), Some(&json!("e1")));
+        assert_eq!(exchange.data.model, EMBED_MODEL);
+        assert_eq!(exchange.data.data[0].embedding, vec![0.5, 0.25]);
+    }
+
+    const RERANK_MODEL: &str = "cohere/rerank-v3.5";
+    const RERANK_REPLY: &str = r#"{"id":"r1","results":[{"index":1,"relevance_score":0.9},{"index":0,"relevance_score":0.1}],"meta":{"billed_units":{"search_units":1}}}"#;
+
+    fn rerank_request() -> RerankRequest {
+        RerankRequest {
+            model: RERANK_MODEL.into(),
+            query: "what is rust?".into(),
+            documents: vec![
+                RerankDocument::Text("a fungus".into()),
+                RerankDocument::Text("a language".into()),
+            ],
+            top_n: Some(2),
+            ..Default::default()
+        }
+    }
+
+    fn assert_cohere_rerank_body(line: &str, body: &serde_json::Value) {
+        assert_eq!(line, "POST /v2/rerank HTTP/1.1");
+        assert_eq!(
+            body,
+            &json!({
+                "model": "rerank-v3.5",
+                "query": "what is rust?",
+                "documents": ["a fungus", "a language"],
+                "top_n": 2
+            })
+        );
+    }
+
+    fn assert_cohere_rerank_reply(reply: &RerankResponse) {
+        assert_eq!(reply.id.as_deref(), Some("r1"));
+        let ranked: Vec<(u32, f64)> = reply
+            .results
+            .iter()
+            .map(|result| (result.index, result.relevance_score))
+            .collect();
+        assert_eq!(ranked, vec![(1, 0.9), (0, 0.1)]);
+    }
+
+    /// Revert line: in `prepare_request_with`, run `transform_embedding_request` for every
+    /// endpoint, or drop the rerank-specific step, to make this test fail.
+    #[tokio::test]
+    #[serial(outbound_policy)]
+    async fn rerank_of_a_cohere_model_sends_the_rerank_body_and_parses_the_reply() {
+        set_outbound_policy(OutboundPolicy::Off);
+        let (base_url, server) = serve(RERANK_REPLY, 2);
+        let client = local_cohere_client(RERANK_MODEL, base_url);
+
+        let reply = client
+            .rerank(rerank_request())
+            .await
+            .expect("the rerank call should succeed");
+        let exchange = client
+            .rerank_raw(rerank_request())
+            .await
+            .expect("the rerank_raw call should succeed");
+        let requests = server.join().expect("join the local server");
+
+        assert_cohere_rerank_body(&requests[0].0, &requests[0].1);
+        assert_cohere_rerank_reply(&reply);
+        assert_cohere_rerank_body(&requests[1].0, &requests[1].1);
+        assert_eq!(exchange.raw_request, requests[1].1);
+        assert_cohere_rerank_reply(&exchange.data);
     }
 }

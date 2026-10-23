@@ -30,8 +30,11 @@ async fn should_reject_binary_response_above_configured_limit() {
         &format!("http://{address}/"),
         None,
         &[],
-        0,
-        Some(RESPONSE_LIMIT),
+        ResponseReadOptions {
+            max_retries: 0,
+            max_response_bytes: Some(RESPONSE_LIMIT),
+            timeout: None,
+        },
     )
     .await;
     server.join().expect("join response server");
@@ -67,11 +70,25 @@ async fn request_body(operation: BodyOperation, url: &str, limit: Option<usize>)
                 ResponseReadOptions {
                     max_retries: 0,
                     max_response_bytes: limit,
+                    timeout: None,
                 },
             )
             .await
         }
-        BodyOperation::GetBinary => get_binary_bounded(&client, url, None, &[], 0, limit).await,
+        BodyOperation::GetBinary => {
+            get_binary_bounded(
+                &client,
+                url,
+                None,
+                &[],
+                ResponseReadOptions {
+                    max_retries: 0,
+                    max_response_bytes: limit,
+                    timeout: None,
+                },
+            )
+            .await
+        }
         operation => {
             let value = match operation {
                 BodyOperation::PostJson => {
@@ -84,15 +101,42 @@ async fn request_body(operation: BodyOperation, url: &str, limit: Option<usize>)
                         ResponseReadOptions {
                             max_retries: 0,
                             max_response_bytes: limit,
+                            timeout: None,
                         },
                     )
                     .await
                 }
                 BodyOperation::Multipart => {
-                    post_multipart_bounded(&client, url, None, &[], reqwest::multipart::Form::new(), limit).await
+                    post_multipart_bounded(&client, url, None, &[], reqwest::multipart::Form::new(), limit, None).await
                 }
-                BodyOperation::GetJson => get_json_raw_bounded(&client, url, None, &[], 0, limit).await,
-                BodyOperation::DeleteJson => delete_json_bounded(&client, url, None, &[], 0, limit).await,
+                BodyOperation::GetJson => {
+                    get_json_raw_bounded(
+                        &client,
+                        url,
+                        None,
+                        &[],
+                        ResponseReadOptions {
+                            max_retries: 0,
+                            max_response_bytes: limit,
+                            timeout: None,
+                        },
+                    )
+                    .await
+                }
+                BodyOperation::DeleteJson => {
+                    delete_json_bounded(
+                        &client,
+                        url,
+                        None,
+                        &[],
+                        ResponseReadOptions {
+                            max_retries: 0,
+                            max_response_bytes: limit,
+                            timeout: None,
+                        },
+                    )
+                    .await
+                }
                 _ => unreachable!(),
             }?;
             Ok(Bytes::from(serde_json::to_vec(&value).expect("serialize response")))
@@ -119,8 +163,11 @@ async fn successful_non_json_response_is_a_serialization_error() {
         &format!("http://{address}/"),
         None,
         &[],
-        0,
-        None,
+        ResponseReadOptions {
+            max_retries: 0,
+            max_response_bytes: None,
+            timeout: None,
+        },
     )
     .await;
     server.join().expect("join malformed response server");
@@ -251,9 +298,11 @@ async fn should_bound_final_stream_errors_without_limiting_successful_streams() 
             body: Bytes::from_static(b"{}"),
         },
         |_| Ok(None),
+        None,
         ResponseReadOptions {
             max_retries: 0,
             max_response_bytes: Some(BODY_LIMIT),
+            timeout: None,
         },
     )
     .await;
@@ -273,6 +322,7 @@ async fn should_bound_final_stream_errors_without_limiting_successful_streams() 
         ResponseReadOptions {
             max_retries: 0,
             max_response_bytes: Some(BODY_LIMIT),
+            timeout: None,
         },
     )
     .await;
@@ -356,8 +406,11 @@ async fn should_discard_oversized_retry_body_before_reading_bounded_final_succes
         &format!("http://{address}/"),
         None,
         &[],
-        1,
-        Some(BODY_LIMIT),
+        ResponseReadOptions {
+            max_retries: 1,
+            max_response_bytes: Some(BODY_LIMIT),
+            timeout: None,
+        },
     )
     .await;
     server.join().expect("join retry server");
@@ -385,9 +438,11 @@ async fn should_keep_successful_stream_traffic_above_retained_body_limit() {
             body: Bytes::from_static(b"{}"),
         },
         |event| Ok(Some(serde_json::from_str(event)?)),
+        None,
         ResponseReadOptions {
             max_retries: 0,
             max_response_bytes: Some(BODY_LIMIT),
+            timeout: None,
         },
     )
     .await;

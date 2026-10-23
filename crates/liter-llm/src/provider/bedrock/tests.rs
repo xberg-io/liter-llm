@@ -6,6 +6,10 @@ use super::*;
 use crate::provider::Provider;
 
 pub(super) fn provider() -> BedrockProvider {
+    provider_in("us-east-1")
+}
+
+fn provider_in(region: &str) -> BedrockProvider {
     // ~keep SAFETY: env vars are process-global; `#[serial]` on callers prevents races.
     unsafe { std::env::remove_var("BEDROCK_BASE_URL") };
     // ~keep Explicit dummy credentials so `transform_request`'s per-request
@@ -13,7 +17,7 @@ pub(super) fn provider() -> BedrockProvider {
     // regardless of the ambient AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY env state.
     // Without the feature, `validate()` rejects explicit credentials it cannot sign,
     // and passes a provider with none.
-    let p = BedrockProvider::new("us-east-1");
+    let p = BedrockProvider::new(region);
     if cfg!(feature = "bedrock") {
         p.with_credentials(
             Some("AKIATESTDUMMY".to_owned()),
@@ -392,8 +396,148 @@ fn build_url_other_path() {
     // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
     unsafe { std::env::remove_var("BEDROCK_CROSS_REGION") };
     let p = provider();
-    let url = p.build_url("/models", "any-model");
-    assert_eq!(url, "https://bedrock-runtime.us-east-1.amazonaws.com/models");
+    let url = p.build_url("/files", "any-model");
+    assert_eq!(url, "https://bedrock-runtime.us-east-1.amazonaws.com/files");
+}
+
+#[test]
+#[serial]
+fn build_url_list_models_uses_the_bedrock_control_plane_host() {
+    let p = provider();
+    assert_eq!(
+        p.build_url(p.models_path(), ""),
+        "https://bedrock.us-east-1.amazonaws.com/foundation-models"
+    );
+}
+
+#[test]
+#[serial]
+fn build_url_rerank_uses_the_bedrock_agent_runtime_host() {
+    let p = provider();
+    assert_eq!(
+        p.build_url(p.rerank_path(), "amazon.rerank-v1:0"),
+        "https://bedrock-agent-runtime.us-east-1.amazonaws.com/rerank"
+    );
+}
+
+#[test]
+#[serial]
+fn build_url_rerank_and_list_models_follow_the_region_dns_suffix() {
+    let china = BedrockProvider::new("cn-north-1");
+    assert_eq!(
+        china.build_url("/rerank", "m"),
+        "https://bedrock-agent-runtime.cn-north-1.amazonaws.com.cn/rerank"
+    );
+    assert_eq!(
+        china.build_url("/models", ""),
+        "https://bedrock.cn-north-1.amazonaws.com.cn/foundation-models"
+    );
+}
+
+#[test]
+#[serial]
+fn base_url_override_moves_rerank_and_list_models_with_the_rest() {
+    let p = provider().with_base_url("http://127.0.0.1:9000/");
+    assert_eq!(
+        p.build_url("/chat/completions", "m"),
+        "http://127.0.0.1:9000/model/m/converse"
+    );
+    assert_eq!(p.build_url("/rerank", "m"), "http://127.0.0.1:9000/rerank");
+    assert_eq!(p.build_url("/models", ""), "http://127.0.0.1:9000/models");
+}
+
+#[test]
+#[serial]
+fn base_url_from_the_environment_moves_rerank_and_list_models() {
+    // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
+    unsafe { std::env::set_var("BEDROCK_BASE_URL", "http://127.0.0.1:9001") };
+    let p = BedrockProvider::new("us-east-1");
+    unsafe { std::env::remove_var("BEDROCK_BASE_URL") };
+    assert_eq!(p.build_url("/rerank", "m"), "http://127.0.0.1:9001/rerank");
+    assert_eq!(p.build_url("/models", ""), "http://127.0.0.1:9001/models");
+}
+
+#[test]
+#[serial]
+fn transform_request_builds_the_bedrock_rerank_body() {
+    let p = provider();
+    let mut body = json!({
+        "model": "amazon.rerank-v1:0",
+        "query": "which is a fruit",
+        "documents": ["apple", {"text": "hammer"}],
+        "top_n": 1
+    });
+    p.transform_request(&mut body).unwrap();
+    assert_eq!(
+        body,
+        json!({
+            "queries": [{"type": "TEXT", "textQuery": {"text": "which is a fruit"}}],
+            "sources": [
+                {"type": "INLINE", "inlineDocumentSource": {"type": "TEXT", "textDocument": {"text": "apple"}}},
+                {"type": "INLINE", "inlineDocumentSource": {"type": "TEXT", "textDocument": {"text": "hammer"}}}
+            ],
+            "rerankingConfiguration": {
+                "type": "BEDROCK_RERANKING_MODEL",
+                "bedrockRerankingConfiguration": {
+                    "modelConfiguration": {
+                        "modelArn": "arn:aws:bedrock:us-east-1::foundation-model/amazon.rerank-v1:0"
+                    },
+                    "numberOfResults": 1
+                }
+            }
+        })
+    );
+}
+
+#[test]
+#[serial]
+fn transform_request_leaves_out_the_result_count_without_top_n() {
+    let p = provider();
+    let mut body = json!({"model": "amazon.rerank-v1:0", "query": "q", "documents": ["a"]});
+    p.transform_request(&mut body).unwrap();
+    assert!(
+        body.pointer("/rerankingConfiguration/bedrockRerankingConfiguration/numberOfResults")
+            .is_none()
+    );
+}
+
+#[test]
+#[serial]
+fn transform_rerank_response_maps_the_bedrock_reply() {
+    let p = provider();
+    let mut body = json!({
+        "results": [
+            {"index": 1, "relevanceScore": 0.9, "document": {"type": "TEXT", "textDocument": {"text": "apple"}}},
+            {"index": 0, "relevanceScore": 0.1}
+        ]
+    });
+    p.transform_rerank_response(&mut body).unwrap();
+    assert_eq!(
+        body,
+        json!({
+            "results": [
+                {"index": 1, "relevance_score": 0.9, "document": {"text": "apple"}},
+                {"index": 0, "relevance_score": 0.1}
+            ]
+        })
+    );
+}
+
+#[test]
+#[serial]
+fn transform_response_maps_foundation_models_to_a_model_list() {
+    let p = provider();
+    let mut body = json!({
+        "modelSummaries": [{"modelId": "amazon.titan-embed-text-v2:0", "providerName": "Amazon", "modelName": "Titan"}]
+    });
+    p.transform_response(&mut body).unwrap();
+    assert_eq!(
+        body,
+        json!({
+            "object": "list",
+            "data": [{"id": "amazon.titan-embed-text-v2:0", "object": "model", "created": 0, "owned_by": "Amazon"}]
+        })
+    );
 }
 
 #[test]
@@ -955,4 +1099,147 @@ fn should_reject_whitespace_only_resolved_credentials_without_changing_nonblank_
     ] {
         validate_resolved_credential(&credential).expect("nonblank bytes are accepted intact");
     }
+}
+
+fn rerank_model_arn(region: &str, model: &str) -> crate::error::Result<String> {
+    let mut body = json!({"model": model, "query": "q", "documents": ["a"]});
+    provider_in(region).transform_request(&mut body)?;
+    Ok(body
+        .pointer("/rerankingConfiguration/bedrockRerankingConfiguration/modelConfiguration/modelArn")
+        .and_then(|arn| arn.as_str())
+        .expect("a rerank body has a model ARN")
+        .to_owned())
+}
+
+#[test]
+#[serial]
+fn rerank_arn_carries_the_region_of_the_client() {
+    assert_eq!(
+        rerank_model_arn("eu-central-1", "amazon.rerank-v1:0").unwrap(),
+        "arn:aws:bedrock:eu-central-1::foundation-model/amazon.rerank-v1:0"
+    );
+}
+
+#[test]
+#[serial]
+fn rerank_arn_takes_the_partition_from_the_region() {
+    for (region, partition) in [
+        ("us-west-2", "aws"),
+        ("cn-north-1", "aws-cn"),
+        ("us-gov-west-1", "aws-us-gov"),
+        ("eusc-de-east-1", "aws-eusc"),
+    ] {
+        assert_eq!(
+            rerank_model_arn(region, "amazon.rerank-v1:0").unwrap(),
+            format!("arn:{partition}:bedrock:{region}::foundation-model/amazon.rerank-v1:0")
+        );
+    }
+}
+
+#[test]
+#[serial]
+fn rerank_model_that_is_an_arn_passes_unchanged() {
+    for arn in [
+        "arn:aws:bedrock:us-west-2::foundation-model/cohere.rerank-v3-5:0",
+        "arn:aws:bedrock:us-west-2:123456789012:inference-profile/us.amazon.rerank-v1:0",
+    ] {
+        assert_eq!(rerank_model_arn("us-east-1", arn).unwrap(), arn);
+    }
+}
+
+#[test]
+#[serial]
+fn rerank_refuses_an_inference_profile_id() {
+    for model in [
+        "us.amazon.rerank-v1:0",
+        "eu.amazon.rerank-v1:0",
+        "apac.cohere.rerank-v3-5:0",
+    ] {
+        let err = rerank_model_arn("us-east-1", model).unwrap_err();
+        assert!(
+            matches!(err, crate::error::LiterLlmError::BadRequest { status: 400, .. }),
+            "{model}: unexpected error: {err:?}"
+        );
+        assert!(err.to_string().contains(model), "{model}: unexpected error: {err}");
+    }
+}
+
+#[test]
+#[serial]
+fn rerank_refuses_an_empty_model() {
+    for model in ["", "  "] {
+        let err = rerank_model_arn("us-east-1", model).unwrap_err();
+        assert!(
+            matches!(err, crate::error::LiterLlmError::BadRequest { status: 400, .. }),
+            "{model:?}: unexpected error: {err:?}"
+        );
+    }
+}
+
+#[test]
+#[serial]
+fn rerank_refuses_a_document_that_is_not_text_with_a_400() {
+    let mut body = json!({"model": "amazon.rerank-v1:0", "query": "q", "documents": [{"image": "x"}]});
+    let err = provider().transform_request(&mut body).unwrap_err();
+    assert!(
+        matches!(err, crate::error::LiterLlmError::BadRequest { status: 400, .. }),
+        "unexpected error: {err:?}"
+    );
+}
+
+#[test]
+#[serial]
+fn chat_request_with_a_query_and_documents_stays_a_chat_request() {
+    let mut body = json!({
+        "model": "amazon.nova-lite-v1:0",
+        "messages": [{"role": "user", "content": "hi"}],
+        "query": "q",
+        "documents": ["a"]
+    });
+    provider().transform_request(&mut body).unwrap();
+    assert!(body.get("messages").is_some());
+    assert!(body.get("queries").is_none());
+}
+
+#[test]
+#[serial]
+fn foundation_model_without_a_provider_name_is_owned_by_bedrock() {
+    let mut body = json!({"modelSummaries": [{"modelId": "m1"}]});
+    provider().transform_response(&mut body).unwrap();
+    assert_eq!(body["data"][0]["owned_by"], "bedrock");
+}
+
+/// Revert line: pass `use_environment: true` to `sigv4_sign` in `signing_headers`, and a
+/// provider without environment keys signs with `AWS_SESSION_TOKEN` from the environment.
+#[test]
+#[serial]
+#[cfg(feature = "bedrock")]
+fn signing_without_environment_keys_reads_no_session_token() {
+    const TOKEN: &str = "session-token-from-the-environment";
+    let prior = std::env::var("AWS_SESSION_TOKEN").ok();
+    // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
+    unsafe {
+        std::env::remove_var("AWS_BEARER_TOKEN_BEDROCK");
+        std::env::set_var("AWS_SESSION_TOKEN", TOKEN);
+    }
+    let url = "https://bedrock-runtime.us-east-1.amazonaws.com/model/foo/converse";
+    let carries_token = |environment: bool| {
+        provider()
+            .with_environment_keys(environment)
+            .signing_headers("POST", url, b"{}")
+            .expect("AWS keys set in code sign")
+            .iter()
+            .any(|(_, value)| value.contains(TOKEN))
+    };
+    let without = carries_token(false);
+    let with = carries_token(true);
+    // ~keep SAFETY: as above.
+    unsafe {
+        match prior {
+            Some(value) => std::env::set_var("AWS_SESSION_TOKEN", value),
+            None => std::env::remove_var("AWS_SESSION_TOKEN"),
+        }
+    }
+    assert!(!without, "no environment keys: the session token stays unread");
+    assert!(with, "environment keys: the session token signs");
 }

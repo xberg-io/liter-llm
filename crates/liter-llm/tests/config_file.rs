@@ -48,6 +48,7 @@ fn minimal_config_builds_with_defaults() {
     assert_eq!(config.api_key.expose_secret(), "sk-test-minimal");
     assert!(config.base_url.is_none());
     assert_eq!(config.timeout, Duration::from_secs(60));
+    assert_eq!(config.connect_timeout, Duration::from_secs(10));
     assert_eq!(config.max_retries, 3);
 }
 
@@ -66,6 +67,7 @@ fn full_config_parses_all_top_level_fields() {
     assert_eq!(fc.base_url.as_deref(), Some("https://api.example.com/v1"));
     assert_eq!(fc.model_hint.as_deref(), Some("openai"));
     assert_eq!(fc.timeout_secs, Some(120));
+    assert_eq!(fc.connect_timeout_secs, Some(4));
     assert_eq!(fc.max_retries, Some(5));
     assert_eq!(fc.cooldown_secs, Some(30));
     assert_eq!(fc.health_check_secs, Some(60));
@@ -133,6 +135,7 @@ fn full_config_builds_core_fields() {
     assert_eq!(config.api_key.expose_secret(), "sk-test-full");
     assert_eq!(config.base_url.as_deref(), Some("https://api.example.com/v1"));
     assert_eq!(config.timeout, Duration::from_secs(120));
+    assert_eq!(config.connect_timeout, Duration::from_secs(4));
     assert_eq!(config.max_retries, 5);
 }
 

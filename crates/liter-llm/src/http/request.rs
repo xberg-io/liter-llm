@@ -3,6 +3,7 @@ use std::future::Future;
 use bytes::Bytes;
 
 use crate::error::{LiterLlmError, Result};
+use crate::http::deadline::Deadline;
 use crate::http::retry;
 
 fn sensitive_header_values<'a>(
@@ -69,13 +70,29 @@ where
     F: FnMut() -> Fut,
     Fut: Future<Output = std::result::Result<reqwest::Response, reqwest::Error>>,
 {
-    with_retry_bounded(url, max_retries, None, &[], send).await
+    with_retry_bounded(
+        url,
+        ResponseReadOptions {
+            max_retries,
+            max_response_bytes: None,
+            timeout: None,
+        },
+        &[],
+        send,
+    )
+    .await
+    .map(|(response, _deadline)| response)
 }
 
+/// How a call retries and how much of the reply it reads.
+///
+/// `timeout` is the limit of one attempt: send the request and read the reply. On native targets
+/// the HTTP client enforces the limit, and the `Deadline` built from this field does nothing.
 #[derive(Clone, Copy)]
 pub(crate) struct ResponseReadOptions {
     pub max_retries: u32,
     pub max_response_bytes: Option<usize>,
+    pub timeout: Option<std::time::Duration>,
 }
 
 /// The request half of a streaming JSON `POST`: where it goes, which headers
@@ -103,14 +120,10 @@ impl StreamingPost<'_> {
         client: &reqwest::Client,
         options: ResponseReadOptions,
     ) -> Result<reqwest::Response> {
-        let ResponseReadOptions {
-            max_retries,
-            max_response_bytes,
-        } = options;
         let mut retry_count = 0u32;
 
         let secrets = sensitive_header_values(self.auth_header, self.extra_headers);
-        let resp = with_retry_bounded(self.url, max_retries, max_response_bytes, &secrets, || {
+        let (resp, _deadline) = with_retry_bounded(self.url, options, &secrets, || {
             let mut builder = client
                 .post(self.url)
                 .header(reqwest::header::CONTENT_TYPE, "application/json")
@@ -241,28 +254,36 @@ mod retry_header_tests {
 /// - Validating the effective request URL against the active outbound policy.
 /// - Parsing the `Retry-After` header before consuming the response body.
 /// - Exponential back-off via `retry::should_retry`, including for
-///   transport-level failures (connection reset, DNS failure) that never
-///   produce a response at all. A request that times out is not sent again.
+///   transport-level failures (connection reset, DNS failure, connect timeout) that never
+///   produce a response at all. A request that times out after the connection
+///   opened is not sent again.
 /// - Reading the error body and mapping it to `LiterLlmError` on final failure.
 ///
 /// On success the **successful** `Response` is returned so the caller can
 /// choose how to consume the body (JSON deserialisation, byte stream, …).
 pub(crate) async fn with_retry_bounded<F, Fut>(
     url: &str,
-    max_retries: u32,
-    max_response_bytes: Option<usize>,
+    options: ResponseReadOptions,
     sensitive_values: &[&str],
     mut send: F,
-) -> Result<reqwest::Response>
+) -> Result<(reqwest::Response, Deadline)>
 where
     F: FnMut() -> Fut,
     Fut: Future<Output = std::result::Result<reqwest::Response, reqwest::Error>>,
 {
+    let ResponseReadOptions {
+        max_retries,
+        max_response_bytes,
+        timeout,
+    } = options;
     crate::provider::validate_outbound_url(url).await?;
     let mut attempt = 0u32;
 
     loop {
-        let resp = match send().await {
+        // ~keep Each attempt gets its own deadline. A timeout ends the call and is not retried, as on native.
+        let deadline = Deadline::after(timeout);
+        let sent = deadline.race(send()).await.map_err(|_| LiterLlmError::Timeout)?;
+        let resp = match sent {
             Ok(resp) => resp,
             Err(transport_error) => {
                 if let Some(policy_error) = crate::provider::outbound_forbidden_from_reqwest(&transport_error) {
@@ -271,10 +292,15 @@ where
                 // ~keep A transport-level error means no response was ever received, so it
                 // must go through the same retry budget as a 5xx — otherwise a single
                 // connection reset fails the whole request even though `max_retries > 0`.
-                // A timeout is not retried; `should_retry_transport_error` refuses it.
-                if let Some(delay) =
-                    retry::should_retry_transport_error(transport_error.is_timeout(), attempt, max_retries)
-                {
+                // A timeout after the connection opened is not retried; `should_retry_transport_error`
+                // refuses it. A connect timeout is retried: the server never saw the request.
+                // ~keep reqwest has no `is_connect` on wasm32. There the client deadline, not reqwest,
+                // ends a request that runs too long, so a transport error here is never a timeout.
+                #[cfg(not(target_arch = "wasm32"))]
+                let timed_out = transport_error.is_timeout() && !transport_error.is_connect();
+                #[cfg(target_arch = "wasm32")]
+                let timed_out = transport_error.is_timeout();
+                if let Some(delay) = retry::should_retry_transport_error(timed_out, attempt, max_retries) {
                     attempt += 1;
                     tracing::warn!(
                         error = %transport_error.without_url(),
@@ -291,7 +317,7 @@ where
         let status = resp.status().as_u16();
 
         if resp.status().is_success() {
-            return Ok(resp);
+            return Ok((resp, deadline));
         }
 
         let server_retry_after = retry_after_from_response(&resp);
@@ -302,7 +328,10 @@ where
             continue;
         }
 
-        let text = redact_sensitive_values(&read_error_text(resp, max_response_bytes).await?, sensitive_values);
+        let text = redact_sensitive_values(
+            &deadline.run(read_error_text(resp, max_response_bytes)).await?,
+            sensitive_values,
+        );
         return Err(LiterLlmError::from_status(status, &text, server_retry_after));
     }
 }
@@ -332,6 +361,7 @@ pub async fn post_json_raw(
         ResponseReadOptions {
             max_retries,
             max_response_bytes: None,
+            timeout: None,
         },
     )
     .await
@@ -357,14 +387,11 @@ pub(crate) async fn post_json_raw_bounded(
     body: Bytes,
     options: ResponseReadOptions,
 ) -> Result<serde_json::Value> {
-    let ResponseReadOptions {
-        max_retries,
-        max_response_bytes,
-    } = options;
+    let max_response_bytes = options.max_response_bytes;
     let mut retry_count = 0u32;
 
     let secrets = sensitive_header_values(auth_header, extra_headers);
-    let resp = with_retry_bounded(url, max_retries, max_response_bytes, &secrets, || {
+    let (resp, deadline) = with_retry_bounded(url, options, &secrets, || {
         let mut builder = client
             .post(url)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
@@ -386,7 +413,7 @@ pub(crate) async fn post_json_raw_bounded(
         span.record("http.retry_count", retry_count.saturating_sub(1));
     }
 
-    read_response_json(resp, max_response_bytes).await
+    deadline.run(read_response_json(resp, max_response_bytes)).await
 }
 
 /// Send a POST request with a JSON body and return the raw response bytes.
@@ -414,6 +441,7 @@ pub async fn post_binary(
         ResponseReadOptions {
             max_retries,
             max_response_bytes: None,
+            timeout: None,
         },
     )
     .await
@@ -439,14 +467,11 @@ pub(crate) async fn post_binary_bounded(
     body: Bytes,
     options: ResponseReadOptions,
 ) -> Result<Bytes> {
-    let ResponseReadOptions {
-        max_retries,
-        max_response_bytes,
-    } = options;
+    let max_response_bytes = options.max_response_bytes;
     let mut retry_count = 0u32;
 
     let secrets = sensitive_header_values(auth_header, extra_headers);
-    let resp = with_retry_bounded(url, max_retries, max_response_bytes, &secrets, || {
+    let (resp, deadline) = with_retry_bounded(url, options, &secrets, || {
         let mut builder = client
             .post(url)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
@@ -468,7 +493,7 @@ pub(crate) async fn post_binary_bounded(
         span.record("http.retry_count", retry_count.saturating_sub(1));
     }
 
-    read_response_body(resp, max_response_bytes).await
+    deadline.run(read_response_body(resp, max_response_bytes)).await
 }
 
 /// Send a POST request with a multipart form body and return the raw response JSON.
@@ -487,7 +512,7 @@ pub async fn post_multipart(
     extra_headers: &[(&str, &str)],
     form: reqwest::multipart::Form,
 ) -> Result<serde_json::Value> {
-    post_multipart_bounded(client, url, auth_header, extra_headers, form, None).await
+    post_multipart_bounded(client, url, auth_header, extra_headers, form, None, None).await
 }
 
 #[tracing::instrument(
@@ -508,8 +533,10 @@ pub(crate) async fn post_multipart_bounded(
     extra_headers: &[(&str, &str)],
     form: reqwest::multipart::Form,
     max_response_bytes: Option<usize>,
+    timeout: Option<std::time::Duration>,
 ) -> Result<serde_json::Value> {
     crate::provider::validate_outbound_url(url).await?;
+    let deadline = Deadline::after(timeout);
     let mut builder = client.post(url).multipart(form);
     if let Some((name, value)) = auth_header {
         builder = builder.header(name, value);
@@ -518,7 +545,9 @@ pub(crate) async fn post_multipart_bounded(
         builder = builder.header(*name, *value);
     }
 
-    let resp = builder.send().await?;
+    let resp = deadline
+        .run(async { builder.send().await.map_err(LiterLlmError::from) })
+        .await?;
 
     {
         let span = tracing::Span::current();
@@ -529,11 +558,14 @@ pub(crate) async fn post_multipart_bounded(
     if !resp.status().is_success() {
         let server_retry_after = retry_after_from_response(&resp);
         let secrets = sensitive_header_values(auth_header, extra_headers);
-        let text = redact_sensitive_values(&read_error_text(resp, max_response_bytes).await?, &secrets);
+        let text = redact_sensitive_values(
+            &deadline.run(read_error_text(resp, max_response_bytes)).await?,
+            &secrets,
+        );
         return Err(LiterLlmError::from_status(status, &text, server_retry_after));
     }
 
-    read_response_json(resp, max_response_bytes).await
+    deadline.run(read_response_json(resp, max_response_bytes)).await
 }
 
 /// Send a GET request and return the raw response JSON as `serde_json::Value`.
@@ -551,7 +583,18 @@ pub async fn get_json_raw(
     extra_headers: &[(&str, &str)],
     max_retries: u32,
 ) -> Result<serde_json::Value> {
-    get_json_raw_bounded(client, url, auth_header, extra_headers, max_retries, None).await
+    get_json_raw_bounded(
+        client,
+        url,
+        auth_header,
+        extra_headers,
+        ResponseReadOptions {
+            max_retries,
+            max_response_bytes: None,
+            timeout: None,
+        },
+    )
+    .await
 }
 
 #[tracing::instrument(
@@ -571,13 +614,13 @@ pub(crate) async fn get_json_raw_bounded(
     url: &str,
     auth_header: Option<(&str, &str)>,
     extra_headers: &[(&str, &str)],
-    max_retries: u32,
-    max_response_bytes: Option<usize>,
+    options: ResponseReadOptions,
 ) -> Result<serde_json::Value> {
+    let max_response_bytes = options.max_response_bytes;
     let mut retry_count = 0u32;
 
     let secrets = sensitive_header_values(auth_header, extra_headers);
-    let resp = with_retry_bounded(url, max_retries, max_response_bytes, &secrets, || {
+    let (resp, deadline) = with_retry_bounded(url, options, &secrets, || {
         let mut builder = client.get(url);
         if let Some((name, value)) = auth_header {
             builder = builder.header(name, value);
@@ -596,7 +639,7 @@ pub(crate) async fn get_json_raw_bounded(
         span.record("http.retry_count", retry_count.saturating_sub(1));
     }
 
-    read_response_json(resp, max_response_bytes).await
+    deadline.run(read_response_json(resp, max_response_bytes)).await
 }
 
 /// Send a DELETE request and return the raw response JSON.
@@ -613,7 +656,18 @@ pub async fn delete_json(
     extra_headers: &[(&str, &str)],
     max_retries: u32,
 ) -> Result<serde_json::Value> {
-    delete_json_bounded(client, url, auth_header, extra_headers, max_retries, None).await
+    delete_json_bounded(
+        client,
+        url,
+        auth_header,
+        extra_headers,
+        ResponseReadOptions {
+            max_retries,
+            max_response_bytes: None,
+            timeout: None,
+        },
+    )
+    .await
 }
 
 #[tracing::instrument(
@@ -633,13 +687,13 @@ pub(crate) async fn delete_json_bounded(
     url: &str,
     auth_header: Option<(&str, &str)>,
     extra_headers: &[(&str, &str)],
-    max_retries: u32,
-    max_response_bytes: Option<usize>,
+    options: ResponseReadOptions,
 ) -> Result<serde_json::Value> {
+    let max_response_bytes = options.max_response_bytes;
     let mut retry_count = 0u32;
 
     let secrets = sensitive_header_values(auth_header, extra_headers);
-    let resp = with_retry_bounded(url, max_retries, max_response_bytes, &secrets, || {
+    let (resp, deadline) = with_retry_bounded(url, options, &secrets, || {
         let mut builder = client.delete(url);
         if let Some((name, value)) = auth_header {
             builder = builder.header(name, value);
@@ -658,7 +712,7 @@ pub(crate) async fn delete_json_bounded(
         span.record("http.retry_count", retry_count.saturating_sub(1));
     }
 
-    read_response_json(resp, max_response_bytes).await
+    deadline.run(read_response_json(resp, max_response_bytes)).await
 }
 
 /// Send a GET request and return the raw response bytes.
@@ -675,7 +729,18 @@ pub async fn get_binary(
     extra_headers: &[(&str, &str)],
     max_retries: u32,
 ) -> Result<Bytes> {
-    get_binary_bounded(client, url, auth_header, extra_headers, max_retries, None).await
+    get_binary_bounded(
+        client,
+        url,
+        auth_header,
+        extra_headers,
+        ResponseReadOptions {
+            max_retries,
+            max_response_bytes: None,
+            timeout: None,
+        },
+    )
+    .await
 }
 
 #[tracing::instrument(
@@ -695,13 +760,13 @@ pub(crate) async fn get_binary_bounded(
     url: &str,
     auth_header: Option<(&str, &str)>,
     extra_headers: &[(&str, &str)],
-    max_retries: u32,
-    max_response_bytes: Option<usize>,
+    options: ResponseReadOptions,
 ) -> Result<Bytes> {
+    let max_response_bytes = options.max_response_bytes;
     let mut retry_count = 0u32;
 
     let secrets = sensitive_header_values(auth_header, extra_headers);
-    let resp = with_retry_bounded(url, max_retries, max_response_bytes, &secrets, || {
+    let (resp, deadline) = with_retry_bounded(url, options, &secrets, || {
         let mut builder = client.get(url);
         if let Some((name, value)) = auth_header {
             builder = builder.header(name, value);
@@ -720,7 +785,7 @@ pub(crate) async fn get_binary_bounded(
         span.record("http.retry_count", retry_count.saturating_sub(1));
     }
 
-    read_response_body(resp, max_response_bytes).await
+    deadline.run(read_response_body(resp, max_response_bytes)).await
 }
 
 #[cfg(test)]
@@ -732,16 +797,7 @@ mod tests {
 
     use super::*;
     use crate::provider::{OutboundPolicy, set_outbound_policy};
-
-    /// Bind an ephemeral loopback port, then immediately release it. Connections to
-    /// the now-closed port are refused instantly (no live network, no timeout wait),
-    /// giving a deterministic, genuine `reqwest::Error` transport failure for tests.
-    fn closed_port_url() -> String {
-        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind ephemeral port");
-        let port = listener.local_addr().expect("local_addr").port();
-        drop(listener);
-        format!("http://127.0.0.1:{port}/")
-    }
+    use crate::tests::ClosingPort;
 
     fn one_shot_json_server() -> (String, std::thread::JoinHandle<()>) {
         let listener = TcpListener::bind("127.0.0.1:0").expect("bind JSON server");
@@ -812,7 +868,8 @@ mod tests {
         use tracing::instrument::WithSubscriber as _;
 
         let client = reqwest::Client::builder().no_proxy().build().expect("HTTP client");
-        let url = format!("{}path-secret-marker?key=query-secret-marker", closed_port_url());
+        let port = ClosingPort::new();
+        let url = format!("{}path-secret-marker?key=query-secret-marker", port.url());
         let warnings = RetryWarnings::default();
         let mut attempts = 0;
         let result = with_retry(&url, 1, || {
@@ -852,7 +909,8 @@ mod tests {
         // transport-level error (e.g. connection refused) immediately via `?`,
         // bypassing the retry loop entirely regardless of `max_retries`.
         let client = reqwest::Client::new();
-        let url = closed_port_url();
+        let port = ClosingPort::new();
+        let url = port.url().to_owned();
         let mut attempts = 0u32;
 
         let result = with_retry(&url, 2, || {
@@ -875,7 +933,8 @@ mod tests {
     #[serial(outbound_policy)]
     async fn with_retry_does_not_retry_transport_errors_when_max_retries_is_zero() {
         let client = reqwest::Client::new();
-        let url = closed_port_url();
+        let port = ClosingPort::new();
+        let url = port.url().to_owned();
         let mut attempts = 0u32;
 
         let result = with_retry(&url, 0, || {
@@ -897,7 +956,7 @@ mod tests {
         set_outbound_policy(OutboundPolicy::DenyPrivate);
         let result = post_json_raw(
             &reqwest::Client::new(),
-            &closed_port_url(),
+            ClosingPort::new().url(),
             None,
             &[],
             Bytes::from_static(b"{}"),
@@ -933,7 +992,7 @@ mod tests {
         set_outbound_policy(OutboundPolicy::DenyPrivate);
         let result = post_multipart(
             &reqwest::Client::new(),
-            &closed_port_url(),
+            ClosingPort::new().url(),
             None,
             &[],
             reqwest::multipart::Form::new(),

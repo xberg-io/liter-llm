@@ -55,7 +55,7 @@ native-http = [
   "dep:gcp_auth",
 ]
 
-wasm-http = ["dep:reqwest", "dep:memchr", "dep:gloo-timers", "dep:web-time"]
+wasm-http = ["dep:reqwest", "dep:memchr", "dep:gloo-timers"]
 
 otel = ["dep:tracing-opentelemetry", "dep:opentelemetry"]
 
@@ -117,6 +117,11 @@ opendal-http-transport-reqwest = { workspace = true, optional = true, features =
 reqwest = { workspace = true, optional = true, features = ["rustls-no-provider"] }
 rustls = { workspace = true, optional = true }
 
+# ~keep The wasm32 build selects getrandom's `wasm_js` backend in .cargo/config.toml; the crate feature
+# ~keep must be on for the crate to build for wasm32 without `liter-llm-wasm`.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
+
 # ~keep Windows uses SChannel via native-tls to avoid aws-lc-sys MSVC build failures.
 # ~keep rustls is intentionally not pulled in on Windows.
 [target.'cfg(target_os = "windows")'.dependencies]
@@ -171,14 +176,19 @@ tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true, optional = true }
 url = { workspace = true }
 utoipa = { workspace = true, optional = true }
-web-time = { version = "1", optional = true }
+web-time = "1"
 
 [dev-dependencies]
+futures-util = { workspace = true }
+serde_json = { workspace = true }
+
+# ~keep These dev-dependencies stay off wasm32: the workspace pins tokio to its `full` features,
+# ~keep whose `net` feature does not build for wasm32 (mio), and the unit tests need a native runtime.
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 ctor = "1.0"
 etcd-client = { workspace = true }
-futures-util = { workspace = true }
 jsonschema = { workspace = true }
-serde_json = { workspace = true }
+reqwest = { workspace = true, features = ["gzip"] }
 serial_test = { workspace = true }
 tempfile = { workspace = true }
 tokio = { workspace = true, features = ["test-util", "macros"] }
@@ -187,8 +197,12 @@ tokio = { workspace = true, features = ["test-util", "macros"] }
 # does not re-export.
 tracing-core = "0.1"
 
-[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-reqwest = { workspace = true, features = ["gzip"] }
+# ~keep The wasm32 tests run in Node.js through `wasm-bindgen-test-runner`; see tests/wasm_timeout.rs.
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+js-sys = "0.3"
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = "0.4"
+wasm-bindgen-test = { workspace = true }
 
 [lints]
 workspace = true

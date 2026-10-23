@@ -1,7 +1,8 @@
 use std::borrow::Cow;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::time::{SystemTime, UNIX_EPOCH};
+
+use web_time::{SystemTime, UNIX_EPOCH};
 
 use crate::provider::Provider;
 

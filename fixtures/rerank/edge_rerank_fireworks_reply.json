@@ -1,0 +1,63 @@
+{
+  "id": "edge_rerank_fireworks_reply",
+  "description": "Reranking where Fireworks lists the scored documents under data",
+  "docs": {
+    "topic": "rerank",
+    "stem": "edge-rerank-fireworks-reply",
+    "title": "Reranking where Fireworks lists the scored documents under data"
+  },
+  "category": "rerank",
+  "tags": [
+    "edge-case",
+    "rerank"
+  ],
+  "call": "rerank",
+  "input": {
+    "model": "fireworks_ai/rerank-x",
+    "query": "What is machine learning?",
+    "documents": [
+      "The weather is sunny today.",
+      "Deep learning uses neural networks.",
+      "Machine learning is a subset of AI."
+    ]
+  },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "object": "list",
+      "data": [
+        {
+          "index": 2,
+          "relevance_score": 0.91
+        },
+        {
+          "index": 1,
+          "relevance_score": 0.62
+        },
+        {
+          "index": 0,
+          "relevance_score": 0.04
+        }
+      ],
+      "model": "rerank-x",
+      "usage": {
+        "total_tokens": 24
+      }
+    }
+  },
+  "assertions": [
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "count_equals",
+      "field": "results",
+      "value": 3
+    },
+    {
+      "type": "greater_than",
+      "field": "results[0].relevance_score",
+      "value": 0.9
+    }
+  ]
+}

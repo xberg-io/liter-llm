@@ -5,9 +5,8 @@
 //! The translator handles serialisation and deserialisation via `serde_json`
 //! and maps unknown event types to [`RealtimeEvent::Raw`].
 
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use serde_json::Value;
+use web_time::{SystemTime, UNIX_EPOCH};
 
 use super::{ContentPart, RealtimeEvent, RealtimeTranslator, ResponseStatus};
 use crate::error::{LiterLlmError, Result};

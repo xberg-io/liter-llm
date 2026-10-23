@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.111.0"
+alef_version = "0.113.1"
 languages = [
   "python",
   "node",
@@ -17,7 +17,8 @@ languages = [
   "kotlin_android",
   "jni",
 ]
-extra_clippy_allows = ["single_match", "collapsible_match"]
+# The unnecessary_to_owned entry stays until xberg-io/alef#679 is fixed.
+extra_clippy_allows = ["single_match", "collapsible_match", "unnecessary_to_owned"]
 
 # ~keep These are create-once seeds that alef re-renders on every run but refuses to
 # overwrite, so `alef verify` reported them as DRIFTED forever and `alef generate` could
@@ -863,6 +864,7 @@ precondition = "command -v uv >/dev/null 2>&1"
 e2e = [
   "cd e2e/python && uv sync --no-install-project --no-install-workspace",
   "cd e2e/python && uv run --no-sync pytest tests/ -q",
+  "cd e2e/python && uv run --no-sync pytest ../../scripts/tests/test_python_content_accessors.py -q",
 ]
 
 [crates.test.node]
@@ -1334,6 +1336,114 @@ options_type = "EmbeddingRequest"
 options_via = "from_json"
 
 [crates.e2e.calls.embed.overrides.swift]
+options_type = "EmbeddingRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.chat_ollama]
+function = "chat"
+path = "/api/chat"
+module = "liter_llm"
+async = true
+
+[[crates.e2e.calls.chat_ollama.args]]
+name = "req"
+field = "input"
+type = "json_object"
+owned = true
+
+[crates.e2e.calls.chat_ollama.overrides.c]
+options_type = "ChatCompletionRequest"
+result_type = "ChatCompletionResponse"
+
+[crates.e2e.calls.chat_ollama.overrides.csharp]
+options_type = "ChatCompletionRequest"
+
+[crates.e2e.calls.chat_ollama.overrides.elixir]
+function = "defaultclient_chat"
+
+[crates.e2e.calls.chat_ollama.overrides.php]
+options_type = "ChatCompletionRequest"
+
+[crates.e2e.calls.chat_ollama.overrides.go]
+client_factory = "CreateClient"
+options_type = "ChatCompletionRequest"
+
+[crates.e2e.calls.chat_ollama.overrides.python]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+from_json_module = "liter_llm._internal_bindings"
+
+[crates.e2e.calls.chat_ollama.overrides.ruby]
+options_type = "ChatCompletionRequest"
+
+[crates.e2e.calls.chat_ollama.overrides.java]
+client_factory = "createClient"
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+enum_fields = { "choices[0].finish_reason" = "FinishReason", "choices[0].message.role" = "Role" }
+
+[crates.e2e.calls.chat_ollama.overrides.wasm]
+options_type = "WasmChatCompletionRequest"
+result_enum_fields = { "choices[0].finish_reason" = "WasmFinishReason" }
+
+[crates.e2e.calls.chat_ollama.overrides.dart]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.chat_ollama.overrides.swift]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.embed_ollama]
+function = "embed"
+path = "/api/embed"
+module = "liter_llm"
+async = true
+
+[[crates.e2e.calls.embed_ollama.args]]
+name = "req"
+field = "input"
+type = "json_object"
+owned = true
+
+[crates.e2e.calls.embed_ollama.overrides.c]
+options_type = "EmbeddingRequest"
+result_type = "EmbeddingResponse"
+
+[crates.e2e.calls.embed_ollama.overrides.csharp]
+options_type = "EmbeddingRequest"
+
+[crates.e2e.calls.embed_ollama.overrides.elixir]
+function = "defaultclient_embed"
+
+[crates.e2e.calls.embed_ollama.overrides.php]
+options_type = "EmbeddingRequest"
+
+[crates.e2e.calls.embed_ollama.overrides.go]
+client_factory = "CreateClient"
+options_type = "EmbeddingRequest"
+
+[crates.e2e.calls.embed_ollama.overrides.python]
+options_type = "EmbeddingRequest"
+options_via = "from_json"
+from_json_module = "liter_llm._internal_bindings"
+
+[crates.e2e.calls.embed_ollama.overrides.ruby]
+options_type = "EmbeddingRequest"
+
+[crates.e2e.calls.embed_ollama.overrides.java]
+client_factory = "createClient"
+options_type = "EmbeddingRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.embed_ollama.overrides.wasm]
+options_type = "WasmEmbeddingRequest"
+
+[crates.e2e.calls.embed_ollama.overrides.dart]
+options_type = "EmbeddingRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.embed_ollama.overrides.swift]
 options_type = "EmbeddingRequest"
 options_via = "from_json"
 

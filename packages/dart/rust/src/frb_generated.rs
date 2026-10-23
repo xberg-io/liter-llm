@@ -72,7 +72,7 @@ fn wire__crate__DefaultClient_cancel_batch_impl(
             let api_batch_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -118,7 +118,7 @@ fn wire__crate__DefaultClient_cancel_response_impl(
             let api_response_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -165,7 +165,7 @@ fn wire__crate__DefaultClient_chat_impl(
             let api_req = <crate::ChatCompletionRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -193,48 +193,25 @@ fn wire__crate__DefaultClient_chat_stream_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "DefaultClient_chat_stream",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "DefaultClient_chat_stream", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that =
-                <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_req = <crate::ChatCompletionRequest>::sse_decode(&mut deserializer);
-            let api_sink =
-                <StreamSink<crate::ChatCompletionChunk, flutter_rust_bridge::for_generated::SseCodec>>::sse_decode(
-                    &mut deserializer,
-                );
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let mut api_that_guard = None;
-                    let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(&api_that, 0, false),
-                    ]);
-                    for i in decode_indices_ {
-                        match i {
-                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                            _ => unreachable!(),
-                        }
-                    }
-                    let api_that_guard = api_that_guard.unwrap();
-                    let output_ok = Ok::<_, ()>({
-                        crate::DefaultClient::chat_stream(&*api_that_guard, api_req, api_sink);
-                    })?;
-                    std::result::Result::Ok(output_ok)
-                })())
+            let api_that = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>>::sse_decode(&mut deserializer);
+let api_req = <crate::ChatCompletionRequest>::sse_decode(&mut deserializer);
+let api_sink = <StreamSink<AlefStreamDefaultClientChatStream,flutter_rust_bridge::for_generated::SseCodec>>::sse_decode(&mut deserializer);deserializer.end(); move |context|  {
+                    transform_result_sse::<_, ()>((move ||  {
+                        let mut api_that_guard = None;
+let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(&api_that, 0, false)]);
+        for i in decode_indices_ {
+            match i {
+                0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                _ => unreachable!(),
             }
-        },
-    )
+        }
+        let api_that_guard = api_that_guard.unwrap();
+ let output_ok = Ok::<_, ()>({ crate::DefaultClient::chat_stream(&*api_that_guard, api_req, api_sink); })?;   std::result::Result::Ok(output_ok)
+                    })())
+                } })
 }
 fn wire__crate__DefaultClient_create_batch_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
@@ -260,7 +237,7 @@ fn wire__crate__DefaultClient_create_batch_impl(
             let api_req = <crate::CreateBatchRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -306,7 +283,7 @@ fn wire__crate__DefaultClient_create_file_impl(
             let api_req = <crate::CreateFileRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -352,7 +329,7 @@ fn wire__crate__DefaultClient_create_response_impl(
             let api_req = <crate::CreateResponseRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -398,7 +375,7 @@ fn wire__crate__DefaultClient_delete_file_impl(
             let api_file_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -444,7 +421,7 @@ fn wire__crate__DefaultClient_embed_impl(
             let api_req = <crate::EmbeddingRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -490,7 +467,7 @@ fn wire__crate__DefaultClient_fetch_batch_for_polling_impl(
             let api_batch_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -537,7 +514,7 @@ fn wire__crate__DefaultClient_file_content_impl(
             let api_file_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -583,7 +560,7 @@ fn wire__crate__DefaultClient_image_generate_impl(
             let api_req = <crate::CreateImageRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -629,7 +606,7 @@ fn wire__crate__DefaultClient_list_batches_impl(
             let api_query = <Option<crate::BatchListQuery>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -675,7 +652,7 @@ fn wire__crate__DefaultClient_list_files_impl(
             let api_query = <Option<crate::FileListQuery>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -720,7 +697,7 @@ fn wire__crate__DefaultClient_list_models_impl(
                 );
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -766,7 +743,7 @@ fn wire__crate__DefaultClient_moderate_impl(
             let api_req = <crate::ModerationRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -812,7 +789,7 @@ fn wire__crate__DefaultClient_ocr_impl(
             let api_req = <crate::OcrRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -858,7 +835,7 @@ fn wire__crate__DefaultClient_rerank_impl(
             let api_req = <crate::RerankRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -904,7 +881,7 @@ fn wire__crate__DefaultClient_retrieve_batch_impl(
             let api_batch_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -950,7 +927,7 @@ fn wire__crate__DefaultClient_retrieve_file_impl(
             let api_file_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -996,7 +973,7 @@ fn wire__crate__DefaultClient_retrieve_response_impl(
             let api_response_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1043,7 +1020,7 @@ fn wire__crate__DefaultClient_search_impl(
             let api_req = <crate::SearchRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1089,7 +1066,7 @@ fn wire__crate__DefaultClient_speech_impl(
             let api_req = <crate::CreateSpeechRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1135,7 +1112,7 @@ fn wire__crate__DefaultClient_transcribe_impl(
             let api_req = <crate::CreateTranscriptionRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let mut api_that_guard = None;
                         let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1224,7 +1201,7 @@ fn wire__crate__all_providers_impl(
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::all_providers()?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -1310,7 +1287,7 @@ fn wire__crate__check_bound_impl(
             let api_limit = <i64>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::check_bound(api_context, api_current_len, api_incoming, api_limit)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -1503,7 +1480,7 @@ fn wire__crate__complex_provider_names_impl(
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::complex_provider_names()?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -1533,7 +1510,7 @@ fn wire__crate__count_request_tokens_impl(
             let api_req = <crate::ChatCompletionRequest>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::count_request_tokens(api_model, api_req)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -1563,7 +1540,7 @@ fn wire__crate__count_tokens_impl(
             let api_text = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::count_tokens(api_model, api_text)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -2271,7 +2248,7 @@ fn wire__crate__create_client_impl(
             let api_model_hint = <Option<String>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::create_client(
                         api_api_key,
                         api_base_url,
@@ -2306,7 +2283,7 @@ fn wire__crate__create_client_from_json_impl(
             let api_json = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::create_client_from_json(api_json)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -2364,7 +2341,7 @@ fn wire__crate__create_client_with_options_impl(
             let api_options = <crate::ClientOptions>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::create_client_with_options(api_options)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -5258,7 +5235,7 @@ fn wire__crate__install_catalog_overlay_from_str_impl(
             let api_catalog_json = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::install_catalog_overlay_from_str(api_catalog_json)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -5488,7 +5465,7 @@ fn wire__crate__refresh_catalog_impl(
             let api_config = <crate::CatalogRefreshConfig>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, AlefBridgeError>(
                     (move || async move {
                         let output_ok = crate::refresh_catalog(api_config).await?;
                         std::result::Result::Ok(output_ok)
@@ -5519,7 +5496,7 @@ fn wire__crate__register_custom_provider_impl(
             let api_config = <crate::CustomProviderConfig>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::register_custom_provider(api_config)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -5547,7 +5524,7 @@ fn wire__crate__unregister_custom_provider_impl(
             let api_name = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
-                transform_result_sse::<_, String>((move || {
+                transform_result_sse::<_, AlefBridgeError>((move || {
                     let output_ok = crate::unregister_custom_provider(api_name)?;
                     std::result::Result::Ok(output_ok)
                 })())
@@ -5796,6 +5773,7 @@ const _: fn() = || {
         let _: String = ClientOptions.api_key;
         let _: Option<String> = ClientOptions.base_url;
         let _: Option<i64> = ClientOptions.timeout_secs;
+        let _: Option<i64> = ClientOptions.connect_timeout_secs;
         let _: Option<i64> = ClientOptions.max_retries;
         let _: Option<i64> = ClientOptions.max_response_bytes;
         let _: Option<String> = ClientOptions.model_hint;
@@ -5841,6 +5819,7 @@ const _: fn() = || {
         let _: Option<String> = CreateImageRequest.style;
         let _: Option<String> = CreateImageRequest.response_format;
         let _: Option<String> = CreateImageRequest.user;
+        let _: Option<String> = CreateImageRequest.extra_body;
     }
     {
         let CreateResponseRequest = None::<crate::CreateResponseRequest>.unwrap();
@@ -5861,6 +5840,7 @@ const _: fn() = || {
         let _: String = CreateSpeechRequest.voice;
         let _: Option<String> = CreateSpeechRequest.response_format;
         let _: Option<f64> = CreateSpeechRequest.speed;
+        let _: Option<String> = CreateSpeechRequest.extra_body;
     }
     {
         let CreateTranscriptionRequest = None::<crate::CreateTranscriptionRequest>.unwrap();
@@ -5870,6 +5850,7 @@ const _: fn() = || {
         let _: Option<String> = CreateTranscriptionRequest.prompt;
         let _: Option<String> = CreateTranscriptionRequest.response_format;
         let _: Option<f64> = CreateTranscriptionRequest.temperature;
+        let _: Option<String> = CreateTranscriptionRequest.extra_body;
     }
     {
         let CustomProviderConfig = None::<crate::CustomProviderConfig>.unwrap();
@@ -5934,6 +5915,7 @@ const _: fn() = || {
         let _: Option<crate::EmbeddingFormat> = EmbeddingRequest.encoding_format;
         let _: Option<i64> = EmbeddingRequest.dimensions;
         let _: Option<String> = EmbeddingRequest.user;
+        let _: Option<String> = EmbeddingRequest.extra_body;
     }
     {
         let EmbeddingResponse = None::<crate::EmbeddingResponse>.unwrap();
@@ -6015,7 +5997,7 @@ const _: fn() = || {
         }
         crate::LiterLlmError::RateLimited { message, retry_after } => {
             let _: String = message;
-            let _: i64 = retry_after;
+            let _: Option<i64> = retry_after;
         }
         crate::LiterLlmError::BadRequest { message, status } => {
             let _: String = message;
@@ -6041,7 +6023,7 @@ const _: fn() = || {
         } => {
             let _: String = message;
             let _: i64 = status;
-            let _: i64 = retry_after;
+            let _: Option<i64> = retry_after;
         }
         crate::LiterLlmError::Timeout => {}
         crate::LiterLlmError::Network { message } => {
@@ -6063,7 +6045,7 @@ const _: fn() = || {
         }
         crate::LiterLlmError::BudgetExceeded { message, model } => {
             let _: String = message;
-            let _: String = model;
+            let _: Option<String> = model;
         }
         crate::LiterLlmError::HookRejected { message } => {
             let _: String = message;
@@ -6105,6 +6087,7 @@ const _: fn() = || {
         let _: Option<String> = LlmConfig.api_key;
         let _: Option<String> = LlmConfig.base_url;
         let _: Option<i64> = LlmConfig.timeout_secs;
+        let _: Option<i64> = LlmConfig.connect_timeout_secs;
         let _: Option<i64> = LlmConfig.max_retries;
         let _: Option<f64> = LlmConfig.temperature;
         let _: Option<i64> = LlmConfig.max_tokens;
@@ -6246,6 +6229,7 @@ const _: fn() = || {
         let ModerationRequest = None::<crate::ModerationRequest>.unwrap();
         let _: crate::ModerationInput = ModerationRequest.input;
         let _: Option<String> = ModerationRequest.model;
+        let _: Option<String> = ModerationRequest.extra_body;
     }
     {
         let ModerationResponse = None::<crate::ModerationResponse>.unwrap();
@@ -6286,6 +6270,7 @@ const _: fn() = || {
         let _: crate::OcrDocument = OcrRequest.document;
         let _: Option<Vec<i64>> = OcrRequest.pages;
         let _: Option<bool> = OcrRequest.include_image_base64;
+        let _: Option<String> = OcrRequest.extra_body;
     }
     {
         let OcrResponse = None::<crate::OcrResponse>.unwrap();
@@ -6345,6 +6330,7 @@ const _: fn() = || {
         let _: Vec<crate::RerankDocument> = RerankRequest.documents;
         let _: Option<i64> = RerankRequest.top_n;
         let _: Option<bool> = RerankRequest.return_documents;
+        let _: Option<String> = RerankRequest.extra_body;
     }
     {
         let RerankResponse = None::<crate::RerankResponse>.unwrap();
@@ -6403,6 +6389,7 @@ const _: fn() = || {
         let _: Option<i64> = SearchRequest.max_results;
         let _: Option<Vec<String>> = SearchRequest.search_domain_filter;
         let _: Option<String> = SearchRequest.country;
+        let _: Option<String> = SearchRequest.extra_body;
     }
     {
         let SearchResponse = None::<crate::SearchResponse>.unwrap();
@@ -6560,6 +6547,22 @@ impl SseDecode for DefaultClient {
     }
 }
 
+impl SseDecode for AlefBridgeError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <crate::AlefBridgeErrorWire>::sse_decode(deserializer);
+        return crate::alef_decode_bridge_error(inner);
+    }
+}
+
+impl SseDecode for AlefStreamDefaultClientChatStream {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <crate::AlefStreamDefaultClientChatStreamWire>::sse_decode(deserializer);
+        return crate::alef_decode_stream_default_client_chat_stream(inner);
+    }
+}
+
 impl SseDecode for std::collections::HashMap<String, String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -6584,7 +6587,7 @@ impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
     }
 }
 
-impl SseDecode for StreamSink<crate::ChatCompletionChunk, flutter_rust_bridge::for_generated::SseCodec> {
+impl SseDecode for StreamSink<AlefStreamDefaultClientChatStream, flutter_rust_bridge::for_generated::SseCodec> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <String>::sse_decode(deserializer);
@@ -6597,6 +6600,58 @@ impl SseDecode for String {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <Vec<u8>>::sse_decode(deserializer);
         return String::from_utf8(inner).unwrap();
+    }
+}
+
+impl SseDecode for crate::AlefBridgeErrorWire {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_error = <crate::LiterLlmError>::sse_decode(deserializer);
+                return crate::AlefBridgeErrorWire::LiterLlmError { error: var_error };
+            }
+            1 => {
+                let mut var_error = <crate::CatalogRefreshError>::sse_decode(deserializer);
+                return crate::AlefBridgeErrorWire::CatalogRefreshError { error: var_error };
+            }
+            2 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::AlefBridgeErrorWire::InvalidInput { message: var_message };
+            }
+            3 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::AlefBridgeErrorWire::NativeFailure { message: var_message };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseDecode for crate::AlefStreamDefaultClientChatStreamWire {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_value = <crate::ChatCompletionChunk>::sse_decode(deserializer);
+                return crate::AlefStreamDefaultClientChatStreamWire::Item { value: var_value };
+            }
+            1 => {
+                let mut var_error = <crate::LiterLlmError>::sse_decode(deserializer);
+                return crate::AlefStreamDefaultClientChatStreamWire::Error { error: var_error };
+            }
+            2 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::AlefStreamDefaultClientChatStreamWire::NativeFailure { message: var_message };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -7182,6 +7237,7 @@ impl SseDecode for crate::ClientOptions {
         let mut var_apiKey = <String>::sse_decode(deserializer);
         let mut var_baseUrl = <Option<String>>::sse_decode(deserializer);
         let mut var_timeoutSecs = <Option<i64>>::sse_decode(deserializer);
+        let mut var_connectTimeoutSecs = <Option<i64>>::sse_decode(deserializer);
         let mut var_maxRetries = <Option<i64>>::sse_decode(deserializer);
         let mut var_maxResponseBytes = <Option<i64>>::sse_decode(deserializer);
         let mut var_modelHint = <Option<String>>::sse_decode(deserializer);
@@ -7189,6 +7245,7 @@ impl SseDecode for crate::ClientOptions {
             api_key: var_apiKey,
             base_url: var_baseUrl,
             timeout_secs: var_timeoutSecs,
+            connect_timeout_secs: var_connectTimeoutSecs,
             max_retries: var_maxRetries,
             max_response_bytes: var_maxResponseBytes,
             model_hint: var_modelHint,
@@ -7279,6 +7336,7 @@ impl SseDecode for crate::CreateImageRequest {
         let mut var_style = <Option<String>>::sse_decode(deserializer);
         let mut var_responseFormat = <Option<String>>::sse_decode(deserializer);
         let mut var_user = <Option<String>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::CreateImageRequest {
             prompt: var_prompt,
             model: var_model,
@@ -7288,6 +7346,7 @@ impl SseDecode for crate::CreateImageRequest {
             style: var_style,
             response_format: var_responseFormat,
             user: var_user,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -7326,12 +7385,14 @@ impl SseDecode for crate::CreateSpeechRequest {
         let mut var_voice = <String>::sse_decode(deserializer);
         let mut var_responseFormat = <Option<String>>::sse_decode(deserializer);
         let mut var_speed = <Option<f64>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::CreateSpeechRequest {
             model: var_model,
             input: var_input,
             voice: var_voice,
             response_format: var_responseFormat,
             speed: var_speed,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -7345,6 +7406,7 @@ impl SseDecode for crate::CreateTranscriptionRequest {
         let mut var_prompt = <Option<String>>::sse_decode(deserializer);
         let mut var_responseFormat = <Option<String>>::sse_decode(deserializer);
         let mut var_temperature = <Option<f64>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::CreateTranscriptionRequest {
             model: var_model,
             file: var_file,
@@ -7352,6 +7414,7 @@ impl SseDecode for crate::CreateTranscriptionRequest {
             prompt: var_prompt,
             response_format: var_responseFormat,
             temperature: var_temperature,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -7508,12 +7571,14 @@ impl SseDecode for crate::EmbeddingRequest {
         let mut var_encodingFormat = <Option<crate::EmbeddingFormat>>::sse_decode(deserializer);
         let mut var_dimensions = <Option<i64>>::sse_decode(deserializer);
         let mut var_user = <Option<String>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::EmbeddingRequest {
             model: var_model,
             input: var_input,
             encoding_format: var_encodingFormat,
             dimensions: var_dimensions,
             user: var_user,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -8199,7 +8264,7 @@ impl SseDecode for crate::LiterLlmError {
             }
             1 => {
                 let mut var_message = <String>::sse_decode(deserializer);
-                let mut var_retryAfter = <i64>::sse_decode(deserializer);
+                let mut var_retryAfter = <Option<i64>>::sse_decode(deserializer);
                 return crate::LiterLlmError::RateLimited {
                     message: var_message,
                     retry_after: var_retryAfter,
@@ -8236,7 +8301,7 @@ impl SseDecode for crate::LiterLlmError {
             7 => {
                 let mut var_message = <String>::sse_decode(deserializer);
                 let mut var_status = <i64>::sse_decode(deserializer);
-                let mut var_retryAfter = <i64>::sse_decode(deserializer);
+                let mut var_retryAfter = <Option<i64>>::sse_decode(deserializer);
                 return crate::LiterLlmError::ServiceUnavailable {
                     message: var_message,
                     status: var_status,
@@ -8276,7 +8341,7 @@ impl SseDecode for crate::LiterLlmError {
             }
             14 => {
                 let mut var_message = <String>::sse_decode(deserializer);
-                let mut var_model = <String>::sse_decode(deserializer);
+                let mut var_model = <Option<String>>::sse_decode(deserializer);
                 return crate::LiterLlmError::BudgetExceeded {
                     message: var_message,
                     model: var_model,
@@ -8358,6 +8423,7 @@ impl SseDecode for crate::LlmConfig {
         let mut var_apiKey = <Option<String>>::sse_decode(deserializer);
         let mut var_baseUrl = <Option<String>>::sse_decode(deserializer);
         let mut var_timeoutSecs = <Option<i64>>::sse_decode(deserializer);
+        let mut var_connectTimeoutSecs = <Option<i64>>::sse_decode(deserializer);
         let mut var_maxRetries = <Option<i64>>::sse_decode(deserializer);
         let mut var_temperature = <Option<f64>>::sse_decode(deserializer);
         let mut var_maxTokens = <Option<i64>>::sse_decode(deserializer);
@@ -8378,6 +8444,7 @@ impl SseDecode for crate::LlmConfig {
             api_key: var_apiKey,
             base_url: var_baseUrl,
             timeout_secs: var_timeoutSecs,
+            connect_timeout_secs: var_connectTimeoutSecs,
             max_retries: var_maxRetries,
             temperature: var_temperature,
             max_tokens: var_maxTokens,
@@ -8675,9 +8742,11 @@ impl SseDecode for crate::ModerationRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_input = <crate::ModerationInput>::sse_decode(deserializer);
         let mut var_model = <Option<String>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::ModerationRequest {
             input: var_input,
             model: var_model,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -8769,11 +8838,13 @@ impl SseDecode for crate::OcrRequest {
         let mut var_document = <crate::OcrDocument>::sse_decode(deserializer);
         let mut var_pages = <Option<Vec<i64>>>::sse_decode(deserializer);
         let mut var_includeImageBase64 = <Option<bool>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::OcrRequest {
             model: var_model,
             document: var_document,
             pages: var_pages,
             include_image_base64: var_includeImageBase64,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -9457,12 +9528,14 @@ impl SseDecode for crate::RerankRequest {
         let mut var_documents = <Vec<crate::RerankDocument>>::sse_decode(deserializer);
         let mut var_topN = <Option<i64>>::sse_decode(deserializer);
         let mut var_returnDocuments = <Option<bool>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::RerankRequest {
             model: var_model,
             query: var_query,
             documents: var_documents,
             top_n: var_topN,
             return_documents: var_returnDocuments,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -9597,12 +9670,14 @@ impl SseDecode for crate::SearchRequest {
         let mut var_maxResults = <Option<i64>>::sse_decode(deserializer);
         let mut var_searchDomainFilter = <Option<Vec<String>>>::sse_decode(deserializer);
         let mut var_country = <Option<String>>::sse_decode(deserializer);
+        let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         return crate::SearchRequest {
             model: var_model,
             query: var_query,
             max_results: var_maxResults,
             search_domain_filter: var_searchDomainFilter,
             country: var_country,
+            extra_body: var_extraBody,
         };
     }
 }
@@ -9716,6 +9791,7 @@ impl SseDecode for crate::StreamFormat {
         return match inner {
             0 => crate::StreamFormat::Sse,
             1 => crate::StreamFormat::AwsEventStream,
+            2 => crate::StreamFormat::Ndjson,
             _ => unreachable!("Invalid variant for StreamFormat: {}", inner),
         };
     }
@@ -10197,6 +10273,87 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<DefaultClient>> for DefaultCli
     }
 }
 
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<AlefBridgeError> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        crate::alef_encode_bridge_error(self.0).into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<AlefBridgeError> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<AlefBridgeError>> for AlefBridgeError {
+    fn into_into_dart(self) -> FrbWrapper<AlefBridgeError> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<AlefStreamDefaultClientChatStream> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        crate::alef_encode_stream_default_client_chat_stream(self.0).into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<AlefStreamDefaultClientChatStream> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<AlefStreamDefaultClientChatStream>>
+    for AlefStreamDefaultClientChatStream
+{
+    fn into_into_dart(self) -> FrbWrapper<AlefStreamDefaultClientChatStream> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::AlefBridgeErrorWire {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::AlefBridgeErrorWire::LiterLlmError { error } => {
+                [0.into_dart(), error.into_into_dart().into_dart()].into_dart()
+            }
+            crate::AlefBridgeErrorWire::CatalogRefreshError { error } => {
+                [1.into_dart(), error.into_into_dart().into_dart()].into_dart()
+            }
+            crate::AlefBridgeErrorWire::InvalidInput { message } => {
+                [2.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            crate::AlefBridgeErrorWire::NativeFailure { message } => {
+                [3.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::AlefBridgeErrorWire {}
+impl flutter_rust_bridge::IntoIntoDart<crate::AlefBridgeErrorWire> for crate::AlefBridgeErrorWire {
+    fn into_into_dart(self) -> crate::AlefBridgeErrorWire {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::AlefStreamDefaultClientChatStreamWire {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::AlefStreamDefaultClientChatStreamWire::Item { value } => {
+                [0.into_dart(), value.into_into_dart().into_dart()].into_dart()
+            }
+            crate::AlefStreamDefaultClientChatStreamWire::Error { error } => {
+                [1.into_dart(), error.into_into_dart().into_dart()].into_dart()
+            }
+            crate::AlefStreamDefaultClientChatStreamWire::NativeFailure { message } => {
+                [2.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::AlefStreamDefaultClientChatStreamWire {}
+impl flutter_rust_bridge::IntoIntoDart<crate::AlefStreamDefaultClientChatStreamWire>
+    for crate::AlefStreamDefaultClientChatStreamWire
+{
+    fn into_into_dart(self) -> crate::AlefStreamDefaultClientChatStreamWire {
+        self
+    }
+}
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::AssistantContent> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
@@ -10764,6 +10921,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::ClientOptions> {
             self.0.api_key.into_into_dart().into_dart(),
             self.0.base_url.into_into_dart().into_dart(),
             self.0.timeout_secs.into_into_dart().into_dart(),
+            self.0.connect_timeout_secs.into_into_dart().into_dart(),
             self.0.max_retries.into_into_dart().into_dart(),
             self.0.max_response_bytes.into_into_dart().into_dart(),
             self.0.model_hint.into_into_dart().into_dart(),
@@ -10862,6 +11020,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::CreateImageRequest> {
             self.0.style.into_into_dart().into_dart(),
             self.0.response_format.into_into_dart().into_dart(),
             self.0.user.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -10904,6 +11063,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::CreateSpeechRequest> {
             self.0.voice.into_into_dart().into_dart(),
             self.0.response_format.into_into_dart().into_dart(),
             self.0.speed.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -10924,6 +11084,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::CreateTranscriptionRequ
             self.0.prompt.into_into_dart().into_dart(),
             self.0.response_format.into_into_dart().into_dart(),
             self.0.temperature.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -11111,6 +11272,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::EmbeddingRequest> {
             self.0.encoding_format.into_into_dart().into_dart(),
             self.0.dimensions.into_into_dart().into_dart(),
             self.0.user.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -11565,6 +11727,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::LlmConfig> {
             self.0.api_key.into_into_dart().into_dart(),
             self.0.base_url.into_into_dart().into_dart(),
             self.0.timeout_secs.into_into_dart().into_dart(),
+            self.0.connect_timeout_secs.into_into_dart().into_dart(),
             self.0.max_retries.into_into_dart().into_dart(),
             self.0.temperature.into_into_dart().into_dart(),
             self.0.max_tokens.into_into_dart().into_dart(),
@@ -11848,6 +12011,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::ModerationRequest> {
         [
             self.0.input.into_into_dart().into_dart(),
             self.0.model.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -11957,6 +12121,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::OcrRequest> {
             self.0.document.into_into_dart().into_dart(),
             self.0.pages.into_into_dart().into_dart(),
             self.0.include_image_base64.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -12140,6 +12305,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::RerankRequest> {
             self.0.documents.into_into_dart().into_dart(),
             self.0.top_n.into_into_dart().into_dart(),
             self.0.return_documents.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -12297,6 +12463,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::SearchRequest> {
             self.0.max_results.into_into_dart().into_dart(),
             self.0.search_domain_filter.into_into_dart().into_dart(),
             self.0.country.into_into_dart().into_dart(),
+            self.0.extra_body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -12432,6 +12599,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::StreamFormat> {
         match self.0 {
             crate::StreamFormat::Sse => 0.into_dart(),
             crate::StreamFormat::AwsEventStream => 1.into_dart(),
+            crate::StreamFormat::Ndjson => 2.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -12713,6 +12881,23 @@ impl SseEncode for DefaultClient {
     }
 }
 
+impl SseEncode for AlefBridgeError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::AlefBridgeErrorWire>::sse_encode(crate::alef_encode_bridge_error(self), serializer);
+    }
+}
+
+impl SseEncode for AlefStreamDefaultClientChatStream {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::AlefStreamDefaultClientChatStreamWire>::sse_encode(
+            crate::alef_encode_stream_default_client_chat_stream(self),
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for std::collections::HashMap<String, String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -12736,7 +12921,7 @@ impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
     }
 }
 
-impl SseEncode for StreamSink<crate::ChatCompletionChunk, flutter_rust_bridge::for_generated::SseCodec> {
+impl SseEncode for StreamSink<AlefStreamDefaultClientChatStream, flutter_rust_bridge::for_generated::SseCodec> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         unimplemented!("")
@@ -12747,6 +12932,56 @@ impl SseEncode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<u8>>::sse_encode(self.into_bytes(), serializer);
+    }
+}
+
+impl SseEncode for crate::AlefBridgeErrorWire {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::AlefBridgeErrorWire::LiterLlmError { error } => {
+                <i32>::sse_encode(0, serializer);
+                <crate::LiterLlmError>::sse_encode(error, serializer);
+            }
+            crate::AlefBridgeErrorWire::CatalogRefreshError { error } => {
+                <i32>::sse_encode(1, serializer);
+                <crate::CatalogRefreshError>::sse_encode(error, serializer);
+            }
+            crate::AlefBridgeErrorWire::InvalidInput { message } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            crate::AlefBridgeErrorWire::NativeFailure { message } => {
+                <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseEncode for crate::AlefStreamDefaultClientChatStreamWire {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::AlefStreamDefaultClientChatStreamWire::Item { value } => {
+                <i32>::sse_encode(0, serializer);
+                <crate::ChatCompletionChunk>::sse_encode(value, serializer);
+            }
+            crate::AlefStreamDefaultClientChatStreamWire::Error { error } => {
+                <i32>::sse_encode(1, serializer);
+                <crate::LiterLlmError>::sse_encode(error, serializer);
+            }
+            crate::AlefStreamDefaultClientChatStreamWire::NativeFailure { message } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -13171,6 +13406,7 @@ impl SseEncode for crate::ClientOptions {
         <String>::sse_encode(self.api_key, serializer);
         <Option<String>>::sse_encode(self.base_url, serializer);
         <Option<i64>>::sse_encode(self.timeout_secs, serializer);
+        <Option<i64>>::sse_encode(self.connect_timeout_secs, serializer);
         <Option<i64>>::sse_encode(self.max_retries, serializer);
         <Option<i64>>::sse_encode(self.max_response_bytes, serializer);
         <Option<String>>::sse_encode(self.model_hint, serializer);
@@ -13241,6 +13477,7 @@ impl SseEncode for crate::CreateImageRequest {
         <Option<String>>::sse_encode(self.style, serializer);
         <Option<String>>::sse_encode(self.response_format, serializer);
         <Option<String>>::sse_encode(self.user, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -13267,6 +13504,7 @@ impl SseEncode for crate::CreateSpeechRequest {
         <String>::sse_encode(self.voice, serializer);
         <Option<String>>::sse_encode(self.response_format, serializer);
         <Option<f64>>::sse_encode(self.speed, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -13279,6 +13517,7 @@ impl SseEncode for crate::CreateTranscriptionRequest {
         <Option<String>>::sse_encode(self.prompt, serializer);
         <Option<String>>::sse_encode(self.response_format, serializer);
         <Option<f64>>::sse_encode(self.temperature, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -13404,6 +13643,7 @@ impl SseEncode for crate::EmbeddingRequest {
         <Option<crate::EmbeddingFormat>>::sse_encode(self.encoding_format, serializer);
         <Option<i64>>::sse_encode(self.dimensions, serializer);
         <Option<String>>::sse_encode(self.user, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -13976,7 +14216,7 @@ impl SseEncode for crate::LiterLlmError {
             crate::LiterLlmError::RateLimited { message, retry_after } => {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(message, serializer);
-                <i64>::sse_encode(retry_after, serializer);
+                <Option<i64>>::sse_encode(retry_after, serializer);
             }
             crate::LiterLlmError::BadRequest { message, status } => {
                 <i32>::sse_encode(2, serializer);
@@ -14008,7 +14248,7 @@ impl SseEncode for crate::LiterLlmError {
                 <i32>::sse_encode(7, serializer);
                 <String>::sse_encode(message, serializer);
                 <i64>::sse_encode(status, serializer);
-                <i64>::sse_encode(retry_after, serializer);
+                <Option<i64>>::sse_encode(retry_after, serializer);
             }
             crate::LiterLlmError::Timeout => {
                 <i32>::sse_encode(8, serializer);
@@ -14038,7 +14278,7 @@ impl SseEncode for crate::LiterLlmError {
             crate::LiterLlmError::BudgetExceeded { message, model } => {
                 <i32>::sse_encode(14, serializer);
                 <String>::sse_encode(message, serializer);
-                <String>::sse_encode(model, serializer);
+                <Option<String>>::sse_encode(model, serializer);
             }
             crate::LiterLlmError::HookRejected { message } => {
                 <i32>::sse_encode(15, serializer);
@@ -14099,6 +14339,7 @@ impl SseEncode for crate::LlmConfig {
         <Option<String>>::sse_encode(self.api_key, serializer);
         <Option<String>>::sse_encode(self.base_url, serializer);
         <Option<i64>>::sse_encode(self.timeout_secs, serializer);
+        <Option<i64>>::sse_encode(self.connect_timeout_secs, serializer);
         <Option<i64>>::sse_encode(self.max_retries, serializer);
         <Option<f64>>::sse_encode(self.temperature, serializer);
         <Option<i64>>::sse_encode(self.max_tokens, serializer);
@@ -14313,6 +14554,7 @@ impl SseEncode for crate::ModerationRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::ModerationInput>::sse_encode(self.input, serializer);
         <Option<String>>::sse_encode(self.model, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -14379,6 +14621,7 @@ impl SseEncode for crate::OcrRequest {
         <crate::OcrDocument>::sse_encode(self.document, serializer);
         <Option<Vec<i64>>>::sse_encode(self.pages, serializer);
         <Option<bool>>::sse_encode(self.include_image_base64, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -14983,6 +15226,7 @@ impl SseEncode for crate::RerankRequest {
         <Vec<crate::RerankDocument>>::sse_encode(self.documents, serializer);
         <Option<i64>>::sse_encode(self.top_n, serializer);
         <Option<bool>>::sse_encode(self.return_documents, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -15079,6 +15323,7 @@ impl SseEncode for crate::SearchRequest {
         <Option<i64>>::sse_encode(self.max_results, serializer);
         <Option<Vec<String>>>::sse_encode(self.search_domain_filter, serializer);
         <Option<String>>::sse_encode(self.country, serializer);
+        <Option<String>>::sse_encode(self.extra_body, serializer);
     }
 }
 
@@ -15162,6 +15407,7 @@ impl SseEncode for crate::StreamFormat {
             match self {
                 crate::StreamFormat::Sse => 0,
                 crate::StreamFormat::AwsEventStream => 1,
+                crate::StreamFormat::Ndjson => 2,
                 _ => {
                     unimplemented!("");
                 }

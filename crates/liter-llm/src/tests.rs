@@ -4,6 +4,89 @@ fn init_crypto_for_unit_tests() {
     crate::ensure_crypto_provider();
 }
 
+/// A loopback port that fails every request at once and that no other process can take.
+///
+/// The port listens and closes each connection without a reply, so a request to it fails with
+/// a transport error on every platform. A bound socket that never listens is not enough: Linux
+/// refuses a connect to it, but macOS drops the SYN and the connect waits for the operating
+/// system timeout. The listener keeps the port while the value lives.
+/// A port that a test binds and then frees can go to another test process before the test
+/// connects to it. Keep the value in a named binding until the test ends, inside a Tokio runtime.
+#[cfg(test)]
+pub(crate) struct ClosingPort {
+    server: tokio::task::JoinHandle<()>,
+    address: std::net::SocketAddr,
+    url: String,
+}
+
+#[cfg(test)]
+impl ClosingPort {
+    pub(crate) fn new() -> Self {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind the closing port");
+        listener.set_nonblocking(true).expect("non-blocking listener");
+        let address = listener.local_addr().expect("closing port address");
+        let listener = tokio::net::TcpListener::from_std(listener).expect("register the closing port");
+        let server = tokio::spawn(async move {
+            loop {
+                // An accept error must not end the loop: that would free the port.
+                match listener.accept().await {
+                    Ok((stream, _)) => drop(stream),
+                    Err(_) => tokio::time::sleep(std::time::Duration::from_millis(10)).await,
+                }
+            }
+        });
+        Self {
+            server,
+            address,
+            url: format!("http://{address}/"),
+        }
+    }
+
+    pub(crate) fn address(&self) -> std::net::SocketAddr {
+        self.address
+    }
+
+    pub(crate) fn url(&self) -> &str {
+        &self.url
+    }
+}
+
+#[cfg(test)]
+impl Drop for ClosingPort {
+    fn drop(&mut self) {
+        self.server.abort();
+    }
+}
+
+#[cfg(test)]
+mod closing_port_tests {
+    use super::ClosingPort;
+    use tokio::io::AsyncReadExt as _;
+
+    #[tokio::test]
+    async fn a_held_closing_port_ends_connections_and_cannot_be_bound_again() {
+        let port = ClosingPort::new();
+
+        let bind = std::net::TcpListener::bind(port.address());
+        assert_eq!(
+            bind.err().map(|e| e.kind()),
+            Some(std::io::ErrorKind::AddrInUse),
+            "another socket cannot take the port while the guard lives"
+        );
+        let mut stream = tokio::net::TcpStream::connect(port.address())
+            .await
+            .expect("the held port accepts the connection");
+        let mut buffer = [0_u8; 1];
+        let read = tokio::time::timeout(std::time::Duration::from_secs(10), stream.read(&mut buffer))
+            .await
+            .expect("the held port ends the connection at once");
+        assert!(
+            matches!(read, Ok(0) | Err(_)),
+            "the connection ends with no data, got {read:?}"
+        );
+    }
+}
+
 #[cfg(test)]
 mod serde_tests {
     use crate::types::*;
@@ -145,6 +228,7 @@ mod serde_tests {
             encoding_format: None,
             dimensions: Some(256),
             user: None,
+            extra_body: None,
         };
 
         let json = serde_json::to_string(&req).expect("serialization should not fail");
@@ -341,6 +425,7 @@ mod serde_tests {
             encoding_format: Some(EmbeddingFormat::Base64),
             dimensions: Some(1024),
             user: Some("user-123".into()),
+            extra_body: None,
         };
 
         let json = serde_json::to_string(&req).expect("serialization should not fail");
@@ -617,6 +702,7 @@ mod serde_tests {
             max_results: Some(5),
             search_domain_filter: Some(vec!["rust-lang.org".into()]),
             country: Some("US".into()),
+            extra_body: None,
         };
         let json = serde_json::to_string(&req).expect("serialization should not fail");
         assert!(json.contains("max_results"));
@@ -651,6 +737,7 @@ mod serde_tests {
             },
             pages: None,
             include_image_base64: None,
+            extra_body: None,
         };
         let json = serde_json::to_string(&req).expect("serialization should not fail");
         let parsed: OcrRequest = serde_json::from_str(&json).expect("deserialization should not fail");
@@ -761,7 +848,55 @@ mod provider_tests {
     fn detect_ollama() {
         let p = detect_provider("ollama/llama3").expect("provider should be detected");
         assert_eq!(p.name(), "ollama");
-        assert_eq!(p.base_url(), "http://localhost:11434/v1");
+        assert_eq!(p.base_url(), "http://localhost:11434");
+        assert_eq!(
+            p.chat_completions_path(),
+            "/api/chat",
+            "the native provider, not the registry entry"
+        );
+        assert_eq!(p.embeddings_path(), "/api/embed");
+        assert_eq!(p.models_path(), "/api/tags");
+    }
+
+    #[test]
+    fn a_provider_prefix_is_a_registry_name_or_alias_or_a_builtin() {
+        use crate::provider::has_provider_prefix;
+        for model in [
+            "openai/m",
+            "openai/",
+            "anthropic/m",
+            "azure/m",
+            "gemini/m",
+            "google_ai/m",
+            "vertex_ai/m",
+            "bedrock/m",
+            "cohere/m",
+            "mistral/m",
+            "voyage/m",
+            "github_copilot/m",
+            "ollama/m",
+            "ollama_chat/m",
+            "lm_studio/m",
+            "groq/m",
+            "snowflake/m",
+            "custom/m",
+            "openrouter/anthropic/claude",
+        ] {
+            assert!(has_provider_prefix(model), "{model} names a provider");
+        }
+        for model in [
+            "m",
+            "gpt-4o",
+            "claude-3-5-sonnet",
+            "llama3.1:8b",
+            "hf.co/user/model",
+            "library/llama3",
+            "/m",
+            "Openai/m",
+            "unregistered-vendor/m",
+        ] {
+            assert!(!has_provider_prefix(model), "{model} is bare");
+        }
     }
 
     #[test]
@@ -1541,14 +1676,29 @@ mod error_tests {
         assert!(matches!(LiterLlmError::from(err), LiterLlmError::Timeout));
     }
 
-    #[cfg(feature = "native-http")]
+    // macOS drops the SYN to a bound, non-listening socket, so this test runs on Linux only.
+    #[cfg(all(feature = "native-http", target_os = "linux"))]
     #[tokio::test]
     async fn reqwest_connect_failure_stays_network() {
-        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind");
-        let url = format!("http://{}/", listener.local_addr().expect("addr"));
-        drop(listener);
+        let socket = tokio::net::TcpSocket::new_v4().expect("create socket");
+        socket.set_reuseaddr(false).expect("disable address reuse");
+        socket
+            .bind("127.0.0.1:0".parse().expect("loopback address"))
+            .expect("bind the refusing port");
+        let url = format!("http://{}/", socket.local_addr().expect("refusing port address"));
         let client = reqwest::Client::new();
         let err = client.get(&url).send().await.expect_err("connection refused");
+        assert!(err.is_connect(), "the request fails at connect: {err:?}");
+        assert!(matches!(LiterLlmError::from(err), LiterLlmError::Network { .. }));
+        drop(socket);
+    }
+
+    #[cfg(feature = "native-http")]
+    #[tokio::test]
+    async fn reqwest_transport_failure_stays_network() {
+        let port = super::ClosingPort::new();
+        let client = reqwest::Client::new();
+        let err = client.get(port.url()).send().await.expect_err("connection closed");
         assert!(matches!(LiterLlmError::from(err), LiterLlmError::Network { .. }));
     }
 }

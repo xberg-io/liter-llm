@@ -50,6 +50,10 @@ impl GoogleAiProvider {
 }
 
 impl Provider for GoogleAiProvider {
+    fn at_base_url(&self, base_url: &str) -> Option<Box<dyn Provider>> {
+        Some(Box::new(Self::with_base_url(base_url)))
+    }
+
     fn name(&self) -> &str {
         "google_ai"
     }
@@ -338,6 +342,19 @@ mod tests {
         assert_eq!(body["choices"][0]["finish_reason"], "stop");
         assert_eq!(body["usage"]["prompt_tokens"], 5);
         assert_eq!(body["usage"]["completion_tokens"], 4);
+    }
+
+    /// Revert line: remove the `stream_error_event` call from `parse_gemini_stream_event`
+    /// to make this test fail.
+    #[test]
+    fn parse_stream_event_error_event_is_rate_limited() {
+        let event = r#"{"error":{"code":429,"message":"quota","status":"RESOURCE_EXHAUSTED"}}"#;
+        let err = provider().parse_stream_event(event).unwrap_err();
+        assert!(
+            matches!(err, crate::error::LiterLlmError::RateLimited { .. }),
+            "got: {err:?}"
+        );
+        assert!(err.to_string().contains("quota"), "got: {err}");
     }
 
     #[test]

@@ -217,7 +217,6 @@
         "type": "bearer",
         "env_var": "ASSEMBLYAI_API_KEY"
       },
-      "endpoints": ["audio", "chat"],
       "model_prefixes": ["assemblyai/"],
       "model_count": 2,
       "capabilities": {
@@ -496,7 +495,7 @@
         "type": "bearer",
         "env_var": "BRAVE_API_KEY"
       },
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "capabilities": {
         "vision": false,
         "reasoning": false,
@@ -986,7 +985,6 @@
         "type": "bearer",
         "env_var": "DEEPGRAM_API_KEY"
       },
-      "endpoints": ["audio", "chat"],
       "model_prefixes": ["deepgram/", "deepgram/base-", "deepgram/enhanced-", "deepgram/nova-", "deepgram/whisper-"],
       "model_count": 36,
       "capabilities": {
@@ -1083,7 +1081,7 @@
     {
       "name": "duckduckgo",
       "display_name": "DuckDuckGo",
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_count": 1,
       "base_url": "https://api.duckduckgo.com",
       "auth": {
@@ -1108,7 +1106,8 @@
         "type": "bearer",
         "env_var": "EDENAI_API_KEY"
       },
-      "endpoints": ["chat", "embedding", "image", "audio"],
+      "endpoints": ["chat", "embedding"],
+      "no_route_endpoints": ["audio", "image"],
       "model_prefixes": ["edenai/"],
       "capabilities": {
         "vision": false,
@@ -1129,7 +1128,6 @@
         "type": "bearer",
         "env_var": "ELEVENLABS_API_KEY"
       },
-      "endpoints": ["audio", "chat"],
       "model_prefixes": ["elevenlabs/"],
       "model_count": 4,
       "capabilities": {
@@ -1195,7 +1193,7 @@
         "type": "bearer",
         "env_var": "EXA_API_KEY"
       },
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_count": 1,
       "capabilities": {
         "vision": false,
@@ -1216,7 +1214,6 @@
         "type": "bearer",
         "env_var": "FAL_KEY"
       },
-      "endpoints": ["chat", "image"],
       "model_prefixes": ["fal_ai/", "fal_ai/fal-"],
       "model_count": 12,
       "capabilities": {
@@ -1260,7 +1257,7 @@
         "type": "bearer",
         "env_var": "FIRECRAWL_API_KEY"
       },
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_count": 1,
       "capabilities": {
         "vision": false,
@@ -1512,7 +1509,7 @@
         "type": "bearer",
         "env_var": "GOOGLE_PSE_API_KEY"
       },
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_count": 1,
       "capabilities": {
         "vision": false,
@@ -1834,7 +1831,7 @@
         "type": "bearer",
         "env_var": "LINKUP_API_KEY"
       },
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_prefixes": ["linkup/"],
       "model_count": 2,
       "capabilities": {
@@ -2437,24 +2434,25 @@
     {
       "name": "ollama",
       "display_name": "Ollama",
-      "base_url": "http://localhost:11434/v1",
+      "$comment": "Calls Ollama's own /api/chat and /api/embed so that num_ctx, top_k and repeat_penalty in extra_body reach the model as options. Implemented in crates/liter-llm/src/provider/ollama.rs. For Ollama's OpenAI-compatible endpoint, use the openai/ prefix with the Ollama base_url.",
+      "base_url": "http://localhost:11434",
       "auth": {
         "type": "none"
       },
       "endpoints": ["chat", "embedding"],
-      "model_prefixes": ["ollama/", "ollama/deepseek-", "ollama/gpt-", "ollama/mistral-", "ollama/mixtral-"],
+      "model_prefixes": ["ollama/", "ollama_chat/"],
       "aliases": ["ollama_chat"],
       "model_count": 29,
       "capabilities": {
         "vision": true,
-        "reasoning": false,
+        "reasoning": true,
         "structured_output": true,
         "function_calling": true,
         "audio_in": false,
         "audio_out": false,
         "video_in": false
       },
-      "streaming_format": "sse"
+      "streaming_format": "ndjson"
     },
     {
       "name": "oobabooga",
@@ -2653,7 +2651,7 @@
         "type": "bearer",
         "env_var": "PARALLEL_AI_API_KEY"
       },
-      "endpoints": ["search"],
+      "no_route_endpoints": ["search"],
       "model_prefixes": ["parallel_ai/"],
       "model_count": 2,
       "capabilities": {
@@ -2696,7 +2694,8 @@
         "type": "bearer",
         "env_var": "PERPLEXITYAI_API_KEY"
       },
-      "endpoints": ["chat", "search"],
+      "endpoints": ["chat"],
+      "no_route_endpoints": ["search"],
       "model_prefixes": [
         "perplexity/",
         "perplexity/anthropic/claude-",
@@ -3016,7 +3015,6 @@
         "type": "bearer",
         "env_var": "RUNWAYML_API_KEY"
       },
-      "endpoints": ["audio", "image"],
       "model_prefixes": ["runwayml/"],
       "model_count": 6,
       "capabilities": {
@@ -3226,7 +3224,6 @@
         "type": "bearer",
         "env_var": "SERPER_API_KEY"
       },
-      "endpoints": ["search"],
       "model_count": 1,
       "capabilities": {
         "vision": false,
@@ -3295,7 +3292,6 @@
         "type": "bearer",
         "env_var": "STABILITY_API_KEY"
       },
-      "endpoints": ["image"],
       "model_prefixes": ["stability/", "stability/sd3-", "stability/sd3.5-", "stability/search-", "stability/stable-"],
       "model_count": 23,
       "capabilities": {
@@ -3340,7 +3336,6 @@
         "type": "bearer",
         "env_var": "TAVILY_API_KEY"
       },
-      "endpoints": ["search"],
       "model_prefixes": ["tavily/"],
       "model_count": 2,
       "capabilities": {
@@ -3844,6 +3839,7 @@
     "amazon_nova",
     "anthropic",
     "anthropic_text",
+    "assemblyai",
     "auto_router",
     "aws_polly",
     "azure",
@@ -3863,6 +3859,9 @@
     "databricks",
     "dataforseo",
     "datarobot",
+    "deepgram",
+    "elevenlabs",
+    "fal_ai",
     "gdc",
     "gigachat",
     "github_copilot",
@@ -3880,13 +3879,17 @@
     "pydantic_ai_agents",
     "ragflow",
     "reducto",
+    "runwayml",
     "s3_vectors",
     "sagemaker",
     "sagemaker_chat",
     "sap",
     "searxng",
+    "serper",
     "snowflake",
     "soniox",
+    "stability",
+    "tavily",
     "triton",
     "vertex_ai",
     "vertex_ai/agent_engine",

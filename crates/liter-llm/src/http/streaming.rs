@@ -107,14 +107,22 @@ where
         client,
         request,
         parse_event,
+        None,
         ResponseReadOptions {
             max_retries,
             max_response_bytes: None,
+            timeout: None,
         },
     )
     .await
 }
 
+/// Send a streaming POST request with the response read limits in `options`.
+///
+/// `is_final` makes the end of the stream checked: when it is `Some`, the
+/// stream must end with `[DONE]`, with an item that `is_final` accepts, or with
+/// an error. A clean close with none of these yields one `Streaming` error.
+/// `None` ends the stream on any clean close.
 #[tracing::instrument(
     name = "post_stream",
     level = "debug",
@@ -130,15 +138,33 @@ pub(crate) async fn post_stream_bounded<P, T>(
     client: &reqwest::Client,
     request: StreamingPost<'_>,
     parse_event: P,
+    is_final: Option<fn(&T) -> bool>,
     options: ResponseReadOptions,
 ) -> Result<crate::client::BoxStream<'static, Result<T>>>
 where
     P: Fn(&str) -> Result<Option<T>> + Send + 'static,
     T: Send + 'static,
 {
+    post_stream_framed(client, request, parse_event, is_final, options, Framing::Sse).await
+}
+
+/// Like [`post_stream_bounded`], with the line framing chosen by the caller:
+/// [`Framing::Ndjson`] reads one JSON object per line, with no `data:` prefix and no `[DONE]` line.
+pub(crate) async fn post_stream_framed<P, T>(
+    client: &reqwest::Client,
+    request: StreamingPost<'_>,
+    parse_event: P,
+    is_final: Option<fn(&T) -> bool>,
+    options: ResponseReadOptions,
+    framing: Framing,
+) -> Result<crate::client::BoxStream<'static, Result<T>>>
+where
+    P: Fn(&str) -> Result<Option<T>> + Send + 'static,
+    T: Send + 'static,
+{
     let resp = request.send(client, options).await?;
-    let byte_stream = resp.bytes_stream();
-    let stream = SseParser::new(byte_stream, parse_event, None);
+    let byte_stream = crate::http::deadline::idle_timeout(resp.bytes_stream(), options.timeout);
+    let stream = SseParser::new_with_framing(byte_stream, parse_event, is_final, None, framing);
     Ok(Box::pin(stream))
 }
 
@@ -164,15 +190,23 @@ where
         client,
         request,
         parse_event,
+        None,
         cancel,
         ResponseReadOptions {
             max_retries,
             max_response_bytes: None,
+            timeout: None,
         },
     )
     .await
 }
 
+/// Send a cancellable streaming POST request with the response read limits in `options`.
+///
+/// `is_final` makes the end of the stream checked: when it is `Some`, the
+/// stream must end with `[DONE]`, with an item that `is_final` accepts, or with
+/// an error. A clean close with none of these yields one `Streaming` error.
+/// `None` ends the stream on any clean close.
 #[tracing::instrument(
     name = "post_stream_with_cancel",
     level = "debug",
@@ -190,6 +224,7 @@ pub(crate) async fn post_stream_with_cancel_bounded<P, T>(
     client: &reqwest::Client,
     request: StreamingPost<'_>,
     parse_event: P,
+    is_final: Option<fn(&T) -> bool>,
     cancel: CancellationToken,
     options: ResponseReadOptions,
 ) -> Result<crate::client::BoxStream<'static, Result<T>>>
@@ -199,7 +234,7 @@ where
 {
     let resp = request.send(client, options).await?;
     let byte_stream = resp.bytes_stream();
-    let stream = SseParser::new(byte_stream, parse_event, Some(cancel));
+    let stream = SseParser::new(byte_stream, parse_event, is_final, Some(cancel));
     Ok(Box::pin(stream))
 }
 
@@ -210,6 +245,15 @@ type CancelField = Option<CancellationToken>;
 
 #[cfg(not(feature = "native-http"))]
 type CancelField = Option<std::convert::Infallible>;
+
+/// How the lines of a streaming response carry their payload.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Framing {
+    /// Server-Sent Events: payloads follow `data:`, and `[DONE]` ends the stream.
+    Sse,
+    /// Newline-delimited JSON: every non-empty line is a payload.
+    Ndjson,
+}
 
 pin_project! {
     /// Wraps a `bytes::Bytes` stream and yields parsed items of type `T`.
@@ -244,7 +288,14 @@ pin_project! {
         cursor: usize,
         done: bool,
         parse_event: P,
+        // ~keep `Some` makes the end of the stream checked: the inner stream must
+        // end after `[DONE]`, an item this function accepts as final, or an error.
+        is_final: Option<fn(&T) -> bool>,
+        // True once the stream has a legitimate end: `[DONE]`, a final item, or
+        // an error already reported. A clean EOF before that is a cut stream.
+        settled: bool,
         cancel: CancelField,
+        framing: Framing,
         // ~keep `fn() -> T` marker keeps `SseParser` Send/Sync regardless of `T`,
         // since the parser never actually stores a `T`; it only produces one per item.
         _marker: std::marker::PhantomData<fn() -> T>,
@@ -261,7 +312,19 @@ impl<S, P, T> SseParser<S, P, T>
 where
     P: Fn(&str) -> Result<Option<T>>,
 {
-    fn new(inner: S, parse_event: P, cancel: CancelField) -> Self {
+    // ~keep Only the native cancel path and the tests call `new`; on wasm32 it would be dead code.
+    #[cfg(any(test, feature = "native-http"))]
+    fn new(inner: S, parse_event: P, is_final: Option<fn(&T) -> bool>, cancel: CancelField) -> Self {
+        Self::new_with_framing(inner, parse_event, is_final, cancel, Framing::Sse)
+    }
+
+    fn new_with_framing(
+        inner: S,
+        parse_event: P,
+        is_final: Option<fn(&T) -> bool>,
+        cancel: CancelField,
+        framing: Framing,
+    ) -> Self {
         Self {
             inner,
             buffer: String::with_capacity(4096),
@@ -269,15 +332,19 @@ where
             cursor: 0,
             done: false,
             parse_event,
+            is_final,
+            settled: false,
             cancel,
+            framing,
             _marker: std::marker::PhantomData,
         }
     }
 }
 
-impl<S, P, T> Stream for SseParser<S, P, T>
+impl<S, E, P, T> Stream for SseParser<S, P, T>
 where
-    S: Stream<Item = std::result::Result<Bytes, reqwest::Error>>,
+    S: Stream<Item = std::result::Result<Bytes, E>>,
+    LiterLlmError: From<E>,
     P: Fn(&str) -> Result<Option<T>>,
 {
     type Item = Result<T>;
@@ -293,15 +360,36 @@ where
         }
 
         loop {
-            match take_buffered_line(this.buffer, this.cursor, &*this.parse_event) {
+            match take_buffered_line(this.buffer, this.cursor, &*this.parse_event, *this.framing) {
                 BufferedLine::Incomplete => {}
                 BufferedLine::Consumed => continue,
-                BufferedLine::Done => return Poll::Ready(None),
-                BufferedLine::Item(item) => return Poll::Ready(Some(item)),
+                BufferedLine::Done => {
+                    *this.settled = true;
+                    return Poll::Ready(None);
+                }
+                BufferedLine::Item(item) => {
+                    match &item {
+                        Ok(value) => {
+                            if this.is_final.is_some_and(|is_final| is_final(value)) {
+                                *this.settled = true;
+                            }
+                        }
+                        Err(_) => *this.settled = true,
+                    }
+                    return Poll::Ready(Some(item));
+                }
             }
 
             if *this.done {
-                return Poll::Ready(truncation_error_at_eof(this.buffer, this.cursor, this.pending).map(Err));
+                if let Some(error) = truncation_error_at_eof(this.buffer, this.cursor, this.pending, *this.framing) {
+                    *this.settled = true;
+                    return Poll::Ready(Some(Err(error)));
+                }
+                if this.is_final.is_some() && !*this.settled {
+                    *this.settled = true;
+                    return Poll::Ready(Some(Err(missing_final_event_error())));
+                }
+                return Poll::Ready(None);
             }
 
             // ~keep Re-check cancellation before blocking on the inner stream.
@@ -316,10 +404,12 @@ where
                 Poll::Ready(Some(Ok(bytes))) => {
                     if let Some(e) = append_chunk(this.buffer, this.pending, &bytes) {
                         *this.done = true;
+                        *this.settled = true;
                         return Poll::Ready(Some(Err(e)));
                     }
                 }
                 Poll::Ready(Some(Err(e))) => {
+                    *this.settled = true;
                     return Poll::Ready(Some(Err(LiterLlmError::from(e))));
                 }
                 Poll::Ready(None) => {
@@ -349,7 +439,12 @@ enum BufferedLine<T> {
 
 /// Consume the next complete line from `buffer` (starting at `cursor`) and
 /// classify it, parsing `data:` payloads with `parse_event`.
-fn take_buffered_line<T, P>(buffer: &mut String, cursor: &mut usize, parse_event: &P) -> BufferedLine<T>
+fn take_buffered_line<T, P>(
+    buffer: &mut String,
+    cursor: &mut usize,
+    parse_event: &P,
+    framing: Framing,
+) -> BufferedLine<T>
 where
     P: Fn(&str) -> Result<Option<T>>,
 {
@@ -360,7 +455,15 @@ where
 
     let line = buffer[*cursor..newline_pos].trim_end_matches('\r').trim();
 
-    let outcome = if line.is_empty() || line.starts_with(':') {
+    let outcome = if line.is_empty() {
+        BufferedLine::Consumed
+    } else if framing == Framing::Ndjson {
+        match parse_event(line) {
+            Ok(None) => BufferedLine::Consumed,
+            Ok(Some(item)) => BufferedLine::Item(Ok(item)),
+            Err(e) => BufferedLine::Item(Err(e)),
+        }
+    } else if line.starts_with(':') {
         BufferedLine::Consumed
     } else if let Some(raw) = line.strip_prefix("data:") {
         let data = raw.strip_prefix(' ').unwrap_or(raw).trim();
@@ -387,7 +490,16 @@ where
 /// Once the inner stream has ended, report any bytes left in the buffers as a
 /// truncation error, clearing the leftover data it finds. `None` means a clean
 /// end, in which case there was nothing left to clear.
-fn truncation_error_at_eof(buffer: &mut String, cursor: &mut usize, pending: &mut Vec<u8>) -> Option<LiterLlmError> {
+fn truncation_error_at_eof(
+    buffer: &mut String,
+    cursor: &mut usize,
+    pending: &mut Vec<u8>,
+    framing: Framing,
+) -> Option<LiterLlmError> {
+    let format_name = match framing {
+        Framing::Sse => "SSE",
+        Framing::Ndjson => "NDJSON",
+    };
     // ~keep Leftover bytes at EOF are an incomplete SSE line: the connection was
     // cut mid-event. That is data loss, not a clean end, so it must surface as
     // an `Err` item rather than a silent `Poll::Ready(None)` (see #44).
@@ -406,7 +518,7 @@ fn truncation_error_at_eof(buffer: &mut String, cursor: &mut usize, pending: &mu
             pending.clear();
             return Some(LiterLlmError::Streaming {
                 message: format!(
-                    "SSE stream truncated: {remaining} bytes of incomplete data at end of stream \
+                    "{format_name} stream truncated: {remaining} bytes of incomplete data at end of stream \
                      (starts with: {preview:?})"
                 ),
             });
@@ -424,10 +536,22 @@ fn truncation_error_at_eof(buffer: &mut String, cursor: &mut usize, pending: &mu
             "SSE stream ended mid-codepoint; stream was truncated"
         );
         return Some(LiterLlmError::Streaming {
-            message: format!("SSE stream truncated: {pending_len} bytes of incomplete UTF-8 at end of stream"),
+            message: format!(
+                "{format_name} stream truncated: {pending_len} bytes of incomplete UTF-8 at end of stream"
+            ),
         });
     }
     None
+}
+
+/// The error for a stream that the server closed cleanly before `[DONE]` and
+/// before any final item: the connection was cut on an event boundary, so the
+/// reply is incomplete.
+fn missing_final_event_error() -> LiterLlmError {
+    tracing::warn!("SSE stream ended before [DONE] or a final event; stream was truncated");
+    LiterLlmError::Streaming {
+        message: "SSE stream ended before its final event; the response is incomplete".to_owned(),
+    }
 }
 
 /// Decode an upstream chunk into `buffer`, carrying any split trailing
@@ -500,6 +624,7 @@ pub(crate) fn parse_sse_line(line: &str) -> Option<Result<ChatCompletionChunk>> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::client::chunk_has_finish_reason;
 
     #[test]
     fn bytes_pool_reuses_buffer() {
@@ -556,6 +681,7 @@ mod tests {
             NeverStream,
             |_data: &str| -> Result<Option<crate::types::ChatCompletionChunk>> { Ok(None) },
             None,
+            None,
         );
 
         let reclaimed = pool_acquire();
@@ -605,6 +731,7 @@ mod tests {
         let mut parser: Pin<Box<SseParser<_, _, _>>> = Box::pin(SseParser::new(
             InfiniteStream,
             |_data: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) },
+            None,
             Some(token_clone),
         ));
 
@@ -657,7 +784,7 @@ mod tests {
             Ok::<_, reqwest::Error>(Bytes::from(bytes[..split].to_vec())),
             Ok::<_, reqwest::Error>(Bytes::from(bytes[split..].to_vec())),
         ]);
-        let mut parser: Pin<Box<SseParser<_, _, _>>> = Box::pin(SseParser::new(inner, json_parse, None));
+        let mut parser: Pin<Box<SseParser<_, _, _>>> = Box::pin(SseParser::new(inner, json_parse, None, None));
 
         let result = futures_util::StreamExt::next(&mut parser)
             .await
@@ -676,7 +803,7 @@ mod tests {
             Ok::<_, reqwest::Error>(Bytes::from_static(&[0xFF])),
             Ok::<_, reqwest::Error>(Bytes::from_static(b"\n\n")),
         ]);
-        let mut parser: Pin<Box<SseParser<_, _, _>>> = Box::pin(SseParser::new(inner, json_parse, None));
+        let mut parser: Pin<Box<SseParser<_, _, _>>> = Box::pin(SseParser::new(inner, json_parse, None, None));
 
         match futures_util::StreamExt::next(&mut parser).await {
             Some(Err(LiterLlmError::Streaming { message })) => {
@@ -693,7 +820,7 @@ mod tests {
         let inner = futures_util::stream::iter(vec![Ok::<_, reqwest::Error>(Bytes::from_static(
             br#"data: {"id":"trunc","choices":[{"delta":{"content":"partial"#,
         ))]);
-        let mut parser: Pin<Box<SseParser<_, _, _>>> = Box::pin(SseParser::new(inner, json_parse, None));
+        let mut parser: Pin<Box<SseParser<_, _, _>>> = Box::pin(SseParser::new(inner, json_parse, None, None));
 
         match futures_util::StreamExt::next(&mut parser).await {
             Some(Err(LiterLlmError::Streaming { message })) => {
@@ -720,7 +847,7 @@ mod tests {
         );
 
         let inner = futures_util::stream::iter(vec![Ok::<_, reqwest::Error>(Bytes::from(bytes[..split].to_vec()))]);
-        let mut parser: Pin<Box<SseParser<_, _, _>>> = Box::pin(SseParser::new(inner, json_parse, None));
+        let mut parser: Pin<Box<SseParser<_, _, _>>> = Box::pin(SseParser::new(inner, json_parse, None, None));
 
         match futures_util::StreamExt::next(&mut parser).await {
             Some(Err(LiterLlmError::Streaming { message })) => {
@@ -728,5 +855,183 @@ mod tests {
             }
             other => panic!("mid-codepoint truncation must yield an error, not {other:?}"),
         }
+    }
+
+    const CONTENT_EVENT: &str = r#"data: {"id":"1","object":"chat.completion.chunk","created":1,"model":"m","choices":[{"index":0,"delta":{"content":"1"},"finish_reason":null}]}
+
+"#;
+    const FINISH_EVENT: &str = r#"data: {"id":"1","object":"chat.completion.chunk","created":1,"model":"m","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+"#;
+
+    /// A parser over `body`, with the end of the stream checked when `is_final` is set.
+    fn checked_parser(
+        body: &str,
+        is_final: Option<fn(&ChatCompletionChunk) -> bool>,
+    ) -> Pin<Box<dyn Stream<Item = Result<ChatCompletionChunk>>>> {
+        let inner = futures_util::stream::iter(vec![Ok::<_, reqwest::Error>(Bytes::from(body.as_bytes().to_vec()))]);
+        Box::pin(SseParser::new(inner, json_parse, is_final, None))
+    }
+
+    async fn drain_checked(
+        body: &str,
+        is_final: Option<fn(&ChatCompletionChunk) -> bool>,
+    ) -> Vec<Result<ChatCompletionChunk>> {
+        futures_util::StreamExt::collect(checked_parser(body, is_final)).await
+    }
+
+    fn assert_missing_final_event(last: &Result<ChatCompletionChunk>) {
+        match last {
+            Err(LiterLlmError::Streaming { message }) => {
+                assert!(message.contains("final event"), "unexpected message: {message}");
+            }
+            other => panic!("expected a Streaming error for the missing final event, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn done_sentinel_ends_a_checked_stream_cleanly() {
+        let body = format!("{CONTENT_EVENT}data: [DONE]\n\n");
+        let items = drain_checked(&body, Some(chunk_has_finish_reason)).await;
+        assert_eq!(items.len(), 1, "one chunk and a clean end: {items:?}");
+        assert!(items[0].is_ok());
+    }
+
+    #[tokio::test]
+    async fn finish_reason_ends_a_checked_stream_cleanly_without_done() {
+        let body = format!("{CONTENT_EVENT}{FINISH_EVENT}");
+        let items = drain_checked(&body, Some(chunk_has_finish_reason)).await;
+        assert_eq!(items.len(), 2, "two chunks and a clean end: {items:?}");
+        assert!(items.iter().all(Result::is_ok));
+    }
+
+    #[tokio::test]
+    async fn clean_close_on_an_event_boundary_without_done_is_an_error() {
+        let body = format!("{CONTENT_EVENT}{CONTENT_EVENT}");
+        let items = drain_checked(&body, Some(chunk_has_finish_reason)).await;
+        assert_eq!(items.len(), 3, "two chunks and one error: {items:?}");
+        assert!(items[0].is_ok() && items[1].is_ok());
+        assert_missing_final_event(&items[2]);
+    }
+
+    #[tokio::test]
+    async fn empty_body_is_an_error_when_the_end_is_checked() {
+        let items = drain_checked("", Some(chunk_has_finish_reason)).await;
+        assert_eq!(items.len(), 1);
+        assert_missing_final_event(&items[0]);
+    }
+
+    #[tokio::test]
+    async fn missing_final_event_error_is_reported_once() {
+        let mut parser = checked_parser(CONTENT_EVENT, Some(chunk_has_finish_reason));
+        assert!(futures_util::StreamExt::next(&mut parser).await.expect("chunk").is_ok());
+        assert_missing_final_event(&futures_util::StreamExt::next(&mut parser).await.expect("error"));
+        assert!(futures_util::StreamExt::next(&mut parser).await.is_none());
+        assert!(futures_util::StreamExt::next(&mut parser).await.is_none());
+    }
+
+    #[tokio::test]
+    async fn parse_error_is_not_followed_by_a_missing_final_event_error() {
+        let body = format!("{CONTENT_EVENT}data: not json\n\n");
+        let items = drain_checked(&body, Some(chunk_has_finish_reason)).await;
+        assert_eq!(items.len(), 2, "a chunk and the parse error only: {items:?}");
+        assert!(items[0].is_ok());
+        assert!(
+            matches!(&items[1], Err(LiterLlmError::Streaming { message }) if !message.contains("final event")),
+            "unexpected item: {:?}",
+            items[1]
+        );
+    }
+
+    #[tokio::test]
+    async fn mid_event_cut_on_a_checked_stream_is_reported_once_as_truncation() {
+        let body = format!("{CONTENT_EVENT}data: {{\"id\":\"1\",\"choi");
+        let items = drain_checked(&body, Some(chunk_has_finish_reason)).await;
+        assert_eq!(items.len(), 2, "a chunk and one truncation error: {items:?}");
+        assert!(items[0].is_ok());
+        match &items[1] {
+            Err(LiterLlmError::Streaming { message }) => {
+                assert!(message.contains("truncated"), "unexpected message: {message}");
+                assert!(!message.contains("final event"), "unexpected message: {message}");
+            }
+            other => panic!("expected the truncation error, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn invalid_utf8_on_a_checked_stream_gets_no_missing_final_event_error() {
+        let inner = futures_util::stream::iter(vec![
+            Ok::<_, reqwest::Error>(Bytes::from(CONTENT_EVENT.as_bytes().to_vec())),
+            Ok::<_, reqwest::Error>(Bytes::from_static(&[0xFF])),
+        ]);
+        let parser: Pin<Box<SseParser<_, _, _>>> =
+            Box::pin(SseParser::new(inner, json_parse, Some(chunk_has_finish_reason), None));
+        let items = futures_util::StreamExt::collect::<Vec<_>>(parser).await;
+        // ~keep The reader also reports the rejected byte left pending, with or without the end check.
+        assert!(items[0].is_ok());
+        assert!(matches!(&items[1], Err(LiterLlmError::Streaming { message }) if message.contains("invalid UTF-8")));
+        assert!(
+            !items.iter().any(
+                |item| matches!(item, Err(LiterLlmError::Streaming { message }) if message.contains("final event"))
+            ),
+            "no missing-final-event error after a reported error: {items:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn polling_a_checked_stream_after_done_stays_ended() {
+        let body = format!("{CONTENT_EVENT}data: [DONE]\n\n");
+        let mut parser = checked_parser(&body, Some(chunk_has_finish_reason));
+        assert!(
+            futures_util::StreamExt::next(&mut parser)
+                .await
+                .expect("the chunk")
+                .is_ok()
+        );
+        assert!(futures_util::StreamExt::next(&mut parser).await.is_none());
+        let again = futures_util::StreamExt::next(&mut parser).await;
+        assert!(again.is_none(), "a poll after the end reports no new error: {again:?}");
+    }
+
+    #[tokio::test]
+    async fn buffer_overflow_on_a_checked_stream_is_reported_once() {
+        let inner = futures_util::stream::iter(vec![
+            Ok::<_, reqwest::Error>(Bytes::from(CONTENT_EVENT.as_bytes().to_vec())),
+            Ok::<_, reqwest::Error>(Bytes::from(vec![b'x'; MAX_BUFFER_BYTES + 1])),
+        ]);
+        let parser: Pin<Box<SseParser<_, _, _>>> =
+            Box::pin(SseParser::new(inner, json_parse, Some(chunk_has_finish_reason), None));
+        let items = futures_util::StreamExt::collect::<Vec<_>>(parser).await;
+        assert_eq!(items.len(), 2, "a chunk and the overflow error: {items:?}");
+        assert!(items[0].is_ok());
+        let last = items[1].as_ref().expect_err("the overflow ends the stream");
+        assert!(last.to_string().contains("buffer exceeded"), "unexpected error: {last}");
+    }
+
+    #[tokio::test]
+    async fn transport_error_on_a_checked_stream_is_reported_once() {
+        let transport_error = reqwest::Client::new()
+            .get("not a url")
+            .build()
+            .expect_err("an invalid URL does not build");
+        let inner = futures_util::stream::iter(vec![
+            Ok::<_, reqwest::Error>(Bytes::from(CONTENT_EVENT.as_bytes().to_vec())),
+            Err(transport_error),
+        ]);
+        let parser: Pin<Box<SseParser<_, _, _>>> =
+            Box::pin(SseParser::new(inner, json_parse, Some(chunk_has_finish_reason), None));
+        let items = futures_util::StreamExt::collect::<Vec<_>>(parser).await;
+        assert_eq!(items.len(), 2, "a chunk and the transport error: {items:?}");
+        assert!(items[0].is_ok());
+        let last = items[1].as_ref().expect_err("the transport error ends the stream");
+        assert!(!last.to_string().contains("final event"), "unexpected error: {last}");
+    }
+
+    #[tokio::test]
+    async fn stream_without_an_end_check_stays_lenient() {
+        let body = format!("{CONTENT_EVENT}{CONTENT_EVENT}");
+        let items = drain_checked(&body, None).await;
+        assert_eq!(items.len(), 2, "no end check, no end error: {items:?}");
+        assert!(items.iter().all(Result::is_ok));
     }
 }

@@ -17,7 +17,7 @@ Liter-llm supports **174 providers** out of the box. Route requests to any provi
 | Anthropic | `anthropic/` | :white_check_mark: | -- | -- | -- | -- |
 | Anthropic Text | `anthropic_text/` | :white_check_mark: | -- | -- | -- | -- |
 | Apertis | `apertis/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
-| AssemblyAI | `assemblyai/` | :white_check_mark: | -- | -- | :white_check_mark: | -- |
+| AssemblyAI | `assemblyai/` | -- | -- | -- | -- | -- |
 | Auto Router | `auto_router/` | :white_check_mark: | -- | -- | -- | -- |
 | AWS - Bedrock | `bedrock/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | AWS - Bedrock Mantle | `bedrock_mantle/` | :white_check_mark: | -- | -- | -- | -- |
@@ -55,17 +55,17 @@ Liter-llm supports **174 providers** out of the box. Route requests to any provi
 | Databricks | `databricks/` | :white_check_mark: | -- | -- | -- | -- |
 | DataForSEO | `dataforseo/` | -- | -- | -- | -- | -- |
 | DataRobot | `datarobot/` | :white_check_mark: | -- | -- | -- | -- |
-| Deepgram | `deepgram/` | :white_check_mark: | -- | -- | :white_check_mark: | -- |
+| Deepgram | `deepgram/` | -- | -- | -- | -- | -- |
 | DeepInfra | `deepinfra/` | :white_check_mark: | -- | -- | -- | -- |
 | Deepseek | `deepseek/` | :white_check_mark: | -- | -- | -- | -- |
 | Docker Model Runner | `docker_model_runner/` | :white_check_mark: | -- | -- | -- | -- |
 | DuckDuckGo | `duckduckgo/` | -- | -- | -- | -- | -- |
-| Eden AI | `edenai/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- |
-| ElevenLabs | `elevenlabs/` | :white_check_mark: | -- | -- | :white_check_mark: | -- |
+| Eden AI | `edenai/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
+| ElevenLabs | `elevenlabs/` | -- | -- | -- | -- | -- |
 | Empiriolabs | `empiriolabs/` | :white_check_mark: | -- | -- | -- | -- |
 | Empower | `empower/` | :white_check_mark: | -- | -- | -- | -- |
 | Exa AI | `exa_ai/` | -- | -- | -- | -- | -- |
-| Fal AI | `fal_ai/` | :white_check_mark: | -- | :white_check_mark: | -- | -- |
+| Fal AI | `fal_ai/` | -- | -- | -- | -- | -- |
 | Featherless AI | `featherless_ai/` | :white_check_mark: | -- | -- | -- | -- |
 | Firecrawl | `firecrawl/` | -- | -- | -- | -- | -- |
 | Fireworks AI | `fireworks_ai/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
@@ -146,7 +146,7 @@ Liter-llm supports **174 providers** out of the box. Route requests to any provi
 | Reducto | `reducto/` | -- | -- | -- | -- | -- |
 | Reka | `reka/` | :white_check_mark: | -- | -- | -- | -- |
 | Replicate | `replicate/` | :white_check_mark: | -- | -- | -- | -- |
-| RunwayML | `runwayml/` | -- | -- | :white_check_mark: | :white_check_mark: | -- |
+| RunwayML | `runwayml/` | -- | -- | -- | -- | -- |
 | Sagemaker Chat | `sagemaker_chat/` | :white_check_mark: | -- | -- | -- | -- |
 | Sail | `sail/` | :white_check_mark: | -- | -- | -- | -- |
 | Sambanova | `sambanova/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
@@ -158,7 +158,7 @@ Liter-llm supports **174 providers** out of the box. Route requests to any provi
 | Serper | `serper/` | -- | -- | -- | -- | -- |
 | Snowflake | `snowflake/` | :white_check_mark: | -- | -- | -- | -- |
 | Soniox | `soniox/` | -- | -- | -- | :white_check_mark: | -- |
-| Stability AI | `stability/` | -- | -- | :white_check_mark: | -- | -- |
+| Stability AI | `stability/` | -- | -- | -- | -- | -- |
 | Synthetic | `synthetic/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Tavily | `tavily/` | -- | -- | -- | -- | -- |
 | Tencent | `tencent/` | :white_check_mark: | -- | -- | -- | -- |

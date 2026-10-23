@@ -177,6 +177,7 @@ mod live_stream_tests {
     }
 
     #[tokio::test]
+    #[serial_test::serial(outbound_policy)]
     async fn returns_first_chunk_before_upstream_finishes_and_drop_closes_socket() {
         let (url, _seen, server) = upstream(true).await;
         let response = timeout(Duration::from_secs(2), service(url).call(request()))
@@ -200,6 +201,7 @@ mod live_stream_tests {
     }
 
     #[tokio::test]
+    #[serial_test::serial(outbound_policy)]
     async fn cancellation_before_headers_closes_upstream() {
         let (url, seen, server) = upstream(false).await;
         let caller = tokio::spawn(async move { service(url).call(request()).await });
@@ -213,6 +215,7 @@ mod live_stream_tests {
     }
 
     #[tokio::test]
+    #[serial_test::serial(outbound_policy)]
     async fn upstream_failure_after_first_chunk_reaches_consumer() {
         let (url, _seen, server) = upstream(true).await;
         let response = timeout(Duration::from_secs(2), service(url).call(request()))

@@ -5,11 +5,12 @@ use crate::provider::{Provider, StreamFormat};
 
 mod embed;
 mod request;
+mod rerank;
 mod response;
 mod stream;
 
 use embed::{transform_bedrock_embed_request, transform_bedrock_embed_response};
-pub(crate) use stream::parse_bedrock_stream_event;
+pub(crate) use stream::{exception_error, parse_bedrock_stream_event};
 
 /// Default AWS region for Bedrock when none is specified.
 const DEFAULT_REGION: &str = "us-east-1";
@@ -107,6 +108,11 @@ fn dns_suffix_for_region(region: &str) -> &'static str {
     }
 }
 
+/// The runtime base URL of a region: `https://bedrock-runtime.{region}.{dns_suffix}`.
+fn runtime_url_for_region(region: &str) -> String {
+    format!("https://bedrock-runtime.{region}.{}", dns_suffix_for_region(region))
+}
+
 /// Percent-encode a model ID for use in a URL path segment.
 ///
 /// Bedrock model IDs can contain colons and slashes that must be encoded.
@@ -163,6 +169,7 @@ fn percent_encode_model(model: &str) -> String {
 ///     .build();
 /// let client = DefaultClient::new(config, Some("bedrock/anthropic.claude-3-sonnet-20240229-v1:0"))?;
 /// ```
+#[derive(Clone)]
 pub struct BedrockProvider {
     region: String,
     /// Cached base URL: `https://bedrock-runtime.{region}.{dns_suffix}`.
@@ -178,6 +185,10 @@ pub struct BedrockProvider {
     /// Explicit AWS session token, overriding `AWS_SESSION_TOKEN` when set.
     session_token: Option<String>,
     dynamic_credentials: bool,
+    /// False when no AWS key comes from the environment: no `AWS_BEARER_TOKEN_BEDROCK`
+    /// and no `AWS_ACCESS_KEY_ID` pair. AWS keys set in code still sign; with none, requests
+    /// go out unsigned.
+    environment_keys: bool,
 }
 
 impl BedrockProvider {
@@ -192,10 +203,9 @@ impl BedrockProvider {
             .ok()
             .filter(|v| !v.is_empty())
             .map(|v| v.trim_end_matches('/').to_string());
-        let base_url = custom_base_url.clone().unwrap_or_else(|| {
-            let dns_suffix = dns_suffix_for_region(&region);
-            format!("https://bedrock-runtime.{region}.{dns_suffix}")
-        });
+        let base_url = custom_base_url
+            .clone()
+            .unwrap_or_else(|| runtime_url_for_region(&region));
         let cross_region_prefix = if custom_base_url.is_some() {
             None
         } else {
@@ -212,6 +222,7 @@ impl BedrockProvider {
             secret_access_key: None,
             session_token: None,
             dynamic_credentials: false,
+            environment_keys: true,
         }
     }
 
@@ -256,6 +267,13 @@ impl BedrockProvider {
         self
     }
 
+    /// Whether AWS keys come from the environment. A client with a `base_url` and a bare
+    /// `bedrock` hint turns this off, so no AWS variable goes to the `base_url` host.
+    pub(crate) fn with_environment_keys(mut self, enabled: bool) -> Self {
+        self.environment_keys = enabled;
+        self
+    }
+
     /// Override the cross-region inference profile prefix (e.g. `"us"`).
     ///
     /// When `None`, the prefix cached from `BEDROCK_CROSS_REGION` at
@@ -274,6 +292,8 @@ impl BedrockProvider {
     }
 
     /// Override the Bedrock runtime base URL while retaining native request transforms.
+    ///
+    /// The override moves every call, rerank and list models included.
     #[must_use]
     pub fn with_base_url(mut self, base_url: impl Into<String>) -> Self {
         self.base_url = base_url.into().trim_end_matches('/').to_owned();
@@ -297,6 +317,20 @@ impl BedrockProvider {
         self
     }
 
+    /// The base URL of a Bedrock service other than the runtime, derived from the region.
+    ///
+    /// Rerank is served by `bedrock-agent-runtime` and list models by `bedrock`. With a
+    /// `base_url` override, one host serves every call, and this returns `None`.
+    fn service_url(&self, service: &str) -> Option<String> {
+        (self.base_url == runtime_url_for_region(&self.region)).then(|| {
+            format!(
+                "https://{service}.{}.{}",
+                self.region,
+                dns_suffix_for_region(&self.region)
+            )
+        })
+    }
+
     /// Return the AWS region this provider is configured for.
     #[must_use]
     #[allow(dead_code)]
@@ -316,6 +350,9 @@ impl BedrockProvider {
     /// principal. Against *environment* credentials the token wins, matching the AWS
     /// SDKs. Without the feature nothing can sign, so a usable token always wins. ~keep
     fn bearer_token(&self) -> Option<String> {
+        if !self.environment_keys {
+            return None;
+        }
         #[cfg(feature = "bedrock")]
         {
             if self.has_explicit_credential() {
@@ -325,6 +362,12 @@ impl BedrockProvider {
         std::env::var("AWS_BEARER_TOKEN_BEDROCK")
             .ok()
             .filter(|token| !token.is_empty())
+    }
+
+    /// True when no AWS key can sign: none comes from the environment and none was set in code.
+    #[cfg(feature = "bedrock")]
+    fn sends_unsigned(&self) -> bool {
+        !self.environment_keys && !self.has_explicit_credential()
     }
 
     /// Whether any credential field was set in code rather than left to the environment.
@@ -338,6 +381,10 @@ impl BedrockProvider {
 }
 
 impl Provider for BedrockProvider {
+    fn at_base_url(&self, base_url: &str) -> Option<Box<dyn Provider>> {
+        Some(Box::new(self.clone().with_base_url(base_url)))
+    }
+
     fn name(&self) -> &str {
         "bedrock"
     }
@@ -407,9 +454,14 @@ impl Provider for BedrockProvider {
             if self.bearer_token().is_some() {
                 return Ok(());
             }
+            // ~keep Without AWS keys from the environment or from code, the request goes out unsigned.
+            if self.sends_unsigned() {
+                return Ok(());
+            }
 
-            let has_access_key = self.access_key_id.is_some() || std::env::var("AWS_ACCESS_KEY_ID").is_ok();
-            let has_secret_key = self.secret_access_key.is_some() || std::env::var("AWS_SECRET_ACCESS_KEY").is_ok();
+            let from_env = |var: &str| self.environment_keys && std::env::var(var).is_ok();
+            let has_access_key = self.access_key_id.is_some() || from_env("AWS_ACCESS_KEY_ID");
+            let has_secret_key = self.secret_access_key.is_some() || from_env("AWS_SECRET_ACCESS_KEY");
             // ~keep Both keys are required: sigv4_sign has no instance-profile/SSO fallback,
             // so a request missing either one can never actually be signed.
             if !has_access_key || !has_secret_key {
@@ -436,6 +488,9 @@ impl Provider for BedrockProvider {
     ///
     /// Chat completions map to `/model/{encoded_model}/converse`.
     /// Embeddings map to `/model/{encoded_model}/invoke`.
+    /// Rerank maps to `https://bedrock-agent-runtime.{region}.{dns_suffix}/rerank` and list models
+    /// to `https://bedrock.{region}.{dns_suffix}/foundation-models`. With a `base_url` override,
+    /// both stay on the override, like every other path.
     /// All other paths are passed through unchanged.
     ///
     /// When the `BEDROCK_CROSS_REGION` environment variable is set, the
@@ -451,6 +506,14 @@ impl Provider for BedrockProvider {
             format!("{base}/model/{encoded_model}/converse")
         } else if endpoint_path.contains("embeddings") {
             format!("{base}/model/{encoded_model}/invoke")
+        } else if endpoint_path == self.rerank_path()
+            && let Some(host) = self.service_url("bedrock-agent-runtime")
+        {
+            format!("{host}/rerank")
+        } else if endpoint_path == self.models_path()
+            && let Some(host) = self.service_url("bedrock")
+        {
+            format!("{host}/foundation-models")
         } else {
             format!("{base}{endpoint_path}")
         }
@@ -478,6 +541,9 @@ impl Provider for BedrockProvider {
     /// - `temperature` and `top_p` outside Bedrock's documented `[0.0, 1.0]` range are
     ///   rejected with a `BadRequest` error rather than forwarded and left for Bedrock to reject.
     ///
+    /// Rerank requests (`query` and `documents`, no `messages`) are translated to the
+    /// Bedrock `Rerank` format.
+    ///
     /// Embedding requests (`input` present, no `messages`) are routed to
     /// [`transform_bedrock_embed_request`] instead: Bedrock has no Converse-style
     /// unified embeddings API, so this dispatch mirrors the same
@@ -495,6 +561,10 @@ impl Provider for BedrockProvider {
         // ~keep `{"messages": []}`, silently discarding the entire `input`.
         if body.get("input").is_some() && body.get("messages").is_none() {
             return transform_bedrock_embed_request(body);
+        }
+
+        if rerank::is_rerank_request(body) {
+            return rerank::transform_rerank_request(body, &self.region);
         }
 
         request::transform_converse_request(body)
@@ -523,7 +593,17 @@ impl Provider for BedrockProvider {
             return transform_bedrock_embed_response(body);
         }
 
+        if let Some(summaries) = body.get("modelSummaries").and_then(|m| m.as_array()) {
+            *body = rerank::transform_foundation_models(summaries);
+            return Ok(());
+        }
+
         response::transform_converse_response(body)
+    }
+
+    fn transform_rerank_response(&self, body: &mut serde_json::Value) -> Result<()> {
+        rerank::transform_rerank_response(body);
+        Ok(())
     }
 
     /// Compute the authentication headers for the request.
@@ -557,6 +637,9 @@ impl Provider for BedrockProvider {
 
         #[cfg(feature = "bedrock")]
         {
+            if self.sends_unsigned() {
+                return Ok(vec![]);
+            }
             sigv4_sign(
                 method,
                 url,
@@ -566,7 +649,7 @@ impl Provider for BedrockProvider {
                     access_key_id: self.access_key_id.as_deref(),
                     secret_access_key: self.secret_access_key.as_deref(),
                     session_token: self.session_token.as_deref(),
-                    use_environment: true,
+                    use_environment: self.environment_keys,
                 },
             )
             .map_err(|error| {

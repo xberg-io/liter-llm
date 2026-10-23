@@ -25,6 +25,9 @@ pub struct ClientOptions {
     pub base_url: Option<String>,
     /// Optional request timeout in seconds.
     pub timeout_secs: Option<u64>,
+    /// Optional connect timeout in seconds. A connect timeout is retried up to `max_retries` times.
+    /// Zero is an error on every target. `wasm32` ignores any other value.
+    pub connect_timeout_secs: Option<u64>,
     /// Optional retry count for retryable provider failures.
     pub max_retries: Option<u32>,
     /// Optional maximum number of response bytes retained in memory.
@@ -38,7 +41,7 @@ pub struct ClientOptions {
 /// # Errors
 ///
 /// Returns [`LiterLlmError::BadRequest`] for a zero or platform-overflowing
-/// `max_response_bytes`, plus the errors documented by [`create_client`].
+/// `max_response_bytes`, a zero `connect_timeout_secs`, plus the errors documented by [`create_client`].
 #[cfg(feature = "native-http")]
 pub fn create_client_with_options(options: ClientOptions) -> Result<DefaultClient> {
     let mut builder = ClientConfigBuilder::new(options.api_key);
@@ -47,6 +50,9 @@ pub fn create_client_with_options(options: ClientOptions) -> Result<DefaultClien
     }
     if let Some(secs) = options.timeout_secs {
         builder = builder.timeout(Duration::from_secs(secs));
+    }
+    if let Some(secs) = options.connect_timeout_secs {
+        builder = builder.connect_timeout(Duration::from_secs(secs));
     }
     if let Some(retries) = options.max_retries {
         builder = builder.max_retries(retries);
@@ -222,6 +228,15 @@ mod tests {
             ..ClientOptions::default()
         });
         assert!(client.is_ok());
+    }
+
+    #[cfg(feature = "native-http")]
+    #[test]
+    fn create_client_with_options_accepts_a_connect_timeout() {
+        let options: ClientOptions =
+            serde_json::from_str(r#"{"api_key":"sk-test","connect_timeout_secs":3}"#).expect("options parse");
+        assert_eq!(options.connect_timeout_secs, Some(3));
+        assert!(create_client_with_options(options).is_ok());
     }
 
     #[cfg(not(all(feature = "native-http", feature = "tower")))]

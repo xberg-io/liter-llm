@@ -50,7 +50,6 @@ coverage.lcov
 coverage.out
 coverage/
 htmlcov/
-.mypy_cache/
 .pytest_cache/
 .ruff_cache/
 .hypothesis/
