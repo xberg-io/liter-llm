@@ -17,7 +17,8 @@ languages = [
   "kotlin_android",
   "jni",
 ]
-extra_clippy_allows = ["single_match", "collapsible_match"]
+# The unnecessary_to_owned entry stays until xberg-io/alef#679 is fixed.
+extra_clippy_allows = ["single_match", "collapsible_match", "unnecessary_to_owned"]
 
 # ~keep These are create-once seeds that alef re-renders on every run but refuses to
 # overwrite, so `alef verify` reported them as DRIFTED forever and `alef generate` could
