@@ -59,10 +59,20 @@
       "type": "count_equals",
       "field": "choices[0].message.content.parts",
       "value": 2
+    },
+    {
+      "type": "equals",
+      "field": "choices[0].message.content.parts[0].text",
+      "value": "hello"
+    },
+    {
+      "type": "equals",
+      "field": "choices[0].message.content.parts[1].text",
+      "value": " world"
     }
   ],
   "skip": {
-    "languages": ["rust", "node", "ruby", "php", "c", "go", "java", "csharp", "elixir", "wasm", "dart", "kotlin_android", "swift", "zig"],
-    "reason": "Only the Python generated test reads the parts of a reply. The Rust generated test does not compile (no field parts on AssistantContent). The other bindings are not tried. See xberg-io/alef#663."
+    "languages": ["go", "c", "zig", "elixir", "wasm", "swift", "java", "csharp", "dart", "kotlin_android", "php", "ruby"],
+    "reason": "C#, Dart, Kotlin, PHP and Ruby generate a test that drops the parts assertions with a skipped comment, see xberg-io/alef#682. Go, C, Zig, Elixir, WASM, Swift and Java generate a test that reads the parts at a path or accessor the binding does not have, see xberg-io/alef#684. The Java build also fails the checkstyle MethodLength check, see xberg-io/alef#685."
   }
 }
