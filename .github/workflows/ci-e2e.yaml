@@ -9,6 +9,7 @@ on:
       - e2e/**
       - fixtures/**
       - scripts/tests/test_python_content_accessors.py
+      - scripts/tests/test_python_stub_matches_reply.py
       - schemas/**
       - Cargo.toml
       - Cargo.lock
@@ -35,6 +36,7 @@ on:
       - e2e/**
       - fixtures/**
       - scripts/tests/test_python_content_accessors.py
+      - scripts/tests/test_python_stub_matches_reply.py
       - schemas/**
       - Cargo.toml
       - Cargo.lock

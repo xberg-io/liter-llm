@@ -865,6 +865,7 @@ e2e = [
   "cd e2e/python && uv sync --no-install-project --no-install-workspace",
   "cd e2e/python && uv run --no-sync pytest tests/ -q",
   "cd e2e/python && uv run --no-sync pytest ../../scripts/tests/test_python_content_accessors.py -q",
+  "cd e2e/python && uv run --no-sync pytest ../../scripts/tests/test_python_stub_matches_reply.py -q",
 ]
 
 [crates.test.node]
