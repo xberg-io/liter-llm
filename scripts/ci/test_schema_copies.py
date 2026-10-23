@@ -25,7 +25,7 @@ def test_the_two_copies_of_each_registry_are_equal(name: str) -> None:
 
 
 @pytest.mark.parametrize("name", REGISTRIES)
-@pytest.mark.parametrize("changed_copy", ("root", "crate"))
+@pytest.mark.parametrize("changed_copy", ["root", "crate"])
 def test_a_one_byte_difference_in_either_copy_is_detected(tmp_path: Path, name: str, changed_copy: str) -> None:
     """The check fails on a single changed byte in either copy, using the real file as the base."""
     original = (ROOT / "schemas" / name).read_bytes()
