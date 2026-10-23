@@ -70,5 +70,9 @@
       "field": "choices[0].message.content.parts[1].text",
       "value": " world"
     }
-  ]
+  ],
+  "skip": {
+    "languages": ["go", "c", "java", "swift"],
+    "reason": "alef 0.113.4 still generates a parts assertion these bindings cannot run. Go: result.Choices[0].Message.Content.Parts is undefined on AssistantContent. C: the parts collection JSON is NULL (test_chat.c:312). Java: AssistantContent has no parts() method. Swift: content() returns a RustString with no parts()."
+  }
 }
