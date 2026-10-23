@@ -475,6 +475,385 @@ as String,
 }
 
 /// @nodoc
+mixin _$AlefStreamDefaultClientChatStreamWire {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AlefStreamDefaultClientChatStreamWire);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'AlefStreamDefaultClientChatStreamWire()';
+}
+
+
+}
+
+/// @nodoc
+class $AlefStreamDefaultClientChatStreamWireCopyWith<$Res>  {
+$AlefStreamDefaultClientChatStreamWireCopyWith(AlefStreamDefaultClientChatStreamWire _, $Res Function(AlefStreamDefaultClientChatStreamWire) __);
+}
+
+
+/// Adds pattern-matching-related methods to [AlefStreamDefaultClientChatStreamWire].
+extension AlefStreamDefaultClientChatStreamWirePatterns on AlefStreamDefaultClientChatStreamWire {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AlefStreamDefaultClientChatStreamWire_Item value)?  item,TResult Function( AlefStreamDefaultClientChatStreamWire_Error value)?  error,TResult Function( AlefStreamDefaultClientChatStreamWire_NativeFailure value)?  nativeFailure,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case AlefStreamDefaultClientChatStreamWire_Item() when item != null:
+return item(_that);case AlefStreamDefaultClientChatStreamWire_Error() when error != null:
+return error(_that);case AlefStreamDefaultClientChatStreamWire_NativeFailure() when nativeFailure != null:
+return nativeFailure(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AlefStreamDefaultClientChatStreamWire_Item value)  item,required TResult Function( AlefStreamDefaultClientChatStreamWire_Error value)  error,required TResult Function( AlefStreamDefaultClientChatStreamWire_NativeFailure value)  nativeFailure,}){
+final _that = this;
+switch (_that) {
+case AlefStreamDefaultClientChatStreamWire_Item():
+return item(_that);case AlefStreamDefaultClientChatStreamWire_Error():
+return error(_that);case AlefStreamDefaultClientChatStreamWire_NativeFailure():
+return nativeFailure(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AlefStreamDefaultClientChatStreamWire_Item value)?  item,TResult? Function( AlefStreamDefaultClientChatStreamWire_Error value)?  error,TResult? Function( AlefStreamDefaultClientChatStreamWire_NativeFailure value)?  nativeFailure,}){
+final _that = this;
+switch (_that) {
+case AlefStreamDefaultClientChatStreamWire_Item() when item != null:
+return item(_that);case AlefStreamDefaultClientChatStreamWire_Error() when error != null:
+return error(_that);case AlefStreamDefaultClientChatStreamWire_NativeFailure() when nativeFailure != null:
+return nativeFailure(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( ChatCompletionChunk value)?  item,TResult Function( LiterLlmError error)?  error,TResult Function( String message)?  nativeFailure,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case AlefStreamDefaultClientChatStreamWire_Item() when item != null:
+return item(_that.value);case AlefStreamDefaultClientChatStreamWire_Error() when error != null:
+return error(_that.error);case AlefStreamDefaultClientChatStreamWire_NativeFailure() when nativeFailure != null:
+return nativeFailure(_that.message);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( ChatCompletionChunk value)  item,required TResult Function( LiterLlmError error)  error,required TResult Function( String message)  nativeFailure,}) {final _that = this;
+switch (_that) {
+case AlefStreamDefaultClientChatStreamWire_Item():
+return item(_that.value);case AlefStreamDefaultClientChatStreamWire_Error():
+return error(_that.error);case AlefStreamDefaultClientChatStreamWire_NativeFailure():
+return nativeFailure(_that.message);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( ChatCompletionChunk value)?  item,TResult? Function( LiterLlmError error)?  error,TResult? Function( String message)?  nativeFailure,}) {final _that = this;
+switch (_that) {
+case AlefStreamDefaultClientChatStreamWire_Item() when item != null:
+return item(_that.value);case AlefStreamDefaultClientChatStreamWire_Error() when error != null:
+return error(_that.error);case AlefStreamDefaultClientChatStreamWire_NativeFailure() when nativeFailure != null:
+return nativeFailure(_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class AlefStreamDefaultClientChatStreamWire_Item extends AlefStreamDefaultClientChatStreamWire {
+  const AlefStreamDefaultClientChatStreamWire_Item({required this.value}): super._();
+
+
+ final  ChatCompletionChunk value;
+
+/// Create a copy of AlefStreamDefaultClientChatStreamWire
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AlefStreamDefaultClientChatStreamWire_ItemCopyWith<AlefStreamDefaultClientChatStreamWire_Item> get copyWith => _$AlefStreamDefaultClientChatStreamWire_ItemCopyWithImpl<AlefStreamDefaultClientChatStreamWire_Item>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AlefStreamDefaultClientChatStreamWire_Item&&(identical(other.value, value) || other.value == value));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,value);
+}
+
+@override
+String toString() {
+    return 'AlefStreamDefaultClientChatStreamWire.item(value: $value)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AlefStreamDefaultClientChatStreamWire_ItemCopyWith<$Res> implements $AlefStreamDefaultClientChatStreamWireCopyWith<$Res> {
+  factory $AlefStreamDefaultClientChatStreamWire_ItemCopyWith(AlefStreamDefaultClientChatStreamWire_Item value, $Res Function(AlefStreamDefaultClientChatStreamWire_Item) _then) = _$AlefStreamDefaultClientChatStreamWire_ItemCopyWithImpl;
+@useResult
+$Res call({
+ ChatCompletionChunk value
+});
+
+
+
+
+}
+/// @nodoc
+class _$AlefStreamDefaultClientChatStreamWire_ItemCopyWithImpl<$Res>
+    implements $AlefStreamDefaultClientChatStreamWire_ItemCopyWith<$Res> {
+  _$AlefStreamDefaultClientChatStreamWire_ItemCopyWithImpl(this._self, this._then);
+
+  final AlefStreamDefaultClientChatStreamWire_Item _self;
+  final $Res Function(AlefStreamDefaultClientChatStreamWire_Item) _then;
+
+/// Create a copy of AlefStreamDefaultClientChatStreamWire
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
+  return _then(AlefStreamDefaultClientChatStreamWire_Item(
+value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as ChatCompletionChunk,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AlefStreamDefaultClientChatStreamWire_Error extends AlefStreamDefaultClientChatStreamWire {
+  const AlefStreamDefaultClientChatStreamWire_Error({required this.error}): super._();
+
+
+ final  LiterLlmError error;
+
+/// Create a copy of AlefStreamDefaultClientChatStreamWire
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AlefStreamDefaultClientChatStreamWire_ErrorCopyWith<AlefStreamDefaultClientChatStreamWire_Error> get copyWith => _$AlefStreamDefaultClientChatStreamWire_ErrorCopyWithImpl<AlefStreamDefaultClientChatStreamWire_Error>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AlefStreamDefaultClientChatStreamWire_Error&&(identical(other.error, error) || other.error == error));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,error);
+}
+
+@override
+String toString() {
+    return 'AlefStreamDefaultClientChatStreamWire.error(error: $error)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AlefStreamDefaultClientChatStreamWire_ErrorCopyWith<$Res> implements $AlefStreamDefaultClientChatStreamWireCopyWith<$Res> {
+  factory $AlefStreamDefaultClientChatStreamWire_ErrorCopyWith(AlefStreamDefaultClientChatStreamWire_Error value, $Res Function(AlefStreamDefaultClientChatStreamWire_Error) _then) = _$AlefStreamDefaultClientChatStreamWire_ErrorCopyWithImpl;
+@useResult
+$Res call({
+ LiterLlmError error
+});
+
+
+$LiterLlmErrorCopyWith<$Res> get error;
+
+}
+/// @nodoc
+class _$AlefStreamDefaultClientChatStreamWire_ErrorCopyWithImpl<$Res>
+    implements $AlefStreamDefaultClientChatStreamWire_ErrorCopyWith<$Res> {
+  _$AlefStreamDefaultClientChatStreamWire_ErrorCopyWithImpl(this._self, this._then);
+
+  final AlefStreamDefaultClientChatStreamWire_Error _self;
+  final $Res Function(AlefStreamDefaultClientChatStreamWire_Error) _then;
+
+/// Create a copy of AlefStreamDefaultClientChatStreamWire
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? error = null,}) {
+  return _then(AlefStreamDefaultClientChatStreamWire_Error(
+error: null == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as LiterLlmError,
+  ));
+}
+
+/// Create a copy of AlefStreamDefaultClientChatStreamWire
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LiterLlmErrorCopyWith<$Res> get error {
+
+  return $LiterLlmErrorCopyWith<$Res>(_self.error, (value) {
+    return _then(_self.copyWith(error: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class AlefStreamDefaultClientChatStreamWire_NativeFailure extends AlefStreamDefaultClientChatStreamWire {
+  const AlefStreamDefaultClientChatStreamWire_NativeFailure({required this.message}): super._();
+
+
+ final  String message;
+
+/// Create a copy of AlefStreamDefaultClientChatStreamWire
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AlefStreamDefaultClientChatStreamWire_NativeFailureCopyWith<AlefStreamDefaultClientChatStreamWire_NativeFailure> get copyWith => _$AlefStreamDefaultClientChatStreamWire_NativeFailureCopyWithImpl<AlefStreamDefaultClientChatStreamWire_NativeFailure>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AlefStreamDefaultClientChatStreamWire_NativeFailure&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'AlefStreamDefaultClientChatStreamWire.nativeFailure(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AlefStreamDefaultClientChatStreamWire_NativeFailureCopyWith<$Res> implements $AlefStreamDefaultClientChatStreamWireCopyWith<$Res> {
+  factory $AlefStreamDefaultClientChatStreamWire_NativeFailureCopyWith(AlefStreamDefaultClientChatStreamWire_NativeFailure value, $Res Function(AlefStreamDefaultClientChatStreamWire_NativeFailure) _then) = _$AlefStreamDefaultClientChatStreamWire_NativeFailureCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$AlefStreamDefaultClientChatStreamWire_NativeFailureCopyWithImpl<$Res>
+    implements $AlefStreamDefaultClientChatStreamWire_NativeFailureCopyWith<$Res> {
+  _$AlefStreamDefaultClientChatStreamWire_NativeFailureCopyWithImpl(this._self, this._then);
+
+  final AlefStreamDefaultClientChatStreamWire_NativeFailure _self;
+  final $Res Function(AlefStreamDefaultClientChatStreamWire_NativeFailure) _then;
+
+/// Create a copy of AlefStreamDefaultClientChatStreamWire
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(AlefStreamDefaultClientChatStreamWire_NativeFailure(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$AssistantContent {
 
  Object get field0;
