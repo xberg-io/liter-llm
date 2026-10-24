@@ -265,6 +265,180 @@ fn transform_request_empty_tool_and_function_results_carry_no_empty_text() {
 }
 
 #[test]
+fn transform_request_tool_choice_none_without_tools_is_omitted() {
+    let mut body = json!({
+        "model": "claude-3-5-sonnet-20241022",
+        "messages": [{"role": "user", "content": "Hi"}],
+        "tool_choice": "none"
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert!(body.get("tool_choice").is_none(), "no tools, so no tool_choice");
+    assert!(body.get("tools").is_none());
+}
+
+#[test]
+fn transform_request_tool_choice_none_with_empty_tools_is_omitted() {
+    let mut body = json!({
+        "model": "claude-3-5-sonnet-20241022",
+        "messages": [{"role": "user", "content": "Hi"}],
+        "tools": [],
+        "tool_choice": "none"
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert!(body.get("tool_choice").is_none(), "empty tools, so no tool_choice");
+    assert!(body.get("tools").is_none());
+}
+
+#[test]
+fn transform_request_tool_choice_auto_without_tools_is_unchanged() {
+    let mut body = json!({
+        "model": "claude-3-5-sonnet-20241022",
+        "messages": [{"role": "user", "content": "Hi"}],
+        "tool_choice": "auto"
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert_eq!(body["tool_choice"], json!({"type": "auto"}));
+}
+
+#[test]
+fn transform_request_assistant_parts_become_text_blocks() {
+    let out = transformed_messages(json!([
+        {"role": "user", "content": "a"},
+        {"role": "assistant", "content": [
+            {"type": "text", "text": "first"},
+            {"type": "text", "text": ""},
+            {"type": "text", "text": "  \n"},
+            {"type": "text", "text": "second", "cache_control": {"type": "ephemeral"}}
+        ]},
+        {"role": "user", "content": "b"}
+    ]));
+    assert_eq!(out.len(), 3, "the assistant turn is kept");
+    assert_eq!(out[1]["role"], "assistant");
+    assert_eq!(
+        out[1]["content"],
+        json!([
+            {"type": "text", "text": "first"},
+            {"type": "text", "text": "second", "cache_control": {"type": "ephemeral"}}
+        ])
+    );
+}
+
+#[test]
+fn transform_request_assistant_parts_with_only_blank_text_are_dropped() {
+    let out = transformed_messages(json!([
+        {"role": "user", "content": "a"},
+        {"role": "assistant", "content": [{"type": "text", "text": " "}]},
+        {"role": "user", "content": "b"}
+    ]));
+    assert_eq!(out.len(), 1);
+}
+
+#[test]
+fn transform_request_assistant_parts_keep_tool_calls() {
+    let out = transformed_messages(json!([
+        {"role": "user", "content": "a"},
+        {"role": "assistant",
+         "content": [{"type": "text", "text": "calling"}],
+         "tool_calls": [{
+            "id": "call_1", "type": "function",
+            "function": {"name": "f", "arguments": "{}"}
+         }]}
+    ]));
+    let blocks = out[1]["content"].as_array().expect("blocks");
+    assert_eq!(blocks.len(), 2);
+    assert_eq!(blocks[0]["type"], "text");
+    assert_eq!(blocks[1]["type"], "tool_use");
+}
+
+#[test]
+fn transform_request_whitespace_only_text_counts_as_empty() {
+    let out = transformed_messages(json!([
+        {"role": "system", "content": "  "},
+        {"role": "user", "content": " \t\n"},
+        {"role": "user", "content": [{"type": "text", "text": "  "}, {"type": "text", "text": "kept"}]},
+        {"role": "assistant", "content": "   "},
+        {"role": "user", "content": "end"}
+    ]));
+    assert_eq!(out.len(), 1);
+    assert_eq!(
+        out[0]["content"],
+        json!([{"type": "text", "text": "kept"}, {"type": "text", "text": "end"}])
+    );
+}
+
+#[test]
+fn transform_request_whitespace_system_string_is_not_sent() {
+    let mut body = json!({
+        "model": "claude-3-5-sonnet-20241022",
+        "messages": [{"role": "system", "content": "  "}, {"role": "user", "content": "hi"}]
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert!(body.get("system").is_none());
+}
+
+#[test]
+fn transform_request_whitespace_tool_result_omits_content() {
+    let out = transformed_messages(json!([
+        {"role": "user", "content": "go"},
+        {"role": "assistant", "tool_calls": [{
+            "id": "call_1", "type": "function",
+            "function": {"name": "f", "arguments": "{}"}
+        }]},
+        {"role": "tool", "tool_call_id": "call_1", "content": "  "}
+    ]));
+    let result = &out[2]["content"][0];
+    assert_eq!(result["type"], "tool_result");
+    assert!(result.get("content").is_none());
+}
+
+#[test]
+fn transform_request_unknown_role_empty_string_adds_no_text_block() {
+    let out = transformed_messages(json!([
+        {"role": "user", "content": "go"},
+        {"role": "mystery", "content": "a"},
+        {"role": "mystery", "content": ""},
+        {"role": "mystery", "content": "  "}
+    ]));
+    assert_eq!(out[1]["content"], json!([{"type": "text", "text": "a"}]));
+}
+
+#[test]
+fn transform_request_unknown_role_empty_first_then_text_keeps_only_text() {
+    let out = transformed_messages(json!([
+        {"role": "user", "content": "go"},
+        {"role": "mystery", "content": ""},
+        {"role": "mystery", "content": "b"}
+    ]));
+    assert_eq!(out[1]["content"], json!([{"type": "text", "text": "b"}]));
+}
+
+#[test]
+fn transform_request_tool_result_document_part_degrades_to_text() {
+    let out = transformed_messages(json!([
+        {"role": "user", "content": "go"},
+        {"role": "assistant", "tool_calls": [{
+            "id": "call_1", "type": "function",
+            "function": {"name": "f", "arguments": "{}"}
+        }]},
+        {"role": "tool", "tool_call_id": "call_1", "content": [
+            {"type": "document", "document": {"data": "AAAA"}}
+        ]}
+    ]));
+    assert_eq!(
+        out[2]["content"][0]["content"],
+        json!([{"type": "text", "text": "[unsupported content in tool result]"}])
+    );
+}
+
+#[test]
 fn transform_request_only_empty_messages_is_a_local_error() {
     let mut body = json!({
         "model": "claude-3-5-sonnet-20241022",
