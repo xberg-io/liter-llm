@@ -29,9 +29,16 @@ pub(super) fn transform_request(body: &mut Value) -> Result<()> {
     let converted_messages: Vec<Value> = non_system_messages
         .into_iter()
         .map(convert_message_to_anthropic)
+        .filter(has_content)
         .collect();
 
     let merged_messages = merge_consecutive_same_role(converted_messages);
+    if merged_messages.is_empty() {
+        return Err(LiterLlmError::BadRequest {
+            message: "messages must contain at least one non-empty message".to_owned(),
+            status: 400,
+        });
+    }
 
     body["messages"] = json!(merged_messages);
 
@@ -77,7 +84,7 @@ fn split_system_messages(messages: Vec<Value>) -> (Vec<Value>, Vec<Value>) {
         let role = msg.get("role").and_then(|r| r.as_str()).unwrap_or("");
         match role {
             "system" | "developer" => match msg.get("content") {
-                Some(Value::String(s)) if !s.is_empty() => {
+                Some(Value::String(s)) if !is_blank(s) => {
                     let mut block = json!({"type": "text", "text": s});
                     if let Some(cc) = msg.get("cache_control") {
                         block["cache_control"] = cc.clone();
@@ -128,19 +135,22 @@ fn apply_stop_sequences(body: &mut Value) {
     }
 }
 
-/// Map `tool_choice` to Anthropic semantics; `"none"` removes `tools` entirely.
+/// Map `tool_choice` to Anthropic semantics. With tools, `"none"` becomes
+/// `{"type": "none"}` and the tools stay, because a history that holds `tool_use`
+/// blocks needs them. Without tools Anthropic takes no `tool_choice`, so `"none"` drops it.
 fn apply_tool_choice(body: &mut Value) {
-    if let Some(tool_choice) = body.as_object_mut().and_then(|o| o.remove("tool_choice")) {
-        let anthropic_tool_choice = convert_tool_choice(&tool_choice);
-        match anthropic_tool_choice {
-            Some(tc) => {
-                body["tool_choice"] = tc;
-            }
-            None => {
-                body.as_object_mut().map(|o| o.remove("tools"));
-            }
-        }
+    let Some(tool_choice) = body.as_object_mut().and_then(|o| o.remove("tool_choice")) else {
+        return;
+    };
+    let has_tools = body
+        .get("tools")
+        .and_then(Value::as_array)
+        .is_some_and(|t| !t.is_empty());
+    if !has_tools && tool_choice.as_str() == Some("none") {
+        body.as_object_mut().map(|o| o.remove("tools"));
+        return;
     }
+    body["tool_choice"] = convert_tool_choice(&tool_choice);
 }
 
 /// Convert OpenAI `function` tool wrappers to Anthropic `input_schema` tools,
@@ -420,10 +430,26 @@ fn merge_consecutive_same_role(messages: Vec<Value>) -> Vec<Value> {
 fn content_as_blocks(content: Option<&Value>) -> Vec<Value> {
     match content {
         Some(Value::Array(arr)) => arr.clone(),
+        Some(Value::String(s)) if is_blank(s) => vec![],
         Some(Value::String(s)) => vec![json!({"type": "text", "text": s})],
         Some(other) => vec![json!({"type": "text", "text": other.to_string()})],
         None => vec![],
     }
+}
+
+/// Anthropic rejects a text block that is empty or only whitespace.
+fn is_blank(text: &str) -> bool {
+    text.trim().is_empty()
+}
+
+/// False for a converted `user` or `assistant` turn with no content blocks.
+/// Anthropic rejects an empty text block, so such a turn is dropped and its
+/// neighbours merge.
+fn has_content(msg: &Value) -> bool {
+    !matches!(
+        (msg.get("role").and_then(Value::as_str), msg.get("content")),
+        (Some("user" | "assistant"), Some(Value::Array(blocks))) if blocks.is_empty()
+    )
 }
 
 /// Convert an OpenAI-format message JSON value to Anthropic Messages API format.
@@ -453,18 +479,37 @@ fn convert_user_message(msg: &Value) -> Value {
     user_msg
 }
 
-/// An `assistant` message: text and tool calls become `text` / `tool_use` blocks.
+/// An `assistant` message: text (a string or a list of text parts) and tool calls
+/// become `text` / `tool_use` blocks.
+/// A turn with neither gets an empty `content`; [`has_content`] drops it.
 fn convert_assistant_message(msg: &Value) -> Value {
     let mut blocks: Vec<Value> = Vec::new();
 
-    if let Some(text) = msg.get("content").and_then(|c| c.as_str())
-        && !text.is_empty()
-    {
-        let mut block = json!({"type": "text", "text": text});
-        if let Some(cc) = msg.get("cache_control") {
-            block["cache_control"] = cc.clone();
+    match msg.get("content") {
+        Some(Value::String(text)) if !is_blank(text) => {
+            let mut block = json!({"type": "text", "text": text});
+            if let Some(cc) = msg.get("cache_control") {
+                block["cache_control"] = cc.clone();
+            }
+            blocks.push(block);
         }
-        blocks.push(block);
+        Some(Value::Array(parts)) => {
+            for part in parts {
+                if part.get("type").and_then(Value::as_str) != Some("text") {
+                    continue;
+                }
+                let text = part.get("text").and_then(Value::as_str).unwrap_or("");
+                if is_blank(text) {
+                    continue;
+                }
+                let mut block = json!({"type": "text", "text": text});
+                if let Some(cc) = part.get("cache_control") {
+                    block["cache_control"] = cc.clone();
+                }
+                blocks.push(block);
+            }
+        }
+        _ => {}
     }
 
     if let Some(tool_calls) = msg.get("tool_calls").and_then(|tc| tc.as_array()) {
@@ -485,10 +530,6 @@ fn convert_assistant_message(msg: &Value) -> Value {
         }
     }
 
-    if blocks.is_empty() {
-        blocks.push(json!({"type": "text", "text": ""}));
-    }
-
     json!({"role": "assistant", "content": blocks})
 }
 
@@ -499,11 +540,7 @@ fn convert_tool_message(msg: &Value) -> Value {
 
     let result_content = convert_tool_result_content_to_anthropic(msg.get("content"));
 
-    let mut tool_result_block = json!({
-        "type": "tool_result",
-        "tool_use_id": tool_use_id,
-        "content": result_content
-    });
+    let mut tool_result_block = tool_result_block(&tool_use_id, result_content);
 
     if let Some(cc) = msg.get("cache_control") {
         tool_result_block["cache_control"] = cc.clone();
@@ -520,22 +557,29 @@ fn convert_tool_message(msg: &Value) -> Value {
 fn convert_function_message(msg: &Value) -> Value {
     let name = msg.get("name").and_then(|v| v.as_str()).unwrap_or("");
     let sanitized_name = sanitize_tool_call_id(name);
-    let content_text = msg.get("content").and_then(|c| c.as_str()).unwrap_or("");
+    let result_content = convert_tool_result_content_to_anthropic(msg.get("content"));
     json!({
         "role": "user",
-        "content": [{
-            "type": "tool_result",
-            "tool_use_id": sanitized_name,
-            "content": [{"type": "text", "text": content_text}]
-        }]
+        "content": [tool_result_block(&sanitized_name, result_content)]
     })
 }
 
+/// A `tool_result` block. Anthropic documents `content` as optional and a text block
+/// as non-empty, so a result with no content blocks omits the field.
+fn tool_result_block(tool_use_id: &str, content: Vec<Value>) -> Value {
+    let mut block = json!({"type": "tool_result", "tool_use_id": tool_use_id});
+    if !content.is_empty() {
+        block["content"] = json!(content);
+    }
+    block
+}
+
 /// Convert OpenAI user content (string or content-part array) to Anthropic content blocks.
-fn convert_user_content_to_anthropic(content: Option<&Value>) -> Value {
+fn convert_user_content_to_anthropic(content: Option<&Value>) -> Vec<Value> {
     match content {
-        None => json!([]),
-        Some(Value::String(s)) => json!([{"type": "text", "text": s}]),
+        None => vec![],
+        Some(Value::String(s)) if is_blank(s) => vec![],
+        Some(Value::String(s)) => vec![json!({"type": "text", "text": s})],
         Some(Value::Array(parts)) => {
             let blocks: Vec<Value> = parts
                 .iter()
@@ -544,6 +588,9 @@ fn convert_user_content_to_anthropic(content: Option<&Value>) -> Value {
                     match part_type {
                         "text" => {
                             let text = part.get("text").and_then(|t| t.as_str()).unwrap_or("");
+                            if is_blank(text) {
+                                return None;
+                            }
                             let mut block = json!({"type": "text", "text": text});
                             if let Some(cc) = part.get("cache_control") {
                                 block["cache_control"] = cc.clone();
@@ -583,7 +630,7 @@ fn convert_user_content_to_anthropic(content: Option<&Value>) -> Value {
                                 "unrecognized user content part type; falling back to text"
                             );
                             let text = part.get("text").and_then(|t| t.as_str()).unwrap_or("");
-                            if text.is_empty() {
+                            if is_blank(text) {
                                 None
                             } else {
                                 Some(json!({"type": "text", "text": text}))
@@ -592,9 +639,9 @@ fn convert_user_content_to_anthropic(content: Option<&Value>) -> Value {
                     }
                 })
                 .collect();
-            json!(blocks)
+            blocks
         }
-        Some(other) => json!([{"type": "text", "text": other.to_string()}]),
+        Some(other) => vec![json!({"type": "text", "text": other.to_string()})],
     }
 }
 
@@ -607,12 +654,8 @@ fn convert_user_content_to_anthropic(content: Option<&Value>) -> Value {
 /// turn, Anthropic's API does not accept a `document` (or any other) block
 /// inside `tool_result`, so any such part degrades to a text block instead of
 /// being silently dropped. ~keep
-fn convert_tool_result_content_to_anthropic(content: Option<&Value>) -> Value {
-    let Value::Array(blocks) = convert_user_content_to_anthropic(content) else {
-        return json!([{"type": "text", "text": ""}]);
-    };
-
-    let blocks: Vec<Value> = blocks
+fn convert_tool_result_content_to_anthropic(content: Option<&Value>) -> Vec<Value> {
+    convert_user_content_to_anthropic(content)
         .into_iter()
         .map(|block| match block.get("type").and_then(|t| t.as_str()) {
             Some("text") | Some("image") => block,
@@ -624,30 +667,28 @@ fn convert_tool_result_content_to_anthropic(content: Option<&Value>) -> Value {
                 json!({"type": "text", "text": "[unsupported content in tool result]"})
             }
         })
-        .collect();
-
-    json!(blocks)
+        .collect()
 }
 
 /// Map an OpenAI `tool_choice` value to Anthropic format.
 ///
-/// Returns `None` when the tool_choice means "none" (tools should be removed entirely).
-fn convert_tool_choice(tool_choice: &Value) -> Option<Value> {
+/// `"none"` maps to `{"type": "none"}`, which Anthropic accepts with `tools` present.
+fn convert_tool_choice(tool_choice: &Value) -> Value {
     match tool_choice {
         Value::String(s) => match s.as_str() {
-            "none" => None,
-            "required" => Some(json!({"type": "any"})),
-            _ => Some(json!({"type": "auto"})),
+            "none" => json!({"type": "none"}),
+            "required" => json!({"type": "any"}),
+            _ => json!({"type": "auto"}),
         },
         Value::Object(_) => {
             let name = tool_choice.pointer("/function/name").and_then(|v| v.as_str());
             if let Some(name) = name {
-                Some(json!({"type": "tool", "name": name}))
+                json!({"type": "tool", "name": name})
             } else {
-                Some(json!({"type": "auto"}))
+                json!({"type": "auto"})
             }
         }
-        _ => Some(json!({"type": "auto"})),
+        _ => json!({"type": "auto"}),
     }
 }
 
