@@ -84,7 +84,7 @@ class PublicSkillsTests(unittest.TestCase):
             executable.write_text("#!/bin/sh\nset -eu\n" + command + "\n")
             executable.chmod(0o755)
         (self.root / "Taskfile.yml").write_text(
-            'version: "3"\nincludes:\n'
+            'version: "3"\nvars:\n  AI_RULEZ: "ai-rulez"\nincludes:\n'
             f'  version: "{repository / ".task/tools/version-sync.yml"}"\n'
             f'  plugin: "{repository / ".task/tools/plugin.yml"}"\n'
         )
