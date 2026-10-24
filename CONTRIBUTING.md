@@ -80,19 +80,19 @@ liter-llm is written following strict AI engineering practices. That is, its vib
 
 ### Conventions
 
-Use the reviewed `ai-rulez` 5.3.0-based CLI (with the source revision pinned in CI) to manage agent conventions. Edit authored content under
+Use `ai-rulez` 5.6.0, the version that CI and the Taskfile pin, to manage agent conventions. Edit authored content under
 `.ai-rulez/`; `AGENTS.md`, `CLAUDE.md` and harness directories are generated outputs.
 The main `config.toml` selects the `plugins` layer through `default_layers`; marketplace and
 plugin settings live separately in `config.plugins.toml`.
 
 ```sh
-ai-rulez validate --no-local
-ai-rulez generate --no-local --strict-config
+uvx --from ai-rulez==5.6.0 ai-rulez validate --no-local
+uvx --from ai-rulez==5.6.0 ai-rulez generate --no-local --strict-config
 task governance:check
 ```
 
 The final command checks the materialized local governance files, including ignored harness
-outputs. Installing governance hooks requires Python 3.11 or newer. Run `task governance:hooks:install` to install the repository's reviewed Poly hooks.
+outputs. Installing governance hooks requires Python 3.11 or newer. The hooks run the `ai-rulez` on PATH, so run `uv tool install ai-rulez==5.6.0` first. Then run `task governance:hooks:install` to install the repository's reviewed Poly hooks.
 The hooks validate staged sources and verify shipped plugin artifacts where present; CI also
 validates the authored content. Shared convention modules come from `xberg-io/agent-conventions`;
 Git credentials are needed when an included repository requires access.
@@ -101,8 +101,8 @@ Product plugin sources live under `plugin/.ai-rulez/`. Keep public skills, gener
 adapters and their installation guide in sync:
 
 ```sh
-ai-rulez generate --plugin --no-local --strict-config
-ai-rulez verify --plugin
+uvx --from ai-rulez==5.6.0 ai-rulez generate --plugin --no-local --strict-config
+uvx --from ai-rulez==5.6.0 ai-rulez verify --plugin
 ```
 
 See [the plugin guide](plugin/README.md) for runtime setup and [public skills](skills/) for

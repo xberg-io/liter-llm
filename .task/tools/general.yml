@@ -4,4 +4,4 @@ tasks:
   ai-rulez:
     desc: Generate ai-rulez configuration files (CLAUDE.md, etc.)
     cmds:
-      - ai-rulez generate
+      - "{{.AI_RULEZ}} generate"

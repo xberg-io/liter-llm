@@ -68,4 +68,20 @@ self_server_command = ["ai-rulez", "mcp"]
 include_outputs = false
 
 [lint]
-allow_overrides = ["python-conventions"]
+allow_overrides = ["claude:mcp", "python-conventions"]
+
+# Goldziher/ai-rulez#485: ai-rulez reports generated skill copies as duplicates. ~keep
+[[lint.ignore_rules]]
+rules = ["AR701"]
+paths = [
+  ".claude/skills/*/SKILL.md",
+  ".codex/skills/*/SKILL.md",
+  "plugin/.cursor-plugin/skills/*/SKILL.md",
+  "plugin/.hermes/package/src/liter_llm_hermes_plugin/skills/*/SKILL.md",
+  "plugin/.hermes/plugins/liter-llm/skills/*/SKILL.md",
+  "plugin/.opencode/skills/*/SKILL.md",
+  "plugin/.pi/skills/*/SKILL.md",
+  "plugin/skills/*/SKILL.md",
+  "skills/*/SKILL.md",
+]
+reason = "The generated harness and plugin copies repeat the source skill descriptions and names. ai-rulez counts each copy as a duplicate."
