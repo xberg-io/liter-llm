@@ -163,7 +163,7 @@ fn transform_request_tool_choice_required_maps_to_any() {
 }
 
 #[test]
-fn transform_request_tool_choice_none_removes_tools() {
+fn transform_request_tool_choice_none_keeps_tools_and_sends_none() {
     let mut body = json!({
         "model": "claude-3-5-sonnet-20241022",
         "messages": [{"role": "user", "content": "Hi"}],
@@ -175,11 +175,103 @@ fn transform_request_tool_choice_none_removes_tools() {
         .transform_request(&mut body)
         .expect("transform_request should not fail");
 
-    assert!(body.get("tool_choice").is_none(), "tool_choice should be removed");
+    assert_eq!(body["tool_choice"], json!({"type": "none"}));
+    assert_eq!(body["tools"].as_array().map(Vec::len), Some(1), "tools must stay");
+    assert_eq!(body["tools"][0]["name"], "f");
+}
+
+/// Collect every `text` block with an empty `text` value, at any depth of `messages`.
+fn empty_text_blocks(value: &serde_json::Value, found: &mut usize) {
+    match value {
+        serde_json::Value::Object(map) => {
+            if map.get("type").and_then(|t| t.as_str()) == Some("text")
+                && map.get("text").and_then(|t| t.as_str()) == Some("")
+            {
+                *found += 1;
+            }
+            map.values().for_each(|v| empty_text_blocks(v, found));
+        }
+        serde_json::Value::Array(items) => items.iter().for_each(|v| empty_text_blocks(v, found)),
+        _ => {}
+    }
+}
+
+fn transformed_messages(messages: serde_json::Value) -> Vec<serde_json::Value> {
+    let mut body = json!({"model": "claude-3-5-sonnet-20241022", "messages": messages});
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    let out = body["messages"].clone();
+    let mut found = 0;
+    empty_text_blocks(&out, &mut found);
+    assert_eq!(found, 0, "empty text block on the wire: {out}");
+    out.as_array().expect("messages should be an array").clone()
+}
+
+#[test]
+fn transform_request_empty_user_string_is_dropped_not_sent_as_empty_text() {
+    let out = transformed_messages(json!([
+        {"role": "user", "content": ""},
+        {"role": "user", "content": "real question"}
+    ]));
+    assert_eq!(out.len(), 1);
+    assert_eq!(out[0]["content"], json!([{"type": "text", "text": "real question"}]));
+}
+
+#[test]
+fn transform_request_empty_user_text_part_is_skipped() {
+    let out = transformed_messages(json!([
+        {"role": "user", "content": [
+            {"type": "text", "text": ""},
+            {"type": "text", "text": "kept"}
+        ]}
+    ]));
+    assert_eq!(out[0]["content"], json!([{"type": "text", "text": "kept"}]));
+}
+
+#[test]
+fn transform_request_empty_assistant_turn_is_dropped() {
+    let out = transformed_messages(json!([
+        {"role": "user", "content": "one"},
+        {"role": "assistant", "content": ""},
+        {"role": "user", "content": "two"}
+    ]));
+    assert_eq!(out.len(), 1, "user turns around the empty assistant turn merge");
+    assert_eq!(out[0]["role"], "user");
+    assert_eq!(out[0]["content"].as_array().map(Vec::len), Some(2));
+}
+
+#[test]
+fn transform_request_empty_tool_and_function_results_carry_no_empty_text() {
+    let out = transformed_messages(json!([
+        {"role": "user", "content": "go"},
+        {"role": "assistant", "tool_calls": [{
+            "id": "call_1", "type": "function",
+            "function": {"name": "f", "arguments": "{}"}
+        }]},
+        {"role": "tool", "tool_call_id": "call_1", "content": ""},
+        {"role": "function", "name": "g", "content": ""}
+    ]));
+    let results: Vec<_> = out
+        .iter()
+        .flat_map(|m| m["content"].as_array().cloned().unwrap_or_default())
+        .filter(|b| b["type"] == "tool_result")
+        .collect();
+    assert_eq!(results.len(), 2, "both results stay, with their ids");
     assert!(
-        body.get("tools").is_none(),
-        "tools should be removed for tool_choice=none"
+        results.iter().all(|r| r.get("content").is_none()),
+        "an empty result omits content, which Anthropic documents as optional"
     );
+}
+
+#[test]
+fn transform_request_only_empty_messages_is_a_local_error() {
+    let mut body = json!({
+        "model": "claude-3-5-sonnet-20241022",
+        "messages": [{"role": "user", "content": ""}]
+    });
+    let result = provider().transform_request(&mut body);
+    assert!(result.is_err(), "nothing is left to send, so the call fails locally");
 }
 
 #[test]
