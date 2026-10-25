@@ -711,3 +711,94 @@ fn should_preserve_reported_model_when_gemini_blocks_prompt() {
     assert_eq!(body["choices"][0]["finish_reason"], "content_filter");
     assert_eq!(body["usage"]["prompt_tokens"], 337);
 }
+
+fn function_call_candidate(finish_reason: &str) -> serde_json::Value {
+    json!({
+        "candidates": [{
+            "content": {
+                "role": "model",
+                "parts": [{"functionCall": {"name": "get_weather", "args": {"city": "Paris"}}}]
+            },
+            "finishReason": finish_reason
+        }],
+        "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 5}
+    })
+}
+
+#[test]
+fn transform_response_stop_with_a_function_call_finishes_with_tool_calls() {
+    let mut body = function_call_candidate("STOP");
+
+    provider().transform_response(&mut body).expect("transform_response");
+
+    assert_eq!(body["choices"][0]["finish_reason"], "tool_calls");
+}
+
+#[test]
+fn transform_response_other_reasons_keep_their_mapping_with_a_function_call() {
+    for (gemini_reason, expected) in [("MAX_TOKENS", "length"), ("SAFETY", "content_filter")] {
+        let mut body = function_call_candidate(gemini_reason);
+
+        provider().transform_response(&mut body).expect("transform_response");
+
+        assert_eq!(body["choices"][0]["finish_reason"], expected);
+    }
+}
+
+#[test]
+fn transform_response_stop_without_a_function_call_still_finishes_with_stop() {
+    let mut body = json!({
+        "candidates": [{
+            "content": {"role": "model", "parts": [{"text": "Sunny."}]},
+            "finishReason": "STOP"
+        }],
+        "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 5}
+    });
+
+    provider().transform_response(&mut body).expect("transform_response");
+
+    assert_eq!(body["choices"][0]["finish_reason"], "stop");
+}
+
+#[test]
+fn stream_final_chunk_with_a_function_call_finishes_with_tool_calls() {
+    let event = function_call_candidate("STOP").to_string();
+
+    let chunk = parse_gemini_stream_event(&event).expect("parse").expect("a chunk");
+
+    assert_eq!(
+        chunk.choices[0].finish_reason,
+        Some(crate::types::FinishReason::ToolCalls)
+    );
+    assert_eq!(chunk.choices[0].delta.tool_calls.as_ref().map(Vec::len), Some(1));
+}
+
+#[test]
+fn stream_final_chunk_without_a_function_call_finishes_with_stop() {
+    let event = json!({
+        "candidates": [{
+            "content": {"role": "model", "parts": [{"text": "Sunny."}]},
+            "finishReason": "STOP"
+        }]
+    })
+    .to_string();
+
+    let chunk = parse_gemini_stream_event(&event).expect("parse").expect("a chunk");
+
+    assert_eq!(chunk.choices[0].finish_reason, Some(crate::types::FinishReason::Stop));
+}
+
+#[test]
+fn stream_chunk_with_a_function_call_and_no_finish_reason_stays_open() {
+    let mut event = function_call_candidate("STOP");
+    event["candidates"][0]
+        .as_object_mut()
+        .expect("candidate object")
+        .remove("finishReason");
+
+    let chunk = parse_gemini_stream_event(&event.to_string())
+        .expect("parse")
+        .expect("a chunk");
+
+    assert_eq!(chunk.choices[0].finish_reason, None);
+}

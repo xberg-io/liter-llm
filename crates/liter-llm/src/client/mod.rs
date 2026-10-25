@@ -186,6 +186,8 @@ struct ChatStreamState {
     model: String,
     /// Tool calls already streamed, so later chunks continue the index numbering.
     tool_calls_seen: u32,
+    /// A Gemini chunk of this stream carried a tool call.
+    gemini_tool_call_seen: bool,
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -197,6 +199,21 @@ fn attribute_chat_model(provider: &dyn Provider, model: &mut String, fallback_mo
             "Gemini omitted modelVersion; using request or prior stream model context"
         );
         *model = fallback_model.to_owned();
+    }
+}
+
+/// Gemini ends a function-call turn with `STOP`, and the call can arrive in an earlier chunk than
+/// the chunk that carries `STOP`. Remember that the stream carried a call, and finish with
+/// `tool_calls` when `STOP` arrives after one.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn finish_gemini_tool_stream(chunk: &mut ChatCompletionChunk, tool_call_seen: &mut bool) {
+    for choice in &mut chunk.choices {
+        if choice.delta.tool_calls.as_ref().is_some_and(|calls| !calls.is_empty()) {
+            *tool_call_seen = true;
+        }
+        if *tool_call_seen && choice.finish_reason == Some(crate::types::FinishReason::Stop) {
+            choice.finish_reason = Some(crate::types::FinishReason::ToolCalls);
+        }
     }
 }
 
@@ -226,6 +243,7 @@ fn parse_chat_stream_event(
     attribute_chat_model(provider, &mut chunk.model, &state.model);
     if matches!(provider.name(), "google_ai" | "vertex_ai") {
         state.model.clone_from(&chunk.model);
+        finish_gemini_tool_stream(&mut chunk, &mut state.gemini_tool_call_seen);
         return Ok(Some(chunk));
     }
     if let Some(usage) = chunk.usage.as_mut() {
@@ -4329,6 +4347,55 @@ mod build_provider_tests {
         let details = usage.prompt_tokens_details.expect("cache details");
         assert_eq!(details.cached_tokens, 200);
         assert_eq!(details.cache_creation_tokens, 100);
+    }
+
+    const GEMINI_CALL_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"get_weather","args":{"city":"Paris"}}}]}}]}"#;
+    const GEMINI_STOP_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"text":""}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5}}"#;
+
+    fn gemini_stream_finish(provider: &dyn Provider, events: &[&str]) -> Vec<Option<crate::types::FinishReason>> {
+        let state = std::sync::Mutex::new(ChatStreamState::default());
+        events
+            .iter()
+            .map(|event| {
+                let chunk = parse_chat_stream_event(provider, &state, event)
+                    .expect("event")
+                    .expect("chunk");
+                chunk.choices[0].finish_reason.clone()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn gemini_stream_with_the_call_before_the_stop_chunk_finishes_with_tool_calls() {
+        let google_ai = provider::google_ai::GoogleAiProvider::default();
+        let vertex = provider::vertex::VertexAiProvider::new("test-project", "us-central1");
+        for provider in [&google_ai as &dyn Provider, &vertex] {
+            assert_eq!(
+                gemini_stream_finish(provider, &[GEMINI_CALL_CHUNK, GEMINI_STOP_CHUNK]),
+                [None, Some(crate::types::FinishReason::ToolCalls)],
+                "provider {}",
+                provider.name()
+            );
+        }
+    }
+
+    #[test]
+    fn gemini_stream_without_a_call_finishes_with_stop() {
+        let provider = provider::google_ai::GoogleAiProvider::default();
+        assert_eq!(
+            gemini_stream_finish(&provider, &[GEMINI_STOP_CHUNK]),
+            [Some(crate::types::FinishReason::Stop)]
+        );
+    }
+
+    #[test]
+    fn gemini_stream_tool_call_flag_does_not_leak_into_the_next_stream() {
+        let provider = provider::google_ai::GoogleAiProvider::default();
+        gemini_stream_finish(&provider, &[GEMINI_CALL_CHUNK]);
+        assert_eq!(
+            gemini_stream_finish(&provider, &[GEMINI_STOP_CHUNK]),
+            [Some(crate::types::FinishReason::Stop)]
+        );
     }
 
     fn embed_request(model: &str, extra_body: Option<serde_json::Value>) -> EmbeddingRequest {
