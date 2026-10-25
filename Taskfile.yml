@@ -56,7 +56,7 @@ includes:
     taskfile: .task/workflows/e2e.yml
 
 vars:
-  # One pin for every task that runs ai-rulez. Keep it equal to ai-rulez-version in the workflows. ~keep
+  # One pin for every task that runs ai-rulez. The workflows' ai-rulez-version inputs must equal it; task governance:check enforces this. ~keep
   AI_RULEZ_VERSION: "5.6.0"
   AI_RULEZ: "uvx --from ai-rulez=={{.AI_RULEZ_VERSION}} ai-rulez"
   PROJECT_ROOT:
@@ -162,6 +162,7 @@ tasks:
         scripts/ci/test_python_wheel_release_path.py
         scripts/ci/test_schema_copies.py
         scripts/ci/test_changelog_entry.py
+        scripts/ci/test_ai_rulez_version.py
 
   ci:release-version-forms:
     desc: Resolve canonical package version forms for release validation
@@ -425,16 +426,11 @@ tasks:
       - |
         python3 - <<'PYTHON'
         import pathlib
-        import shutil
         import subprocess
         import tomllib
 
-        # The hooks run the ai-rulez on PATH, so it must be the pinned version.
-        if shutil.which("ai-rulez") is None:
-            raise SystemExit("Install ai-rulez {{.AI_RULEZ_VERSION}} before installing hooks")
-        found = subprocess.run(["ai-rulez", "--version"], capture_output=True, text=True, check=True).stdout
-        if "{{.AI_RULEZ_VERSION}}" not in found:
-            raise SystemExit(f"Hooks need ai-rulez {{.AI_RULEZ_VERSION}}, found: {found.strip()}")
+        # The hooks run the ai-rulez on PATH, so it must be exactly the pinned version.
+        subprocess.run(["python3", "scripts/ci/check_ai_rulez_version.py", "installed"], check=True)
         preferences = pathlib.Path("poly.local.toml")
         text = preferences.read_text() if preferences.exists() else ""
         data = tomllib.loads(text)
@@ -453,6 +449,7 @@ tasks:
   governance:check:
     desc: Check materialized local governance outputs against shared sources
     cmds:
+      - python3 scripts/ci/check_ai_rulez_version.py workflows
       - "{{.AI_RULEZ}} generate --check --no-local --strict-config"
 
   plugin:skills:test:
