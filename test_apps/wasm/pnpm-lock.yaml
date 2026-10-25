@@ -167,8 +167,8 @@ importers:
   .:
     devDependencies:
       '@xberg-io/liter-llm-wasm':
-        specifier: 2.2.3
-        version: 2.2.3
+        specifier: 2.4.0
+        version: 2.4.0
       rollup:
         specifier: ^4.64.6
         version: 4.64.6
@@ -458,8 +458,8 @@ packages:
   '@vitest/spy@5.0.4':
     resolution: {integrity: sha512-MZKk/gSkm2q+ICobMxCpH1mA+cCAWm8WV7UhxlqGjq/sJ3AGc1BqFOs5CRVXxH78wQtme9q/NAAgBquj4AcyMw==}
 
-  '@xberg-io/liter-llm-wasm@2.2.3':
-    resolution: {integrity: sha512-dEPm3mait9ThFel7QD4/TBlx19Z6CXeqRUo+mKZ0stdcpAiAXu0q7sSv5DLh7UBuiQGzCuWZKqaAhQ4U/1mWdA==}
+  '@xberg-io/liter-llm-wasm@2.4.0':
+    resolution: {integrity: sha512-Lo8Fi+pfptyymM3F3Z4fcgn9GNtWprX71tyFHbZWDZjtL8b89lzrJ8CAsad7Yb1d/58TfbHZryb4vu0ivuecvQ==}
 
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
@@ -870,7 +870,7 @@ snapshots:
 
   '@vitest/spy@5.0.4': {}
 
-  '@xberg-io/liter-llm-wasm@2.2.3': {}
+  '@xberg-io/liter-llm-wasm@2.4.0': {}
 
   assertion-error@2.0.1: {}
 
