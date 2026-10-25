@@ -896,6 +896,49 @@ fn transform_request_uses_native_structured_output_for_supported_model() {
 }
 
 #[test]
+fn transform_request_native_structured_output_closes_every_object() {
+    let mut body = json!({
+        "model": "claude-opus-5",
+        "messages": [{"role": "user", "content": "Give me structured output"}],
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {"name": "person", "schema": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "address": {"type": "object", "properties": {"city": {"type": "string"}}},
+                    "tags": {"type": "array", "items": {"type": "object", "properties": {}}},
+                    "pick": {"anyOf": [{"type": "object"}, {"type": "null"}]},
+                    "kept": {"type": "object", "additionalProperties": true},
+                    "untyped": {"properties": {"x": {"type": "string"}}}
+                },
+                "$defs": {"inner": {"type": ["object", "null"], "properties": {}}}
+            }}
+        }
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    let schema = &body["output_config"]["format"]["schema"];
+    assert_eq!(schema["additionalProperties"], false);
+    assert_eq!(schema["properties"]["address"]["additionalProperties"], false);
+    assert_eq!(schema["properties"]["tags"]["items"]["additionalProperties"], false);
+    assert_eq!(schema["properties"]["pick"]["anyOf"][0]["additionalProperties"], false);
+    assert_eq!(schema["$defs"]["inner"]["additionalProperties"], false);
+    assert_eq!(schema["properties"]["untyped"]["additionalProperties"], false);
+    assert!(schema["properties"]["name"].get("additionalProperties").is_none());
+    assert!(
+        schema["properties"]["pick"]["anyOf"][1]
+            .get("additionalProperties")
+            .is_none()
+    );
+    assert_eq!(
+        schema["properties"]["kept"]["additionalProperties"], true,
+        "a value the caller set stays as it is"
+    );
+}
+
+#[test]
 fn transform_request_json_object_with_existing_system() {
     let mut body = json!({
         "model": "claude-3-5-sonnet-20241022",
