@@ -271,6 +271,9 @@ fn apply_response_format(body: &mut Value) {
 /// Set `additionalProperties: false` on every object node of `schema` that leaves it unset.
 ///
 /// Anthropic's structured outputs require the keyword on objects. A value the caller set is kept.
+///
+/// `not`, `if`, `then` and `else` are left as they are: closing an object under `not` inverts the
+/// schema, and the Anthropic SDK's `transform_schema` does not walk them either.
 fn close_object_schemas(schema: &mut Value) {
     let Some(node) = schema.as_object_mut() else {
         return;
@@ -293,7 +296,7 @@ fn close_object_schemas(schema: &mut Value) {
             children.iter_mut().for_each(close_object_schemas);
         }
     }
-    for key in ["items", "not", "if", "then", "else", "additionalProperties"] {
+    for key in ["items", "additionalProperties"] {
         if let Some(child) = node.get_mut(key) {
             close_object_schemas(child);
         }
