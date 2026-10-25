@@ -205,6 +205,15 @@ fn generation_config(body: &Value) -> Value {
     if let Some(top_p) = body.get("top_p") {
         gen_config["topP"] = top_p.clone();
     }
+    if let Some(seed) = body.get("seed") {
+        gen_config["seed"] = seed.clone();
+    }
+    if let Some(penalty) = body.get("presence_penalty") {
+        gen_config["presencePenalty"] = penalty.clone();
+    }
+    if let Some(penalty) = body.get("frequency_penalty") {
+        gen_config["frequencyPenalty"] = penalty.clone();
+    }
     if let Some(stop) = body.get("stop") {
         let sequences = if let Some(s) = stop.as_str() {
             vec![json!(s)]
