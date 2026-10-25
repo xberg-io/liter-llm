@@ -721,7 +721,7 @@ public func completionCostWithCache<GenericIntoRustString: IntoRustString>(_ mod
 public func completionCostWithCacheDetails<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString, _ prompt_tokens: UInt64, _ cached_tokens: UInt64, _ cache_creation_tokens: UInt64, _ completion_tokens: UInt64) -> RustString {
     RustString(ptr: __swift_bridge__$completion_cost_with_cache_details({ let rustString = model.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), prompt_tokens, cached_tokens, cache_creation_tokens, completion_tokens))
 }
-public func complexProviderNames() throws -> RustVec<RustString> {
+public func __alef_owned_vec_complex_provider_names() throws -> RustVec<RustString> {
     try { let val = __swift_bridge__$complex_provider_names(); if val.is_ok { return RustVec(ptr: val.ok_or_err!) } else { throw AlefBridgeError(ptr: val.ok_or_err!) } }()
 }
 public func decodeDataUrl<GenericIntoRustString: IntoRustString>(_ url: GenericIntoRustString) -> Optional<DecodedDataUrl> {
@@ -736,7 +736,7 @@ public func exactModelInfo<GenericIntoRustString: IntoRustString>(_ model: Gener
 public func installCatalogOverlayFromStr<GenericIntoRustString: IntoRustString>(_ catalog_json: GenericIntoRustString) throws -> () {
     try { let val = __swift_bridge__$install_catalog_overlay_from_str({ let rustString = catalog_json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val != nil { throw AlefBridgeError(ptr: val!) } else { return } }()
 }
-public func listCatalogModels<GenericIntoRustString: IntoRustString>(_ provider: Optional<GenericIntoRustString>) -> RustVec<CatalogModel> {
+public func __alef_owned_vec_list_catalog_models<GenericIntoRustString: IntoRustString>(_ provider: Optional<GenericIntoRustString>) -> RustVec<CatalogModel> {
     RustVec(ptr: __swift_bridge__$list_catalog_models({ if let rustString = optionalStringIntoRustString(provider) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
 }
 public func modelInfo<GenericIntoRustString: IntoRustString>(_ model: GenericIntoRustString) -> Optional<ModelInfo> {
@@ -1702,6 +1702,10 @@ public class AssistantMessageRef {
     }
 }
 extension AssistantMessageRef {
+    public func __alef_json_content() throws -> RustString {
+        try { let val = __swift_bridge__$AssistantMessage$__alef_json_content(ptr); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw AlefBridgeError(ptr: val.ok_or_err!) } }()
+    }
+
     public func content() -> Optional<RustString> {
         { let val = __swift_bridge__$AssistantMessage$content(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
@@ -2073,7 +2077,7 @@ extension BatchListResponseRef {
         RustString(ptr: __swift_bridge__$BatchListResponse$object(ptr))
     }
 
-    public func data() -> RustVec<BatchObject> {
+    public func __alef_owned_vec_data() -> RustVec<BatchObject> {
         RustVec(ptr: __swift_bridge__$BatchListResponse$data(ptr))
     }
 
@@ -3037,7 +3041,7 @@ extension ChatCompletionChunkRef {
         RustString(ptr: __swift_bridge__$ChatCompletionChunk$model(ptr))
     }
 
-    public func choices() -> RustVec<RustString> {
+    public func __alef_owned_vec_choices() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$ChatCompletionChunk$choices(ptr))
     }
 
@@ -3133,7 +3137,7 @@ extension ChatCompletionRequestRef {
         RustString(ptr: __swift_bridge__$ChatCompletionRequest$model(ptr))
     }
 
-    public func messages() -> RustVec<RustString> {
+    public func __alef_owned_vec_messages() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$ChatCompletionRequest$messages(ptr))
     }
 
@@ -3346,7 +3350,7 @@ extension ChatCompletionResponseRef {
         RustString(ptr: __swift_bridge__$ChatCompletionResponse$model(ptr))
     }
 
-    public func choices() -> RustVec<Choice> {
+    public func __alef_owned_vec_choices() -> RustVec<Choice> {
         RustVec(ptr: __swift_bridge__$ChatCompletionResponse$choices(ptr))
     }
 
@@ -4458,7 +4462,7 @@ extension CustomProviderConfigRef {
         RustString(ptr: __swift_bridge__$CustomProviderConfig$auth_header(ptr))
     }
 
-    public func modelPrefixes() -> RustVec<RustString> {
+    public func __alef_owned_vec_model_prefixes() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$CustomProviderConfig$model_prefixes(ptr))
     }
 }
@@ -5170,7 +5174,7 @@ extension EmbeddingResponseRef {
         RustString(ptr: __swift_bridge__$EmbeddingResponse$object(ptr))
     }
 
-    public func data() -> RustVec<RustString> {
+    public func __alef_owned_vec_data() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$EmbeddingResponse$data(ptr))
     }
 
@@ -5360,7 +5364,7 @@ extension FileListResponseRef {
         RustString(ptr: __swift_bridge__$FileListResponse$object(ptr))
     }
 
-    public func data() -> RustVec<RustString> {
+    public func __alef_owned_vec_data() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$FileListResponse$data(ptr))
     }
 
@@ -6009,7 +6013,7 @@ extension ImagesResponseRef {
         __swift_bridge__$ImagesResponse$created(ptr)
     }
 
-    public func data() -> RustVec<RustString> {
+    public func __alef_owned_vec_data() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$ImagesResponse$data(ptr))
     }
 }
@@ -6797,7 +6801,7 @@ extension LlmProviderConfigRef {
         { let val = __swift_bridge__$LlmProviderConfig$auth_header(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
-    public func modelPrefixes() -> RustVec<RustString> {
+    public func __alef_owned_vec_model_prefixes() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$LlmProviderConfig$model_prefixes(ptr))
     }
 }
@@ -7059,7 +7063,7 @@ extension ModelInfoRef {
         __swift_bridge__$ModelInfo$supports_prompt_caching(ptr).intoSwiftRepr()
     }
 
-    public func tiers() -> RustVec<RustString> {
+    public func __alef_owned_vec_tiers() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$ModelInfo$tiers(ptr))
     }
 }
@@ -7358,7 +7362,7 @@ extension ModelsListResponseRef {
         RustString(ptr: __swift_bridge__$ModelsListResponse$object(ptr))
     }
 
-    public func data() -> RustVec<RustString> {
+    public func __alef_owned_vec_data() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$ModelsListResponse$data(ptr))
     }
 }
@@ -7789,7 +7793,7 @@ extension ModerationResponseRef {
         RustString(ptr: __swift_bridge__$ModerationResponse$model(ptr))
     }
 
-    public func results() -> RustVec<RustString> {
+    public func __alef_owned_vec_results() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$ModerationResponse$results(ptr))
     }
 }
@@ -8229,7 +8233,7 @@ public class OcrResponseRef {
     }
 }
 extension OcrResponseRef {
-    public func pages() -> RustVec<RustString> {
+    public func __alef_owned_vec_pages() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$OcrResponse$pages(ptr))
     }
 
@@ -8818,7 +8822,7 @@ extension RerankRequestRef {
         RustString(ptr: __swift_bridge__$RerankRequest$query(ptr))
     }
 
-    public func documents() -> RustVec<RustString> {
+    public func __alef_owned_vec_documents() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$RerankRequest$documents(ptr))
     }
 
@@ -8914,7 +8918,7 @@ extension RerankResponseRef {
         { let val = __swift_bridge__$RerankResponse$id(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
-    public func results() -> RustVec<RerankResult> {
+    public func __alef_owned_vec_results() -> RustVec<RerankResult> {
         RustVec(ptr: __swift_bridge__$RerankResponse$results(ptr))
     }
 
@@ -9191,7 +9195,7 @@ extension ResponseObjectRef {
         RustString(ptr: __swift_bridge__$ResponseObject$status(ptr))
     }
 
-    public func output() -> RustVec<ResponseOutputItem> {
+    public func __alef_owned_vec_output() -> RustVec<ResponseOutputItem> {
         RustVec(ptr: __swift_bridge__$ResponseObject$output(ptr))
     }
 
@@ -9650,7 +9654,7 @@ public class SearchResponseRef {
     }
 }
 extension SearchResponseRef {
-    public func results() -> RustVec<RustString> {
+    public func __alef_owned_vec_results() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$SearchResponse$results(ptr))
     }
 

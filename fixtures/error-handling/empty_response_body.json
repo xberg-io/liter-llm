@@ -26,9 +26,5 @@
     {
       "type": "error"
     }
-  ],
-  "skip": {
-    "languages": ["ruby"],
-    "reason": "The generated Ruby spec lists LiterLlm::CelCompileError, which the Ruby extension does not define, so the matcher raises NameError, see xberg-io/alef#687."
-  }
+  ]
 }
