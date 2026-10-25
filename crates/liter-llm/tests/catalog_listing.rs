@@ -32,3 +32,21 @@ fn an_empty_provider_lists_every_provider() {
     assert!(!all.is_empty());
     assert_eq!(list_catalog_models(Some("")), all);
 }
+
+#[test]
+fn a_routing_provider_name_lists_the_models_of_its_catalog_id() {
+    for (routing, catalog_id) in [
+        ("gemini", "google"),
+        ("google_ai", "google"),
+        ("vertex_ai", "google-vertex"),
+    ] {
+        let expected = list_catalog_models(Some(catalog_id));
+        assert!(!expected.is_empty(), "the catalog holds {catalog_id} models");
+        assert_eq!(
+            list_catalog_models(Some(routing)),
+            expected,
+            "{routing} lists {catalog_id}"
+        );
+        assert!(expected.iter().all(|m| m.provider == catalog_id));
+    }
+}

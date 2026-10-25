@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `list_catalog_models(provider)` accepts the routing names `gemini`, `google_ai` and `vertex_ai`. They list the models
+  of the catalog ids `google` and `google-vertex`, as the cost lookup already resolves them (#405).
+
 ## [2.4.0] - 2026-10-24
 
 ### Changed

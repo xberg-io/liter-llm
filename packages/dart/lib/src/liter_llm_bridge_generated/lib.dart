@@ -223,10 +223,12 @@ Future<ModelInfo?> exactModelInfo({required String model}) =>
 /// accepts, such as "gpt-4o" for "openai/gpt-4o", is not an extra entry.
 ///
 /// The provider argument takes a catalog provider id, such as "openai" or
-/// "anthropic": the part of an entry key before the first slash. It is not a
-/// routing provider name from all_providers; only some routing names are also
-/// catalog ids. The listing keeps the models of that id only, compared exactly
-/// and case-sensitively. An id the catalog does not hold gives an empty list.
+/// "anthropic": the part of an entry key before the first slash. It also takes
+/// a routing provider name from all_providers that the catalog files under a
+/// different id: "gemini" and "google_ai" list the "google" models, and
+/// "vertex_ai" lists the "google-vertex" models. The listing keeps the models
+/// of that id only, compared exactly and case-sensitively. An id the catalog
+/// does not hold gives an empty list.
 /// When the provider is absent or empty, the listing keeps every provider.
 ///
 /// The list reads the catalog that the model lookup reads: the embedded
