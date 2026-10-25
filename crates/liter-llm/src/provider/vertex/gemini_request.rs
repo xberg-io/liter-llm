@@ -1,5 +1,7 @@
 //! OpenAI chat request -> Gemini `generateContent` request translation.
 
+use std::collections::HashMap;
+
 use serde_json::{Map, Value, json};
 
 use super::{
@@ -83,6 +85,7 @@ pub(crate) fn transform_gemini_request(body: &mut Value) -> Result<()> {
 fn convert_messages(messages: &[Value]) -> (Vec<Value>, Vec<Value>) {
     let mut system_parts: Vec<Value> = vec![];
     let mut contents: Vec<Value> = vec![];
+    let mut call_names: HashMap<&str, &str> = HashMap::new();
 
     for msg in messages {
         let role = msg.get("role").and_then(|r| r.as_str()).unwrap_or("");
@@ -98,9 +101,12 @@ fn convert_messages(messages: &[Value]) -> (Vec<Value>, Vec<Value>) {
                 let parts = convert_user_content_to_gemini(content);
                 contents.push(json!({"role": "user", "parts": parts}));
             }
-            "assistant" => contents.push(model_message(msg, content)),
+            "assistant" => {
+                record_call_names(msg, &mut call_names);
+                contents.push(model_message(msg, content));
+            }
             "tool" => {
-                let name = msg.get("name").and_then(|n| n.as_str()).unwrap_or("tool");
+                let name = tool_result_name(msg, &call_names);
                 let result_content = content.cloned().unwrap_or(json!(null));
                 contents.push(json!({
                     "role": "user",
@@ -117,6 +123,32 @@ fn convert_messages(messages: &[Value]) -> (Vec<Value>, Vec<Value>) {
     }
 
     (system_parts, contents)
+}
+
+/// Remember the function name of each tool call in an assistant message, keyed by call `id`.
+fn record_call_names<'a>(msg: &'a Value, call_names: &mut HashMap<&'a str, &'a str>) {
+    let Some(tool_calls) = msg.get("tool_calls").and_then(|t| t.as_array()) else {
+        return;
+    };
+    for tc in tool_calls {
+        if let (Some(id), Some(name)) = (
+            tc.get("id").and_then(|i| i.as_str()),
+            tc.pointer("/function/name").and_then(|n| n.as_str()),
+        ) {
+            call_names.insert(id, name);
+        }
+    }
+}
+
+/// The function name for a tool result. Gemini pairs a `functionResponse` with its
+/// `functionCall` by name, so the name of the call that `tool_call_id` points at wins.
+/// The message's own `name` applies only when no call matches, and `"tool"` is the last resort.
+fn tool_result_name<'a>(msg: &'a Value, call_names: &HashMap<&str, &'a str>) -> &'a str {
+    msg.get("tool_call_id")
+        .and_then(|i| i.as_str())
+        .and_then(|id| call_names.get(id).copied())
+        .or_else(|| msg.get("name").and_then(|n| n.as_str()))
+        .unwrap_or("tool")
 }
 
 /// An assistant turn as a Gemini `model` turn: non-empty text plus one

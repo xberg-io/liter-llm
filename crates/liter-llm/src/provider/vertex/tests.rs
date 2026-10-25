@@ -316,6 +316,84 @@ fn transform_request_with_tool_calls() {
     assert_eq!(fn_resp["name"], "get_weather");
 }
 
+fn tool_call(id: &str, name: &str) -> serde_json::Value {
+    json!({"id": id, "type": "function", "function": {"name": name, "arguments": "{}"}})
+}
+
+fn function_response_names(body: &serde_json::Value) -> Vec<String> {
+    body["contents"]
+        .as_array()
+        .expect("contents should be an array")
+        .iter()
+        .filter_map(|turn| turn["parts"][0]["functionResponse"]["name"].as_str())
+        .map(str::to_owned)
+        .collect()
+}
+
+#[test]
+fn transform_request_tool_result_without_name_uses_the_called_function() {
+    let mut body = json!({
+        "messages": [
+            {"role": "user", "content": "Call noop."},
+            {"role": "assistant", "content": null, "tool_calls": [tool_call("call_1", "noop")]},
+            {"role": "tool", "tool_call_id": "call_1", "content": "done"}
+        ]
+    });
+
+    provider().transform_request(&mut body).expect("transform_request");
+
+    assert_eq!(function_response_names(&body), ["noop"]);
+}
+
+#[test]
+fn transform_request_tool_results_out_of_order_match_their_calls() {
+    let mut body = json!({
+        "messages": [
+            {"role": "user", "content": "Call both."},
+            {
+                "role": "assistant",
+                "content": null,
+                "tool_calls": [tool_call("call_a", "alpha"), tool_call("call_b", "beta")]
+            },
+            {"role": "tool", "tool_call_id": "call_b", "content": "second"},
+            {"role": "tool", "tool_call_id": "call_a", "content": "first"}
+        ]
+    });
+
+    provider().transform_request(&mut body).expect("transform_request");
+
+    assert_eq!(function_response_names(&body), ["beta", "alpha"]);
+}
+
+#[test]
+fn transform_request_matching_call_wins_over_the_message_name() {
+    let mut body = json!({
+        "messages": [
+            {"role": "assistant", "content": null, "tool_calls": [tool_call("call_1", "noop")]},
+            {"role": "tool", "name": "stale", "tool_call_id": "call_1", "content": "done"}
+        ]
+    });
+
+    provider().transform_request(&mut body).expect("transform_request");
+
+    assert_eq!(function_response_names(&body), ["noop"]);
+}
+
+#[test]
+fn transform_request_tool_result_without_a_matching_call_uses_the_message_name() {
+    let mut body = json!({
+        "messages": [
+            {"role": "assistant", "content": null, "tool_calls": [tool_call("call_1", "noop")]},
+            {"role": "tool", "name": "lookup", "tool_call_id": "call_9", "content": "done"},
+            {"role": "tool", "tool_call_id": "call_10", "content": "done"}
+        ]
+    });
+
+    provider().transform_request(&mut body).expect("transform_request");
+
+    assert_eq!(function_response_names(&body), ["lookup", "tool"]);
+}
+
 #[test]
 fn transform_request_stop_sequences() {
     let p = provider();
