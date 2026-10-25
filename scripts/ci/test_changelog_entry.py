@@ -78,3 +78,17 @@ def test_swift_step_writes_the_changelog_entry_before_the_install_sections() -> 
     assert script.index("changelog_entry.py") < script.index("## Swift Package Manager")
     assert "cat /tmp/changelog-notes.md /tmp/swift-install.md > /tmp/release-notes.md" in script
     assert "--notes-file /tmp/release-notes.md" in script
+
+
+def test_zig_notes_are_appended_after_the_swift_rewrite() -> None:
+    jobs = yaml.safe_load(WORKFLOW.read_text())["jobs"]
+    assert "upload-swift-release" in jobs["publish-zig"]["needs"]
+    assert "publish-zig" not in jobs["upload-swift-release"]["needs"]
+
+
+def test_only_the_swift_step_replaces_the_release_notes() -> None:
+    lines = [line.strip() for line in WORKFLOW.read_text().splitlines()]
+    commands = [line for line in lines if not line.startswith("#")]
+    replacing = [line for line in commands if "gh release edit" in line and "--notes-file" in line]
+    assert replacing == ['gh release edit "v${VERSION}" --notes-file /tmp/release-notes.md']
+    assert sum(line.startswith("update-release-notes:") for line in commands) == 1
