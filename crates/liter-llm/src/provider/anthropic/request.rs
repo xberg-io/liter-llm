@@ -231,6 +231,8 @@ fn apply_response_format(body: &mut Value) {
         && supports_structured_output
         && let Some(schema) = response_format.pointer("/json_schema/schema").cloned()
     {
+        let mut schema = schema;
+        close_object_schemas(&mut schema);
         body["output_config"] = json!({
             "format": {
                 "type": "json_schema",
@@ -264,6 +266,38 @@ fn apply_response_format(body: &mut Value) {
         _ => return,
     };
     append_system_instruction(body, instruction);
+}
+
+/// Set `additionalProperties: false` on every object node of `schema` that leaves it unset.
+///
+/// Anthropic's structured outputs require the keyword on objects. A value the caller set is kept.
+fn close_object_schemas(schema: &mut Value) {
+    let Some(node) = schema.as_object_mut() else {
+        return;
+    };
+    let is_object = match node.get("type") {
+        Some(Value::String(t)) => t == "object",
+        Some(Value::Array(types)) => types.iter().any(|t| t == "object"),
+        _ => node.contains_key("properties"),
+    };
+    if is_object && !node.contains_key("additionalProperties") {
+        node.insert("additionalProperties".to_owned(), Value::Bool(false));
+    }
+    for key in ["properties", "$defs", "definitions", "patternProperties"] {
+        if let Some(children) = node.get_mut(key).and_then(Value::as_object_mut) {
+            children.values_mut().for_each(close_object_schemas);
+        }
+    }
+    for key in ["anyOf", "oneOf", "allOf", "prefixItems"] {
+        if let Some(children) = node.get_mut(key).and_then(Value::as_array_mut) {
+            children.iter_mut().for_each(close_object_schemas);
+        }
+    }
+    for key in ["items", "not", "if", "then", "else", "additionalProperties"] {
+        if let Some(child) = node.get_mut(key) {
+            close_object_schemas(child);
+        }
+    }
 }
 
 /// Insert `instruction` after caller-provided `system` blocks, creating `system` when it
