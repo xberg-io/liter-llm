@@ -161,6 +161,7 @@ tasks:
         scripts/ci/test_python_wheel_check.py
         scripts/ci/test_python_wheel_release_path.py
         scripts/ci/test_schema_copies.py
+        scripts/ci/test_changelog_entry.py
 
   ci:release-version-forms:
     desc: Resolve canonical package version forms for release validation
