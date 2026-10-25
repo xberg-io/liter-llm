@@ -93,6 +93,11 @@ fn split_system_messages(messages: Vec<Value>) -> (Vec<Value>, Vec<Value>) {
                 }
                 Some(Value::Array(parts)) => {
                     for part in parts {
+                        let is_text = part.get("type").and_then(Value::as_str) == Some("text");
+                        let text = part.get("text").and_then(Value::as_str).unwrap_or("");
+                        if is_text && is_blank(text) {
+                            continue;
+                        }
                         system_blocks.push(part.clone());
                     }
                 }
