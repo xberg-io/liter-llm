@@ -196,7 +196,8 @@ where
 /// - `RateLimited` (429): quota exhausted on this key.
 /// - `ServerError` / `ServiceUnavailable` (5xx): may indicate per-key limits.
 ///
-/// Auth errors (401/403) are excluded — bad keys cannot be fixed by rotation.
+/// Authentication errors (401/403, or a Google 400 for an invalid API key) are
+/// excluded — bad keys cannot be fixed by rotation.
 fn needs_rotation(err: &LiterLlmError) -> bool {
     matches!(
         err,

@@ -112,6 +112,7 @@ where
             max_retries,
             max_response_bytes: None,
             timeout: None,
+            invalid_key_as_400: false,
         },
     )
     .await
@@ -196,6 +197,7 @@ where
             max_retries,
             max_response_bytes: None,
             timeout: None,
+            invalid_key_as_400: false,
         },
     )
     .await

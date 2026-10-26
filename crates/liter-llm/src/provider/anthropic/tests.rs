@@ -940,7 +940,7 @@ fn parse_stream_event_error_event_has_the_http_error_kind() {
     for (kind, status) in cases {
         let event = format!(r#"{{"type":"error","error":{{{kind},"message":"boom"}}}}"#);
         let err = provider().parse_stream_event(&event).unwrap_err();
-        let http = crate::error::LiterLlmError::from_status(status, r#"{"error":{"message":"boom"}}"#, None);
+        let http = crate::error::LiterLlmError::from_status(status, r#"{"error":{"message":"boom"}}"#, None, false);
         assert_eq!(
             std::mem::discriminant(&err),
             std::mem::discriminant(&http),

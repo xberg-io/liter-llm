@@ -1475,6 +1475,7 @@ mod error_tests {
             401,
             r#"{"error":{"message":"Invalid API key","type":"invalid_request_error"}}"#,
             None,
+            false,
         );
         assert!(matches!(err, LiterLlmError::Authentication { .. }));
     }
@@ -1485,6 +1486,7 @@ mod error_tests {
             400,
             r#"{"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"API_KEY_INVALID","domain":"googleapis.com"}]}}"#,
             None,
+            true,
         );
 
         assert!(matches!(
@@ -1497,11 +1499,24 @@ mod error_tests {
     }
 
     #[test]
+    fn invalid_api_key_reason_without_the_google_rule_is_bad_request() {
+        let err = LiterLlmError::from_status(
+            400,
+            r#"{"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"API_KEY_INVALID","domain":"googleapis.com"}]}}"#,
+            None,
+            false,
+        );
+
+        assert!(matches!(err, LiterLlmError::BadRequest { status: 400, .. }));
+    }
+
+    #[test]
     fn other_google_http_400_remains_bad_request() {
         let err = LiterLlmError::from_status(
             400,
             r#"{"error":{"code":400,"message":"Invalid argument","status":"INVALID_ARGUMENT","details":[{"reason":"INVALID_ARGUMENT"}]}}"#,
             None,
+            true,
         );
 
         assert!(matches!(err, LiterLlmError::BadRequest { status: 400, .. }));
@@ -1513,6 +1528,7 @@ mod error_tests {
             400,
             r#"{"error":{"code":400,"message":"The input token count exceeds the maximum number of tokens allowed","status":"INVALID_ARGUMENT"}}"#,
             None,
+            false,
         );
         assert!(matches!(
             &err,
@@ -1527,6 +1543,7 @@ mod error_tests {
             400,
             r#"{"error":{"code":400,"message":"blocked by content_filter","status":"INVALID_ARGUMENT"}}"#,
             None,
+            false,
         );
         assert!(matches!(&err, LiterLlmError::ContentPolicy { message } if message == "blocked by content_filter"));
     }
@@ -1537,6 +1554,7 @@ mod error_tests {
             429,
             r#"{"error":{"code":429,"message":"Resource exhausted","status":"RESOURCE_EXHAUSTED"}}"#,
             None,
+            false,
         );
         assert!(matches!(&err, LiterLlmError::RateLimited { message, .. } if message == "Resource exhausted"));
     }
@@ -1547,6 +1565,7 @@ mod error_tests {
             429,
             r#"{"error":{"code":"insufficient_quota","message":"quota exhausted"}}"#,
             None,
+            false,
         );
         assert!(matches!(err, LiterLlmError::ProviderQuotaExceeded { status: 429, .. }));
     }
@@ -1558,6 +1577,7 @@ mod error_tests {
             400,
             r#"{"error":{"code":"context_length_exceeded","message":"request rejected"}}"#,
             None,
+            false,
         );
         assert!(matches!(&err, LiterLlmError::ContextWindowExceeded { message } if message == "request rejected"));
     }
@@ -1569,6 +1589,19 @@ mod error_tests {
             400,
             r#"{"error":{"code":"content_filter","message":"request rejected"}}"#,
             None,
+            false,
+        );
+        assert!(matches!(&err, LiterLlmError::ContentPolicy { message } if message == "request rejected"));
+    }
+
+    #[test]
+    fn string_content_policy_violation_code_selects_content_policy() {
+        // The message holds no policy fragment, so only the code can decide.
+        let err = LiterLlmError::from_status(
+            400,
+            r#"{"error":{"code":"content_policy_violation","message":"request rejected"}}"#,
+            None,
+            false,
         );
         assert!(matches!(&err, LiterLlmError::ContentPolicy { message } if message == "request rejected"));
     }
@@ -1577,9 +1610,9 @@ mod error_tests {
     fn insufficient_quota_code_without_a_string_message_is_quota_exceeded() {
         // The code is the authoritative signal; the body is kept as the message.
         let body = r#"{"error":{"code":"insufficient_quota","message":42}}"#;
-        let err = LiterLlmError::from_status(429, body, None);
+        let err = LiterLlmError::from_status(429, body, None, false);
         assert!(matches!(&err, LiterLlmError::ProviderQuotaExceeded { status: 429, message } if message == body));
-        let err = LiterLlmError::from_status(429, r#"{"error":{"code":"insufficient_quota"}}"#, None);
+        let err = LiterLlmError::from_status(429, r#"{"error":{"code":"insufficient_quota"}}"#, None, false);
         assert!(matches!(err, LiterLlmError::ProviderQuotaExceeded { status: 429, .. }));
     }
 
@@ -1589,6 +1622,7 @@ mod error_tests {
             500,
             r#"{"error":{"code":500,"message":"backend error","details":[{"reason":"API_KEY_INVALID"}]}}"#,
             None,
+            true,
         );
         assert!(matches!(err, LiterLlmError::ServerError { status: 500, .. }));
     }
@@ -1599,6 +1633,7 @@ mod error_tests {
             429,
             r#"{"error":{"message":"Rate limited","type":"rate_limit_error"}}"#,
             None,
+            false,
         );
         assert!(matches!(err, LiterLlmError::RateLimited { .. }));
     }
@@ -1609,6 +1644,7 @@ mod error_tests {
             429,
             r#"{"error":{"message":"quota exhausted","code":"insufficient_quota"}}"#,
             Some(std::time::Duration::from_secs(7)),
+            false,
         );
         assert!(matches!(err, LiterLlmError::ProviderQuotaExceeded { status: 429, .. }));
         assert_eq!(err.status_code(), 429);
@@ -1617,7 +1653,7 @@ mod error_tests {
 
     #[test]
     fn anthropic_overload_preserves_529_status() {
-        let err = LiterLlmError::from_status(529, "overloaded", Some(std::time::Duration::from_secs(2)));
+        let err = LiterLlmError::from_status(529, "overloaded", Some(std::time::Duration::from_secs(2)), false);
         assert!(matches!(
             err,
             LiterLlmError::ServiceUnavailable {
@@ -1637,7 +1673,7 @@ mod error_tests {
         ] {
             let body = format!(r#"{{"error":{{"message":"{message}"}}}}"#);
             assert!(matches!(
-                LiterLlmError::from_status(400, &body, None),
+                LiterLlmError::from_status(400, &body, None, false),
                 LiterLlmError::ContextWindowExceeded { .. }
             ));
         }
@@ -1645,7 +1681,7 @@ mod error_tests {
 
     #[test]
     fn service_unavailable_exposes_retry_after() {
-        let err = LiterLlmError::from_status(503, "unavailable", Some(std::time::Duration::from_secs(3)));
+        let err = LiterLlmError::from_status(503, "unavailable", Some(std::time::Duration::from_secs(3)), false);
         assert_eq!(err.retry_after(), Some(std::time::Duration::from_secs(3)));
     }
 
@@ -1656,7 +1692,7 @@ mod error_tests {
     /// Node, PHP or WASM had to invent its own backoff.
     #[test]
     fn rate_limited_error_exposes_retry_after() {
-        let err = LiterLlmError::from_status(429, "slow down", Some(std::time::Duration::from_secs(30)));
+        let err = LiterLlmError::from_status(429, "slow down", Some(std::time::Duration::from_secs(30)), false);
 
         assert_eq!(err.retry_after(), Some(std::time::Duration::from_secs(30)));
     }
@@ -1665,8 +1701,8 @@ mod error_tests {
     /// `None` rather than a fabricated delay.
     #[test]
     fn retry_after_is_none_when_the_server_did_not_advertise_one() {
-        assert_eq!(LiterLlmError::from_status(429, "slow down", None).retry_after(), None);
-        assert_eq!(LiterLlmError::from_status(500, "boom", None).retry_after(), None);
+        assert_eq!(LiterLlmError::from_status(429, "slow down", None, false).retry_after(), None);
+        assert_eq!(LiterLlmError::from_status(500, "boom", None, false).retry_after(), None);
     }
 
     #[test]
@@ -1675,31 +1711,32 @@ mod error_tests {
             400,
             r#"{"error":{"message":"maximum context length exceeded","type":"invalid_request_error"}}"#,
             None,
+            false,
         );
         assert!(matches!(err, LiterLlmError::ContextWindowExceeded { .. }));
     }
 
     #[test]
     fn error_from_plain_text() {
-        let err = LiterLlmError::from_status(500, "Internal Server Error", None);
+        let err = LiterLlmError::from_status(500, "Internal Server Error", None, false);
         assert!(matches!(err, LiterLlmError::ServerError { .. }));
     }
 
     #[test]
     fn error_from_503() {
-        let err = LiterLlmError::from_status(503, "Service Unavailable", None);
+        let err = LiterLlmError::from_status(503, "Service Unavailable", None, false);
         assert!(matches!(err, LiterLlmError::ServiceUnavailable { .. }));
     }
 
     #[test]
     fn error_from_403_forbidden() {
-        let err = LiterLlmError::from_status(403, "Forbidden", None);
+        let err = LiterLlmError::from_status(403, "Forbidden", None, false);
         assert!(matches!(err, LiterLlmError::Authentication { .. }));
     }
 
     #[test]
     fn error_from_502_bad_gateway() {
-        let err = LiterLlmError::from_status(502, "Bad Gateway", None);
+        let err = LiterLlmError::from_status(502, "Bad Gateway", None, false);
         assert!(matches!(err, LiterLlmError::ServiceUnavailable { .. }));
     }
 
@@ -1717,7 +1754,7 @@ mod error_tests {
 
     #[test]
     fn error_from_504_gateway_timeout() {
-        let err = LiterLlmError::from_status(504, "Gateway Timeout", None);
+        let err = LiterLlmError::from_status(504, "Gateway Timeout", None, false);
         assert!(matches!(err, LiterLlmError::ServiceUnavailable { .. }));
     }
 
@@ -1727,6 +1764,7 @@ mod error_tests {
             400,
             r#"{"error":{"message":"Request violates content_filter policy","type":"invalid_request_error"}}"#,
             None,
+            false,
         );
         assert!(matches!(err, LiterLlmError::ContentPolicy { .. }));
     }
@@ -1737,6 +1775,7 @@ mod error_tests {
             400,
             r#"{"error":{"message":"content_policy violation detected","type":"invalid_request_error"}}"#,
             None,
+            false,
         );
         assert!(matches!(err, LiterLlmError::ContentPolicy { .. }));
     }
@@ -1748,6 +1787,7 @@ mod error_tests {
             500,
             &format!(r#"{{"error":{{"message":"{}","type":"server_error"}}}}"#, msg),
             None,
+            false,
         );
         if let LiterLlmError::ServerError { message, .. } = err {
             assert_eq!(message, msg);

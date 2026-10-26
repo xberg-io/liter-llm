@@ -929,11 +929,14 @@ impl DefaultClient {
         self
     }
 
-    fn response_read_options(&self) -> http::request::ResponseReadOptions {
+    /// The options for a request that goes to `provider`. The provider is the one that
+    /// serves the model, which can differ from `self.provider`.
+    fn response_read_options(&self, provider: &dyn Provider) -> http::request::ResponseReadOptions {
         http::request::ResponseReadOptions {
             max_retries: self.config.max_retries,
             max_response_bytes: self.config.max_response_bytes,
             timeout: Some(self.config.timeout),
+            invalid_key_as_400: provider.reports_invalid_key_as_400(),
         }
     }
 
@@ -1402,7 +1405,7 @@ impl DefaultClient {
                     },
                     parse_event,
                     end_check,
-                    self.response_read_options(),
+                    self.response_read_options(prepared.provider.as_ref()),
                     framing,
                 )
                 .await
@@ -1418,7 +1421,7 @@ impl DefaultClient {
                         body: prepared.body_bytes,
                     },
                     provider::bedrock::parse_bedrock_stream_event,
-                    self.response_read_options(),
+                    self.response_read_options(prepared.provider.as_ref()),
                 )
                 .await?
             }
@@ -1670,7 +1673,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await
             .map_err(|e| prepared.provider.transform_error(e))?;
@@ -1732,7 +1735,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await
             .map_err(|e| prepared.provider.transform_error(e))?;
@@ -1757,7 +1760,7 @@ impl LlmClient for DefaultClient {
                 let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
                 let mut raw =
-                    http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+                    http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
                         .await
                         .map_err(|e| self.provider.transform_error(e))?;
                 let next_url = self.provider.next_models_page_url(&url, &raw);
@@ -1813,7 +1816,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             prepared.provider.transform_response(&mut raw)?;
@@ -1855,7 +1858,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await
         })
@@ -1895,7 +1898,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             prepared.provider.transform_response(&mut raw)?;
@@ -1938,7 +1941,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             prepared.provider.transform_response(&mut raw)?;
@@ -1981,7 +1984,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             transform_rerank_reply(prepared.provider.as_ref(), &req.model, &mut raw)?;
@@ -2018,7 +2021,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             prepared.provider.transform_response(&mut raw)?;
@@ -2054,7 +2057,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             prepared.provider.transform_response(&mut raw)?;
@@ -2096,7 +2099,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await
             .map_err(|e| prepared.provider.transform_error(e))?;
@@ -2158,7 +2161,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await
             .map_err(|e| prepared.provider.transform_error(e))?;
@@ -2207,7 +2210,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2257,7 +2260,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2305,7 +2308,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2353,7 +2356,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2395,7 +2398,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2436,7 +2439,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2487,8 +2490,7 @@ impl FileClient for DefaultClient {
                 auth,
                 &extra,
                 form,
-                self.config.max_response_bytes,
-                Some(self.config.timeout),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await?;
             serde_json::from_value::<FileObject>(raw).map_err(LiterLlmError::from)
@@ -2508,7 +2510,7 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
                 .await?;
             serde_json::from_value::<FileObject>(raw).map_err(LiterLlmError::from)
         })
@@ -2527,7 +2529,7 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "DELETE", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::delete_json_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+            let raw = http::request::delete_json_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
                 .await?;
             serde_json::from_value::<DeleteResponse>(raw).map_err(LiterLlmError::from)
         })
@@ -2560,7 +2562,7 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
                 .await?;
             serde_json::from_value::<FileListResponse>(raw).map_err(LiterLlmError::from)
         })
@@ -2579,7 +2581,7 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            http::request::get_binary_bounded(&self.http, &url, auth, &extra, self.response_read_options()).await
+            http::request::get_binary_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref())).await
         })
     }
 }
@@ -2603,7 +2605,7 @@ impl BatchClient for DefaultClient {
                 auth,
                 &extra,
                 body_bytes,
-                self.response_read_options(),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await?;
             serde_json::from_value::<BatchObject>(raw).map_err(LiterLlmError::from)
@@ -2623,7 +2625,7 @@ impl BatchClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
                 .await?;
             serde_json::from_value::<BatchObject>(raw).map_err(LiterLlmError::from)
         })
@@ -2653,7 +2655,7 @@ impl BatchClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
                 .await?;
             serde_json::from_value::<BatchListResponse>(raw).map_err(LiterLlmError::from)
         })
@@ -2680,7 +2682,7 @@ impl BatchClient for DefaultClient {
                 auth,
                 &extra,
                 body_bytes,
-                self.response_read_options(),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await?;
             serde_json::from_value::<BatchObject>(raw).map_err(LiterLlmError::from)
@@ -2866,7 +2868,7 @@ impl ResponseClient for DefaultClient {
                 auth,
                 &extra,
                 body_bytes,
-                self.response_read_options(),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await?;
             serde_json::from_value::<ResponseObject>(raw).map_err(LiterLlmError::from)
@@ -2900,7 +2902,7 @@ impl ResponseClient for DefaultClient {
                 },
                 parse_response_stream_event,
                 Some(response_event_is_terminal),
-                self.response_read_options(),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await
         })
@@ -2917,7 +2919,7 @@ impl ResponseClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
+            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
                 .await?;
             serde_json::from_value::<ResponseObject>(raw).map_err(LiterLlmError::from)
         })
@@ -2942,7 +2944,7 @@ impl ResponseClient for DefaultClient {
                 auth,
                 &extra,
                 body_bytes,
-                self.response_read_options(),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await?;
             serde_json::from_value::<ResponseObject>(raw).map_err(LiterLlmError::from)

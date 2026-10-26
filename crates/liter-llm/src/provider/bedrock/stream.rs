@@ -60,7 +60,7 @@ pub(crate) fn exception_error(exception_type: &str, payload: &str) -> LiterLlmEr
         "serviceUnavailableException" => 503,
         _ => return LiterLlmError::Streaming { message },
     };
-    crate::provider::stream_error_event(&json!({ "error": { "message": message } }), Some(status))
+    crate::provider::stream_error_event(&json!({ "error": { "message": message } }), Some(status), false)
         .unwrap_or(LiterLlmError::Streaming { message })
 }
 

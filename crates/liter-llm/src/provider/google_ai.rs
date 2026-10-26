@@ -58,6 +58,10 @@ impl Provider for GoogleAiProvider {
         "google_ai"
     }
 
+    fn reports_invalid_key_as_400(&self) -> bool {
+        true
+    }
+
     fn base_url(&self) -> &str {
         &self.base_url
     }

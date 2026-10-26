@@ -447,7 +447,14 @@ fn retry_after_field(event: &serde_json::Value) -> Option<std::time::Duration> {
 ///
 /// `status` is the HTTP status the provider put in the payload. With `None`, the
 /// error code or type gives one (see `status_for_error_kind`).
-pub(crate) fn stream_error_event(event: &serde_json::Value, status: Option<u16>) -> Option<LiterLlmError> {
+///
+/// `invalid_key_as_400` is `Provider::reports_invalid_key_as_400` of the provider
+/// that sent the event.
+pub(crate) fn stream_error_event(
+    event: &serde_json::Value,
+    status: Option<u16>,
+    invalid_key_as_400: bool,
+) -> Option<LiterLlmError> {
     let error = event.get("error")?;
     let text = |key: &str| error.get(key).and_then(serde_json::Value::as_str);
     let message = text("message").unwrap_or("provider returned an error mid-stream");
@@ -465,6 +472,7 @@ pub(crate) fn stream_error_event(event: &serde_json::Value, status: Option<u16>)
         status,
         &body.to_string(),
         retry_after_field(event),
+        invalid_key_as_400,
     ))
 }
 
@@ -690,6 +698,16 @@ pub(crate) trait Provider: Send + Sync {
         error
     }
 
+    /// Whether the provider answers an invalid API key with HTTP 400 and the reason
+    /// `API_KEY_INVALID` in the error `details`, instead of 401 or 403.
+    ///
+    /// Only Google AI and Vertex do. For them the error classifier turns that 400
+    /// into [`LiterLlmError::Authentication`]. For every other provider the same 400
+    /// stays a bad request. The default implementation returns `false`.
+    fn reports_invalid_key_as_400(&self) -> bool {
+        false
+    }
+
     /// Transform the raw rerank reply before deserialization into `RerankResponse`.
     ///
     /// The canonical shape is a top-level `results` array. Providers whose rerank
@@ -753,7 +771,7 @@ pub(crate) trait Provider: Send + Sync {
         // range keeps its raw number in a bad-request error. With no usable status,
         // `status_for_error_kind` reads one from the error code or type.
         if let Ok(value) = serde_json::from_str::<serde_json::Value>(event_data)
-            && let Some(err) = stream_error_event(&value, status_code_field(&value))
+            && let Some(err) = stream_error_event(&value, status_code_field(&value), self.reports_invalid_key_as_400())
         {
             return Err(err);
         }
@@ -1789,6 +1807,19 @@ mod tests {
             .expect_err("a mid-stream error object must not decode as a chunk")
     }
 
+    /// Only Google AI and Vertex send `API_KEY_INVALID`. From any other provider a
+    /// 400 event that holds the reason stays a bad request.
+    #[test]
+    fn parse_stream_event_keeps_bad_request_for_invalid_key_reason_outside_google() {
+        let err = mid_stream_error(
+            r#"{"error":{"message":"bad key","status_code":400,"details":[{"reason":"API_KEY_INVALID"}]}}"#,
+        );
+        assert!(
+            matches!(err, LiterLlmError::BadRequest { status: 400, .. }),
+            "got: {err:?}"
+        );
+    }
+
     /// Revert line: drop the `retry_after_field` argument of `from_status` in
     /// `stream_error_event` to make this test fail. The delay is read from the error
     /// object, then from the top level of the event.
@@ -2063,7 +2094,7 @@ mod tests {
         for (fields, status) in cases {
             let err = mid_stream_error(&format!(r#"{{"error":{{"message":"boom",{fields}}}}}"#));
             let http_body = format!(r#"{{"error":{{"message":"boom",{fields}}}}}"#);
-            let http = LiterLlmError::from_status(status, &http_body, None);
+            let http = LiterLlmError::from_status(status, &http_body, None, false);
             assert_eq!(
                 std::mem::discriminant(&err),
                 std::mem::discriminant(&http),

@@ -178,7 +178,7 @@ impl Provider for CohereProvider {
         let wrapped = (v.get("error").is_none() && event_type == "error").then(|| serde_json::json!({ "error": &v }));
         let error_event = wrapped.as_ref().unwrap_or(&v);
         if let Some(err) =
-            crate::provider::stream_error_event(error_event, crate::provider::status_code_field(error_event))
+            crate::provider::stream_error_event(error_event, crate::provider::status_code_field(error_event), false)
         {
             return Err(err);
         }
@@ -670,7 +670,7 @@ mod tests {
         ];
         for (event, status) in cases {
             let err = CohereProvider.parse_stream_event(event).unwrap_err();
-            let http = LiterLlmError::from_status(status, r#"{"error":{"message":"x"}}"#, None);
+            let http = LiterLlmError::from_status(status, r#"{"error":{"message":"x"}}"#, None, false);
             assert_eq!(
                 std::mem::discriminant(&err),
                 std::mem::discriminant(&http),
