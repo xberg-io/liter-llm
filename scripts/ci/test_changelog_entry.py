@@ -59,7 +59,9 @@ def test_command_exits_nonzero_for_missing_version(tmp_path: Path) -> None:
     path = tmp_path / "CHANGELOG.md"
     path.write_text(CHANGELOG, encoding="utf-8")
     script = ROOT / "scripts/ci/changelog_entry.py"
-    result = subprocess.run([sys.executable, str(script), str(path), "9.9.9"], capture_output=True, text=True)
+    result = subprocess.run(
+        [sys.executable, str(script), str(path), "9.9.9"], capture_output=True, text=True, check=False
+    )
     assert result.returncode == 1
     assert "::error::" in result.stderr
 
