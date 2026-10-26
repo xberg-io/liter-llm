@@ -1759,10 +1759,15 @@ impl LlmClient for DefaultClient {
                 let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
                 let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-                let mut raw =
-                    http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
-                        .await
-                        .map_err(|e| self.provider.transform_error(e))?;
+                let mut raw = http::request::get_json_raw_bounded(
+                    &self.http,
+                    &url,
+                    auth,
+                    &extra,
+                    self.response_read_options(self.provider.as_ref()),
+                )
+                .await
+                .map_err(|e| self.provider.transform_error(e))?;
                 let next_url = self.provider.next_models_page_url(&url, &raw);
                 self.provider.transform_response(&mut raw)?;
                 let page = serde_json::from_value::<ModelsListResponse>(raw).map_err(LiterLlmError::from)?;
@@ -2510,8 +2515,14 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
-                .await?;
+            let raw = http::request::get_json_raw_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<FileObject>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2529,8 +2540,14 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "DELETE", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::delete_json_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
-                .await?;
+            let raw = http::request::delete_json_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<DeleteResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2562,8 +2579,14 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
-                .await?;
+            let raw = http::request::get_json_raw_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<FileListResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2581,7 +2604,14 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            http::request::get_binary_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref())).await
+            http::request::get_binary_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await
         })
     }
 }
@@ -2625,8 +2655,14 @@ impl BatchClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
-                .await?;
+            let raw = http::request::get_json_raw_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<BatchObject>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2655,8 +2691,14 @@ impl BatchClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
-                .await?;
+            let raw = http::request::get_json_raw_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<BatchListResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2919,8 +2961,14 @@ impl ResponseClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options(self.provider.as_ref()))
-                .await?;
+            let raw = http::request::get_json_raw_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<ResponseObject>(raw).map_err(LiterLlmError::from)
         })
     }

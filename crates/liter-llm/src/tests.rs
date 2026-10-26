@@ -1701,7 +1701,10 @@ mod error_tests {
     /// `None` rather than a fabricated delay.
     #[test]
     fn retry_after_is_none_when_the_server_did_not_advertise_one() {
-        assert_eq!(LiterLlmError::from_status(429, "slow down", None, false).retry_after(), None);
+        assert_eq!(
+            LiterLlmError::from_status(429, "slow down", None, false).retry_after(),
+            None
+        );
         assert_eq!(LiterLlmError::from_status(500, "boom", None, false).retry_after(), None);
     }
 
