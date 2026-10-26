@@ -224,6 +224,10 @@ impl Provider for BaseUrlOverride {
         self.inner.stream_has_final_event()
     }
 
+    fn reports_invalid_key_as_400(&self) -> bool {
+        self.inner.reports_invalid_key_as_400()
+    }
+
     fn stream_tool_call_indexes_restart(&self) -> bool {
         self.inner.stream_tool_call_indexes_restart()
     }
@@ -496,6 +500,10 @@ mod tests {
             true
         }
 
+        fn reports_invalid_key_as_400(&self) -> bool {
+            true
+        }
+
         fn stream_tool_call_indexes_restart(&self) -> bool {
             true
         }
@@ -541,6 +549,7 @@ mod tests {
         stream_events: Vec<String>,
         stream_format: StreamFormat,
         stream_has_final_event: bool,
+        reports_invalid_key_as_400: bool,
         stream_tool_call_indexes_restart: bool,
         supports_streaming: bool,
     }
@@ -678,6 +687,7 @@ mod tests {
             stream_events,
             stream_format: provider.stream_format(),
             stream_has_final_event: provider.stream_has_final_event(),
+            reports_invalid_key_as_400: provider.reports_invalid_key_as_400(),
             stream_tool_call_indexes_restart: provider.stream_tool_call_indexes_restart(),
             supports_streaming: provider.supports_streaming(),
             name,
