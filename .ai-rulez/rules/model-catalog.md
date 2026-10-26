@@ -5,9 +5,6 @@ paths:
   - "crates/liter-llm-catalog-gen/**"
   - "schemas/catalog.json"
   - "crates/liter-llm/schemas/catalog.json"
-targets:
-  - ".claude/rules/"
-  - ".github/instructions/"
 x-ai-rulez:
   kind: rule
   id: model-catalog

@@ -4,9 +4,6 @@ title: Proxy Server
 paths:
   - "crates/liter-llm-proxy/**"
   - "docker/Dockerfile"
-targets:
-  - ".claude/rules/"
-  - ".github/instructions/"
 x-ai-rulez:
   kind: rule
   id: proxy
