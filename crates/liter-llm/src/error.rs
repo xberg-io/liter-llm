@@ -346,7 +346,17 @@ impl LiterLlmError {
     /// The `retry_after` value is forwarded into [`LiterLlmError::RateLimited`]
     /// so callers can honour the server-requested delay without re-parsing the
     /// header.
-    pub(crate) fn from_status(status: u16, body: &str, retry_after: Option<Duration>) -> Self {
+    ///
+    /// `invalid_key_as_400` is true for a provider that answers an invalid API key with a 400
+    /// whose error `details` hold the reason `API_KEY_INVALID` (Google AI and Vertex). Only
+    /// then is that 400 an [`LiterLlmError::Authentication`]. See
+    /// `Provider::reports_invalid_key_as_400`.
+    pub(crate) fn from_status(
+        status: u16,
+        body: &str,
+        retry_after: Option<Duration>,
+        invalid_key_as_400: bool,
+    ) -> Self {
         let parsed = serde_json::from_str::<serde_json::Value>(body).ok();
         let error = parsed.as_ref().and_then(|response| response.get("error"));
         let code = error
@@ -368,7 +378,7 @@ impl LiterLlmError {
 
         match status {
             401 | 403 => Self::Authentication { message, status },
-            400 if google_api_key_invalid => Self::Authentication { message, status },
+            400 if invalid_key_as_400 && google_api_key_invalid => Self::Authentication { message, status },
             429 if code == Some("insufficient_quota") => Self::ProviderQuotaExceeded { message, status },
             429 => Self::RateLimited { message, retry_after },
             529 => Self::ServiceUnavailable {

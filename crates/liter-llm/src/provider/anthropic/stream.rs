@@ -33,7 +33,7 @@ pub(super) fn parse_stream_event(event_data: &str) -> Result<Option<ChatCompleti
         "content_block_stop" | "ping" => Ok(None),
 
         "error" => Err(
-            crate::provider::stream_error_event(&event, None).unwrap_or_else(|| LiterLlmError::Streaming {
+            crate::provider::stream_error_event(&event, None, false).unwrap_or_else(|| LiterLlmError::Streaming {
                 message: "unknown Anthropic streaming error".to_owned(),
             }),
         ),

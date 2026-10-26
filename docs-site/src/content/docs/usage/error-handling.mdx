@@ -55,7 +55,7 @@ Transient variants trigger fallbacks and retries. The [Fallback & Routing](/usag
 | Status              | Variant                                                                                             |
 | ------------------- | --------------------------------------------------------------------------------------------------- |
 | `401`, `403`        | `Authentication`                                                                                    |
-| `400` (Google invalid API key) | `Authentication` (the error `details` hold the reason `API_KEY_INVALID`)                 |
+| `400` (Google)      | `Authentication` for an invalid API key (Google AI and Vertex send the reason `API_KEY_INVALID`)   |
 | `429`               | `RateLimited` (with `Retry-After` parsed), or `ProviderQuotaExceeded` when `code` is `insufficient_quota` |
 | `400`, `422`        | `ContextWindowExceeded` / `ContentPolicy` / `BadRequest` (selected by `code` or message heuristics) |
 | `404`               | `NotFound`                                                                                          |

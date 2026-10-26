@@ -61,6 +61,7 @@ where
             max_retries,
             max_response_bytes: None,
             timeout: None,
+            invalid_key_as_400: false,
         },
     )
     .await
@@ -803,7 +804,7 @@ mod tests {
             );
             let parse = |_: &str, _: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) };
             let err = decode_frame(&frame, &parse).unwrap_err();
-            let http = LiterLlmError::from_status(status, r#"{"error":{"message":"x"}}"#, None);
+            let http = LiterLlmError::from_status(status, r#"{"error":{"message":"x"}}"#, None, false);
             assert_eq!(
                 std::mem::discriminant(&err),
                 std::mem::discriminant(&http),
