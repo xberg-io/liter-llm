@@ -770,6 +770,19 @@ fn gemini_stream_error_event_keeps_message_and_retry_after() {
     assert_eq!(err.retry_after(), Some(std::time::Duration::from_secs(11)));
 }
 
+/// Revert line: drop `details` from the body that `stream_error_event` builds
+/// to make this test fail (the invalid key then stays a bad request).
+#[test]
+fn gemini_stream_invalid_api_key_is_authentication() {
+    let event = r#"{"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"API_KEY_INVALID","domain":"googleapis.com"}]}}"#;
+    let err = provider().parse_stream_event(event).unwrap_err();
+    assert!(
+        matches!(&err, crate::error::LiterLlmError::Authentication { status: 400, message }
+            if message == "API key not valid. Please pass a valid API key."),
+        "got: {err:?}"
+    );
+}
+
 #[test]
 fn gemini_stream_chunk_without_error_still_parses() {
     let event = r#"{"candidates":[{"content":{"role":"model","parts":[{"text":"Hi"}]}}]}"#;

@@ -458,7 +458,9 @@ pub(crate) fn stream_error_event(event: &serde_json::Value, status: Option<u16>)
             status,
         });
     }
-    let body = serde_json::json!({ "error": { "message": message, "code": text("code") } });
+    // ~keep `details` carries the Google `API_KEY_INVALID` reason that `from_status` reads.
+    let body =
+        serde_json::json!({ "error": { "message": message, "code": text("code"), "details": error.get("details") } });
     Some(LiterLlmError::from_status(
         status,
         &body.to_string(),

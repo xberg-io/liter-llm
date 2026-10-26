@@ -3278,7 +3278,8 @@ class JsonSchemaFormat {
 sealed class LiterLlmError with _$LiterLlmError {
   const LiterLlmError._();
 
-  /// `status` preserves the exact HTTP status code received (401 or 403).
+  /// `status` preserves the exact HTTP status code received (usually 401 or 403;
+  /// Google reports an invalid API key as 400).
   const factory LiterLlmError.authentication({
     required String message,
     required PlatformInt64 status,

@@ -1480,6 +1480,120 @@ mod error_tests {
     }
 
     #[test]
+    fn google_invalid_api_key_with_http_400_is_authentication() {
+        let err = LiterLlmError::from_status(
+            400,
+            r#"{"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"API_KEY_INVALID","domain":"googleapis.com"}]}}"#,
+            None,
+        );
+
+        assert!(matches!(
+            &err,
+            LiterLlmError::Authentication { message, status: 400 }
+                if message == "API key not valid. Please pass a valid API key."
+        ));
+        assert_eq!(err.status_code(), 400);
+        assert_eq!(err.error_type(), "Authentication");
+    }
+
+    #[test]
+    fn other_google_http_400_remains_bad_request() {
+        let err = LiterLlmError::from_status(
+            400,
+            r#"{"error":{"code":400,"message":"Invalid argument","status":"INVALID_ARGUMENT","details":[{"reason":"INVALID_ARGUMENT"}]}}"#,
+            None,
+        );
+
+        assert!(matches!(err, LiterLlmError::BadRequest { status: 400, .. }));
+    }
+
+    #[test]
+    fn numeric_error_code_detects_context_window_through_the_message() {
+        let err = LiterLlmError::from_status(
+            400,
+            r#"{"error":{"code":400,"message":"The input token count exceeds the maximum number of tokens allowed","status":"INVALID_ARGUMENT"}}"#,
+            None,
+        );
+        assert!(matches!(
+            &err,
+            LiterLlmError::ContextWindowExceeded { message }
+                if message == "The input token count exceeds the maximum number of tokens allowed"
+        ));
+    }
+
+    #[test]
+    fn numeric_error_code_keeps_content_policy_detection() {
+        let err = LiterLlmError::from_status(
+            400,
+            r#"{"error":{"code":400,"message":"blocked by content_filter","status":"INVALID_ARGUMENT"}}"#,
+            None,
+        );
+        assert!(matches!(&err, LiterLlmError::ContentPolicy { message } if message == "blocked by content_filter"));
+    }
+
+    #[test]
+    fn numeric_error_code_rate_limit_keeps_the_message() {
+        let err = LiterLlmError::from_status(
+            429,
+            r#"{"error":{"code":429,"message":"Resource exhausted","status":"RESOURCE_EXHAUSTED"}}"#,
+            None,
+        );
+        assert!(matches!(&err, LiterLlmError::RateLimited { message, .. } if message == "Resource exhausted"));
+    }
+
+    #[test]
+    fn string_insufficient_quota_code_still_selects_quota_exceeded() {
+        let err = LiterLlmError::from_status(
+            429,
+            r#"{"error":{"code":"insufficient_quota","message":"quota exhausted"}}"#,
+            None,
+        );
+        assert!(matches!(err, LiterLlmError::ProviderQuotaExceeded { status: 429, .. }));
+    }
+
+    #[test]
+    fn string_context_length_exceeded_code_selects_context_window() {
+        // The message holds no context-window fragment, so only the code can decide.
+        let err = LiterLlmError::from_status(
+            400,
+            r#"{"error":{"code":"context_length_exceeded","message":"request rejected"}}"#,
+            None,
+        );
+        assert!(matches!(&err, LiterLlmError::ContextWindowExceeded { message } if message == "request rejected"));
+    }
+
+    #[test]
+    fn string_content_filter_code_selects_content_policy() {
+        // The message holds no policy fragment, so only the code can decide.
+        let err = LiterLlmError::from_status(
+            400,
+            r#"{"error":{"code":"content_filter","message":"request rejected"}}"#,
+            None,
+        );
+        assert!(matches!(&err, LiterLlmError::ContentPolicy { message } if message == "request rejected"));
+    }
+
+    #[test]
+    fn insufficient_quota_code_without_a_string_message_is_quota_exceeded() {
+        // The code is the authoritative signal; the body is kept as the message.
+        let body = r#"{"error":{"code":"insufficient_quota","message":42}}"#;
+        let err = LiterLlmError::from_status(429, body, None);
+        assert!(matches!(&err, LiterLlmError::ProviderQuotaExceeded { status: 429, message } if message == body));
+        let err = LiterLlmError::from_status(429, r#"{"error":{"code":"insufficient_quota"}}"#, None);
+        assert!(matches!(err, LiterLlmError::ProviderQuotaExceeded { status: 429, .. }));
+    }
+
+    #[test]
+    fn invalid_key_reason_outside_a_400_keeps_the_status_kind() {
+        let err = LiterLlmError::from_status(
+            500,
+            r#"{"error":{"code":500,"message":"backend error","details":[{"reason":"API_KEY_INVALID"}]}}"#,
+            None,
+        );
+        assert!(matches!(err, LiterLlmError::ServerError { status: 500, .. }));
+    }
+
+    #[test]
     fn error_from_429() {
         let err = LiterLlmError::from_status(
             429,
