@@ -86,3 +86,37 @@ async fn invalid_key_reason_from_google_ai_and_vertex_is_authentication() {
         server.join().expect("response server completed");
     }
 }
+
+/// Revert line: pass `invalid_key_as_400: false` in the options of the
+/// `post_stream_framed` call in `send_chat_stream` to make this test fail.
+#[tokio::test]
+async fn streaming_request_with_invalid_key_reply_from_google_ai_and_vertex_is_authentication() {
+    for prefix in ["gemini", "google_ai", "vertex_ai"] {
+        let (client, server) = client(prefix, INVALID_KEY);
+        let err = match client.chat_stream(request(prefix)).await {
+            Ok(_) => panic!("{prefix}: the reply is a 400"),
+            Err(err) => err,
+        };
+        assert!(
+            matches!(&err, LiterLlmError::Authentication { status: 400, .. }),
+            "{prefix}: {err:?}"
+        );
+        server.join().expect("response server completed");
+    }
+}
+
+#[tokio::test]
+async fn streaming_request_with_invalid_key_reply_from_another_provider_stays_bad_request() {
+    for prefix in ["openai", "groq"] {
+        let (client, server) = client(prefix, INVALID_KEY);
+        let err = match client.chat_stream(request(prefix)).await {
+            Ok(_) => panic!("{prefix}: the reply is a 400"),
+            Err(err) => err,
+        };
+        assert!(
+            matches!(&err, LiterLlmError::BadRequest { status: 400, .. }),
+            "{prefix}: {err:?}"
+        );
+        server.join().expect("response server completed");
+    }
+}
