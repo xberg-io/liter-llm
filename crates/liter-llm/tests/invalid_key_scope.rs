@@ -88,7 +88,7 @@ async fn invalid_key_reason_from_google_ai_and_vertex_is_authentication() {
 }
 
 /// Revert line: pass `invalid_key_as_400: false` in the options of the
-/// `post_stream_framed` call in `chat_stream` to make this test fail.
+/// `post_stream_framed` call in `send_chat_stream` to make this test fail.
 #[tokio::test]
 async fn streaming_request_with_invalid_key_reply_from_google_ai_and_vertex_is_authentication() {
     for prefix in ["gemini", "google_ai", "vertex_ai"] {
