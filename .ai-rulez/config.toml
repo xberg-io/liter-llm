@@ -7,21 +7,7 @@ gitignore = true
 presets = ["claude", "codex", "opencode", "pi", "hermes", "gemini", "copilot"]
 
 compact = true
-builtins = [
-  "!git-workflow",
-  "rust",
-  "python",
-  "typescript",
-  "ruby",
-  "php",
-  "elixir",
-  "go",
-  "java",
-  "csharp",
-  "pyo3",
-  "napi-rs",
-  "default-commands",
-]
+builtins = ["!agent-delegation", "!git-workflow", "default-commands"]
 
 [header]
 style = "minimal"
@@ -30,22 +16,36 @@ style = "minimal"
 [[includes]]
 name = "xberg-core"
 source = 'https://github.com/xberg-io/agent-conventions.git'
-ref = "2011d3db223de5b1c8b35f602ec6f2d2a7b62bf8"
+ref = "923818e1ce9b71ebe68306c7a551caeaf7b27106"
 path = "modules/core"
+merge_strategy = "local-override"
+
+[[includes]]
+name = "xberg-languages"
+source = 'https://github.com/xberg-io/agent-conventions.git'
+ref = "923818e1ce9b71ebe68306c7a551caeaf7b27106"
+path = "modules/languages"
 merge_strategy = "local-override"
 
 [[includes]]
 name = "xberg-cicd"
 source = 'https://github.com/xberg-io/agent-conventions.git'
-ref = "2011d3db223de5b1c8b35f602ec6f2d2a7b62bf8"
+ref = "923818e1ce9b71ebe68306c7a551caeaf7b27106"
 path = "modules/cicd"
+merge_strategy = "local-override"
+
+[[includes]]
+name = "xberg-e2e-generator"
+source = 'https://github.com/xberg-io/agent-conventions.git'
+ref = "923818e1ce9b71ebe68306c7a551caeaf7b27106"
+path = "modules/e2e-generator"
 merge_strategy = "local-override"
 
 [[installed_skills]]
 name = "alef"
 source = "https://github.com/xberg-io/alef.git"
 
-ref = "613e2b06975b1d3a0d776ca141dec7b540e9ed74"
+ref = "8fd2cf190d7f1523e3aec8753a850d37e5acccc9"
 [[mcp_servers]]
 name = "ai-rulez"
 description = "AI-Rulez MCP server for configuration management"
@@ -63,6 +63,11 @@ effort = "medium"
 
 [mcp]
 self_server_command = ["ai-rulez", "mcp"]
+# ~keep Skill discovery only: the full server lists 67 tools (~38k tokens of schema) at every session start.
+serve_skills = true
+read_only = true
+discover_skills = "repo"
+tools = ["find_skill", "load_skill"]
 
 [lock]
 include_outputs = false
@@ -85,3 +90,7 @@ paths = [
   "skills/*/SKILL.md",
 ]
 reason = "The generated harness and plugin copies repeat the source skill descriptions and names. ai-rulez counts each copy as a duplicate."
+
+[rules]
+# ~keep Glob-scoped rules stay out of AGENTS.md: rule files for Claude, path-gated skills for Codex.
+scoped_fallback = "skill"
