@@ -40,9 +40,14 @@ jobs:
       - uses: actions/checkout@v7
       - uses: xberg-io/actions/setup-ai-rulez@v1.27.1
         with:
-          ai-rulez-version: "5.6.0"
+          ai-rulez-version: "5.7.0"
       - uses: xberg-io/actions/validate-ai-rulez@v1.27.1
         with:
           expected-config-count: "2"
           additional-config-directories: "plugin/.ai-rulez"
           verify-plugin: "true"
+      - uses: xberg-io/agent-conventions/actions/context-exposure@923818e1ce9b71ebe68306c7a551caeaf7b27106
+        with:
+          budgets: |
+            claude=5650
+            codex=7000

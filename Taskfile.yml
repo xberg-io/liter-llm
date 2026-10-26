@@ -57,7 +57,7 @@ includes:
 
 vars:
   # One pin for every task that runs ai-rulez. The workflows' ai-rulez-version inputs must equal it; task governance:check enforces this. ~keep
-  AI_RULEZ_VERSION: "5.6.0"
+  AI_RULEZ_VERSION: "5.7.0"
   AI_RULEZ: "uvx --from ai-rulez=={{.AI_RULEZ_VERSION}} ai-rulez"
   PROJECT_ROOT:
     sh: pwd
