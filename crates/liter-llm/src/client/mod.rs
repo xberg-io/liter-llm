@@ -4352,6 +4352,8 @@ mod build_provider_tests {
     const GEMINI_CALL_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"get_weather","args":{"city":"Paris"}}}]}}]}"#;
     const GEMINI_STOP_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"text":""}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5}}"#;
 
+    const GEMINI_MAX_TOKENS_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"text":""}]},"finishReason":"MAX_TOKENS"}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5}}"#;
+
     fn gemini_stream_finish(provider: &dyn Provider, events: &[&str]) -> Vec<Option<crate::types::FinishReason>> {
         let state = std::sync::Mutex::new(ChatStreamState::default());
         events
@@ -4373,6 +4375,20 @@ mod build_provider_tests {
             assert_eq!(
                 gemini_stream_finish(provider, &[GEMINI_CALL_CHUNK, GEMINI_STOP_CHUNK]),
                 [None, Some(crate::types::FinishReason::ToolCalls)],
+                "provider {}",
+                provider.name()
+            );
+        }
+    }
+
+    #[test]
+    fn gemini_stream_that_hits_max_tokens_after_a_call_finishes_with_length() {
+        let google_ai = provider::google_ai::GoogleAiProvider::default();
+        let vertex = provider::vertex::VertexAiProvider::new("test-project", "us-central1");
+        for provider in [&google_ai as &dyn Provider, &vertex] {
+            assert_eq!(
+                gemini_stream_finish(provider, &[GEMINI_CALL_CHUNK, GEMINI_MAX_TOKENS_CHUNK]),
+                [None, Some(crate::types::FinishReason::Length)],
                 "provider {}",
                 provider.name()
             );
