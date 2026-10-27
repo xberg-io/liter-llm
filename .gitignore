@@ -365,3 +365,13 @@ test_apps/java/.mvn/wrapper/*
 
 !test_apps/node/pnpm-lock.yaml
 !test_apps/wasm/pnpm-lock.yaml
+
+# Agent harness output outside the ai-rulez managed block: the machine-local overlay,
+# plugin-root manifests, and presets this repository does not enable.
+**/.ai-rulez/.generated-manifest.local.json
+plugin/.ai-rulez/.generated-manifest.json
+.agents/settings.json
+.claude/plugins.json
+.codex/commands/
+.codex/plugins.json
+.github/commands/
