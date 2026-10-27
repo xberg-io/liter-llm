@@ -1,5 +1,8 @@
 //! Anthropic SSE event -> OpenAI `ChatCompletionChunk` translation.
 
+use serde::Deserialize as _;
+use serde::de::IntoDeserializer as _;
+use serde::de::value::StrDeserializer;
 use serde_json::Value;
 
 use super::map_stop_reason;
@@ -154,11 +157,11 @@ fn message_delta_chunk(event: &Value) -> ChatCompletionChunk {
     let finish_reason = stop_reason.map(map_stop_reason);
     let output_tokens = event.pointer("/usage/output_tokens").and_then(|v| v.as_u64());
 
-    let finish = finish_reason.map(|fr| match fr {
-        "stop" => FinishReason::Stop,
-        "length" => FinishReason::Length,
-        "tool_calls" => FinishReason::ToolCalls,
-        _ => FinishReason::Other,
+    // ~keep Parse with the serde impl that reads the finish reason of a full reply, so the stream
+    // ~keep and the full reply cannot disagree on a value.
+    let finish = finish_reason.map(|fr| {
+        let reader: StrDeserializer<'_, serde::de::value::Error> = fr.into_deserializer();
+        FinishReason::deserialize(reader).unwrap_or(FinishReason::Other)
     });
 
     let usage = output_tokens.map(|ct| crate::types::Usage {
