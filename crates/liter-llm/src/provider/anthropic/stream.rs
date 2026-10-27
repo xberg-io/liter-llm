@@ -161,7 +161,7 @@ fn message_delta_chunk(event: &Value) -> ChatCompletionChunk {
     // ~keep and the full reply cannot disagree on a value.
     let finish = finish_reason.map(|fr| {
         let reader: StrDeserializer<'_, serde::de::value::Error> = fr.into_deserializer();
-        FinishReason::deserialize(reader).unwrap_or(FinishReason::Other)
+        FinishReason::deserialize(reader).expect("`FinishReason` maps an unknown string to `Other` with `serde(other)`")
     });
 
     let usage = output_tokens.map(|ct| crate::types::Usage {
