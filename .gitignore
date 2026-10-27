@@ -221,7 +221,6 @@ CLAUDE.md
 # plugin/.ai-rulez-generated.json) that CI's `ai-rulez verify --plugin` reads;
 # it must be committed like its sibling bundles. ~keep
 !plugin/.mcp.json
-.github/copilot-instructions.md
 AGENTS.md
 GEMINI.md
 
