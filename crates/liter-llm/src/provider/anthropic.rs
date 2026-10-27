@@ -308,4 +308,6 @@ fn map_stop_reason(stop_reason: &str) -> &'static str {
 #[cfg(test)]
 mod feature_tests;
 #[cfg(test)]
+mod stream_tests;
+#[cfg(test)]
 mod tests;
