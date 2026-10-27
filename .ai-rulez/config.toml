@@ -7,7 +7,13 @@ gitignore = true
 presets = ["claude", "codex", "opencode"]
 
 compact = true
-builtins = ["!agent-delegation", "!git-workflow", "!testing/test-alongside-code", "default-commands"]
+builtins = [
+  "!agent-delegation",
+  "!ai-governance/agent-workflow",
+  "!git-workflow",
+  "!testing/test-alongside-code",
+  "default-commands",
+]
 
 [header]
 style = "minimal"
