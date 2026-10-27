@@ -81,6 +81,7 @@ tools = ["find_skill", "load_skill"]
 include_outputs = false
 
 [lint]
+# ~keep Alef publishes the canonical liter-llm MCP reference as the mcp skill.
 allow_overrides = ["claude:mcp", "python-conventions"]
 
 # Goldziher/ai-rulez#485: ai-rulez reports generated skill copies as duplicates. ~keep
