@@ -140,7 +140,9 @@ jobs:
       # ./Cargo.toml) so the scan semantics are unchanged.
       - name: Install cargo-deny (Linux only)
         if: runner.os == 'Linux'
-        uses: taiki-e/install-action@cargo-deny
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
 
       - name: Dependency scan (cargo-deny, Linux only)
         if: runner.os == 'Linux'
@@ -151,7 +153,9 @@ jobs:
 
       - name: Install cargo-llvm-cov (Linux only)
         if: runner.os == 'Linux'
-        uses: taiki-e/install-action@cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
 
       - name: Rust coverage (Linux only)
         if: runner.os == 'Linux'

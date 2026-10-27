@@ -154,7 +154,7 @@ jobs:
       # prerelease would fail it on a version that is in fact correct. A final release has no
       # suffix and passes through both expressions untouched.
       - name: Install Task
-        uses: xberg-io/actions/install-task@fdddc35399a9eb87cb9c35ae87346ef38e7bbc29
+        uses: xberg-io/actions/install-task@v1
 
       - name: Respell the release version for PyPI and RubyGems
         id: version_forms
@@ -614,7 +614,7 @@ jobs:
           use-sccache: false
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@v1.335.0
         with:
           ruby-version: "3.3"
           bundler: none
@@ -1341,7 +1341,7 @@ jobs:
           path: go-ffi-release
           merge-multiple: true
       - name: Install Task
-        uses: xberg-io/actions/install-task@fdddc35399a9eb87cb9c35ae87346ef38e7bbc29
+        uses: xberg-io/actions/install-task@v1
 
       - name: Prepare Go installer archive aliases and checksums
         env:
@@ -1982,7 +1982,7 @@ jobs:
           merge-multiple: true
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@v1.335.0
         with:
           ruby-version: "3.3"
           bundler: none
@@ -3697,7 +3697,7 @@ jobs:
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org/"
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
+      - uses: pnpm/action-setup@v6
         with:
           run_install: false
       - name: Upgrade npm (trusted publishing support)
@@ -3792,7 +3792,7 @@ jobs:
         with:
           config-directory: .ai-rulez
       - name: Install uv
-        uses: astral-sh/setup-uv@v10.3.0
+        uses: astral-sh/setup-uv@v10.3.2
         with:
           python-version: "3.13"
       # ~keep Same rendered-bundle gap as the npm job, but silent: this job had no guard at
@@ -3989,7 +3989,7 @@ jobs:
         uses: xberg-io/actions/verify-ai-rulez-plugin@v1
         with:
           version-sync-script: scripts/sync_plugin_version.py
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: astral-sh/setup-uv@v10.3.2
         with:
           python-version: "3.13"
       - name: Read the verified Hermes version

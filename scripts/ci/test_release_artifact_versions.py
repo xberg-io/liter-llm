@@ -239,7 +239,7 @@ def test_workflow_and_ci_run_the_real_tasks_and_regression_file() -> None:
     assert regression_commands.count("scripts/ci/test_release_artifact_versions.py") == 1
 
 
-TASK_ACTION = "xberg-io/actions/install-task@fdddc35399a9eb87cb9c35ae87346ef38e7bbc29"
+TASK_ACTION = "xberg-io/actions/install-task@v1"
 RELEASE_TASKS = {"task ci:release-version-forms", "task ci:prepare-go-release-assets"}
 
 
@@ -282,7 +282,7 @@ def test_task_prerequisite_guard_rejects_missing_late_or_mutable_installers(job:
         steps.append(installer)
         expected = f"Task installer order for {job}"
     else:
-        installer["uses"] = "xberg-io/actions/install-task@v1"
+        installer["uses"] = "xberg-io/actions/install-task@main"
         expected = f"Task installer pin for {job}"
     with pytest.raises(AssertionError, match=expected):
         assert_release_task_prerequisites(jobs)

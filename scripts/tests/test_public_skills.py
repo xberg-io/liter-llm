@@ -107,7 +107,7 @@ class PublicSkillsTests(unittest.TestCase):
         workflow = (repository / ".github/workflows/ci-plugin.yaml").read_text()
         assert workflow.count("  launcher-contract:\n") == 1
         job = workflow.split("  launcher-contract:\n", 1)[1]
-        installers = list(re.finditer(r"uses: xberg-io/actions/install-task@[0-9a-f]{40}\b", job))
+        installers = list(re.finditer(r"uses: xberg-io/actions/install-task@v1\b", job))
         assert len(installers) == 1, "Launcher job must install the pinned Task CLI exactly once"
         command = "python3 scripts/tests/test_public_skills.py"
         assert job.count(command) == 1

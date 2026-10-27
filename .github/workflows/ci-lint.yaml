@@ -26,7 +26,7 @@ jobs:
   validate:
     name: Validate
     if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
-    uses: xberg-io/actions/.github/workflows/reusable-validate.yml@a5177b8eb2fba9322b45b570725f8823ca03d64b
+    uses: xberg-io/actions/.github/workflows/reusable-validate.yml@v1
     with:
       # `check-fixture-snippets` is deliberately NOT enabled here: turning it on
       # installs alef and runs `alef snippets check --strict --cache off`, which

@@ -361,7 +361,7 @@ jobs:
 
       - name: Setup Ruby
         if: matrix.ruby-version
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@v1.335.0
         with:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true
