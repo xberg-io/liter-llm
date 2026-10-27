@@ -68,7 +68,7 @@ jobs:
       # Byte-verify the ai-rulez-generated bundles under plugin/ match plugin/.ai-rulez.
       # Pinned to the ai-rulez version that generates them; bump in lockstep. ~keep
       - name: Install ai-rulez
-        uses: xberg-io/actions/setup-ai-rulez@v1.27.1
+        uses: xberg-io/actions/setup-ai-rulez@v1
         with:
           ai-rulez-version: "latest"
       - name: Verify generated plugin bundles are current
