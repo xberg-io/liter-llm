@@ -56,9 +56,9 @@ includes:
     taskfile: .task/workflows/e2e.yml
 
 vars:
-  # One pin for every task that runs ai-rulez. The workflows' ai-rulez-version inputs must equal it; task governance:check enforces this. ~keep
-  AI_RULEZ_VERSION: "5.7.0"
-  AI_RULEZ: "uvx --from ai-rulez=={{.AI_RULEZ_VERSION}} ai-rulez"
+  # Tasks and CI run the latest ai-rulez release; hooks use the one on PATH, which must be at least this. ~keep
+  AI_RULEZ_MIN_VERSION: "5.7.0"
+  AI_RULEZ: "uvx ai-rulez@latest"
   PROJECT_ROOT:
     sh: pwd
   VERSION:
@@ -429,7 +429,7 @@ tasks:
         import subprocess
         import tomllib
 
-        # The hooks run the ai-rulez on PATH, so it must be exactly the pinned version.
+        # The hooks run the ai-rulez on PATH, so it must meet AI_RULEZ_MIN_VERSION. ~keep
         subprocess.run(["python3", "scripts/ci/check_ai_rulez_version.py", "installed"], check=True)
         preferences = pathlib.Path("poly.local.toml")
         text = preferences.read_text() if preferences.exists() else ""

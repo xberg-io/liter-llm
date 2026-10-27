@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Keep every ai-rulez version pin equal to the Taskfile's AI_RULEZ_VERSION.
+"""Keep ai-rulez on the latest release, with a floor for the binary the hooks run.
 
 Two modes:
 
-    installed   the ai-rulez on PATH reports exactly the pinned version
-    workflows   every ai-rulez-version input in .github/workflows equals the pin
+    installed   the ai-rulez on PATH is at least the Taskfile's AI_RULEZ_MIN_VERSION
+    workflows   every ai-rulez-version input in .github/workflows is "latest"
 """
 
 from __future__ import annotations
@@ -16,25 +16,30 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PIN = re.compile(r'^\s*AI_RULEZ_VERSION:\s*"([^"]+)"\s*$', re.MULTILINE)
+MINIMUM = re.compile(r'^\s*AI_RULEZ_MIN_VERSION:\s*"(\d+\.\d+\.\d+)"\s*$', re.MULTILINE)
 WORKFLOW_INPUT = re.compile(r'^\s*ai-rulez-version:\s*"?([^"\s#]+)"?\s*(?:#.*)?$', re.MULTILINE)
-REPORTED = re.compile(r"(?:ai-rulez(?: version)?\s+)?v?(\d+\.\d+\.\d+)")
+REPORTED = re.compile(r"(?:ai-rulez(?: version)?\s+)?v?(\d+)\.(\d+)\.(\d+)")
+UPGRADE = "uv tool install --upgrade ai-rulez"
+
+Version = tuple[int, int, int]
 
 
-def pinned_version(taskfile: Path = ROOT / "Taskfile.yml") -> str:
-    """Return the version the Taskfile pins."""
-    found = PIN.findall(taskfile.read_text())
+def minimum_version(taskfile: Path = ROOT / "Taskfile.yml") -> Version:
+    """Return the minimum release the Taskfile sets."""
+    found = MINIMUM.findall(taskfile.read_text())
     if len(found) != 1:
-        raise SystemExit(f"Expected one AI_RULEZ_VERSION in {taskfile}, found {len(found)}")
-    return found[0]
+        raise SystemExit(f"Expected one numeric AI_RULEZ_MIN_VERSION in {taskfile}, found {len(found)}")
+    major, minor, patch = (int(part) for part in found[0].split("."))
+    return (major, minor, patch)
 
 
-def reported_version(output: str) -> str:
-    """Parse the whole `ai-rulez --version` output; a partial match is a failure."""
+def reported_version(output: str) -> Version:
+    """Parse the whole `ai-rulez --version` output; a partial or pre-release match is a failure."""
     match = REPORTED.fullmatch(output.strip())
     if match is None:
-        raise SystemExit(f"Cannot read an ai-rulez version from: {output.strip()!r}")
-    return match.group(1)
+        raise SystemExit(f"Cannot read an ai-rulez release version from: {output.strip()!r}")
+    major, minor, patch = (int(part) for part in match.groups())
+    return (major, minor, patch)
 
 
 def workflow_pins(workflows: Path = ROOT / ".github/workflows") -> dict[str, list[str]]:
@@ -47,34 +52,38 @@ def workflow_pins(workflows: Path = ROOT / ".github/workflows") -> dict[str, lis
     return pins
 
 
-def check_installed(pin: str) -> None:
-    """Require the ai-rulez on PATH to equal the pin."""
+def dotted(version: Version) -> str:
+    """Render a version tuple as major.minor.patch."""
+    return ".".join(str(part) for part in version)
+
+
+def check_installed(minimum: Version) -> None:
+    """Require the ai-rulez on PATH to be at least the minimum."""
     if shutil.which("ai-rulez") is None:
-        raise SystemExit(f"Install ai-rulez {pin} before installing hooks")
+        raise SystemExit(f"Install ai-rulez {dotted(minimum)} or newer before installing hooks: {UPGRADE}")
     output = subprocess.run(["ai-rulez", "--version"], capture_output=True, text=True, check=True).stdout
     found = reported_version(output)
-    if found != pin:
-        raise SystemExit(f"Hooks need ai-rulez {pin}, found: {found}")
+    if found < minimum:
+        raise SystemExit(f"Hooks need ai-rulez {dotted(minimum)} or newer, found {dotted(found)}; run {UPGRADE}")
 
 
-def check_workflows(pin: str, pins: dict[str, list[str]]) -> None:
-    """Require at least one workflow pin and every one equal to the Taskfile pin."""
+def check_workflows(pins: dict[str, list[str]]) -> None:
+    """Require at least one workflow input and every one set to latest."""
     if not pins:
         raise SystemExit("No ai-rulez-version input found in the workflows")
-    wrong = [f"{name}: {value}" for name, values in pins.items() for value in values if value != pin]
+    wrong = [f"{name}: {value}" for name, values in pins.items() for value in values if value != "latest"]
     if wrong:
-        raise SystemExit(f"Workflow ai-rulez-version differs from Taskfile AI_RULEZ_VERSION {pin}: " + "; ".join(wrong))
+        raise SystemExit("Workflow ai-rulez-version must be latest: " + "; ".join(wrong))
 
 
 def main(argv: list[str]) -> None:
     """Run the named mode."""
     if len(argv) != 2 or argv[1] not in {"installed", "workflows"}:
         raise SystemExit("usage: check_ai_rulez_version.py installed|workflows")
-    pin = pinned_version()
     if argv[1] == "installed":
-        check_installed(pin)
+        check_installed(minimum_version())
     else:
-        check_workflows(pin, workflow_pins())
+        check_workflows(workflow_pins())
 
 
 if __name__ == "__main__":

@@ -70,7 +70,7 @@ jobs:
       - name: Install ai-rulez
         uses: xberg-io/actions/setup-ai-rulez@v1.27.1
         with:
-          ai-rulez-version: "5.7.0"
+          ai-rulez-version: "latest"
       - name: Verify generated plugin bundles are current
         run: |
           ai-rulez verify --plugin

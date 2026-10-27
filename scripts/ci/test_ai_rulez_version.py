@@ -1,4 +1,4 @@
-"""Regression coverage for the exact ai-rulez version checks."""
+"""Regression coverage for the ai-rulez minimum-version and latest-input checks."""
 
 from __future__ import annotations
 
@@ -11,21 +11,41 @@ import pytest
 
 
 class TestReportedVersion:
-    """The installed version is compared whole, never as a substring."""
+    """The installed version is parsed whole and compared numerically."""
 
-    @pytest.mark.parametrize("output", ["ai-rulez version 5.6.0\n", "5.6.0", "v5.6.0", "ai-rulez 5.6.0"])
+    @pytest.mark.parametrize("output", ["ai-rulez version 5.7.0\n", "5.7.0", "v5.7.0", "ai-rulez 5.7.0"])
     def test_accepts_known_forms(self, output: str) -> None:
-        assert check.reported_version(output) == "5.6.0"
+        assert check.reported_version(output) == (5, 7, 0)
 
-    @pytest.mark.parametrize("output", ["", "ai-rulez version dev", "ai-rulez version 5.6.0-rc1", "5.6"])
+    @pytest.mark.parametrize(
+        "output", ["", "dev", "ai-rulez version dev", "ai-rulez version 5.7.0-rc1", "5.7", "v5.7.0.1"]
+    )
     def test_rejects_unreadable_output(self, output: str) -> None:
         with pytest.raises(SystemExit, match="Cannot read"):
             check.reported_version(output)
 
-    def test_longer_version_is_not_the_pin(self) -> None:
-        """15.6.0 contains 5.6.0 but is a different version."""
-        assert check.reported_version("ai-rulez version 15.6.0") == "15.6.0"
-        assert check.reported_version("ai-rulez version 15.6.0") != "5.6.0"
+    def test_compares_numerically_not_lexically(self) -> None:
+        """5.10.0 sorts before 5.7.0 as text but is newer."""
+        assert check.reported_version("5.10.0") > check.reported_version("5.7.0")
+
+
+class TestMinimumVersion:
+    """The floor comes from the Taskfile and must be a plain release."""
+
+    def test_reads_the_taskfile_minimum(self, tmp_path: Path) -> None:
+        taskfile = tmp_path / "Taskfile.yml"
+        taskfile.write_text('vars:\n  AI_RULEZ_MIN_VERSION: "5.7.0"\n')
+        assert check.minimum_version(taskfile) == (5, 7, 0)
+
+    @pytest.mark.parametrize("text", ["vars:\n", 'vars:\n  AI_RULEZ_MIN_VERSION: "latest"\n'])
+    def test_missing_or_non_numeric_minimum_fails(self, tmp_path: Path, text: str) -> None:
+        taskfile = tmp_path / "Taskfile.yml"
+        taskfile.write_text(text)
+        with pytest.raises(SystemExit, match="AI_RULEZ_MIN_VERSION"):
+            check.minimum_version(taskfile)
+
+    def test_repository_minimum_is_readable(self) -> None:
+        assert check.minimum_version() >= (5, 7, 0)
 
 
 class TestCheckInstalled:
@@ -37,45 +57,43 @@ class TestCheckInstalled:
             patch.object(check.shutil, "which", return_value="/bin/ai-rulez"),
             patch.object(check.subprocess, "run", return_value=result),
         ):
-            check.check_installed("5.6.0")
+            check.check_installed((5, 7, 0))
 
-    def test_exact_version_passes(self) -> None:
-        self.run_with("ai-rulez version 5.6.0\n")
+    @pytest.mark.parametrize("stdout", ["ai-rulez version 5.7.0\n", "ai-rulez version 5.10.0", "6.0.0"])
+    def test_minimum_or_newer_passes(self, stdout: str) -> None:
+        self.run_with(stdout)
 
-    @pytest.mark.parametrize("stdout", ["ai-rulez version 15.6.0", "ai-rulez version 5.6.01", "ai-rulez version 5.4.1"])
-    def test_other_version_fails(self, stdout: str) -> None:
+    @pytest.mark.parametrize("stdout", ["ai-rulez version 5.6.10", "4.99.0", "ai-rulez version dev"])
+    def test_older_or_unreadable_fails(self, stdout: str) -> None:
         with pytest.raises(SystemExit):
             self.run_with(stdout)
 
     def test_missing_binary_fails(self) -> None:
         with patch.object(check.shutil, "which", return_value=None), pytest.raises(SystemExit, match="Install"):
-            check.check_installed("5.6.0")
+            check.check_installed((5, 7, 0))
 
 
 class TestWorkflowPins:
-    """Workflow inputs must equal the Taskfile pin."""
-
-    def test_taskfile_pin_is_read(self, tmp_path: Path) -> None:
-        taskfile = tmp_path / "Taskfile.yml"
-        taskfile.write_text('vars:\n  AI_RULEZ_VERSION: "5.6.0"\n')
-        assert check.pinned_version(taskfile) == "5.6.0"
+    """Every workflow input must be latest."""
 
     def test_workflow_inputs_are_collected(self, tmp_path: Path) -> None:
-        (tmp_path / "a.yaml").write_text('with:\n  ai-rulez-version: "5.6.0"\n')
-        (tmp_path / "b.yml").write_text("with:\n  ai-rulez-version: 5.5.0 # old\n")
+        (tmp_path / "a.yaml").write_text('with:\n  ai-rulez-version: "latest"\n')
+        (tmp_path / "b.yml").write_text("with:\n  ai-rulez-version: 5.7.0 # old\n")
         (tmp_path / "c.yml").write_text("name: none\n")
-        assert check.workflow_pins(tmp_path) == {"a.yaml": ["5.6.0"], "b.yml": ["5.5.0"]}
+        assert check.workflow_pins(tmp_path) == {"a.yaml": ["latest"], "b.yml": ["5.7.0"]}
 
-    def test_equal_pins_pass(self) -> None:
-        check.check_workflows("5.6.0", {"a.yaml": ["5.6.0"]})
+    def test_latest_inputs_pass(self) -> None:
+        check.check_workflows({"a.yaml": ["latest", "latest"]})
 
-    def test_differing_pin_names_the_file(self) -> None:
-        with pytest.raises(SystemExit, match="b.yml: 5.5.0"):
-            check.check_workflows("5.6.0", {"a.yaml": ["5.6.0"], "b.yml": ["5.5.0"]})
+    def test_exact_pin_names_the_file(self) -> None:
+        with pytest.raises(SystemExit, match=r"b\.yml: 5\.7\.0"):
+            check.check_workflows({"a.yaml": ["latest"], "b.yml": ["5.7.0"]})
 
-    def test_no_pins_fails(self) -> None:
+    def test_no_inputs_fails(self) -> None:
         with pytest.raises(SystemExit, match="No ai-rulez-version"):
-            check.check_workflows("5.6.0", {})
+            check.check_workflows({})
 
-    def test_repository_pins_agree(self) -> None:
-        check.check_workflows(check.pinned_version(), check.workflow_pins())
+    def test_repository_inputs_are_latest(self) -> None:
+        pins = check.workflow_pins()
+        assert sum(len(values) for values in pins.values()) == 8
+        check.check_workflows(pins)
