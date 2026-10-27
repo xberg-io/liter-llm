@@ -4,7 +4,7 @@ requires-python = ">=3.10"
 
 [[package]]
 name = "liter-llm"
-version = "2.4.0"
+version = "2.4.1"
 source = { editable = "." }
 
 [package.dev-dependencies]

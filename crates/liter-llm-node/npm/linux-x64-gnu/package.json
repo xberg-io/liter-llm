@@ -10,7 +10,7 @@
     }
   ],
   "name": "@xberg-io/liter-llm-linux-x64-gnu",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "license": "MIT",
   "repository": {
     "type": "git",

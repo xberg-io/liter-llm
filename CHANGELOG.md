@@ -7,10 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-10-27
+
+### Changed
+
+- Regenerate bindings with alef 0.114.0. Five end-to-end fixtures that skipped bindings now run (#391).
+
 ### Fixed
 
+- Anthropic: `json_schema` structured output closes every object schema with `additionalProperties: false` (#403).
+- Anthropic: a list-form system message skips blank text parts (#399).
+- Anthropic and Bedrock: streamed tool calls are numbered from 0 across the whole stream, in the order they start. Argument deltas keep the number of their own call (#435).
+- Anthropic: a streamed refusal reports the finish reason `content_filter`, as the reply that is not streamed does, not `other` (#436).
+- Gemini: a tool result carries the name of the function that was called, not `tool` (#417).
+- Gemini: a reply that calls a tool finishes with `tool_calls` (#420).
+- Gemini: presence penalty and frequency penalty are sent (#421). The seed is sent (#422).
+- Gemini and Vertex: streamed tool calls are numbered across the whole stream. The first call is 0, the second is 1, also when the calls arrive in different chunks (#439).
+- Ollama: a stream that stops at the token limit after a tool call finishes with `tool_calls` (#440).
+- An API key that Google reports as not valid is an authentication error, for Google AI and Vertex AI only, on streams
+  and on calls that are not streams (#418, #426).
+- llama.cpp and LM Studio: a request that does not fit the context window raises `ContextWindowExceeded`, not `BadRequest` (#437).
 - `list_catalog_models(provider)` accepts the routing names `gemini`, `google_ai` and `vertex_ai`. They list the models
   of the catalog ids `google` and `google-vertex`, as the cost lookup already resolves them (#405).
+- Build: the stale pnpm and uv lock files are refreshed, and the PHP end-to-end config no longer holds a macOS path
+  (#413).
+- CI: the release notes start from the CHANGELOG entry of the version (#392). The hook check matches the ai-rulez
+  version exactly (#401). The CHANGELOG entry test passes `check` to `subprocess.run` (#428).
+
+### Not in this release
+
+The next alef bump waits for the alef fix for the dropped end-to-end assertions (xberg-io/alef#412).
 
 ## [2.4.0] - 2026-10-24
 

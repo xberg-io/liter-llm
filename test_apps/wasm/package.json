@@ -10,7 +10,7 @@
     "test": "NODE_OPTIONS=--max-old-space-size=4096 vitest run"
   },
   "devDependencies": {
-    "@xberg-io/liter-llm-wasm": "2.4.0",
+    "@xberg-io/liter-llm-wasm": "2.4.1",
     "rollup": "^4.64.6",
     "vitest": "^5.0.4"
   },
