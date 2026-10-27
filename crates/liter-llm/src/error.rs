@@ -398,6 +398,8 @@ impl LiterLlmError {
                     || message_lower.contains("maximum context length")
                     || message_lower.contains("prompt is too long")
                     || message_lower.contains("input token count exceeds the maximum")
+                    || message_lower.contains("exceeds the available context size")
+                    || message_lower.contains("exceed_context_size_error")
                 {
                     Self::ContextWindowExceeded { message }
                 } else if message_lower.contains("content_policy") || message_lower.contains("content_filter") {
