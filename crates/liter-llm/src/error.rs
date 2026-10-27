@@ -362,6 +362,9 @@ impl LiterLlmError {
         let code = error
             .and_then(|error| error.get("code"))
             .and_then(serde_json::Value::as_str);
+        let error_type = error
+            .and_then(|error| error.get("type"))
+            .and_then(serde_json::Value::as_str);
         let google_api_key_invalid = error
             .and_then(|error| error.get("details"))
             .and_then(serde_json::Value::as_array)
@@ -387,7 +390,7 @@ impl LiterLlmError {
                 retry_after,
             },
             400 | 422 => {
-                if code == Some("context_length_exceeded") {
+                if code == Some("context_length_exceeded") || error_type == Some("exceed_context_size_error") {
                     Self::ContextWindowExceeded { message }
                 } else if code == Some("content_policy_violation") || code == Some("content_filter") {
                     Self::ContentPolicy { message }

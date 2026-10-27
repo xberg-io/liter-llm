@@ -1711,6 +1711,26 @@ mod error_tests {
         ));
     }
 
+    /// Revert line: remove the `error_type` test from `LiterLlmError::from_status`, and an error
+    /// object with this type and a message of its own stays `BadRequest`.
+    #[test]
+    fn context_overflow_error_type_is_matched_on_the_error_object() {
+        let body = r#"{"error":{"type":"exceed_context_size_error","message":"x"}}"#;
+        assert!(matches!(
+            LiterLlmError::from_status(400, body, None, false),
+            LiterLlmError::ContextWindowExceeded { .. }
+        ));
+    }
+
+    #[test]
+    fn bad_request_with_an_unrelated_error_type_stays_a_bad_request() {
+        let body = r#"{"error":{"type":"invalid_request_error","message":"x"}}"#;
+        assert!(matches!(
+            LiterLlmError::from_status(400, body, None, false),
+            LiterLlmError::BadRequest { status: 400, .. }
+        ));
+    }
+
     #[test]
     fn ordinary_bad_requests_stay_bad_requests() {
         for message in [
