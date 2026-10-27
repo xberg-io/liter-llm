@@ -208,10 +208,15 @@ tasks:
       - swift test
 
   smoke:homebrew:
-    desc: Run Homebrew CLI formula smoke test
+    desc: Run generated Bats Homebrew consumer checks
     dir: test_apps/homebrew
+    preconditions:
+      - sh: command -v bats
+        msg: "bats is required: brew install bats-core"
+      - sh: test -f homebrew.bats
+        msg: "Generate the Homebrew suite with alef e2e generate --registry --lang homebrew"
     cmds:
-      - ./run_tests.sh
+      - bash run_tests.sh
 
   comprehensive:
     desc: Run all test_app comprehensive tests

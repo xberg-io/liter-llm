@@ -213,6 +213,8 @@ owned_paths = [
   "test_apps/c/Makefile",
   "test_apps/csharp/XbergIo.LiterLlm.E2eTests.csproj",
   "test_apps/homebrew/Brewfile",
+  "test_apps/homebrew/homebrew.bats",
+  "test_apps/homebrew/lib/xberg-bats/load.bash",
   "test_apps/java/.mvn/wrapper/maven-wrapper.properties",
   "test_apps/kotlin_android/gradle/wrapper/gradle-wrapper.jar",
   "test_apps/node/.npmrc",

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 import tomllib
-from check_consumer_versions import OWNED_PINS, PINS, expected_pin, replace_pin, sync_owned, verify_all
+from check_consumer_versions import OWNED_PINS, PINS, expected_pin, replace_pin, sync_owned, verify_all, verify_pin
 
 ROOT = Path(__file__).resolve().parents[2]
 CURRENT_VERSION = tomllib.loads((ROOT / "Cargo.toml").read_text())["workspace"]["package"]["version"]
@@ -72,3 +72,11 @@ def test_go_major_bump_updates_module_suffix_and_preserves_other_dependencies() 
     new = "github.com/xberg-io/liter-llm/packages/go/v3 v3.0.0"
     original = f"module example.test\n\nrequire (\n\t{old}\n\texample.org/other v1.5.0\n)\n"
     assert replace_pin(original, PINS["go/go.mod"], expected_pin("go/go.mod", "3.0.0")) == original.replace(old, new)
+
+
+def test_homebrew_version_guard_reads_the_executed_bats_suite() -> None:
+    """The launcher delegates to Bats, so its suite owns the effective version pin."""
+    assert "homebrew/run_tests.sh" not in PINS
+    assert "homebrew/homebrew.bats" in PINS
+    suite = (ROOT / "test_apps/homebrew/homebrew.bats").read_text()
+    verify_pin(suite, PINS["homebrew/homebrew.bats"], CURRENT_VERSION, "homebrew/homebrew.bats")

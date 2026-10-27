@@ -22,7 +22,7 @@ PINS = {
     "swift_e2e/Package.swift": r'branch: "release/swift/([^"]+)"',
     "c/download_ffi.sh": r"(?m)^VERSION='([^']+)'",
     "php/install.sh": r"(?m)^PINNED_VERSION='([^']+)'",
-    "homebrew/run_tests.sh": r"(?m)^VERSION='([^']+)'",
+    "homebrew/homebrew.bats": r"(?m)^export VERSION='([^']+)'",
     "homebrew/README.md": r"at version `([^`]+)`",
     "zig/build.zig.zon": r'\.url = "([^"]+)"',
 }
