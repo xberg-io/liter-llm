@@ -217,6 +217,8 @@ impl Provider for AnthropicProvider {
     /// Anthropic event types handled:
     /// - `message_start`: emits a role-only delta chunk.
     /// - `content_block_start`: emits empty delta (tool_use: emits tool_call header chunk).
+    ///   The tool call `index` is the Anthropic block number. The client renumbers it while it
+    ///   reads the stream, so the first tool call of a stream has `index` 0.
     /// - `content_block_delta`: emits text, thinking, or tool input JSON delta.
     /// - `message_delta`: emits final chunk with finish_reason and usage.
     /// - `message_stop`: signals end of stream, returns `Ok(None)`.

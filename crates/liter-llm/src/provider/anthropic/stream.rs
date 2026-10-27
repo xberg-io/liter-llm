@@ -104,8 +104,8 @@ fn message_start_chunk(event: &Value) -> ChatCompletionChunk {
 fn content_block_start_chunk(event: &Value) -> Option<ChatCompletionChunk> {
     let block = &event["content_block"];
     let block_type = block.get("type").and_then(|t| t.as_str()).unwrap_or("");
-    // ~keep Anthropic block indices include text/thinking/tool blocks, so tool indices may have gaps.
-    // ~keep The same index appears in start and delta events, and clients correlate by id.
+    // ~keep This is the Anthropic block index. It counts text and thinking blocks too, and
+    // ~keep `ToolCallNumbering` turns it into the tool call number.
     let anthropic_index = event.get("index").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
 
     if block_type == "tool_use" || block_type == "server_tool_use" {
