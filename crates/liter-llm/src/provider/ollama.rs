@@ -222,8 +222,8 @@ fn plain_error_text(message: String) -> String {
 }
 
 /// Continue the tool call numbering across stream lines, and end a stream that made tool calls
-/// with `tool_calls`. Ollama reports `done_reason: "stop"` for those streams, and numbers the
-/// calls of each line from 0.
+/// with `tool_calls`, as a chat reply does. Ollama reports `done_reason: "stop"` or `"length"`
+/// for those streams, and numbers the calls of each line from 0.
 pub(crate) fn number_stream_tool_calls(chunk: &mut ChatCompletionChunk, seen: &mut u32) {
     use crate::types::FinishReason;
     for choice in &mut chunk.choices {
@@ -235,7 +235,7 @@ pub(crate) fn number_stream_tool_calls(chunk: &mut ChatCompletionChunk, seen: &m
             }
             *seen += count;
         }
-        if *seen > 0 && choice.finish_reason == Some(FinishReason::Stop) {
+        if *seen > 0 && choice.finish_reason.is_some() {
             choice.finish_reason = Some(FinishReason::ToolCalls);
         }
     }
