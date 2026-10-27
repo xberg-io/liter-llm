@@ -1679,6 +1679,77 @@ mod error_tests {
         }
     }
 
+    const LLAMA_CPP_CONTEXT_ERROR: &str = r#"{"code":400,"message":"request (6420 tokens) exceeds the available context size (256 tokens), try increasing it","type":"exceed_context_size_error","n_prompt_tokens":6420,"n_ctx":256}"#;
+
+    /// Revert line: remove `exceeds the available context size` and `exceed_context_size_error`
+    /// from the message phrases in `LiterLlmError::from_status`, and both bodies become `BadRequest`.
+    #[test]
+    fn llama_cpp_context_overflow_is_classified() {
+        let object_body = format!(r#"{{"error":{LLAMA_CPP_CONTEXT_ERROR}}}"#);
+        // LM Studio wraps the llama.cpp error object in a string.
+        let string_body = serde_json::json!({
+            "error": format!("Engine protocol predict request returned 400: {LLAMA_CPP_CONTEXT_ERROR}")
+        })
+        .to_string();
+        for body in [object_body, string_body] {
+            assert!(
+                matches!(
+                    LiterLlmError::from_status(400, &body, None, false),
+                    LiterLlmError::ContextWindowExceeded { .. }
+                ),
+                "body {body}"
+            );
+        }
+    }
+
+    #[test]
+    fn llama_cpp_context_overflow_type_alone_is_classified() {
+        let body = r#"{"error":"server answered: exceed_context_size_error"}"#;
+        assert!(matches!(
+            LiterLlmError::from_status(400, body, None, false),
+            LiterLlmError::ContextWindowExceeded { .. }
+        ));
+    }
+
+    /// Revert line: remove the `error_type` test from `LiterLlmError::from_status`, and an error
+    /// object with this type and a message of its own stays `BadRequest`.
+    #[test]
+    fn context_overflow_error_type_is_matched_on_the_error_object() {
+        let body = r#"{"error":{"type":"exceed_context_size_error","message":"x"}}"#;
+        assert!(matches!(
+            LiterLlmError::from_status(400, body, None, false),
+            LiterLlmError::ContextWindowExceeded { .. }
+        ));
+    }
+
+    #[test]
+    fn bad_request_with_an_unrelated_error_type_stays_a_bad_request() {
+        let body = r#"{"error":{"type":"invalid_request_error","message":"x"}}"#;
+        assert!(matches!(
+            LiterLlmError::from_status(400, body, None, false),
+            LiterLlmError::BadRequest { status: 400, .. }
+        ));
+    }
+
+    #[test]
+    fn ordinary_bad_requests_stay_bad_requests() {
+        for message in [
+            "request body is not valid JSON",
+            "the available models are listed at /v1/models",
+            "temperature exceeds the allowed range",
+            "context is required",
+        ] {
+            let body = format!(r#"{{"error":{{"message":"{message}"}}}}"#);
+            assert!(
+                matches!(
+                    LiterLlmError::from_status(400, &body, None, false),
+                    LiterLlmError::BadRequest { status: 400, .. }
+                ),
+                "message {message}"
+            );
+        }
+    }
+
     #[test]
     fn service_unavailable_exposes_retry_after() {
         let err = LiterLlmError::from_status(503, "unavailable", Some(std::time::Duration::from_secs(3)), false);

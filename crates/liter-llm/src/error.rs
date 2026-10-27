@@ -362,6 +362,9 @@ impl LiterLlmError {
         let code = error
             .and_then(|error| error.get("code"))
             .and_then(serde_json::Value::as_str);
+        let error_type = error
+            .and_then(|error| error.get("type"))
+            .and_then(serde_json::Value::as_str);
         let google_api_key_invalid = error
             .and_then(|error| error.get("details"))
             .and_then(serde_json::Value::as_array)
@@ -387,7 +390,7 @@ impl LiterLlmError {
                 retry_after,
             },
             400 | 422 => {
-                if code == Some("context_length_exceeded") {
+                if code == Some("context_length_exceeded") || error_type == Some("exceed_context_size_error") {
                     Self::ContextWindowExceeded { message }
                 } else if code == Some("content_policy_violation") || code == Some("content_filter") {
                     Self::ContentPolicy { message }
@@ -398,6 +401,8 @@ impl LiterLlmError {
                     || message_lower.contains("maximum context length")
                     || message_lower.contains("prompt is too long")
                     || message_lower.contains("input token count exceeds the maximum")
+                    || message_lower.contains("exceeds the available context size")
+                    || message_lower.contains("exceed_context_size_error")
                 {
                     Self::ContextWindowExceeded { message }
                 } else if message_lower.contains("content_policy") || message_lower.contains("content_filter") {

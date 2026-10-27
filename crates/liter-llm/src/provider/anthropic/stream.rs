@@ -1,5 +1,8 @@
 //! Anthropic SSE event -> OpenAI `ChatCompletionChunk` translation.
 
+use serde::Deserialize as _;
+use serde::de::IntoDeserializer as _;
+use serde::de::value::StrDeserializer;
 use serde_json::Value;
 
 use super::map_stop_reason;
@@ -104,8 +107,8 @@ fn message_start_chunk(event: &Value) -> ChatCompletionChunk {
 fn content_block_start_chunk(event: &Value) -> Option<ChatCompletionChunk> {
     let block = &event["content_block"];
     let block_type = block.get("type").and_then(|t| t.as_str()).unwrap_or("");
-    // ~keep Anthropic block indices include text/thinking/tool blocks, so tool indices may have gaps.
-    // ~keep The same index appears in start and delta events, and clients correlate by id.
+    // ~keep This is the Anthropic block index. It counts text and thinking blocks too, and
+    // ~keep `ToolCallNumbering` turns it into the tool call number.
     let anthropic_index = event.get("index").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
 
     if block_type == "tool_use" || block_type == "server_tool_use" {
@@ -154,11 +157,11 @@ fn message_delta_chunk(event: &Value) -> ChatCompletionChunk {
     let finish_reason = stop_reason.map(map_stop_reason);
     let output_tokens = event.pointer("/usage/output_tokens").and_then(|v| v.as_u64());
 
-    let finish = finish_reason.map(|fr| match fr {
-        "stop" => FinishReason::Stop,
-        "length" => FinishReason::Length,
-        "tool_calls" => FinishReason::ToolCalls,
-        _ => FinishReason::Other,
+    // ~keep Parse with the serde impl that reads the finish reason of a full reply, so the stream
+    // ~keep and the full reply cannot disagree on a value.
+    let finish = finish_reason.map(|fr| {
+        let reader: StrDeserializer<'_, serde::de::value::Error> = fr.into_deserializer();
+        FinishReason::deserialize(reader).expect("`FinishReason` maps an unknown string to `Other` with `serde(other)`")
     });
 
     let usage = output_tokens.map(|ct| crate::types::Usage {

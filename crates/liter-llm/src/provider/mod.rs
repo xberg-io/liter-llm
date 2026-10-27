@@ -886,8 +886,13 @@ pub(crate) mod ollama;
 pub mod outbound_policy;
 pub(crate) mod rebased;
 pub(crate) mod rerank_shape;
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+mod tool_call_numbering;
 pub(crate) mod vertex;
 pub(crate) mod voyage;
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) use tool_call_numbering::ToolCallNumbering;
 
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
 pub use outbound_policy::configure_outbound_client_builder;
