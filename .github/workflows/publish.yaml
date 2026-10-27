@@ -2382,7 +2382,10 @@ jobs:
 
   publish-zig:
     name: Publish Zig package metadata
-    needs: [prepare, validate-versions, check-zig, build-ffi]
+    # ~keep `upload-swift-release` rewrites the whole release body with `--notes-file`. This job
+    # appends the Zig section to the body, so it runs after that rewrite. Its `if:` below does not
+    # require the Swift job to succeed: a skipped or failed Swift job only means no rewrite.
+    needs: [prepare, validate-versions, check-zig, build-ffi, upload-swift-release]
     # ~keep `!cancelled()` is load-bearing. On a partial-target dispatch the crates-chain jobs
     # skip, an upstream job survives only via its own `!cancelled()`, and GitHub's skipped-state
     # propagation then resumes at the first dependent that declares no opt-out -- skipping it
@@ -2687,7 +2690,12 @@ jobs:
           CHECKSUM=${{ needs.swift-artifactbundle.outputs.checksum }}
           ASSET_URL="https://github.com/xberg-io/liter-llm/releases/download/v${VERSION}/LiterLlm-rs.artifactbundle.zip"
 
-          cat > /tmp/swift-notes.md << EOF
+          # `gh release edit --notes-file` replaces the whole body, so the notes start from the
+          # version's CHANGELOG entry whatever notes the release was created with.
+          python3 scripts/ci/changelog_entry.py CHANGELOG.md "${VERSION}" > /tmp/changelog-notes.md
+
+          cat > /tmp/swift-install.md << EOF
+
           ## Swift Package Manager
 
           The Swift binding is distributed as a pre-built artifact bundle. No Rust toolchain required.
@@ -2714,7 +2722,8 @@ jobs:
           **Checksum**: \`${CHECKSUM}\`
           EOF
 
-          gh release edit "v${VERSION}" --notes-file /tmp/swift-notes.md
+          cat /tmp/changelog-notes.md /tmp/swift-install.md > /tmp/release-notes.md
+          gh release edit "v${VERSION}" --notes-file /tmp/release-notes.md
 
   build-cli-binaries:
     name: Build CLI binary (${{ matrix.label }})

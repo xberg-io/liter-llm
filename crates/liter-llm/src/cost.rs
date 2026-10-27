@@ -700,17 +700,23 @@ fn lookup_in<'a>(models: &'a HashMap<String, ModelPricing>, model: &str) -> Opti
     }
 
     if let Some((prefix, model_id)) = model.split_once('/') {
-        let catalog_provider = match prefix {
-            "gemini" | "google_ai" => Some("google"),
-            "vertex_ai" => Some("google-vertex"),
-            _ => None,
-        };
-        if let Some(provider) = catalog_provider {
+        let provider = catalog_provider_id(prefix);
+        if provider != prefix {
             return lookup_in(models, &format!("{provider}/{model_id}"));
         }
     }
 
     None
+}
+
+/// Map a routing provider name to the id the catalog files its rows under.
+/// A name that the catalog already uses maps to itself.
+fn catalog_provider_id(provider: &str) -> &str {
+    match provider {
+        "gemini" | "google_ai" => "google",
+        "vertex_ai" => "google-vertex",
+        other => other,
+    }
 }
 
 fn fallback_model_key(model: &str) -> Option<&str> {
@@ -858,10 +864,12 @@ impl CatalogModel {
 /// accepts, such as "gpt-4o" for "openai/gpt-4o", is not an extra entry.
 ///
 /// The provider argument takes a catalog provider id, such as "openai" or
-/// "anthropic": the part of an entry key before the first slash. It is not a
-/// routing provider name from all_providers; only some routing names are also
-/// catalog ids. The listing keeps the models of that id only, compared exactly
-/// and case-sensitively. An id the catalog does not hold gives an empty list.
+/// "anthropic": the part of an entry key before the first slash. It also takes
+/// a routing provider name from all_providers that the catalog files under a
+/// different id: "gemini" and "google_ai" list the "google" models, and
+/// "vertex_ai" lists the "google-vertex" models. The listing keeps the models
+/// of that id only, compared exactly and case-sensitively. An id the catalog
+/// does not hold gives an empty list.
 /// When the provider is absent or empty, the listing keeps every provider.
 ///
 /// The list reads the catalog that the model lookup reads: the embedded
@@ -873,7 +881,7 @@ impl CatalogModel {
 /// call of a client.
 #[must_use]
 pub fn list_catalog_models(provider: Option<&str>) -> Vec<CatalogModel> {
-    let provider = provider.filter(|id| !id.is_empty());
+    let provider = provider.filter(|id| !id.is_empty()).map(catalog_provider_id);
     let mut models: BTreeMap<String, CatalogModel> = BTreeMap::new();
     if let Some(embedded) = embedded_catalog() {
         collect_catalog_models(embedded, provider, &mut models);

@@ -6,8 +6,9 @@
 //!
 //! The default policy ([`DefaultRetryPolicy`]) treats rate-limit (429),
 //! service-unavailable (502/503/504), timeout, server error (5xx), and network
-//! errors as transient; authentication (401/403), bad-request (400/422),
-//! context-window-exceeded, content-policy, and not-found (404) as terminal.
+//! errors as transient; authentication (401/403, or a Google 400 for an
+//! invalid API key), bad-request (400/422), context-window-exceeded,
+//! content-policy, and not-found (404) as terminal.
 
 use std::sync::Arc;
 use std::task::{Context, Poll};

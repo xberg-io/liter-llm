@@ -186,6 +186,10 @@ struct ChatStreamState {
     model: String,
     /// Tool calls already streamed, so later chunks continue the index numbering.
     tool_calls_seen: u32,
+    /// A Gemini chunk of this stream carried a tool call.
+    gemini_tool_call_seen: bool,
+    /// The tool calls of an Anthropic or Gemini stream, so each gets its number among the tool calls.
+    tool_calls: provider::ToolCallNumbering,
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -197,6 +201,21 @@ fn attribute_chat_model(provider: &dyn Provider, model: &mut String, fallback_mo
             "Gemini omitted modelVersion; using request or prior stream model context"
         );
         *model = fallback_model.to_owned();
+    }
+}
+
+/// Gemini ends a function-call turn with `STOP`, and the call can arrive in an earlier chunk than
+/// the chunk that carries `STOP`. Remember that the stream carried a call, and finish with
+/// `tool_calls` when `STOP` arrives after one.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn finish_gemini_tool_stream(chunk: &mut ChatCompletionChunk, tool_call_seen: &mut bool) {
+    for choice in &mut chunk.choices {
+        if choice.delta.tool_calls.as_ref().is_some_and(|calls| !calls.is_empty()) {
+            *tool_call_seen = true;
+        }
+        if *tool_call_seen && choice.finish_reason == Some(crate::types::FinishReason::Stop) {
+            choice.finish_reason = Some(crate::types::FinishReason::ToolCalls);
+        }
     }
 }
 
@@ -226,8 +245,11 @@ fn parse_chat_stream_event(
     attribute_chat_model(provider, &mut chunk.model, &state.model);
     if matches!(provider.name(), "google_ai" | "vertex_ai") {
         state.model.clone_from(&chunk.model);
+        finish_gemini_tool_stream(&mut chunk, &mut state.gemini_tool_call_seen);
+        state.tool_calls.renumber(&mut chunk);
         return Ok(Some(chunk));
     }
+    state.tool_calls.renumber(&mut chunk);
     if let Some(usage) = chunk.usage.as_mut() {
         let aggregate = state.usage.get_or_insert_with(Usage::default);
         aggregate.prompt_tokens = aggregate.prompt_tokens.max(usage.prompt_tokens);
@@ -244,6 +266,27 @@ fn parse_chat_stream_event(
         usage.clone_from(aggregate);
     }
     Ok(Some(chunk))
+}
+
+/// The event reader of one Bedrock stream.
+///
+/// The reader owns the tool call numbering of its stream, and numbers the tool calls of every
+/// event it reads among the tool calls of the stream. Make one reader for each stream.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn bedrock_stream_reader() -> impl Fn(&str, &str) -> Result<Option<ChatCompletionChunk>> + Send + 'static {
+    let tool_calls = std::sync::Mutex::new(provider::ToolCallNumbering::default());
+    move |event_type: &str, payload: &str| {
+        let Some(mut chunk) = provider::bedrock::parse_bedrock_stream_event(event_type, payload)? else {
+            return Ok(None);
+        };
+        tool_calls
+            .lock()
+            .map_err(|_| LiterLlmError::InternalError {
+                message: "chat stream state lock poisoned".into(),
+            })?
+            .renumber(&mut chunk);
+        Ok(Some(chunk))
+    }
 }
 
 /// Whether a chat chunk ends the reply: some choice carries a finish reason.
@@ -911,11 +954,14 @@ impl DefaultClient {
         self
     }
 
-    fn response_read_options(&self) -> http::request::ResponseReadOptions {
+    /// The options for a request that goes to `provider`. The provider is the one that
+    /// serves the model, which can differ from `self.provider`.
+    fn response_read_options(&self, provider: &dyn Provider) -> http::request::ResponseReadOptions {
         http::request::ResponseReadOptions {
             max_retries: self.config.max_retries,
             max_response_bytes: self.config.max_response_bytes,
             timeout: Some(self.config.timeout),
+            invalid_key_as_400: provider.reports_invalid_key_as_400(),
         }
     }
 
@@ -1384,7 +1430,7 @@ impl DefaultClient {
                     },
                     parse_event,
                     end_check,
-                    self.response_read_options(),
+                    self.response_read_options(prepared.provider.as_ref()),
                     framing,
                 )
                 .await
@@ -1399,8 +1445,8 @@ impl DefaultClient {
                         extra_headers: &extra,
                         body: prepared.body_bytes,
                     },
-                    provider::bedrock::parse_bedrock_stream_event,
-                    self.response_read_options(),
+                    bedrock_stream_reader(),
+                    self.response_read_options(prepared.provider.as_ref()),
                 )
                 .await?
             }
@@ -1652,7 +1698,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await
             .map_err(|e| prepared.provider.transform_error(e))?;
@@ -1714,7 +1760,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await
             .map_err(|e| prepared.provider.transform_error(e))?;
@@ -1738,10 +1784,15 @@ impl LlmClient for DefaultClient {
                 let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
                 let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-                let mut raw =
-                    http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
-                        .await
-                        .map_err(|e| self.provider.transform_error(e))?;
+                let mut raw = http::request::get_json_raw_bounded(
+                    &self.http,
+                    &url,
+                    auth,
+                    &extra,
+                    self.response_read_options(self.provider.as_ref()),
+                )
+                .await
+                .map_err(|e| self.provider.transform_error(e))?;
                 let next_url = self.provider.next_models_page_url(&url, &raw);
                 self.provider.transform_response(&mut raw)?;
                 let page = serde_json::from_value::<ModelsListResponse>(raw).map_err(LiterLlmError::from)?;
@@ -1795,7 +1846,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             prepared.provider.transform_response(&mut raw)?;
@@ -1837,7 +1888,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await
         })
@@ -1877,7 +1928,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             prepared.provider.transform_response(&mut raw)?;
@@ -1920,7 +1971,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             prepared.provider.transform_response(&mut raw)?;
@@ -1963,7 +2014,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             transform_rerank_reply(prepared.provider.as_ref(), &req.model, &mut raw)?;
@@ -2000,7 +2051,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             prepared.provider.transform_response(&mut raw)?;
@@ -2036,7 +2087,7 @@ impl LlmClient for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
             prepared.provider.transform_response(&mut raw)?;
@@ -2078,7 +2129,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await
             .map_err(|e| prepared.provider.transform_error(e))?;
@@ -2140,7 +2191,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await
             .map_err(|e| prepared.provider.transform_error(e))?;
@@ -2189,7 +2240,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2239,7 +2290,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2287,7 +2338,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2335,7 +2386,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2377,7 +2428,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2418,7 +2469,7 @@ impl LlmClientRaw for DefaultClient {
                 auth,
                 &extra,
                 prepared.body_bytes,
-                self.response_read_options(),
+                self.response_read_options(prepared.provider.as_ref()),
             )
             .await?;
 
@@ -2469,8 +2520,7 @@ impl FileClient for DefaultClient {
                 auth,
                 &extra,
                 form,
-                self.config.max_response_bytes,
-                Some(self.config.timeout),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await?;
             serde_json::from_value::<FileObject>(raw).map_err(LiterLlmError::from)
@@ -2490,8 +2540,14 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
-                .await?;
+            let raw = http::request::get_json_raw_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<FileObject>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2509,8 +2565,14 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "DELETE", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::delete_json_bounded(&self.http, &url, auth, &extra, self.response_read_options())
-                .await?;
+            let raw = http::request::delete_json_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<DeleteResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2542,8 +2604,14 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
-                .await?;
+            let raw = http::request::get_json_raw_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<FileListResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2561,7 +2629,14 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            http::request::get_binary_bounded(&self.http, &url, auth, &extra, self.response_read_options()).await
+            http::request::get_binary_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await
         })
     }
 }
@@ -2585,7 +2660,7 @@ impl BatchClient for DefaultClient {
                 auth,
                 &extra,
                 body_bytes,
-                self.response_read_options(),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await?;
             serde_json::from_value::<BatchObject>(raw).map_err(LiterLlmError::from)
@@ -2605,8 +2680,14 @@ impl BatchClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
-                .await?;
+            let raw = http::request::get_json_raw_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<BatchObject>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2635,8 +2716,14 @@ impl BatchClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
-                .await?;
+            let raw = http::request::get_json_raw_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<BatchListResponse>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2662,7 +2749,7 @@ impl BatchClient for DefaultClient {
                 auth,
                 &extra,
                 body_bytes,
-                self.response_read_options(),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await?;
             serde_json::from_value::<BatchObject>(raw).map_err(LiterLlmError::from)
@@ -2848,7 +2935,7 @@ impl ResponseClient for DefaultClient {
                 auth,
                 &extra,
                 body_bytes,
-                self.response_read_options(),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await?;
             serde_json::from_value::<ResponseObject>(raw).map_err(LiterLlmError::from)
@@ -2882,7 +2969,7 @@ impl ResponseClient for DefaultClient {
                 },
                 parse_response_stream_event,
                 Some(response_event_is_terminal),
-                self.response_read_options(),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await
         })
@@ -2899,8 +2986,14 @@ impl ResponseClient for DefaultClient {
             let all_headers = self.all_headers(credential.as_ref(), "GET", &url, &serde_json::Value::Null, &[])?;
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            let raw = http::request::get_json_raw_bounded(&self.http, &url, auth, &extra, self.response_read_options())
-                .await?;
+            let raw = http::request::get_json_raw_bounded(
+                &self.http,
+                &url,
+                auth,
+                &extra,
+                self.response_read_options(self.provider.as_ref()),
+            )
+            .await?;
             serde_json::from_value::<ResponseObject>(raw).map_err(LiterLlmError::from)
         })
     }
@@ -2924,7 +3017,7 @@ impl ResponseClient for DefaultClient {
                 auth,
                 &extra,
                 body_bytes,
-                self.response_read_options(),
+                self.response_read_options(self.provider.as_ref()),
             )
             .await?;
             serde_json::from_value::<ResponseObject>(raw).map_err(LiterLlmError::from)
@@ -4329,6 +4422,358 @@ mod build_provider_tests {
         let details = usage.prompt_tokens_details.expect("cache details");
         assert_eq!(details.cached_tokens, 200);
         assert_eq!(details.cache_creation_tokens, 100);
+    }
+
+    fn anthropic_text_block(index: u32) -> [String; 3] {
+        [
+            format!(r#"{{"type":"content_block_start","index":{index},"content_block":{{"type":"text","text":""}}}}"#),
+            format!(
+                r#"{{"type":"content_block_delta","index":{index},"delta":{{"type":"text_delta","text":"Looking it up."}}}}"#
+            ),
+            format!(r#"{{"type":"content_block_stop","index":{index}}}"#),
+        ]
+    }
+
+    fn anthropic_thinking_block(index: u32) -> [String; 4] {
+        [
+            format!(
+                r#"{{"type":"content_block_start","index":{index},"content_block":{{"type":"thinking","thinking":""}}}}"#
+            ),
+            format!(
+                r#"{{"type":"content_block_delta","index":{index},"delta":{{"type":"thinking_delta","thinking":"Hmm."}}}}"#
+            ),
+            format!(
+                r#"{{"type":"content_block_delta","index":{index},"delta":{{"type":"signature_delta","signature":"sig"}}}}"#
+            ),
+            format!(r#"{{"type":"content_block_stop","index":{index}}}"#),
+        ]
+    }
+
+    /// A `tool_use` block: the start event, two argument deltas, the stop event.
+    fn anthropic_tool_block(index: u32, id: &str) -> [String; 4] {
+        [
+            format!(
+                r#"{{"type":"content_block_start","index":{index},"content_block":{{"type":"tool_use","id":"{id}","name":"get_weather","input":{{}}}}}}"#
+            ),
+            format!(
+                r#"{{"type":"content_block_delta","index":{index},"delta":{{"type":"input_json_delta","partial_json":"{{\"city\":"}}}}"#
+            ),
+            format!(
+                r#"{{"type":"content_block_delta","index":{index},"delta":{{"type":"input_json_delta","partial_json":"\"Paris\"}}"}}}}"#
+            ),
+            format!(r#"{{"type":"content_block_stop","index":{index}}}"#),
+        ]
+    }
+
+    /// Run the events of one Anthropic stream through the client's stream state, and list every
+    /// streamed tool call as `(index, id, arguments)`.
+    fn anthropic_stream_tool_calls(events: &[String]) -> Vec<(u32, Option<String>, Option<String>)> {
+        let provider = crate::provider::anthropic::AnthropicProvider::new();
+        let state = std::sync::Mutex::new(ChatStreamState::default());
+        let mut calls = Vec::new();
+        for event in events {
+            let Some(chunk) = parse_chat_stream_event(&provider, &state, event).expect("event") else {
+                continue;
+            };
+            for choice in &chunk.choices {
+                for call in choice.delta.tool_calls.iter().flatten() {
+                    let function = call.function.as_ref().expect("function");
+                    calls.push((call.index, call.id.clone(), function.arguments.clone()));
+                }
+            }
+        }
+        calls
+    }
+
+    /// Revert line: make `ToolCallNumbering::renumber` in `provider/tool_call_numbering.rs` leave
+    /// `call.index` as the block number, and a text block before the call gives it index 1.
+    #[test]
+    fn anthropic_stream_numbers_a_tool_call_after_text_from_zero() {
+        let events: Vec<String> = [
+            anthropic_text_block(0).to_vec(),
+            anthropic_tool_block(1, "toolu_1").to_vec(),
+        ]
+        .concat();
+        let calls = anthropic_stream_tool_calls(&events);
+        assert_eq!(
+            calls,
+            [
+                (0, Some("toolu_1".to_owned()), None),
+                (0, None, Some("{\"city\":".to_owned())),
+                (0, None, Some("\"Paris\"}".to_owned())),
+            ]
+        );
+    }
+
+    #[test]
+    fn anthropic_stream_numbers_a_tool_call_without_text_from_zero() {
+        let events: Vec<String> = anthropic_tool_block(0, "toolu_1").to_vec();
+        let indexes: Vec<u32> = anthropic_stream_tool_calls(&events).iter().map(|c| c.0).collect();
+        assert_eq!(indexes, [0, 0, 0]);
+    }
+
+    /// The index counts tool calls, not blocks: the second call is 1 where its block is 2.
+    #[test]
+    fn anthropic_stream_numbers_two_tool_calls_after_text_from_zero() {
+        let events: Vec<String> = [
+            anthropic_text_block(0).to_vec(),
+            anthropic_tool_block(1, "toolu_1").to_vec(),
+            anthropic_tool_block(2, "toolu_2").to_vec(),
+        ]
+        .concat();
+        let calls = anthropic_stream_tool_calls(&events);
+        let numbered: Vec<(u32, Option<&str>)> = calls.iter().map(|c| (c.0, c.1.as_deref())).collect();
+        assert_eq!(
+            numbered,
+            [
+                (0, Some("toolu_1")),
+                (0, None),
+                (0, None),
+                (1, Some("toolu_2")),
+                (1, None),
+                (1, None),
+            ]
+        );
+    }
+
+    #[test]
+    fn anthropic_stream_numbers_a_tool_call_after_thinking_and_text_from_zero() {
+        let events: Vec<String> = [
+            anthropic_thinking_block(0).to_vec(),
+            anthropic_text_block(1).to_vec(),
+            anthropic_tool_block(2, "toolu_1").to_vec(),
+        ]
+        .concat();
+        let indexes: Vec<u32> = anthropic_stream_tool_calls(&events).iter().map(|c| c.0).collect();
+        assert_eq!(indexes, [0, 0, 0]);
+    }
+
+    /// A delta keeps the number of its own block when the blocks of two calls interleave.
+    #[test]
+    fn anthropic_stream_argument_deltas_keep_the_number_of_their_block() {
+        let start = |index: u32, id: &str| {
+            format!(
+                r#"{{"type":"content_block_start","index":{index},"content_block":{{"type":"tool_use","id":"{id}","name":"f","input":{{}}}}}}"#
+            )
+        };
+        let delta = |index: u32, json: &str| {
+            format!(
+                r#"{{"type":"content_block_delta","index":{index},"delta":{{"type":"input_json_delta","partial_json":"{json}"}}}}"#
+            )
+        };
+        let events = [
+            anthropic_text_block(0).to_vec(),
+            vec![start(1, "toolu_1"), start(2, "toolu_2"), delta(1, "a"), delta(2, "b")],
+        ]
+        .concat();
+        let numbered: Vec<(u32, Option<String>)> = anthropic_stream_tool_calls(&events)
+            .into_iter()
+            .map(|c| (c.0, c.2))
+            .collect();
+        assert_eq!(
+            numbered,
+            [
+                (0, None),
+                (1, None),
+                (0, Some("a".to_owned())),
+                (1, Some("b".to_owned())),
+            ]
+        );
+    }
+
+    /// Revert line: remove the `renumber` call from `bedrock_stream_reader`, and the first
+    /// tool call after a text block keeps the Bedrock block number 1.
+    #[test]
+    fn bedrock_stream_numbers_tool_calls_after_text_from_zero() {
+        let reader = bedrock_stream_reader();
+        let events = [
+            (
+                "contentBlockDelta",
+                r#"{"contentBlockIndex":0,"delta":{"text":"Looking it up."}}"#,
+            ),
+            ("contentBlockStop", r#"{"contentBlockIndex":0}"#),
+            (
+                "contentBlockStart",
+                r#"{"contentBlockIndex":1,"start":{"toolUse":{"toolUseId":"tooluse_1","name":"get_weather"}}}"#,
+            ),
+            (
+                "contentBlockDelta",
+                r#"{"contentBlockIndex":1,"delta":{"toolUse":{"input":"{\"city\":\"Paris\"}"}}}"#,
+            ),
+            ("contentBlockStop", r#"{"contentBlockIndex":1}"#),
+            (
+                "contentBlockStart",
+                r#"{"contentBlockIndex":2,"start":{"toolUse":{"toolUseId":"tooluse_2","name":"get_time"}}}"#,
+            ),
+            (
+                "contentBlockDelta",
+                r#"{"contentBlockIndex":2,"delta":{"toolUse":{"input":"{}"}}}"#,
+            ),
+        ];
+        let mut indexes = Vec::new();
+        for (event_type, payload) in events {
+            let chunk = reader(event_type, payload).expect("event");
+            for choice in chunk.iter().flat_map(|chunk| &chunk.choices) {
+                indexes.extend(choice.delta.tool_calls.iter().flatten().map(|call| call.index));
+            }
+        }
+        assert_eq!(indexes, [0, 0, 1, 1]);
+    }
+
+    fn bedrock_tool_call_start(block: u32, id: &str) -> String {
+        format!(r#"{{"contentBlockIndex":{block},"start":{{"toolUse":{{"toolUseId":"{id}","name":"f"}}}}}}"#)
+    }
+
+    fn bedrock_tool_call_index(reader: &impl Fn(&str, &str) -> Result<Option<ChatCompletionChunk>>, block: u32) -> u32 {
+        let chunk = reader("contentBlockStart", &bedrock_tool_call_start(block, "tooluse_1"))
+            .expect("event")
+            .expect("chunk");
+        chunk.choices[0].delta.tool_calls.as_ref().expect("tool calls")[0].index
+    }
+
+    /// Revert line: move the `Mutex::new` in `bedrock_stream_reader` into the returned closure, and
+    /// the numbering restarts at every event, so the second call streams with index 0.
+    #[test]
+    fn bedrock_stream_reader_keeps_the_numbering_for_the_whole_stream() {
+        let reader = bedrock_stream_reader();
+        assert_eq!(bedrock_tool_call_index(&reader, 1), 0);
+        assert_eq!(bedrock_tool_call_index(&reader, 2), 1);
+        assert_eq!(bedrock_tool_call_index(&reader, 3), 2);
+    }
+
+    #[test]
+    fn bedrock_stream_readers_do_not_share_numbering() {
+        let first = bedrock_stream_reader();
+        assert_eq!(bedrock_tool_call_index(&first, 1), 0);
+        assert_eq!(bedrock_tool_call_index(&first, 2), 1);
+        assert_eq!(bedrock_tool_call_index(&bedrock_stream_reader(), 1), 0);
+    }
+
+    const GEMINI_CALL_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"get_weather","args":{"city":"Paris"}}}]}}]}"#;
+    const GEMINI_STOP_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"text":""}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5}}"#;
+
+    const GEMINI_MAX_TOKENS_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"text":""}]},"finishReason":"MAX_TOKENS"}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5}}"#;
+
+    fn gemini_stream_finish(provider: &dyn Provider, events: &[&str]) -> Vec<Option<crate::types::FinishReason>> {
+        let state = std::sync::Mutex::new(ChatStreamState::default());
+        events
+            .iter()
+            .map(|event| {
+                let chunk = parse_chat_stream_event(provider, &state, event)
+                    .expect("event")
+                    .expect("chunk");
+                chunk.choices[0].finish_reason.clone()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn gemini_stream_with_the_call_before_the_stop_chunk_finishes_with_tool_calls() {
+        let google_ai = provider::google_ai::GoogleAiProvider::default();
+        let vertex = provider::vertex::VertexAiProvider::new("test-project", "us-central1");
+        for provider in [&google_ai as &dyn Provider, &vertex] {
+            assert_eq!(
+                gemini_stream_finish(provider, &[GEMINI_CALL_CHUNK, GEMINI_STOP_CHUNK]),
+                [None, Some(crate::types::FinishReason::ToolCalls)],
+                "provider {}",
+                provider.name()
+            );
+        }
+    }
+
+    #[test]
+    fn gemini_stream_that_hits_max_tokens_after_a_call_finishes_with_length() {
+        let google_ai = provider::google_ai::GoogleAiProvider::default();
+        let vertex = provider::vertex::VertexAiProvider::new("test-project", "us-central1");
+        for provider in [&google_ai as &dyn Provider, &vertex] {
+            assert_eq!(
+                gemini_stream_finish(provider, &[GEMINI_CALL_CHUNK, GEMINI_MAX_TOKENS_CHUNK]),
+                [None, Some(crate::types::FinishReason::Length)],
+                "provider {}",
+                provider.name()
+            );
+        }
+    }
+
+    #[test]
+    fn gemini_stream_without_a_call_finishes_with_stop() {
+        let provider = provider::google_ai::GoogleAiProvider::default();
+        assert_eq!(
+            gemini_stream_finish(&provider, &[GEMINI_STOP_CHUNK]),
+            [Some(crate::types::FinishReason::Stop)]
+        );
+    }
+
+    #[test]
+    fn gemini_stream_tool_call_flag_does_not_leak_into_the_next_stream() {
+        let provider = provider::google_ai::GoogleAiProvider::default();
+        gemini_stream_finish(&provider, &[GEMINI_CALL_CHUNK]);
+        assert_eq!(
+            gemini_stream_finish(&provider, &[GEMINI_STOP_CHUNK]),
+            [Some(crate::types::FinishReason::Stop)]
+        );
+    }
+
+    const GEMINI_TIME_CALL_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"get_time","args":{"city":"Paris"}}}]}}]}"#;
+    const GEMINI_TWO_CALLS_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"f1","args":{}}},{"functionCall":{"name":"f2","args":{}}}]}}]}"#;
+
+    /// Run the events of one Gemini stream through the client's stream state, and list every
+    /// streamed tool call as `(index, name)`.
+    fn gemini_stream_tool_calls(provider: &dyn Provider, events: &[&str]) -> Vec<(u32, String)> {
+        let state = std::sync::Mutex::new(ChatStreamState::default());
+        let mut calls = Vec::new();
+        for event in events {
+            let chunk = parse_chat_stream_event(provider, &state, event)
+                .expect("event")
+                .expect("chunk");
+            for choice in &chunk.choices {
+                for call in choice.delta.tool_calls.iter().flatten() {
+                    let name = call.function.as_ref().and_then(|f| f.name.clone()).expect("name");
+                    calls.push((call.index, name));
+                }
+            }
+        }
+        calls
+    }
+
+    /// Revert line: remove the `renumber` call from the Gemini branch of `parse_chat_stream_event`,
+    /// and every call in a chunk of its own streams with index 0.
+    #[test]
+    fn gemini_stream_numbers_tool_calls_across_chunks() {
+        let google_ai = provider::google_ai::GoogleAiProvider::default();
+        let vertex = provider::vertex::VertexAiProvider::new("test-project", "us-central1");
+        for provider in [&google_ai as &dyn Provider, &vertex] {
+            let calls = gemini_stream_tool_calls(
+                provider,
+                &[
+                    GEMINI_CALL_CHUNK,
+                    GEMINI_TIME_CALL_CHUNK,
+                    GEMINI_TWO_CALLS_CHUNK,
+                    GEMINI_STOP_CHUNK,
+                ],
+            );
+            assert_eq!(
+                calls,
+                [
+                    (0, "get_weather".to_owned()),
+                    (1, "get_time".to_owned()),
+                    (2, "f1".to_owned()),
+                    (3, "f2".to_owned()),
+                ],
+                "provider {}",
+                provider.name()
+            );
+        }
+    }
+
+    #[test]
+    fn gemini_stream_tool_call_numbers_do_not_leak_into_the_next_stream() {
+        let provider = provider::google_ai::GoogleAiProvider::default();
+        gemini_stream_tool_calls(&provider, &[GEMINI_CALL_CHUNK, GEMINI_TIME_CALL_CHUNK]);
+        assert_eq!(
+            gemini_stream_tool_calls(&provider, &[GEMINI_CALL_CHUNK]),
+            [(0, "get_weather".to_owned())]
+        );
     }
 
     fn embed_request(model: &str, extra_body: Option<serde_json::Value>) -> EmbeddingRequest {

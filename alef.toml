@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.113.4"
+alef_version = "0.114.0"
 languages = [
   "python",
   "node",
@@ -1997,6 +1997,9 @@ result_is_bytes = true
 
 [crates.e2e.calls.file_content.overrides.c]
 result_is_bytes = true
+
+[crates.e2e.calls.file_content.overrides.wasm]
+result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.swift]
 result_is_simple = true

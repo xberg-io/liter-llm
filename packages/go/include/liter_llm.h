@@ -662,7 +662,8 @@ typedef struct LITERLLMStreamDelta LITERLLMStreamDelta;
  * The streaming wire format a provider uses for its response stream.
  *
  * Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
- * a proprietary binary EventStream framing.
+ * a proprietary binary EventStream framing.  Ollama's native API streams
+ * newline-delimited JSON.
  *
  * Deserialized from the `streaming_format` JSON field via `serde`.
  */
@@ -10167,7 +10168,7 @@ LITERLLMAlefHandle literllm_create_client_from_json(const char *json);
 /**
  * Create a client from binding-friendly options.
  * \note Returns `LiterLlmError.BadRequest` for a zero or platform-overflowing
- * `max_response_bytes`, plus the errors documented by `create_client`.
+ * `max_response_bytes`, a zero `connect_timeout_secs`, plus the errors documented by `create_client`.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
@@ -10295,10 +10296,12 @@ int32_t literllm_install_catalog_overlay_from_str(const char *catalog_json);
  * accepts, such as "gpt-4o" for "openai/gpt-4o", is not an extra entry.
  *
  * The provider argument takes a catalog provider id, such as "openai" or
- * "anthropic": the part of an entry key before the first slash. It is not a
- * routing provider name from all_providers; only some routing names are also
- * catalog ids. The listing keeps the models of that id only, compared exactly
- * and case-sensitively. An id the catalog does not hold gives an empty list.
+ * "anthropic": the part of an entry key before the first slash. It also takes
+ * a routing provider name from all_providers that the catalog files under a
+ * different id: "gemini" and "google_ai" list the "google" models, and
+ * "vertex_ai" lists the "google-vertex" models. The listing keeps the models
+ * of that id only, compared exactly and case-sensitively. An id the catalog
+ * does not hold gives an empty list.
  * When the provider is absent or empty, the listing keeps every provider.
  *
  * The list reads the catalog that the model lookup reads: the embedded

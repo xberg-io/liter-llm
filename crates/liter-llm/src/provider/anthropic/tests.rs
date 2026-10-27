@@ -385,6 +385,41 @@ fn transform_request_whitespace_system_string_is_not_sent() {
 }
 
 #[test]
+fn transform_request_blank_system_parts_are_skipped() {
+    let mut body = json!({
+        "model": "claude-3-5-sonnet-20241022",
+        "messages": [
+            {"role": "system", "content": [
+                {"type": "text", "text": ""},
+                {"type": "text", "text": "  "},
+                {"type": "text", "text": "kept"}
+            ]},
+            {"role": "user", "content": "hi"}
+        ]
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert_eq!(body["system"], json!([{"type": "text", "text": "kept"}]));
+}
+
+#[test]
+fn transform_request_only_blank_system_parts_omit_system() {
+    let mut body = json!({
+        "model": "claude-3-5-sonnet-20241022",
+        "messages": [
+            {"role": "system", "content": [{"type": "text", "text": ""}]},
+            {"role": "developer", "content": [{"type": "text", "text": "  "}]},
+            {"role": "user", "content": "hi"}
+        ]
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert!(body.get("system").is_none());
+}
+
+#[test]
 fn transform_request_whitespace_tool_result_omits_content() {
     let out = transformed_messages(json!([
         {"role": "user", "content": "go"},
@@ -905,7 +940,7 @@ fn parse_stream_event_error_event_has_the_http_error_kind() {
     for (kind, status) in cases {
         let event = format!(r#"{{"type":"error","error":{{{kind},"message":"boom"}}}}"#);
         let err = provider().parse_stream_event(&event).unwrap_err();
-        let http = crate::error::LiterLlmError::from_status(status, r#"{"error":{"message":"boom"}}"#, None);
+        let http = crate::error::LiterLlmError::from_status(status, r#"{"error":{"message":"boom"}}"#, None, false);
         assert_eq!(
             std::mem::discriminant(&err),
             std::mem::discriminant(&http),

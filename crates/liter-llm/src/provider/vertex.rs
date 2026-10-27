@@ -153,6 +153,10 @@ impl Provider for VertexAiProvider {
         "vertex_ai"
     }
 
+    fn reports_invalid_key_as_400(&self) -> bool {
+        true
+    }
+
     /// Vertex AI base URL constructed from project and location.
     ///
     /// Returns an empty string when the provider was constructed without a

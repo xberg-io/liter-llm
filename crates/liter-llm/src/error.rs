@@ -4,22 +4,6 @@
 
 use std::time::Duration;
 
-use serde::{Deserialize, Serialize};
-
-/// Error response from an OpenAI-compatible API.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct ErrorResponse {
-    error: ApiError,
-}
-
-/// Inner error object.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct ApiError {
-    message: String,
-    #[serde(default)]
-    code: Option<String>,
-}
-
 /// All errors that can occur when using `liter-llm`.
 ///
 /// Each variant carries a stable numeric `error_code` (>= 100) that bindings expose
@@ -27,7 +11,8 @@ pub(crate) struct ApiError {
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum LiterLlmError {
-    /// `status` preserves the exact HTTP status code received (401 or 403).
+    /// `status` preserves the exact HTTP status code received (usually 401 or 403;
+    /// Google reports an invalid API key as 400).
     #[cfg_attr(alef, alef(error_code = 100))]
     #[error("authentication failed: {message}")]
     Authentication { message: String, status: u16 },
@@ -361,15 +346,43 @@ impl LiterLlmError {
     /// The `retry_after` value is forwarded into [`LiterLlmError::RateLimited`]
     /// so callers can honour the server-requested delay without re-parsing the
     /// header.
-    pub(crate) fn from_status(status: u16, body: &str, retry_after: Option<Duration>) -> Self {
-        let parsed = serde_json::from_str::<ErrorResponse>(body).ok();
-        let code = parsed.as_ref().and_then(|r| r.error.code.clone());
-        let message = parsed.map(|r| r.error.message).unwrap_or_else(|| body.to_string());
+    ///
+    /// `invalid_key_as_400` is true for a provider that answers an invalid API key with a 400
+    /// whose error `details` hold the reason `API_KEY_INVALID` (Google AI and Vertex). Only
+    /// then is that 400 an [`LiterLlmError::Authentication`]. See
+    /// `Provider::reports_invalid_key_as_400`.
+    pub(crate) fn from_status(
+        status: u16,
+        body: &str,
+        retry_after: Option<Duration>,
+        invalid_key_as_400: bool,
+    ) -> Self {
+        let parsed = serde_json::from_str::<serde_json::Value>(body).ok();
+        let error = parsed.as_ref().and_then(|response| response.get("error"));
+        let code = error
+            .and_then(|error| error.get("code"))
+            .and_then(serde_json::Value::as_str);
+        let error_type = error
+            .and_then(|error| error.get("type"))
+            .and_then(serde_json::Value::as_str);
+        let google_api_key_invalid = error
+            .and_then(|error| error.get("details"))
+            .and_then(serde_json::Value::as_array)
+            .is_some_and(|details| {
+                details
+                    .iter()
+                    .any(|detail| detail.get("reason").and_then(serde_json::Value::as_str) == Some("API_KEY_INVALID"))
+            });
+        let message = error
+            .and_then(|error| error.get("message"))
+            .and_then(serde_json::Value::as_str)
+            .map_or_else(|| body.to_string(), str::to_owned);
         let message_lower = message.to_ascii_lowercase();
 
         match status {
             401 | 403 => Self::Authentication { message, status },
-            429 if code.as_deref() == Some("insufficient_quota") => Self::ProviderQuotaExceeded { message, status },
+            400 if invalid_key_as_400 && google_api_key_invalid => Self::Authentication { message, status },
+            429 if code == Some("insufficient_quota") => Self::ProviderQuotaExceeded { message, status },
             429 => Self::RateLimited { message, retry_after },
             529 => Self::ServiceUnavailable {
                 message,
@@ -377,11 +390,9 @@ impl LiterLlmError {
                 retry_after,
             },
             400 | 422 => {
-                if code.as_deref() == Some("context_length_exceeded") {
+                if code == Some("context_length_exceeded") || error_type == Some("exceed_context_size_error") {
                     Self::ContextWindowExceeded { message }
-                } else if code.as_deref() == Some("content_policy_violation")
-                    || code.as_deref() == Some("content_filter")
-                {
+                } else if code == Some("content_policy_violation") || code == Some("content_filter") {
                     Self::ContentPolicy { message }
                 }
                 // ~keep Some providers omit `code`, so classify retryable errors from stable message fragments.
@@ -390,6 +401,8 @@ impl LiterLlmError {
                     || message_lower.contains("maximum context length")
                     || message_lower.contains("prompt is too long")
                     || message_lower.contains("input token count exceeds the maximum")
+                    || message_lower.contains("exceeds the available context size")
+                    || message_lower.contains("exceed_context_size_error")
                 {
                     Self::ContextWindowExceeded { message }
                 } else if message_lower.contains("content_policy") || message_lower.contains("content_filter") {

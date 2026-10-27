@@ -142,6 +142,7 @@ e2e/csharp/obj/
 e2e/elixir/deps/
 e2e/elixir/_build/
 e2e/php/vendor/
+e2e/php/php-liter-llm.ini
 
 # Swift Package Manager
 **/.build/

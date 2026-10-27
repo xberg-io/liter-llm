@@ -45,7 +45,7 @@ pub(crate) fn transform_gemini_response(body: &mut Value) -> Result<()> {
 
     let collected = collect_parts(&parts);
     let tool_calls = tool_calls_from_parts(&parts);
-    let finish_reason = gemini_finish_reason(finish_reason_raw);
+    let finish_reason = gemini_finish_reason(finish_reason_raw, !tool_calls.is_empty());
 
     let usage = usage_metadata(body);
 
@@ -264,8 +264,12 @@ fn tool_calls_from_parts(parts: &[Value]) -> Vec<Value> {
 }
 
 /// Map a Gemini `finishReason` to an OpenAI `finish_reason`.
-fn gemini_finish_reason(finish_reason_raw: &str) -> &'static str {
+///
+/// Gemini ends a function-call turn with `STOP` plus a `functionCall` part, never
+/// `FUNCTION_CALL`, so `STOP` with tool calls maps to `tool_calls`.
+fn gemini_finish_reason(finish_reason_raw: &str, has_tool_calls: bool) -> &'static str {
     match finish_reason_raw {
+        "STOP" if has_tool_calls => "tool_calls",
         "STOP" => "stop",
         "MAX_TOKENS" => "length",
         "SAFETY" | "RECITATION" | "BLOCKLIST" | "PROHIBITED_CONTENT" | "SPII" | "IMAGE_SAFETY" => "content_filter",

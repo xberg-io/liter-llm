@@ -70,9 +70,5 @@
       "field": "choices[0].message.content.parts[1].text",
       "value": " world"
     }
-  ],
-  "skip": {
-    "languages": ["go", "c", "java", "swift", "kotlin_android"],
-    "reason": "Go, C, Java, Swift and Kotlin generate a test that reads the parts at a path or accessor the binding does not have, see xberg-io/alef#688 for every binding skipped here. Go: Content.Parts is undefined on AssistantContent. C: the parts collection JSON is NULL. Java: AssistantContent has no parts() method. Swift: content() returns a RustString with no parts(). Kotlin: the generated test cannot resolve AssistantContent.Parts or AssistantPart.Text."
-  }
+  ]
 }

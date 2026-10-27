@@ -326,6 +326,30 @@ async fn stream_tool_calls_get_distinct_indexes_and_finish_with_tool_calls() {
 }
 
 #[tokio::test]
+async fn stream_tool_calls_cut_at_the_token_limit_finish_with_tool_calls() {
+    let call = r#"{"model":"m","message":{"role":"assistant","content":"","tool_calls":[{"function":{"name":"one","arguments":{"a":1}}}]},"done":false}"#;
+    let last = LAST.replace(r#""done_reason":"stop""#, r#""done_reason":"length""#);
+    let (_, items) = stream_items(ndjson(&[call, &last])).await;
+    let chunks: Vec<_> = items.into_iter().collect::<Result<_, _>>().expect("no stream errors");
+    let finish = chunks.last().and_then(|chunk| chunk.choices[0].finish_reason.clone());
+    assert_eq!(finish, Some(FinishReason::ToolCalls));
+}
+
+#[tokio::test]
+async fn stream_and_chat_agree_on_a_tool_call_reply_cut_at_the_token_limit() {
+    let message =
+        r#""message":{"role":"assistant","content":"","tool_calls":[{"function":{"name":"one","arguments":{"a":1}}}]}"#;
+    let reply = format!(r#"{{"model":"m",{message},"done":true,"done_reason":"length"}}"#);
+    let (url, _seen) = server(200, "application/json", reply.clone());
+    let chat = client(url).chat(chat_request("ollama/m")).await.expect("chat succeeds");
+    let (_, items) = stream_items(ndjson(&[&reply])).await;
+    let chunks: Vec<_> = items.into_iter().collect::<Result<_, _>>().expect("no stream errors");
+    let streamed = chunks.last().and_then(|chunk| chunk.choices[0].finish_reason.clone());
+    assert_eq!(chat.choices[0].finish_reason, Some(FinishReason::ToolCalls));
+    assert_eq!(streamed, chat.choices[0].finish_reason);
+}
+
+#[tokio::test]
 async fn stream_thinking_becomes_reasoning_content() {
     let think = r#"{"model":"m","message":{"role":"assistant","content":"","thinking":"hmm"},"done":false}"#;
     let (_, items) = stream_items(ndjson(&[think, PART_1, LAST])).await;

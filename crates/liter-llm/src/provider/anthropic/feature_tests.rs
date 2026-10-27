@@ -896,6 +896,111 @@ fn transform_request_uses_native_structured_output_for_supported_model() {
 }
 
 #[test]
+fn transform_request_native_structured_output_closes_every_object() {
+    let mut body = json!({
+        "model": "claude-opus-5",
+        "messages": [{"role": "user", "content": "Give me structured output"}],
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {"name": "person", "schema": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "address": {"type": "object", "properties": {"city": {"type": "string"}}},
+                    "tags": {"type": "array", "items": {"type": "object", "properties": {}}},
+                    "pick": {"anyOf": [{"type": "object"}, {"type": "null"}]},
+                    "kept": {"type": "object", "additionalProperties": true},
+                    "untyped": {"properties": {"x": {"type": "string"}}}
+                },
+                "$defs": {"inner": {"type": ["object", "null"], "properties": {}}}
+            }}
+        }
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    let schema = &body["output_config"]["format"]["schema"];
+    assert_eq!(schema["additionalProperties"], false);
+    assert_eq!(schema["properties"]["address"]["additionalProperties"], false);
+    assert_eq!(schema["properties"]["tags"]["items"]["additionalProperties"], false);
+    assert_eq!(schema["properties"]["pick"]["anyOf"][0]["additionalProperties"], false);
+    assert_eq!(schema["$defs"]["inner"]["additionalProperties"], false);
+    assert_eq!(schema["properties"]["untyped"]["additionalProperties"], false);
+    assert!(schema["properties"]["name"].get("additionalProperties").is_none());
+    assert!(
+        schema["properties"]["pick"]["anyOf"][1]
+            .get("additionalProperties")
+            .is_none()
+    );
+    assert_eq!(
+        schema["properties"]["kept"]["additionalProperties"], true,
+        "a value the caller set stays as it is"
+    );
+}
+
+/// Build a request body that asks for native structured output with `schema`.
+fn structured_output_body(schema: Value) -> Value {
+    json!({
+        "model": "claude-opus-5",
+        "messages": [{"role": "user", "content": "Give me structured output"}],
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {"name": "shape", "schema": schema}
+        }
+    })
+}
+
+#[test]
+fn transform_request_native_structured_output_closes_every_keyword_position() {
+    let mut body = structured_output_body(json!({
+        "type": "object",
+        "properties": {"a": {"type": "string"}},
+        "oneOf": [{"type": "object"}, {"type": "null"}],
+        "allOf": [{"type": "object", "properties": {"b": {"type": "string"}}}, {"properties": {}}],
+        "prefixItems": [{"type": "object"}, {"type": "string"}],
+        "definitions": {"legacy": {"type": "object"}},
+        "patternProperties": {"^x": {"type": "object"}},
+        "additionalProperties": {"type": "object", "properties": {}}
+    }));
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    let schema = &body["output_config"]["format"]["schema"];
+    assert_eq!(schema["additionalProperties"]["additionalProperties"], false);
+    assert_eq!(schema["oneOf"][0]["additionalProperties"], false);
+    assert!(schema["oneOf"][1].get("additionalProperties").is_none());
+    assert_eq!(schema["allOf"][0]["additionalProperties"], false);
+    assert_eq!(schema["allOf"][1]["additionalProperties"], false);
+    assert_eq!(schema["prefixItems"][0]["additionalProperties"], false);
+    assert!(schema["prefixItems"][1].get("additionalProperties").is_none());
+    assert_eq!(schema["definitions"]["legacy"]["additionalProperties"], false);
+    assert_eq!(schema["patternProperties"]["^x"]["additionalProperties"], false);
+}
+
+#[test]
+fn transform_request_native_structured_output_leaves_negation_and_conditionals_open() {
+    let mut body = structured_output_body(json!({
+        "type": "object",
+        "properties": {"a": {"type": "string"}},
+        "not": {"type": "object", "properties": {"a": {"const": "x"}}},
+        "if": {"type": "object", "properties": {"a": {"const": "y"}}},
+        "then": {"type": "object", "properties": {"b": {"type": "string"}}},
+        "else": {"type": "object", "properties": {"c": {"type": "string"}}}
+    }));
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    let schema = &body["output_config"]["format"]["schema"];
+    assert_eq!(schema["additionalProperties"], false, "the object itself is closed");
+    for keyword in ["not", "if", "then", "else"] {
+        assert!(
+            schema[keyword].get("additionalProperties").is_none(),
+            "`{keyword}` keeps its meaning, so it is not closed"
+        );
+    }
+}
+
+#[test]
 fn transform_request_json_object_with_existing_system() {
     let mut body = json!({
         "model": "claude-3-5-sonnet-20241022",

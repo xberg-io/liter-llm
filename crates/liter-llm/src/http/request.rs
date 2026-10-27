@@ -76,6 +76,7 @@ where
             max_retries,
             max_response_bytes: None,
             timeout: None,
+            invalid_key_as_400: false,
         },
         &[],
         send,
@@ -88,11 +89,16 @@ where
 ///
 /// `timeout` is the limit of one attempt: send the request and read the reply. On native targets
 /// the HTTP client enforces the limit, and the `Deadline` built from this field does nothing.
+///
+/// `invalid_key_as_400` is [`Provider::reports_invalid_key_as_400`] of the provider that
+/// gets the request. It tells the error classifier whether a 400 with the reason
+/// `API_KEY_INVALID` is an authentication error.
 #[derive(Clone, Copy)]
 pub(crate) struct ResponseReadOptions {
     pub max_retries: u32,
     pub max_response_bytes: Option<usize>,
     pub timeout: Option<std::time::Duration>,
+    pub invalid_key_as_400: bool,
 }
 
 /// The request half of a streaming JSON `POST`: where it goes, which headers
@@ -275,6 +281,7 @@ where
         max_retries,
         max_response_bytes,
         timeout,
+        invalid_key_as_400,
     } = options;
     crate::provider::validate_outbound_url(url).await?;
     let mut attempt = 0u32;
@@ -332,7 +339,12 @@ where
             &deadline.run(read_error_text(resp, max_response_bytes)).await?,
             sensitive_values,
         );
-        return Err(LiterLlmError::from_status(status, &text, server_retry_after));
+        return Err(LiterLlmError::from_status(
+            status,
+            &text,
+            server_retry_after,
+            invalid_key_as_400,
+        ));
     }
 }
 
@@ -362,6 +374,7 @@ pub async fn post_json_raw(
             max_retries,
             max_response_bytes: None,
             timeout: None,
+            invalid_key_as_400: false,
         },
     )
     .await
@@ -442,6 +455,7 @@ pub async fn post_binary(
             max_retries,
             max_response_bytes: None,
             timeout: None,
+            invalid_key_as_400: false,
         },
     )
     .await
@@ -512,7 +526,20 @@ pub async fn post_multipart(
     extra_headers: &[(&str, &str)],
     form: reqwest::multipart::Form,
 ) -> Result<serde_json::Value> {
-    post_multipart_bounded(client, url, auth_header, extra_headers, form, None, None).await
+    post_multipart_bounded(
+        client,
+        url,
+        auth_header,
+        extra_headers,
+        form,
+        ResponseReadOptions {
+            max_retries: 0,
+            max_response_bytes: None,
+            timeout: None,
+            invalid_key_as_400: false,
+        },
+    )
+    .await
 }
 
 #[tracing::instrument(
@@ -532,9 +559,15 @@ pub(crate) async fn post_multipart_bounded(
     auth_header: Option<(&str, &str)>,
     extra_headers: &[(&str, &str)],
     form: reqwest::multipart::Form,
-    max_response_bytes: Option<usize>,
-    timeout: Option<std::time::Duration>,
+    options: ResponseReadOptions,
 ) -> Result<serde_json::Value> {
+    // ~keep A multipart body is sent once, so `max_retries` is not used.
+    let ResponseReadOptions {
+        max_response_bytes,
+        timeout,
+        invalid_key_as_400,
+        ..
+    } = options;
     crate::provider::validate_outbound_url(url).await?;
     let deadline = Deadline::after(timeout);
     let mut builder = client.post(url).multipart(form);
@@ -562,7 +595,12 @@ pub(crate) async fn post_multipart_bounded(
             &deadline.run(read_error_text(resp, max_response_bytes)).await?,
             &secrets,
         );
-        return Err(LiterLlmError::from_status(status, &text, server_retry_after));
+        return Err(LiterLlmError::from_status(
+            status,
+            &text,
+            server_retry_after,
+            invalid_key_as_400,
+        ));
     }
 
     deadline.run(read_response_json(resp, max_response_bytes)).await
@@ -592,6 +630,7 @@ pub async fn get_json_raw(
             max_retries,
             max_response_bytes: None,
             timeout: None,
+            invalid_key_as_400: false,
         },
     )
     .await
@@ -665,6 +704,7 @@ pub async fn delete_json(
             max_retries,
             max_response_bytes: None,
             timeout: None,
+            invalid_key_as_400: false,
         },
     )
     .await
@@ -738,6 +778,7 @@ pub async fn get_binary(
             max_retries,
             max_response_bytes: None,
             timeout: None,
+            invalid_key_as_400: false,
         },
     )
     .await
