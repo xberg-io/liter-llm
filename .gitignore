@@ -342,6 +342,8 @@ test_apps/java/.mvn/wrapper/*
 
 # Agent harness output outside the ai-rulez managed block: the machine-local overlay,
 # plugin-root manifests, and presets this repository does not enable.
+.ai-rulez/config.local.*
+.ai-rulez/local/
 **/.ai-rulez/.generated-manifest.local.json
 plugin/.ai-rulez/.generated-manifest.json
 .agents/settings.json
