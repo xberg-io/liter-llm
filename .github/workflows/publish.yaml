@@ -3907,7 +3907,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
-      - name: Install reviewed ai-rulez
+      - name: Install ai-rulez
         uses: xberg-io/actions/setup-ai-rulez@v1
         with:
           ai-rulez-version: "latest"
@@ -3981,7 +3981,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
-      - name: Install reviewed ai-rulez
+      - name: Install ai-rulez
         uses: xberg-io/actions/setup-ai-rulez@v1
         with:
           ai-rulez-version: "latest"
