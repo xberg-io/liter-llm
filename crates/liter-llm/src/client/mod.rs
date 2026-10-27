@@ -188,8 +188,8 @@ struct ChatStreamState {
     tool_calls_seen: u32,
     /// A Gemini chunk of this stream carried a tool call.
     gemini_tool_call_seen: bool,
-    /// The tool calls of an Anthropic stream, so each gets its number among the tool calls.
-    anthropic_tool_calls: provider::ToolCallNumbering,
+    /// The tool calls of an Anthropic or Gemini stream, so each gets its number among the tool calls.
+    tool_calls: provider::ToolCallNumbering,
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -246,9 +246,10 @@ fn parse_chat_stream_event(
     if matches!(provider.name(), "google_ai" | "vertex_ai") {
         state.model.clone_from(&chunk.model);
         finish_gemini_tool_stream(&mut chunk, &mut state.gemini_tool_call_seen);
+        state.tool_calls.renumber(&mut chunk);
         return Ok(Some(chunk));
     }
-    state.anthropic_tool_calls.renumber(&mut chunk);
+    state.tool_calls.renumber(&mut chunk);
     if let Some(usage) = chunk.usage.as_mut() {
         let aggregate = state.usage.get_or_insert_with(Usage::default);
         aggregate.prompt_tokens = aggregate.prompt_tokens.max(usage.prompt_tokens);
@@ -267,23 +268,25 @@ fn parse_chat_stream_event(
     Ok(Some(chunk))
 }
 
-/// Read one Bedrock stream event, and number its tool calls among the tool calls of the stream.
+/// The event reader of one Bedrock stream.
+///
+/// The reader owns the tool call numbering of its stream, and numbers the tool calls of every
+/// event it reads among the tool calls of the stream. Make one reader for each stream.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-fn parse_bedrock_chat_event(
-    tool_calls: &std::sync::Mutex<provider::ToolCallNumbering>,
-    event_type: &str,
-    payload: &str,
-) -> Result<Option<ChatCompletionChunk>> {
-    let Some(mut chunk) = provider::bedrock::parse_bedrock_stream_event(event_type, payload)? else {
-        return Ok(None);
-    };
-    tool_calls
-        .lock()
-        .map_err(|_| LiterLlmError::InternalError {
-            message: "chat stream state lock poisoned".into(),
-        })?
-        .renumber(&mut chunk);
-    Ok(Some(chunk))
+fn bedrock_stream_reader() -> impl Fn(&str, &str) -> Result<Option<ChatCompletionChunk>> + Send + 'static {
+    let tool_calls = std::sync::Mutex::new(provider::ToolCallNumbering::default());
+    move |event_type: &str, payload: &str| {
+        let Some(mut chunk) = provider::bedrock::parse_bedrock_stream_event(event_type, payload)? else {
+            return Ok(None);
+        };
+        tool_calls
+            .lock()
+            .map_err(|_| LiterLlmError::InternalError {
+                message: "chat stream state lock poisoned".into(),
+            })?
+            .renumber(&mut chunk);
+        Ok(Some(chunk))
+    }
 }
 
 /// Whether a chat chunk ends the reply: some choice carries a finish reason.
@@ -1434,7 +1437,6 @@ impl DefaultClient {
                 .map_err(|e| prepared.provider.transform_error(e))?
             }
             provider::StreamFormat::AwsEventStream => {
-                let tool_calls = std::sync::Mutex::new(provider::ToolCallNumbering::default());
                 http::eventstream::post_eventstream_bounded(
                     &self.http_stream,
                     http::request::StreamingPost {
@@ -1443,7 +1445,7 @@ impl DefaultClient {
                         extra_headers: &extra,
                         body: prepared.body_bytes,
                     },
-                    move |event_type: &str, payload: &str| parse_bedrock_chat_event(&tool_calls, event_type, payload),
+                    bedrock_stream_reader(),
                     self.response_read_options(prepared.provider.as_ref()),
                 )
                 .await?
@@ -4483,7 +4485,7 @@ mod build_provider_tests {
         calls
     }
 
-    /// Revert line: make `ToolCallNumbering::renumber` in `provider/anthropic/stream.rs` leave
+    /// Revert line: make `ToolCallNumbering::renumber` in `provider/tool_call_numbering.rs` leave
     /// `call.index` as the block number, and a text block before the call gives it index 1.
     #[test]
     fn anthropic_stream_numbers_a_tool_call_after_text_from_zero() {
@@ -4579,11 +4581,11 @@ mod build_provider_tests {
         );
     }
 
-    /// Revert line: remove the `renumber` call from `parse_bedrock_chat_event`, and the first
+    /// Revert line: remove the `renumber` call from `bedrock_stream_reader`, and the first
     /// tool call after a text block keeps the Bedrock block number 1.
     #[test]
     fn bedrock_stream_numbers_tool_calls_after_text_from_zero() {
-        let tool_calls = std::sync::Mutex::new(provider::ToolCallNumbering::default());
+        let reader = bedrock_stream_reader();
         let events = [
             (
                 "contentBlockDelta",
@@ -4610,12 +4612,41 @@ mod build_provider_tests {
         ];
         let mut indexes = Vec::new();
         for (event_type, payload) in events {
-            let chunk = parse_bedrock_chat_event(&tool_calls, event_type, payload).expect("event");
+            let chunk = reader(event_type, payload).expect("event");
             for choice in chunk.iter().flat_map(|chunk| &chunk.choices) {
                 indexes.extend(choice.delta.tool_calls.iter().flatten().map(|call| call.index));
             }
         }
         assert_eq!(indexes, [0, 0, 1, 1]);
+    }
+
+    fn bedrock_tool_call_start(block: u32, id: &str) -> String {
+        format!(r#"{{"contentBlockIndex":{block},"start":{{"toolUse":{{"toolUseId":"{id}","name":"f"}}}}}}"#)
+    }
+
+    fn bedrock_tool_call_index(reader: &impl Fn(&str, &str) -> Result<Option<ChatCompletionChunk>>, block: u32) -> u32 {
+        let chunk = reader("contentBlockStart", &bedrock_tool_call_start(block, "tooluse_1"))
+            .expect("event")
+            .expect("chunk");
+        chunk.choices[0].delta.tool_calls.as_ref().expect("tool calls")[0].index
+    }
+
+    /// Revert line: move the `Mutex::new` in `bedrock_stream_reader` into the returned closure, and
+    /// the numbering restarts at every event, so the second call streams with index 0.
+    #[test]
+    fn bedrock_stream_reader_keeps_the_numbering_for_the_whole_stream() {
+        let reader = bedrock_stream_reader();
+        assert_eq!(bedrock_tool_call_index(&reader, 1), 0);
+        assert_eq!(bedrock_tool_call_index(&reader, 2), 1);
+        assert_eq!(bedrock_tool_call_index(&reader, 3), 2);
+    }
+
+    #[test]
+    fn bedrock_stream_readers_do_not_share_numbering() {
+        let first = bedrock_stream_reader();
+        assert_eq!(bedrock_tool_call_index(&first, 1), 0);
+        assert_eq!(bedrock_tool_call_index(&first, 2), 1);
+        assert_eq!(bedrock_tool_call_index(&bedrock_stream_reader(), 1), 0);
     }
 
     const GEMINI_CALL_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"get_weather","args":{"city":"Paris"}}}]}}]}"#;
@@ -4680,6 +4711,68 @@ mod build_provider_tests {
         assert_eq!(
             gemini_stream_finish(&provider, &[GEMINI_STOP_CHUNK]),
             [Some(crate::types::FinishReason::Stop)]
+        );
+    }
+
+    const GEMINI_TIME_CALL_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"get_time","args":{"city":"Paris"}}}]}}]}"#;
+    const GEMINI_TWO_CALLS_CHUNK: &str = r#"{"candidates":[{"content":{"role":"model","parts":[{"functionCall":{"name":"f1","args":{}}},{"functionCall":{"name":"f2","args":{}}}]}}]}"#;
+
+    /// Run the events of one Gemini stream through the client's stream state, and list every
+    /// streamed tool call as `(index, name)`.
+    fn gemini_stream_tool_calls(provider: &dyn Provider, events: &[&str]) -> Vec<(u32, String)> {
+        let state = std::sync::Mutex::new(ChatStreamState::default());
+        let mut calls = Vec::new();
+        for event in events {
+            let chunk = parse_chat_stream_event(provider, &state, event)
+                .expect("event")
+                .expect("chunk");
+            for choice in &chunk.choices {
+                for call in choice.delta.tool_calls.iter().flatten() {
+                    let name = call.function.as_ref().and_then(|f| f.name.clone()).expect("name");
+                    calls.push((call.index, name));
+                }
+            }
+        }
+        calls
+    }
+
+    /// Revert line: remove the `renumber` call from the Gemini branch of `parse_chat_stream_event`,
+    /// and every call in a chunk of its own streams with index 0.
+    #[test]
+    fn gemini_stream_numbers_tool_calls_across_chunks() {
+        let google_ai = provider::google_ai::GoogleAiProvider::default();
+        let vertex = provider::vertex::VertexAiProvider::new("test-project", "us-central1");
+        for provider in [&google_ai as &dyn Provider, &vertex] {
+            let calls = gemini_stream_tool_calls(
+                provider,
+                &[
+                    GEMINI_CALL_CHUNK,
+                    GEMINI_TIME_CALL_CHUNK,
+                    GEMINI_TWO_CALLS_CHUNK,
+                    GEMINI_STOP_CHUNK,
+                ],
+            );
+            assert_eq!(
+                calls,
+                [
+                    (0, "get_weather".to_owned()),
+                    (1, "get_time".to_owned()),
+                    (2, "f1".to_owned()),
+                    (3, "f2".to_owned()),
+                ],
+                "provider {}",
+                provider.name()
+            );
+        }
+    }
+
+    #[test]
+    fn gemini_stream_tool_call_numbers_do_not_leak_into_the_next_stream() {
+        let provider = provider::google_ai::GoogleAiProvider::default();
+        gemini_stream_tool_calls(&provider, &[GEMINI_CALL_CHUNK, GEMINI_TIME_CALL_CHUNK]);
+        assert_eq!(
+            gemini_stream_tool_calls(&provider, &[GEMINI_CALL_CHUNK]),
+            [(0, "get_weather".to_owned())]
         );
     }
 
