@@ -21,10 +21,23 @@ setup() {
 	write_mock_server
 }
 
+# Stop a server that the script under test failed to stop. The stub inherits Bats' output
+# descriptor (fd 3); a leaked stub would hold it open and hang the whole run instead of failing
+# one test. ~keep
+teardown() {
+	local pid
+	if [ -f "$XBERG_WORK/server.pid" ]; then
+		pid="$(cat "$XBERG_WORK/server.pid")"
+		kill "$pid" 2>/dev/null || true
+	fi
+}
+
 # A server that records its pid and argv, prints the announcement lines, and exits on SIGTERM.
+# It closes fd 3 first, so a leaked server cannot keep the Bats output pipe open.
 write_mock_server() {
 	printf '%s\n' \
 		'#!/usr/bin/env bash' \
+		'exec 3>&-' \
 		'printf "%s\n" "$$" >"$XBERG_WORK/server.pid"' \
 		'printf "%s\n" "$*" >"$XBERG_WORK/server.args"' \
 		'printf "MOCK_SERVER_URL=http://127.0.0.1:4010\n"' \

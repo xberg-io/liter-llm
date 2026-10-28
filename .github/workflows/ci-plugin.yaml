@@ -24,7 +24,7 @@ on:
       - ".task/tools/version-sync.yml"
       - ".task/tools/plugin.yml"
       - "scripts/tests/**"
-      # Every shell script is covered by a Bats suite, so a script edit runs the suites. ~keep
+      # Every script under scripts/ has a Bats suite, so a script edit runs the suites. ~keep
       - "scripts/**/*.sh"
       - "Taskfile.yml"
       - "test_apps/homebrew/**"
@@ -49,7 +49,7 @@ on:
       - ".task/tools/version-sync.yml"
       - ".task/tools/plugin.yml"
       - "scripts/tests/**"
-      # Every shell script is covered by a Bats suite, so a script edit runs the suites. ~keep
+      # Every script under scripts/ has a Bats suite, so a script edit runs the suites. ~keep
       - "scripts/**/*.sh"
       - "Taskfile.yml"
       - "test_apps/homebrew/**"

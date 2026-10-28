@@ -9,7 +9,11 @@
 setup() {
 	bats_load_library xberg-bats
 	xberg_setup
-	python3 -c 'import tomllib' 2>/dev/null || skip "python3 with tomllib is required"
+	# A host without tomllib must turn the suite red, not hide it. ~keep
+	python3 -c 'import tomllib' 2>/dev/null || {
+		echo "python3 with tomllib (3.11 or newer) is required" >&2
+		return 1
+	}
 
 	SOURCE="$(cd "$BATS_TEST_DIRNAME/../../.." && pwd -P)/scripts/php/smoke.sh"
 	REPO="$XBERG_WORK/repo"
@@ -81,4 +85,23 @@ setup() {
 	run bash "$SCRIPT"
 
 	xberg_assert_status 3
+}
+
+@test "php-smoke should_use_the_first_existing_candidate_library_in_order" {
+	local candidates=(
+		"target/release/libliter_llm_php.so"
+		"target/release/libliter_llm_php.dylib"
+		"crates/liter-llm-php/target/release/libliter_llm_php.so"
+		"crates/liter-llm-php/target/release/libliter_llm_php.dylib"
+	)
+	local i
+	mkdir -p "$REPO/crates/liter-llm-php/target/release"
+	for i in 3 2 1 0; do
+		: >"$REPO/${candidates[$i]}"
+		: >"$XBERG_TRACE"
+		run bash "$SCRIPT"
+
+		xberg_assert_status 0
+		xberg_assert_trace "-n -d extension=$REPO/${candidates[$i]} $REPO/scripts/php/smoke.php 9.8.7"
+	done
 }
