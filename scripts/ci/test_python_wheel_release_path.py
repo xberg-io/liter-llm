@@ -38,7 +38,7 @@ def workflow(name: str) -> dict:
 def test_release_builds_an_intel_macos_wheel_on_the_arm64_runner() -> None:
     legs = {leg["label"]: leg for leg in wheel_job()["strategy"]["matrix"]["include"]}
     intel = legs["macos-x86_64"]
-    assert intel["runner"] == "macos-latest"
+    assert intel["runner"] == "macos-26"
     assert intel["cibw_archs_macos"] == "x86_64"
     assert intel["wheel_macho_arch"] == "x86_64"
     assert intel["wheel_platform"] == "macosx_11_0_x86_64"
@@ -58,8 +58,8 @@ def test_release_and_pull_request_check_build_wheels_with_the_same_workflow() ->
 RELEASE_WHEEL_LEGS = {
     "linux-x86_64": ("ubuntu-latest", "auto", "manylinux.*_x86_64", None),
     "linux-aarch64": ("ubuntu-24.04-arm", "auto", "manylinux.*_aarch64", None),
-    "macos-arm64": ("macos-latest", "arm64", "macosx_11_0_arm64", "arm64"),
-    "macos-x86_64": ("macos-latest", "x86_64", "macosx_11_0_x86_64", "x86_64"),
+    "macos-arm64": ("macos-26", "arm64", "macosx_11_0_arm64", "arm64"),
+    "macos-x86_64": ("macos-26", "x86_64", "macosx_11_0_x86_64", "x86_64"),
     "windows-x86_64": ("windows-latest", "auto", "win_amd64", None),
 }
 

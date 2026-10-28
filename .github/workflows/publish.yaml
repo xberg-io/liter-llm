@@ -336,7 +336,7 @@ jobs:
       matrix:
         include:
           - label: macos-arm64
-            runner: macos-latest
+            runner: macos-26
             lib_name: libliter_llm_dart.dylib
             pub_name: libliter_llm_dart.dylib
           - label: linux-x86_64
@@ -498,10 +498,10 @@ jobs:
           # hours, wedging the whole release. Apple ships both slices, so
           # x86_64-apple-darwin builds natively here with no extra toolchain.
           - label: darwin-x64
-            runner: macos-latest
+            runner: macos-26
             napi_target: x86_64-apple-darwin
           - label: darwin-arm64
-            runner: macos-latest
+            runner: macos-26
             napi_target: aarch64-apple-darwin
           - label: win32-x64-msvc
             runner: windows-latest
@@ -597,7 +597,7 @@ jobs:
             runner: ubuntu-24.04-arm
             ruby_platform: aarch64-linux
           - label: macos-arm64
-            runner: macos-latest
+            runner: macos-26
             ruby_platform: arm64-darwin
     env:
       RB_SYS_CARGO_PROFILE: release
@@ -709,7 +709,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
             lib_ext: so
           - label: macos-arm64
-            runner: macos-latest
+            runner: macos-26
             target: aarch64-apple-darwin
             lib_ext: dylib
           - label: windows-x86_64
@@ -794,7 +794,7 @@ jobs:
           - os: ubuntu-24.04-arm
             label: linux-arm64
             target: aarch64-unknown-linux-gnu
-          - os: macos-latest
+          - os: macos-26
             label: macos-arm64
             target: aarch64-apple-darwin
           - os: windows-latest
@@ -803,7 +803,7 @@ jobs:
         exclude:
           - php: "8.5"
             platform:
-              os: macos-latest
+              os: macos-26
               label: macos-arm64
               target: aarch64-apple-darwin
     steps:
@@ -907,7 +907,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
             rid: linux-arm64
           - label: macos-arm64
-            runner: macos-latest
+            runner: macos-26
             target: aarch64-apple-darwin
             rid: osx-arm64
           # ~keep Cross-compiled from the arm64 image on purpose, mirroring
@@ -918,7 +918,7 @@ jobs:
           # it, and the LiterLlm.csproj RuntimeIdentifiers/runtime.json.template
           # both declare osx-x64 support that was never actually built.
           - label: macos-x86_64
-            runner: macos-latest
+            runner: macos-26
             target: x86_64-apple-darwin
             rid: osx-x64
           - label: windows-x86_64
@@ -2430,7 +2430,7 @@ jobs:
     needs: [prepare]
     if: >-
       ${{ !inputs.plugins-only && ((needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.prepare.outputs.release_swift == 'true') }}
-    runs-on: macos-latest
+    runs-on: macos-26
     timeout-minutes: 180
     env:
       MACOSX_DEPLOYMENT_TARGET: "13.0"
@@ -2745,7 +2745,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
             archive: tar.gz
           - label: macos-aarch64
-            runner: macos-latest
+            runner: macos-26
             target: aarch64-apple-darwin
             archive: tar.gz
           - label: windows-x86_64
@@ -3135,7 +3135,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-latest, bottle_tag: arm64_sequoia, install_brew: false }
+          - { os: macos-26, bottle_tag: arm64_tahoe, install_brew: false }
           # ~keep The Intel macOS `sequoia` bottle is deliberately absent, not forgotten. From
           # 2026-09-01 Homebrew serves no `openssl@3` bottle for x86_64 macOS -- "We do not provide
           # support for this platform (as-of September 2026, announced August 2025)", after Apple

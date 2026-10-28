@@ -86,7 +86,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          - os: macos-latest
+          - os: macos-26
             target: aarch64-apple-darwin
           - os: windows-latest
             target: x86_64-pc-windows-msvc
@@ -135,7 +135,7 @@ jobs:
     name: E2E (${{ matrix.lang }})
     if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
     needs: [build-ffi]
-    runs-on: ${{ matrix.lang == 'swift' && 'macos-14' || 'ubuntu-24.04-arm' }}
+    runs-on: ${{ matrix.lang == 'swift' && 'macos-26' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 60
     strategy:
       fail-fast: false

@@ -62,7 +62,7 @@ jobs:
   ios-check:
     name: iOS cargo check (${{ matrix.target }})
     if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
-    runs-on: macos-latest
+    runs-on: macos-26
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -82,7 +82,7 @@ jobs:
   xcframework-build:
     name: Build iOS XCFramework
     if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
-    runs-on: macos-latest
+    runs-on: macos-26
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7

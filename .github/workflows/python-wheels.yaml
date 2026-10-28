@@ -38,7 +38,7 @@ jobs:
             cibw_archs_macos: auto
             wheel_platform: "manylinux.*_aarch64"
           - label: macos-arm64
-            runner: macos-latest
+            runner: macos-26
             cibw_archs_macos: arm64
             wheel_platform: "macosx_11_0_arm64"
             wheel_macho_arch: arm64
@@ -47,7 +47,7 @@ jobs:
           # Apple ships both slices, so x86_64-apple-darwin builds here with only the extra
           # Rust target below. The wheel is never executed, so no Rosetta is involved.
           - label: macos-x86_64
-            runner: macos-latest
+            runner: macos-26
             cibw_archs_macos: x86_64
             wheel_platform: "macosx_11_0_x86_64"
             wheel_macho_arch: x86_64
