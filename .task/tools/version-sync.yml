@@ -31,6 +31,9 @@ tasks:
       - python3 scripts/sync_plugin_version.py
       - python3 scripts/ci/check_consumer_versions.py --sync
       - task: :plugin:generate
+      # ~keep The plugin skill files carry the version, so the ai-rulez lock digests change
+      # with every bump. Refresh the lock here so the bump and the lock land in one commit.
+      - "{{.AI_RULEZ}} -C .ai-rulez lock"
       # ~keep The gate. A bump is not finished because the commands above exited 0 -- each
       # reports only on what it writes. `alef verify` is the only step that looks at the whole
       # managed surface at once. Read its output: it exits 0 while still reporting frozen paths
