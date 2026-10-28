@@ -315,6 +315,7 @@ poly.local.toml
 **/.alef/
 
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
+.ai-rulez/.config.local.*
 .ai-rulez/.generated-manifest.json
 .opencode/agents/
 .opencode/commands/
