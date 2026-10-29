@@ -28,7 +28,7 @@ def main() -> None:
     if original == updated:
         return
     if "--check" in sys.argv:
-        raise SystemExit(f"Dart consumer must require liter_llm {version}; run task version:sync")
+        raise SystemExit(f"Dart consumer must require liter_llm {version}; run mise run version:sync")
     path.write_text(updated)
 
 

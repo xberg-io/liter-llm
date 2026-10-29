@@ -63,8 +63,8 @@ then
   echo "To use this file with PHPUnit:"
   echo "  php -c $INI_FILE vendor/bin/phpunit"
   echo ""
-  echo "Or pass it to task:"
-  echo "  task php:test:ci"
+  echo "The PHP e2e suite (alef.toml [crates.test.php]) creates and uses it:"
+  echo "  mise run php:e2e:test"
 else
   echo "✗ Failed to create INI file"
   exit 1
