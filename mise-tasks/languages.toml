@@ -79,7 +79,7 @@ run = ["python3 --version", "uv --version", "uv sync --no-install-project"]
 
 ["python:build"]
 description = "Build Python wheel via maturin (uv sync)"
-dir = "packages/python"
+dir = "{{config_root}}/packages/python"
 run = "uv sync"
 
 ["python:format"]
@@ -129,7 +129,7 @@ run = [{ task = "python:e2e:generate" }, { task = "python:e2e:lint" }, { task = 
 
 ["node:deps"]
 description = "Install Node.js dependencies"
-dir = "crates/liter-llm-node"
+dir = "{{config_root}}/crates/liter-llm-node"
 run = "pnpm install"
 
 ["node:install"]
@@ -142,17 +142,17 @@ run = ["corepack up", "pnpm up --latest -r", "pnpm up --latest -w"]
 
 ["node:build"]
 description = "Build NAPI-RS native module (release)"
-dir = "crates/liter-llm-node"
+dir = "{{config_root}}/crates/liter-llm-node"
 run = "pnpm exec napi build --no-js --dts index.native.d.ts --release"
 
 ["node:build:dev"]
 description = "Build NAPI-RS native module (debug)"
-dir = "crates/liter-llm-node"
+dir = "{{config_root}}/crates/liter-llm-node"
 run = "pnpm exec napi build --no-js --dts index.native.d.ts"
 
 ["node:test"]
 description = "Smoke test Node.js native module"
-dir = "crates/liter-llm-node"
+dir = "{{config_root}}/crates/liter-llm-node"
 run = """node -e "const m = require('./'); console.log('Module loaded:', Object.keys(m))\""""
 
 ["node:lint"]
@@ -177,7 +177,7 @@ run = "pnpm exec tsc --noEmit --project tsconfig.json"
 
 ["node:clean"]
 description = "Clean Node.js build artifacts"
-dir = "crates/liter-llm-node"
+dir = "{{config_root}}/crates/liter-llm-node"
 run = "rm -f *.node"
 
 ["node:e2e:generate"]
@@ -213,7 +213,7 @@ run = [{ task = "wasm:build:node" }]
 
 ["wasm:test"]
 description = "Run WASM tests"
-dir = "crates/liter-llm-wasm"
+dir = "{{config_root}}/crates/liter-llm-wasm"
 run = "wasm-pack test --headless --firefox"
 
 ["wasm:lint:check"]
@@ -227,7 +227,7 @@ run = "cargo test --target wasm32-unknown-unknown -p liter-llm --no-default-feat
 
 ["wasm:clean"]
 description = "Clean WASM build artifacts"
-dir = "crates/liter-llm-wasm"
+dir = "{{config_root}}/crates/liter-llm-wasm"
 run = "rm -rf pkg target"
 
 ["wasm:e2e:generate"]
@@ -237,7 +237,7 @@ run = "alef e2e generate --lang wasm"
 ["wasm:e2e:setup"]
 description = "Build the Node.js-target WASM pkg and install e2e deps"
 depends = ["wasm:build:node"]
-dir = "e2e/wasm"
+dir = "{{config_root}}/e2e/wasm"
 run = "pnpm install"
 
 ["wasm:update"]
@@ -253,7 +253,7 @@ run = "alef test --lang wasm --e2e"
 
 ["go:install"]
 description = "Install Go tools and modules"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 run = ["go mod tidy", "go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest"]
 run_windows = "go mod tidy"
 
@@ -267,66 +267,66 @@ run = "cargo build -p liter-llm-ffi --release"
 
 ["go:build"]
 description = "Build Go bindings (requires Rust FFI to be built first)"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 env.CGO_ENABLED = "1"
 run = "go build ./..."
 
 ["go:build:dev"]
 description = "Build Go bindings in debug mode (requires Rust FFI to be built first)"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 env.CGO_ENABLED = "1"
 run = "go build ./..."
 
 ["go:build:release"]
 description = "Build Go bindings in release mode (optimized, requires Rust FFI to be built first)"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 env.CGO_ENABLED = "1"
 run = 'go build -ldflags="-s -w" ./...'
 
 ["go:build:ci"]
 description = "Build Go bindings in CI mode (requires Rust FFI to be built first)"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 env.CGO_ENABLED = "1"
 run = "go build ./..."
 
 ["go:test"]
 description = "Run Go unit tests"
 depends = ["go:build:ffi"]
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 env.CGO_ENABLED = "1"
 run = "go test -v ./..."
 
 ["go:test:ci"]
 description = "Run Go tests in CI mode"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 env = { RUST_BACKTRACE = "full", RUST_LIB_BACKTRACE = "1", CI = "true", CGO_ENABLED = "1" }
 run = "go test -timeout 10m -v ./..."
 
 ["go:test:verbose"]
 description = "Run Go tests with verbose output"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 run = "go test -v ./..."
 
 ["go:lint"]
 description = "Lint and format Go code with auto-fix (golangci-lint + gofmt)"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 env.CGO_ENABLED = "1"
 run = "gofmt -w . && golangci-lint run ./..."
 
 ["go:lint:check"]
 description = "Lint and format Go code in check-only mode (golangci-lint + gofmt, no fixes)"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 env.CGO_ENABLED = "1"
 run = "golangci-lint run ./..."
 
 ["go:format"]
 description = "Format Go code with modifications (gofmt)"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 run = "gofmt -w ."
 
 ["go:format:check"]
 description = "Check Go code formatting without modifications (gofmt)"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 run = 'test -z "$(gofmt -l .)"'
 run_windows = """pwsh -Command "$diff = gofmt -l .; if ($diff) { Write-Error 'Go formatting issues found'; exit 1 }\""""
 
@@ -341,12 +341,12 @@ run = "python3 scripts/ci/go/vendor-ffi.py --clean"
 
 ["go:clean"]
 description = "Clean Go build cache"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 run = "go clean -cache"
 
 ["go:update"]
 description = "Update Go dependencies and linters"
-dir = "packages/go"
+dir = "{{config_root}}/packages/go"
 run = ["go get -u ./... && go mod tidy", "go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest"]
 run_windows = "go get -u ./... && go mod tidy"
 
@@ -463,7 +463,7 @@ run = [{ task = "java:build" }, { task = "java:e2e:generate" }, { task = "java:e
 
 ["csharp:install"]
 description = "Restore C# dependencies"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 run = "dotnet restore LiterLlm/LiterLlm.csproj"
 
 ["csharp:build:ffi"]
@@ -472,56 +472,56 @@ run = "cargo build -p liter-llm-ffi --release"
 
 ["csharp:build"]
 description = "Build C# binding (depends on Rust FFI)"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 run = "dotnet build LiterLlm/LiterLlm.csproj -c Release"
 
 ["csharp:build:dev"]
 description = "Build C# binding in debug mode"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 run = "dotnet build LiterLlm/LiterLlm.csproj -c Debug"
 
 ["csharp:build:release"]
 description = "Build C# binding in release mode (optimized)"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 run = "dotnet build LiterLlm/LiterLlm.csproj -c Release"
 
 ["csharp:build:ci"]
 description = "Build C# binding in CI mode"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 run = "dotnet build LiterLlm/LiterLlm.csproj -c Release"
 
 ["csharp:package"]
 description = "Pack C# NuGet package for publishing"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 run = "dotnet pack LiterLlm/LiterLlm.csproj -c Release --no-build"
 
 ["csharp:test"]
 description = "Run C# tests (requires FFI built first)"
 depends = ["csharp:build:ffi"]
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 env.LD_LIBRARY_PATH = "{{config_root}}/target/release:{{ get_env(name='LD_LIBRARY_PATH', default='') }}"
 env.DYLD_LIBRARY_PATH = "{{config_root}}/target/release:{{ get_env(name='DYLD_LIBRARY_PATH', default='') }}"
 run = "dotnet test LiterLlm/LiterLlm.csproj -c Release"
 
 ["csharp:test:ci"]
 description = "Run C# tests in CI mode"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 env.DOTNET_CLI_TELEMETRY_OPTOUT = "true"
 run = "dotnet test LiterLlm/LiterLlm.csproj -c Release"
 
 ["csharp:test:verbose"]
 description = "Run C# tests with verbose output"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 run = "dotnet test LiterLlm/LiterLlm.csproj -c Release --verbosity detailed"
 
 ["csharp:lint"]
 description = "Lint all C# code for style violations with auto-fix (dotnet format)"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 run = "dotnet format LiterLlm/LiterLlm.csproj"
 
 ["csharp:lint:check"]
 description = "Check all C# code style violations without modifications (dotnet format verify)"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 run = ["dotnet restore LiterLlm/LiterLlm.csproj", "dotnet format LiterLlm/LiterLlm.csproj --verify-no-changes"]
 
 ["csharp:format"]
@@ -534,7 +534,7 @@ run = [{ task = "csharp:lint:check" }]
 
 ["csharp:clean"]
 description = "Clean C# build artifacts"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 run = [
   """python -c "import shutil; [shutil.rmtree(d, ignore_errors=True) for d in ['bin', 'obj', '.vs']]\"""",
   "dotnet clean LiterLlm/LiterLlm.csproj",
@@ -542,7 +542,7 @@ run = [
 
 ["csharp:update"]
 description = "Update C# dependencies to latest versions (including major versions)"
-dir = "packages/csharp"
+dir = "{{config_root}}/packages/csharp"
 run = [
   "dotnet tool install --global dotnet-outdated-tool || dotnet tool update --global dotnet-outdated-tool",
   "dotnet outdated LiterLlm/LiterLlm.csproj --upgrade",
@@ -624,7 +624,7 @@ run = "alef test --lang php --e2e"
 
 ["ruby:deps"]
 description = "Install Ruby dependencies"
-dir = "packages/ruby"
+dir = "{{config_root}}/packages/ruby"
 run = "bundle install"
 
 ["ruby:install"]
@@ -633,33 +633,33 @@ run = [{ task = "ruby:deps" }]
 
 ["ruby:update"]
 description = "Update Ruby dependencies to latest versions"
-dir = "packages/ruby"
+dir = "{{config_root}}/packages/ruby"
 run = ["bundle update --all --conservative=false", "bundle outdated || true"]
 
 ["ruby:build"]
 description = "Build Ruby native extension (requires Ruby 3.2-3.4 via rbenv)"
-dir = "packages/ruby"
+dir = "{{config_root}}/packages/ruby"
 env.CARGO_TARGET_DIR = "{{config_root}}/target"
 run = "bundle exec rake compile"
 
 ["ruby:test"]
 description = "Run Ruby tests"
-dir = "packages/ruby"
+dir = "{{config_root}}/packages/ruby"
 run = "bundle exec rspec"
 
 ["ruby:format"]
 description = "Format Ruby code"
-dir = "packages/ruby"
+dir = "{{config_root}}/packages/ruby"
 run = "bundle exec rubocop --config .rubocop.yml --autocorrect-all ."
 
 ["ruby:format:check"]
 description = "Check Ruby formatting (CI)"
-dir = "packages/ruby"
+dir = "{{config_root}}/packages/ruby"
 run = "bundle exec rubocop --config .rubocop.yml --format simple ."
 
 ["ruby:lint"]
 description = "Lint Ruby code"
-dir = "packages/ruby"
+dir = "{{config_root}}/packages/ruby"
 run = "bundle exec rubocop --config .rubocop.yml ."
 
 ["ruby:lint:check"]
@@ -668,17 +668,17 @@ run = [{ task = "ruby:format:check" }]
 
 ["ruby:typecheck"]
 description = "Run Steep type checking"
-dir = "packages/ruby"
+dir = "{{config_root}}/packages/ruby"
 run = "bundle exec steep check"
 
 ["ruby:rbs-validate"]
 description = "Validate RBS type signatures"
-dir = "packages/ruby"
+dir = "{{config_root}}/packages/ruby"
 run = "bundle exec rbs validate"
 
 ["ruby:clean"]
 description = "Clean Ruby build artifacts"
-dir = "packages/ruby"
+dir = "{{config_root}}/packages/ruby"
 run = "rm -rf tmp lib/liter_llm/liter_llm_ruby.* vendor/liter-llm-core vendor/Cargo.toml"
 
 ["ruby:e2e:generate"]
@@ -693,34 +693,34 @@ run = "alef test --lang ruby --e2e"
 
 ["elixir:deps"]
 description = "Install Elixir dependencies"
-dir = "packages/elixir"
+dir = "{{config_root}}/packages/elixir"
 run = "mix deps.get"
 
 ["elixir:build"]
 description = "Compile Elixir project (includes Rustler NIF)"
-dir = "packages/elixir"
+dir = "{{config_root}}/packages/elixir"
 env.LITER_LLM_BUILD = "1"
 run = "mix compile"
 
 ["elixir:test"]
 description = "Run Elixir tests"
-dir = "packages/elixir"
+dir = "{{config_root}}/packages/elixir"
 env = { MIX_ENV = "test", LITER_LLM_BUILD = "1" }
 run = "mix test"
 
 ["elixir:format"]
 description = "Format Elixir code"
-dir = "packages/elixir"
+dir = "{{config_root}}/packages/elixir"
 run = "mix format"
 
 ["elixir:format:check"]
 description = "Check Elixir formatting (CI)"
-dir = "packages/elixir"
+dir = "{{config_root}}/packages/elixir"
 run = "mix format --check-formatted"
 
 ["elixir:lint"]
 description = "Lint Elixir code (credo, requires NIF built first)"
-dir = "packages/elixir"
+dir = "{{config_root}}/packages/elixir"
 run = "mix credo --strict"
 
 ["elixir:lint:check"]
@@ -729,7 +729,7 @@ run = [{ task = "elixir:lint" }]
 
 ["elixir:update"]
 description = "Update Elixir dependencies to latest versions"
-dir = "packages/elixir"
+dir = "{{config_root}}/packages/elixir"
 run = [
   "echo 'Note - Elixir requires manual mix.exs edits for major version updates'",
   "mix hex.outdated || true",
@@ -739,7 +739,7 @@ run = [
 
 ["elixir:clean"]
 description = "Clean Elixir build artifacts"
-dir = "packages/elixir"
+dir = "{{config_root}}/packages/elixir"
 run = "mix clean"
 
 ["elixir:e2e:generate"]
@@ -766,7 +766,7 @@ run = [{ task = "c:e2e:test" }]
 
 ["c:clean"]
 description = "Clean C build artifacts"
-dir = "e2e/c"
+dir = "{{config_root}}/e2e/c"
 run = "rm -rf build"
 
 ["c:e2e:generate"]
