@@ -357,13 +357,14 @@ go build ./...
 
 ## Building from source
 
-If a prebuilt binary is not available for your platform, build from source with stable Rust (edition 2024):
+If a prebuilt binary is not available for your platform, build from source with stable Rust (edition 2024) and [mise](https://mise.jdx.dev/getting-started.html):
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 git clone https://github.com/xberg-io/liter-llm.git
 cd liter-llm
-task build
+mise trust
+mise run build
 ```
 
 ---

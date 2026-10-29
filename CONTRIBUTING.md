@@ -10,14 +10,15 @@ Please begin by reading our AI section below, followed by the getting started gu
 
 Make sure to have [Git](https://git-scm.com/) and [Rust](https://rustup.rs/) stable (via `rustup`) installed on your machine.
 
-1. Install [Task](https://taskfile.dev/installation/) on your machine.
+1. Install [mise](https://mise.jdx.dev/getting-started.html) on your machine.
 2. run:
 
 ```bash
-task setup
+mise trust
+mise run setup
 ```
 
-This will setup the dependencies, and pre-commit hooks via `poly`.
+This will install the pinned toolchain from `mise.toml`, the dependencies, and pre-commit hooks via `poly`.
 
 ### Optional Dependencies
 
@@ -36,17 +37,17 @@ This will setup the dependencies, and pre-commit hooks via `poly`.
 
 ## Quick reference
 
-| Command       | What it does                                    |
-| ------------- | ----------------------------------------------- |
-| `task setup`  | Install all dependencies (idempotent)           |
-| `task build`  | Build the project                               |
-| `task test`   | Run all test suites                             |
-| `task lint`   | Run all linters (with auto-fix)                 |
-| `task format` | Format all code                                 |
-| `task check`  | Combined lint + format check (no modifications) |
-| `task e2e`    | Run the end-to-end suite                        |
+| Command             | What it does                                    |
+| ------------------- | ----------------------------------------------- |
+| `mise run setup`    | Install all dependencies (idempotent)           |
+| `mise run build`    | Build the project                               |
+| `mise run test`     | Run all test suites                             |
+| `mise run lint`     | Run all linters (with auto-fix)                 |
+| `mise run format`   | Format all code                                 |
+| `mise run check`    | Combined lint + format check (no modifications) |
+| `mise run e2e:test` | Run the end-to-end suite                        |
 
-For language-specific commands, use the namespace pattern: `task rust:test`, `task python:build`, `task node:format`, etc.
+For language-specific commands, use the namespace pattern: `mise run rust:test`, `mise run python:build`, `mise run node:format`, etc. `mise tasks` lists them all.
 
 ## What to keep in mind
 
@@ -80,19 +81,19 @@ liter-llm is written following strict AI engineering practices. That is, its vib
 
 ### Conventions
 
-Use the latest `ai-rulez` release (CI and the Taskfile run `latest`; minimum 5.7.0) to manage agent conventions. Edit authored content under
+Use the `ai-rulez` that `mise.toml` pins to manage agent conventions. Edit authored content under
 `.ai-rulez/`; `AGENTS.md`, `CLAUDE.md` and harness directories are generated outputs.
 The main `config.toml` selects the `plugins` layer through `default_layers`; marketplace and
 plugin settings live separately in `config.plugins.toml`.
 
 ```sh
-uvx ai-rulez@latest validate --no-local
-uvx ai-rulez@latest generate --no-local --strict-config
-task governance:check
+ai-rulez validate --no-local
+ai-rulez generate --no-local --strict-config
+mise run governance:check
 ```
 
 The final command checks the materialized local governance files, including ignored harness
-outputs. Installing governance hooks requires Python 3.11 or newer. The hooks run the `ai-rulez` on PATH, so run `uv tool install --upgrade ai-rulez` first. Then run `task governance:hooks:install` to install the repository's reviewed Poly hooks.
+outputs. Run `mise run governance:hooks:install` to install the repository's reviewed Poly hooks.
 The hooks validate staged sources and verify shipped plugin artifacts where present; CI also
 validates the authored content. Shared convention modules come from `xberg-io/agent-conventions`;
 Git credentials are needed when an included repository requires access.

@@ -7,52 +7,26 @@ Thank you for your interest in contributing to liter-llm! This guide will help y
 
 ## Development Setup
 
-### Task Installation
+### mise Installation
 
-This project uses [Task](https://taskfile.dev/) for task automation and orchestration. Task is a task runner that simplifies development workflows across multiple languages and platforms.
+This project uses [mise](https://mise.jdx.dev/) for its toolchain and task automation. `mise.toml` pins every tool version, and `mise run <task>` runs the repository tasks with those tools on PATH.
 
-#### Install Task
-
-Choose the installation method for your platform:
-
-**macOS (Homebrew):**
+Install mise by following the [official getting-started guide](https://mise.jdx.dev/getting-started.html), then trust the repository configuration once:
 
 ```bash
-brew install go-task
+mise trust
 ```
-
-**Linux:**
-
-```bash
-# Using the installer script
-sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
-# Or via package managers:
-apt install go-task  # Debian/Ubuntu
-pacman -S go-task    # Arch
-```
-
-**Windows:**
-
-```powershell
-# Using Scoop
-scoop install task
-
-# Or using Chocolatey
-choco install go-task
-```
-
-For complete installation instructions, visit the [official Task documentation](https://taskfile.dev/installation/).
 
 ### Quick Start
 
-After installing Task, set up your development environment:
+After installing mise, set up your development environment:
 
 ```bash
 # One-time setup - installs all dependencies
-task setup
+mise run setup
 
 # Build in dev mode (fast iteration)
-task build:dev
+mise run build:dev
 ```
 
 The setup command will install Rust, Python, Node.js, Go, Java, and Elixir tooling as needed.
@@ -63,40 +37,40 @@ The setup command will install Rust, Python, Node.js, Go, Java, and Elixir tooli
 
 ```bash
 # Build all crates
-task build
+mise run build
 
 # Build in dev mode (fast iteration)
-task build:dev
+mise run build:dev
 
 # Build in release mode (optimized)
-task build:release
+mise run build:release
 ```
 
 ```bash
 # Run all tests
-task test
+mise run test
 
 # Run all checks (lint + test)
-task check
+mise run check
 ```
 
 ```bash
 # Format all code
-task format
+mise run format
 
 # Run all linters via prek
-task lint
+mise run lint
 
 # Generate READMEs from templates
-task generate:readme
+mise run generate:readme
 ```
 
 ```bash
 # Update all dependencies
-task update
+mise run update
 
 # Clean all build artifacts
-task clean
+mise run clean
 ```
 
 ### Language-Specific Tasks
@@ -106,78 +80,78 @@ Each language binding has its own namespace:
 **Rust:**
 
 ```bash
-task rust:build
-task rust:test
-task rust:format
-task rust:lint
+mise run rust:build
+mise run rust:test
+mise run rust:format
+mise run rust:lint
 ```
 
 **Python:**
 
 ```bash
-task python:install
-task python:test
-task python:format
-task python:lint
+mise run python:install
+mise run python:test
+mise run python:format
+mise run python:lint
 ```
 
 **Node.js:**
 
 ```bash
-task node:build        # Build NAPI-RS native module (release)
-task node:build:dev    # Build in debug mode
-task node:test
+mise run node:build        # Build NAPI-RS native module (release)
+mise run node:build:dev    # Build in debug mode
+mise run node:test
 ```
 
 **Go:**
 
 ```bash
-task go:build          # Build Go bindings (requires FFI)
-task go:build:ffi      # Build FFI static library for Go
-task go:test
-task go:format
-task go:lint
+mise run go:build          # Build Go bindings (requires FFI)
+mise run go:build:ffi      # Build FFI static library for Go
+mise run go:test
+mise run go:format
+mise run go:lint
 ```
 
 **Java:**
 
 ```bash
-task java:build:ffi    # Build FFI shared library for Java
-task java:test
+mise run java:build:ffi    # Build FFI shared library for Java
+mise run java:test
 ```
 
 **Elixir:**
 
 ```bash
-task elixir:build      # Compile (includes Rustler NIF)
-task elixir:test
-task elixir:deps
+mise run elixir:build      # Compile (includes Rustler NIF)
+mise run elixir:test
+mise run elixir:deps
 ```
 
 **Ruby:**
 
 ```bash
-task ruby:build        # Build Ruby native extension
-task ruby:test         # Run Ruby tests
-task ruby:format       # Format Ruby code
-task ruby:lint         # Lint Ruby code
+mise run ruby:build        # Build Ruby native extension
+mise run ruby:test         # Run Ruby tests
+mise run ruby:format       # Format Ruby code
+mise run ruby:lint         # Lint Ruby code
 ```
 
 **WebAssembly:**
 
 ```bash
-task wasm:build         # Build WASM package (web target)
-task wasm:build:bundler # Build WASM package (bundler target)
-task wasm:build:node    # Build WASM package (Node.js target)
-task wasm:test          # Run WASM tests
+mise run wasm:build         # Build WASM package (web target)
+mise run wasm:build:bundler # Build WASM package (bundler target)
+mise run wasm:build:node    # Build WASM package (Node.js target)
+mise run wasm:test          # Run WASM tests
 ```
 
 **C:**
 
 ```bash
-task c:build:ffi       # Build FFI library for C tests
-task c:e2e:build       # Build C E2E tests
-task c:e2e:test        # Run C E2E tests
+mise run c:build:ffi       # Build FFI library for C tests
+mise run c:e2e:build       # Build C E2E tests
+mise run c:e2e:test        # Run C E2E tests
 ```
 
 ## Adding Providers
@@ -208,21 +182,21 @@ task c:e2e:test        # Run C E2E tests
 1. **Regenerate types**
 
    ```bash
-   task generate:types
+   mise run generate:types
    ```
 
 1. **Build and test**
 
    ```bash
-   task build:dev
-   task test
+   mise run build:dev
+   mise run test
    ```
 
 1. **Regenerate E2E tests**
 
    ```bash
-   task e2e:generate:all
-   task test
+   mise run e2e:generate:all
+   mise run test
    ```
 
 ## E2E Tests
@@ -231,19 +205,19 @@ E2E tests are generated from JSON fixtures in `tools/e2e-generator/fixtures/` an
 
 ```bash
 # Generate E2E tests for all languages
-task e2e:generate:all
+mise run e2e:generate:all
 
 # Generate for a specific language
-task e2e:generate:rust
-task e2e:generate:python
-task e2e:generate:go
-task e2e:generate:java
-task e2e:generate:elixir
-task e2e:generate:ruby
-task e2e:generate:c
+mise run e2e:generate:rust
+mise run e2e:generate:python
+mise run e2e:generate:go
+mise run e2e:generate:java
+mise run e2e:generate:elixir
+mise run e2e:generate:ruby
+mise run e2e:generate:c
 
 # Run Rust E2E tests
-task e2e:test:rust
+mise run e2e:test:rust
 ```
 
 Generated test files in `e2e/` should not be edited directly -- modify fixtures or the generator source instead.
@@ -252,10 +226,10 @@ Generated test files in `e2e/` should not be edited directly -- modify fixtures 
 
 ```bash
 # Show all available tasks
-task --list
+mise tasks
 
-# Show all tasks including internal ones
-task --list-all
+# Show all tasks including hidden ones
+mise tasks --hidden
 ```
 
 ## Code Quality
@@ -294,7 +268,7 @@ We use conventional commits:
 1. **Make your changes** and run checks locally:
 
    ```bash
-   task check
+   mise run check
    ```
 
 1. **Commit and push**
@@ -313,7 +287,7 @@ We use conventional commits:
 Version is managed in `Cargo.toml` workspace and synced across all manifests:
 
 ```bash
-task version:sync
+mise run version:sync
 ```
 
 ## Questions?

@@ -90,7 +90,7 @@ pub enum CatalogGenError {
 
     /// `--validate` detected drift between the freshly generated catalog and
     /// a committed output file.
-    #[error("{} is out of date — run `task generate:catalog`", path.display())]
+    #[error("{} is out of date — run `mise run generate:catalog`", path.display())]
     Drift {
         /// The committed output file that no longer matches the freshly
         /// generated catalog.

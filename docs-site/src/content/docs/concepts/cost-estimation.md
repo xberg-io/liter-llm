@@ -33,10 +33,10 @@ Every generated `catalog.json` carries a `$provenance` block:
 
 The embedded catalog is compiled in — the crate build never touches the network. Regenerating it is a separate, opt-in step:
 
-- `task generate:catalog` — refetches `api.json` and rewrites both output files.
-- `task generate:catalog:check` — regenerates in memory and fails if the committed files have drifted from models.dev, without writing anything. Runs in CI on every PR that touches `schemas/catalog.json`, `crates/liter-llm/schemas/catalog.json`, or the generator crate.
+- `mise run generate:catalog` — refetches `api.json` and rewrites both output files.
+- `mise run generate:catalog:check` — regenerates in memory and fails if the committed files have drifted from models.dev, without writing anything. Runs in CI on every PR that touches `schemas/catalog.json`, `crates/liter-llm/schemas/catalog.json`, or the generator crate.
 
-A daily scheduled workflow (`sync-catalog.yml`) also runs `task generate:catalog`, opens a PR when the output changes, and enables auto-merge once required checks pass. A separate workflow (`publish-catalog.yml`) pushes every update to `schemas/catalog.json` on `main` to the rolling `model-catalog` GitHub release, injecting `generated_by_commit` and `release_tag` into `$provenance` before upload. This is the artifact the opt-in [runtime refresh](/guides/catalog-refresh/) downloads from by default.
+A daily scheduled workflow (`sync-catalog.yml`) also runs `mise run generate:catalog`, opens a PR when the output changes, and enables auto-merge once required checks pass. A separate workflow (`publish-catalog.yml`) pushes every update to `schemas/catalog.json` on `main` to the rolling `model-catalog` GitHub release, injecting `generated_by_commit` and `release_tag` into `$provenance` before upload. This is the artifact the opt-in [runtime refresh](/guides/catalog-refresh/) downloads from by default.
 
 ## API
 

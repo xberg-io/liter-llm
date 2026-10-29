@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Build: mise replaces go-task. `mise.toml` pins the toolchain at the xberg-io/toolchains v1.5.0 baseline, every
+  task keeps its name under `mise run`, and CI sets up tools with `setup-mise`. `Taskfile.yml` and `.task/` are gone.
+
 ### Fixed
 
 - Run generated Homebrew consumer checks through Bats, preserving version validation and command failures.

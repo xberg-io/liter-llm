@@ -2,8 +2,8 @@
 //! mirror) from the [models.dev](https://models.dev) unified model catalog.
 //!
 //! This crate is not part of liter-llm's public API surface — it is a
-//! standalone data generator, invoked via `task generate:catalog` /
-//! `task generate:catalog:check`. `catalog.json` is a nested
+//! standalone data generator, invoked via `mise run generate:catalog` /
+//! `mise run generate:catalog:check`. `catalog.json` is a nested
 //! `provider -> model` document: every model in the upstream catalog is
 //! represented, and unpriced models simply omit their `pricing` sub-object.
 //! See `crates/liter-llm-catalog-gen/src/render.rs` for the exact wire shape
