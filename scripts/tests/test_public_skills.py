@@ -83,7 +83,10 @@ class PublicSkillsTests(unittest.TestCase):
             executable = binary / name
             executable.write_text("#!/bin/sh\nset -eu\n" + command + "\n")
             executable.chmod(0o755)
-        includes = [str(repository / "mise-tasks" / name) for name in ("version.toml", "plugin.toml")]
+        # ~keep version:sync calls alef:regenerate, plugin:generate and alef:verify:strict from the
+        # toolchains task sets; their file tasks resolve against the project root, so copy them in.
+        shutil.copytree(repository / "mise-tasks/.shared", self.root / "mise-tasks/.shared")
+        includes = [str(repository / "mise-tasks" / name) for name in ("version.toml", "plugin.toml", "shared.toml")]
         (self.root / "mise.toml").write_text(f"[task_config]\nincludes = {includes!r}\n".replace("'", '"'))
         result = subprocess.run(
             ["mise", "run", "version:sync"],

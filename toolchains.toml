@@ -1,4 +1,22 @@
-baseline = "v1.5.1"
+baseline = "v1.7.0"
+task_sets = [
+  "alef",
+  "alef-publish",
+  "alef-version",
+  "bats-lib",
+  "bats-suite",
+  "deps-refresh",
+  "docs-site",
+  "docs-snippets",
+  "governance",
+  "plugin",
+  "plugin-runtime",
+  "rust",
+]
+
+[task_overrides]
+"alef:snippets" = "stages the Java dependencies and the Kotlin build before alef snippets check"
+"plugin:test" = "also runs scripts/verify_pi_package.py"
 
 [overrides.pnpm]
 version = "12.11.2"

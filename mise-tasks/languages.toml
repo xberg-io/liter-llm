@@ -35,17 +35,9 @@ run = [
   "cargo clippy --workspace --exclude liter-llm-wasm --exclude liter-llm-swift --exclude liter-llm-dart -- -D warnings",
 ]
 
-["rust:format"]
-description = "Format all Rust code"
-run = "cargo fmt --all"
-
 ["rust:format:check"]
 description = "Check Rust formatting (CI)"
 run = "cargo fmt --all -- --check"
-
-["rust:clean"]
-description = "Clean Rust build artifacts"
-run = "cargo clean"
 
 ["rust:e2e:test"]
 description = "Run Rust E2E tests using Alef-configured test commands"

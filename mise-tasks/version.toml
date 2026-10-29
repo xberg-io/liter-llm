@@ -1,15 +1,4 @@
-# Version sync and bump tasks, included from mise.toml [task_config]. The alef bodies come from
-# xberg-io/toolchains at the toolchains.toml baseline. ~keep
-
-["alef:regenerate"]
-description = "Regenerate every alef output that carries the version"
-hide = true
-file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.1/tasks/alef/regenerate.sh"
-
-["alef:verify:strict"]
-description = "Run alef verify and fail on drifted frozen paths too"
-hide = true
-file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.1/tasks/alef/verify-strict.sh"
+# Version sync, included from mise.toml [task_config]; the bump tasks come from the alef-version set. ~keep
 
 ["version:sync"]
 description = "Synchronize version across all package manifests"
@@ -26,19 +15,3 @@ run = [
   "ai-rulez -C .ai-rulez lock",
   { task = "alef:verify:strict" },
 ]
-
-["version:show"]
-description = "Show current version from Cargo.toml"
-file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.1/tasks/version/cargo.sh"
-
-["version:bump:major"]
-description = "Bump major version (X.0.0) and sync"
-run = ["alef sync-versions --bump major", { task = "version:sync" }]
-
-["version:bump:minor"]
-description = "Bump minor version (0.X.0) and sync"
-run = ["alef sync-versions --bump minor", { task = "version:sync" }]
-
-["version:bump:patch"]
-description = "Bump patch version (0.0.X) and sync"
-run = ["alef sync-versions --bump patch", { task = "version:sync" }]

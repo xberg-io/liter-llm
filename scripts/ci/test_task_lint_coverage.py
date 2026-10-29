@@ -76,5 +76,11 @@ class TestTaskLintCoverage:
     def test_scan_set_covers_every_mise_task_file(self) -> None:
         """The real scan set holds mise.toml, the included TOML task files and the shell file tasks."""
         names = {path.relative_to(coverage.ROOT).as_posix() for path in coverage.scan_set()}
-        assert {"mise.toml", "mise-tasks/version.toml", "mise-tasks/test/scripts.sh"} <= names
+        assert {
+            "mise.toml",
+            "mise-tasks/version.toml",
+            "mise-tasks/shared.toml",
+            "mise-tasks/local/up.sh",
+            "mise-tasks/.shared/bats-suite/scripts.sh",
+        } <= names
         assert all(name == "mise.toml" or name.startswith("mise-tasks/") for name in names)

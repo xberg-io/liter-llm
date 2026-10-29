@@ -28,6 +28,7 @@ lychee = "0.24.2"
 
 [task_config]
 includes = [
+  "mise-tasks/shared.toml",
   "mise-tasks",
   "mise-tasks/languages.toml",
   "mise-tasks/version.toml",
@@ -35,25 +36,13 @@ includes = [
   "mise-tasks/test-apps.toml",
 ]
 
-[vars]
+[env]
 # Immutable xberg-io/actions tag that the vendored Bats helper library comes from. Raise it,
 # then run `mise run test:scripts:lib:sync`; CI runs `mise run test:scripts:lib:check`. ~keep
-bats_lib_ref = "v1.29.0"
-
-# ---- Shared task bodies ------------------------------------------------------------------------
-# Repository-neutral scripts from xberg-io/toolchains at the toolchains.toml baseline; version.toml
-# references the alef ones. ~keep
-
-[tasks."governance:hooks:install"]
-description = "Provision machine preferences and install reviewed AI governance hooks"
-file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.1/tasks/governance/hooks-install.sh"
-
-[tasks.deps]
-description = "Update or upgrade one ecosystem's dependencies, or every ecosystem"
-hide = true
-file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.1/tasks/deps/refresh.sh"
-env.DEPS_LANGS = "rust"
-env.DEPS_RUST_MANIFESTS = "e2e/rust/Cargo.toml"
+BATS_LIB_REF = "v1.29.0"
+# `mise run deps` refreshes only the Rust manifests outside the Cargo workspace. ~keep
+DEPS_LANGS = "rust"
+DEPS_RUST_MANIFESTS = "e2e/rust/Cargo.toml"
 
 # ---- Entry points ------------------------------------------------------------------------------
 
@@ -97,16 +86,6 @@ run = ["python3 scripts/ci/check_consumer_versions.py", """\
   scripts/ci/test_schema_copies.py \
   scripts/ci/test_changelog_entry.py \
   scripts/ci/test_ai_rulez_version.py"""]
-
-[tasks."test:scripts:lib:sync"]
-description = "Refresh the vendored Bats helper library from xberg-io/actions"
-env.BATS_LIB_REF = "{{vars.bats_lib_ref}}"
-run = "scripts/task/sync-bats-lib.sh sync"
-
-[tasks."test:scripts:lib:check"]
-description = "Fail when the vendored Bats helper library has drifted from its pinned source"
-env.BATS_LIB_REF = "{{vars.bats_lib_ref}}"
-run = "scripts/task/sync-bats-lib.sh --check"
 
 [tasks."ci:release-version-forms"]
 description = "Resolve canonical package version forms for release validation"
@@ -185,24 +164,6 @@ run = "docker compose -f docker/docker-compose.local-llm.yml down -v"
 description = "Check materialized local governance outputs against shared sources"
 run = ["python3 scripts/ci/check_ai_rulez_version.py workflows", "ai-rulez generate --check --no-local --strict-config"]
 
-# ---- Publishing --------------------------------------------------------------------------------
-
-[tasks."publish:validate"]
-description = "Validate publish manifests are consistent"
-run = "alef publish validate"
-
-[tasks."publish:prepare"]
-description = "Prepare packages for publishing (vendor deps, stage FFI)"
-run = "alef publish prepare"
-
-[tasks."publish:build"]
-description = "Build release artifacts for all languages"
-run = "alef publish build"
-
-[tasks."publish:package"]
-description = "Package built artifacts into distributable archives"
-run = "alef publish package -o dist/"
-
 # ---- alef and generators -----------------------------------------------------------------------
 
 [tasks."alef:generate"]
@@ -213,10 +174,6 @@ description = "Fast regeneration of all alef-managed files (bindings, stubs, sca
 # reference-page audit and gap detection still run. Use `mise run alef:snippets` after
 # `alef build` when you actually want validation.
 run = "alef all --clean --skip-compile --skip-snippet-validation"
-
-[tasks."alef:verify"]
-description = "Check bindings are up-to-date (CI)"
-run = "alef verify --exit-code"
 
 [tasks."alef:snippets"]
 description = "Validate documentation snippets (needs built artifacts; run after alef build)"
@@ -250,10 +207,6 @@ run = "cargo run -p liter-llm-catalog-gen --release -- --validate"
 
 # ---- E2E ---------------------------------------------------------------------------------------
 
-[tasks."e2e:generate"]
-description = "Generate E2E tests for all languages from fixtures (alias for e2e:generate:all)"
-run = [{ task = "e2e:generate:all" }]
-
 [tasks."e2e:test"]
 description = "Run all E2E tests across all supported languages"
 run = "alef test --e2e"
@@ -272,17 +225,9 @@ run = [{ task = "e2e:generate:all" }, { task = "e2e:lint" }, { task = "e2e:test"
 
 # ---- Docs --------------------------------------------------------------------------------------
 
-[tasks."docs:build"]
-description = "Build documentation"
-run = ["pnpm --dir docs-site install --frozen-lockfile", "pnpm --dir docs-site build"]
-
 [tasks."docs:build:strict"]
 description = "Build documentation (CI-equivalent; astro build fails on errors)"
 run = [{ task = "docs:build" }]
-
-[tasks."docs:serve"]
-description = "Serve documentation locally with live reload"
-run = ["pnpm --dir docs-site install", "pnpm --dir docs-site dev"]
 
 [tasks."docs:lint:prose"]
 description = "Lint prose with textlint"
@@ -298,12 +243,3 @@ run = "alef snippets list --snippets docs-site/src/snippets"
 description = "List snippets filtered to specific languages (e.g. rust,python)"
 usage = 'arg "<languages>" env="LANGUAGES" help="Comma-separated snippet languages"'
 run = 'alef snippets list --snippets docs-site/src/snippets --languages "$usage_languages"'
-
-[tasks."docs:snippets:gaps"]
-description = "Report unreferenced snippets + missing language variants"
-run = "alef snippets gaps --snippets docs-site/src/snippets --docs docs-site/src/content/docs"
-
-[tasks."docs:snippets:audit"]
-description = "Audit snippet structure under docs-site/src/snippets"
-run = "alef snippets audit --snippets docs-site/src/snippets"
-
