@@ -75,13 +75,18 @@ tasks:
 
   setup:
     desc: "Install all dependencies and dev tools"
+    vars:
+      # Must equal `poly-version` in .github/workflows/ci-lint.yaml (written there with
+      # a leading "v"). The pin is deliberate. To raise it, change both, run
+      # `poly fmt` and commit the reformat in the same PR. ~keep
+      POLY_VERSION: "0.31.2"
     cmds:
       - task: rust:install
       - alef setup
       - |
-        # Track the newest poly rather than a pinned version, matching ci-lint.yaml,
-        # which leaves `poly-version` unset. A pin here ages into a build with known
-        # defects and silently diverges from what CI runs. ~keep
+        # brew has no versioned poly formula, so this cannot install the pinned
+        # version. It installs or upgrades poly, then warns when the result differs
+        # from the version CI pins. ~keep
         #
         # poly ships on several channels and brew is only one of them, so this does not
         # force a channel — it upgrades the one it can and tells you when it cannot.
@@ -94,7 +99,11 @@ tasks:
           # upgrade must be attempted explicitly or a stale poly survives untouched. ~keep
           brew upgrade goldziher/tap/poly 2>/dev/null || true
         else
-          echo "poly $(poly --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1) from $(command -v poly) (not brew) — keep it current on that channel; CI always installs the newest release." >&2
+          echo "poly $(poly --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1) from $(command -v poly) (not brew) — install the version CI pins on that channel." >&2
+        fi
+        resolved="$(poly --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+        if [ "$resolved" != "{{.POLY_VERSION}}" ]; then
+          echo "poly: CI pins {{.POLY_VERSION}} but found '${resolved:-none}'. \`poly fmt --check\` can disagree with CI until they match." >&2
         fi
       - task: governance:hooks:install
 
