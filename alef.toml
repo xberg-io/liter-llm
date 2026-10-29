@@ -929,7 +929,7 @@ e2e = [
 
 [crates.test.swift]
 precondition = "command -v swift >/dev/null 2>&1"
-before = "task swift:build && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+before = "mise run swift:build && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/swift_e2e && swift test'"
 
 [crates.test.zig]
