@@ -30,7 +30,7 @@ This will install the pinned toolchain from `mise.toml`, the dependencies, and p
 | Node.js  | 20+     | [`pnpm`](https://pnpm.io/)               |
 | Ruby     | 3.2+    | `rbenv` or `rvm`                         |
 | Go       | 1.26+   | [Official installer](https://go.dev/dl/) |
-| Java     | 25+     | JDK (via [sdkman](https://sdkman.io/))   |
+| Java     | 25+     | JDK and Maven (pinned in `mise.toml`)    |
 | .NET     | 10+     | `dotnet`                                 |
 | PHP      | 8.1+    | `composer`                               |
 | Elixir   | 1.14+   | `mix` (OTP 25+)                          |

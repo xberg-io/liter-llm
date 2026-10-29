@@ -11,6 +11,7 @@ node = "26.12.1"
 pnpm = "12.11.2"
 go = "1.27.3"
 java = "temurin-25.0.5+8.0.LTS"
+maven = "3.10.0"
 ruby = "3.4.12"
 zig = "0.17.0"
 "github:Goldziher/poly" = "0.31.2"
@@ -63,6 +64,11 @@ run = "mise tasks ls"
 [tasks.setup]
 description = "Install all dependencies and dev tools"
 run = ["mise install", { task = "rust:install" }, "alef setup", { task = "governance:hooks:install" }]
+
+# Kept by name for existing callers: mise pins the JDK and Maven that .sdkmanrc used to select. ~keep
+[tasks."setup:sdkman"]
+description = "Install the pinned JDK and Maven (formerly via sdkman)"
+run = "mise install java maven"
 
 [tasks.ai-rulez]
 description = "Generate ai-rulez configuration files (CLAUDE.md, etc.)"

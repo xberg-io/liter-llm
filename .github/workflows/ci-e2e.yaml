@@ -161,7 +161,7 @@ jobs:
             mise-tools: ruby
             test-cmd: "cd packages/ruby && bundle install && bundle exec rake compile && cd ../.. && mise run ruby:e2e:test"
           - lang: java
-            mise-tools: java
+            mise-tools: java maven
             test-cmd: "mise run java:e2e:test"
           - lang: csharp
             dotnet-version: "10.0.x"
@@ -355,7 +355,7 @@ jobs:
         shell: bash
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-      # ~keep One setup-mise per leg: Go, Ruby, the Java 25 JDK and Zig come from mise.toml; legs
+      # ~keep One setup-mise per leg: Go, Ruby, the Java 25 JDK, Maven and Zig come from mise.toml; legs
       # without mise-tools install nothing and run their tasks with the tools set up above.
       - name: Setup mise
         uses: xberg-io/actions/setup-mise@v1
