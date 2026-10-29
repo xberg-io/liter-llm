@@ -139,10 +139,10 @@ try_download() {
 
   local api_json tag version
   api_json="$(fetch_stdout "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null)" ||
-  {
-    log "download: could not query latest release; falling through"
-    return 1
-  }
+    {
+      log "download: could not query latest release; falling through"
+      return 1
+    }
   tag="$(printf '%s' "$api_json" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
   [ -n "$tag" ] || {
     log "download: could not parse tag_name from API; falling through"
