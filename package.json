@@ -1,10 +1,18 @@
 {
   "version": "2.4.1",
   "private": true,
-  "workspaces": ["crates/liter-llm-node", "crates/liter-llm-wasm", "e2e/node", "e2e/wasm"],
+  "workspaces": [
+    "crates/liter-llm-node",
+    "crates/liter-llm-wasm",
+    "e2e/node",
+    "e2e/wasm"
+  ],
   "packageManager": "pnpm@12.11.2",
   "pi": {
-    "prompts": ["./plugin/.pi/prompts/liter-llm-chat.md", "./plugin/.pi/prompts/liter-llm-stream.md"],
+    "prompts": [
+      "./plugin/.pi/prompts/liter-llm-chat.md",
+      "./plugin/.pi/prompts/liter-llm-stream.md"
+    ],
     "skills": [
       "./plugin/.pi/skills/calling-llms",
       "./plugin/.pi/skills/embeddings-and-search",
