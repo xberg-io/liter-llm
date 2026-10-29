@@ -34,10 +34,10 @@ jobs:
       # as B26, not yet fixed). Flipping this to `true` before B26 lands would
       # make every push/PR red for a reason contributors cannot fix locally.
       # Re-enable once B26 is resolved upstream. ~keep
-      # `poly-version` is deliberately unset: empty means the reusable workflow
-      # resolves the newest release through the GitHub API and installs that exact
-      # tag, so a run is still reproducible while the gate tracks upstream fixes
-      # instead of aging into a build with known defects. ~keep
+      # The poly pin is deliberate: a new poly release must not turn main red with
+      # no commit. To raise it, change this value and POLY_VERSION in Taskfile.yml
+      # (no "v" there), run `poly fmt`, and commit the reformat in the same PR. ~keep
+      poly-version: "v0.31.2"
       setup-rust: true
       setup-python: true
       # poly's checkstyle project check runs `mvn checkstyle:check` on packages/java,
