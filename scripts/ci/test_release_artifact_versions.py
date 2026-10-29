@@ -230,12 +230,14 @@ def test_workflow_and_ci_run_the_real_tasks_and_regression_file() -> None:
     ]
     assert len(aliases) == 1
     assert aliases[0]["run"] == "task ci:prepare-go-release-assets"
-    tasks = yaml.safe_load((ROOT / "Taskfile.yml").read_text())["tasks"]
-    assert tasks["ci:release-version-forms"]["cmds"] == ["python3 scripts/ci/release_artifact_versions.py"]
-    assert tasks["ci:prepare-go-release-assets"]["cmds"] == [
-        'python3 scripts/ci/prepare_go_release_assets.py go-ffi-release liter-llm "$RELEASE_VERSION"'
-    ]
-    regression_commands = "\n".join(tasks["test:release-regressions"]["cmds"])
+    with (ROOT / "mise.toml").open("rb") as config:
+        tasks = tomllib.load(config)["tasks"]
+    assert tasks["ci:release-version-forms"]["run"] == "python3 scripts/ci/release_artifact_versions.py"
+    assert (
+        tasks["ci:prepare-go-release-assets"]["run"]
+        == 'python3 scripts/ci/prepare_go_release_assets.py go-ffi-release liter-llm "$RELEASE_VERSION"'
+    )
+    regression_commands = "\n".join(tasks["test:release-regressions"]["run"])
     assert regression_commands.count("scripts/ci/test_release_artifact_versions.py") == 1
 
 

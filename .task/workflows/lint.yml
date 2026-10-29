@@ -1,7 +1,0 @@
-version: "3"
-
-tasks:
-  all:
-    desc: Run all linters via poly
-    cmds:
-      - poly lint .

@@ -5,6 +5,7 @@ import shlex
 from pathlib import Path
 
 import pytest
+import tomllib
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -13,7 +14,8 @@ ROOT = Path(__file__).resolve().parents[2]
 def build_commands() -> dict[str, str]:
     """Read executable commands rather than matching comments or unused examples."""
     package = json.loads((ROOT / "crates/liter-llm-node/package.json").read_text())
-    tasks = yaml.safe_load((ROOT / ".task/languages/node.yml").read_text())["tasks"]
+    with (ROOT / "mise-tasks/languages.toml").open("rb") as config:
+        tasks = tomllib.load(config)
     workflow = yaml.safe_load((ROOT / ".github/workflows/publish.yaml").read_text())
     native_steps = [
         step
@@ -24,8 +26,8 @@ def build_commands() -> dict[str, str]:
     assert len(native_steps) == 1, "Expected exactly one native Node publish build"
     return {
         "package": package["scripts"]["build"],
-        "task-release": tasks["build"]["cmds"][0],
-        "task-debug": tasks["build:dev"]["cmds"][0],
+        "task-release": tasks["node:build"]["run"],
+        "task-debug": tasks["node:build:dev"]["run"],
         "publish": native_steps[0]["run"],
     }
 

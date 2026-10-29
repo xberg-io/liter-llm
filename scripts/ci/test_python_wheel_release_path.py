@@ -1,6 +1,6 @@
 """The release path of the Python wheels: the workflows, jobs and task that build, check, upload and test them.
 
-Each test reads the parsed workflows and the Taskfile and compares whole key sets and whole values of the jobs and
+Each test reads the parsed workflows and mise.toml and compares whole key sets and whole values of the jobs and
 steps it guards, so a key no test expects on a guarded job or step is an error, not a value the test ignores.
 Comments and descriptions are labels and no test reads them. A step name is read only where a test expects one
 named step, as the package listing of the PyPI job. The wheel fixtures come from the checker's own tests.
@@ -620,9 +620,10 @@ REGRESSIONS_INSTALL = (
 
 
 def regression_task() -> dict:
-    import yaml
+    import tomllib
 
-    return yaml.safe_load((ROOT / "Taskfile.yml").read_text())["tasks"]["test:release-regressions"]
+    with (ROOT / "mise.toml").open("rb") as config:
+        return tomllib.load(config)["tasks"]["test:release-regressions"]
 
 
 def test_release_regression_task_and_job_fail_when_this_file_fails() -> None:
@@ -630,9 +631,9 @@ def test_release_regression_task_and_job_fail_when_this_file_fails() -> None:
     with names aside, checks out the pull request's own tree (its checkout step takes no ref), installs the Python
     the task runs, and cannot be skipped or absorb its failure."""
     task = regression_task()
-    assert set(task) == {"desc", "cmds"}
-    assert all(isinstance(command, str) for command in task["cmds"])
-    (pytest_run,) = (shlex.split(command) for command in task["cmds"] if "pytest" in command)
+    assert set(task) == {"description", "run"}
+    assert all(isinstance(command, str) for command in task["run"])
+    (pytest_run,) = (shlex.split(command) for command in task["run"] if "pytest" in command)
     assert pytest_run[: len(RELEASE_REGRESSIONS_PYTEST)] == RELEASE_REGRESSIONS_PYTEST
     files = pytest_run[len(RELEASE_REGRESSIONS_PYTEST) :]
     for name in files:
@@ -671,19 +672,14 @@ def test_regression_job_starts_for_every_pull_request_that_edits_what_it_tests()
     }
     ignored = [github_path_pattern(path) for path in LINT_TRIGGER["paths-ignore"]]
     tested = {
-        "Taskfile.yml",
+        "mise.toml",
         "scripts/ci/check_python_wheel.py",
         "packages/python/pyproject.toml",
         ".github/workflows/publish.yaml",
         ".github/workflows/python-wheels.yaml",
         ".github/workflows/ci-python-wheels.yaml",
         ".github/workflows/ci-lint.yaml",
-        *(
-            word
-            for command in regression_task()["cmds"]
-            for word in shlex.split(command)
-            if word.startswith("scripts/")
-        ),
+        *(word for command in regression_task()["run"] for word in shlex.split(command) if word.startswith("scripts/")),
     }
     assert len(tested) > 7
     for path in sorted(tested):
@@ -892,7 +888,7 @@ def test_release_regression_job_runs_this_file() -> None:
     """
     job = workflow("ci-lint.yaml")["jobs"]["release-regressions"]
     assert [step["run"] for step in job["steps"] if "run" in step] == ["task test:release-regressions"]
-    pytest_runs = [shlex.split(command) for command in regression_task()["cmds"] if "pytest" in command]
+    pytest_runs = [shlex.split(command) for command in regression_task()["run"] if "pytest" in command]
     assert len(pytest_runs) == 1
     for name in WHEEL_TEST_FILES:
         assert name in pytest_runs[0], name

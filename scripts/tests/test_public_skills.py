@@ -83,15 +83,17 @@ class PublicSkillsTests(unittest.TestCase):
             executable = binary / name
             executable.write_text("#!/bin/sh\nset -eu\n" + command + "\n")
             executable.chmod(0o755)
-        (self.root / "Taskfile.yml").write_text(
-            'version: "3"\nvars:\n  AI_RULEZ: "ai-rulez"\nincludes:\n'
-            f'  version: "{repository / ".task/tools/version-sync.yml"}"\n'
-            f'  plugin: "{repository / ".task/tools/plugin.yml"}"\n'
-        )
+        includes = [str(repository / "mise-tasks" / name) for name in ("version.toml", "plugin.toml")]
+        (self.root / "mise.toml").write_text(f"[task_config]\nincludes = {includes!r}\n".replace("'", '"'))
         result = subprocess.run(
-            ["task", "version:sync"],
+            ["mise", "run", "version:sync"],
             cwd=self.root,
-            env={**os.environ, "PATH": str(binary) + os.pathsep + os.environ["PATH"]},
+            env={
+                **os.environ,
+                "PATH": str(binary) + os.pathsep + os.environ["PATH"],
+                "MISE_TRUSTED_CONFIG_PATHS": str(self.root),
+                "MISE_CEILING_PATHS": str(self.root.parent),
+            },
             capture_output=True,
             text=True,
             check=False,

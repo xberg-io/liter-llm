@@ -1,0 +1,788 @@
+# Per-language build, test, lint and e2e tasks, included from mise.toml [task_config]. ~keep
+
+# ---- Rust --------------------------------------------------------------------------------------
+
+["rust:install"]
+description = "Install Rust toolchain and tools"
+run = ["rustc --version", "rustup component add rustfmt clippy", { task = "rust:install:cargo-machete" }]
+
+["rust:install:cargo-machete"]
+description = "Install cargo-machete for unused dependency detection"
+run = "mise install github:bnjbvr/cargo-machete || true"
+
+["rust:build"]
+description = "Build all crates"
+run = "cargo build --workspace"
+
+["rust:build:release"]
+description = "Build in release mode (optimized)"
+run = "cargo build --workspace --release"
+
+["rust:test"]
+description = "Run all Rust tests"
+run = "cargo test --workspace"
+
+["rust:lint"]
+description = "Auto-fix Rust code linting (cargo fmt + clippy)"
+run = ["cargo fmt --all", """\
+  cargo clippy --workspace --exclude liter-llm-wasm --exclude liter-llm-swift --exclude liter-llm-dart \
+  --fix --allow-dirty --allow-staged -- -D warnings"""]
+
+["rust:lint:check"]
+description = "Check Rust code linting without modifications"
+run = [
+  "cargo fmt --all -- --check",
+  "cargo clippy --workspace --exclude liter-llm-wasm --exclude liter-llm-swift --exclude liter-llm-dart -- -D warnings",
+]
+
+["rust:format"]
+description = "Format all Rust code"
+run = "cargo fmt --all"
+
+["rust:format:check"]
+description = "Check Rust formatting (CI)"
+run = "cargo fmt --all -- --check"
+
+["rust:clean"]
+description = "Clean Rust build artifacts"
+run = "cargo clean"
+
+["rust:doc"]
+description = "Generate and open documentation"
+run = "cargo doc --workspace --no-deps --open"
+
+["rust:update"]
+description = "Update Rust dependencies"
+run = [{ task = "deps upgrade rust" }]
+
+["rust:e2e:generate"]
+description = "Generate and format Rust E2E tests from fixtures"
+run = ["alef e2e generate --lang rust", { task = "rust:e2e:format" }]
+
+["rust:e2e:format"]
+description = "Format Rust bindings using Alef-configured format commands"
+run = "alef fmt --lang rust"
+
+["rust:e2e:test"]
+description = "Run Rust E2E tests using Alef-configured test commands"
+run = "alef test --lang rust --e2e"
+
+["rust:e2e:verify"]
+description = "Regenerate and validate Rust E2E suite (generate + format + test)"
+run = [{ task = "rust:e2e:generate" }, { task = "rust:e2e:format" }, { task = "rust:e2e:test" }]
+
+# ---- Python ------------------------------------------------------------------------------------
+
+["python:install"]
+description = "Install Python dependencies via uv"
+run = ["python3 --version", "uv --version", "uv sync --no-install-project"]
+
+["python:build"]
+description = "Build Python wheel via maturin (uv sync)"
+dir = "packages/python"
+run = "uv sync"
+
+["python:format"]
+description = "Format Python code"
+run = ["uv run --no-sync ruff format", "uv run --no-sync ruff check --fix --unsafe-fixes"]
+
+["python:format:check"]
+description = "Check Python formatting (CI)"
+run = ["uv run --no-sync ruff format --check", "uv run --no-sync ruff check"]
+
+["python:lint"]
+description = "Lint Python code"
+run = ["uv run --no-sync ruff check --fix --unsafe-fixes", "uv run --no-sync ruff format"]
+
+["python:lint:check"]
+description = "Check Python linting without modifications"
+run = "uv run --no-sync ruff check"
+
+["python:clean"]
+description = "Clean Python build artifacts"
+run = "rm -rf build/ dist/ *.egg-info __pycache__"
+
+["python:update"]
+description = "Update Python dependencies to latest versions (including major versions)"
+run = [
+  "uv sync --all-packages --all-extras --upgrade --no-install-workspace --no-install-project",
+  "uv pip list --outdated || true",
+]
+
+["python:e2e:generate"]
+description = "Generate Python E2E tests from fixtures"
+run = "alef e2e generate --lang python"
+
+["python:e2e:lint"]
+description = "Lint Python bindings using Alef-configured lint commands"
+run = "alef lint --lang python"
+
+["python:e2e:test"]
+description = "Run Python E2E tests using Alef-configured test commands"
+run = "alef test --lang python --e2e"
+
+["python:e2e:verify"]
+description = "Regenerate and validate Python E2E suite (generate + lint + test)"
+run = [{ task = "python:e2e:generate" }, { task = "python:e2e:lint" }, { task = "python:e2e:test" }]
+
+# ---- Node --------------------------------------------------------------------------------------
+
+["node:deps"]
+description = "Install Node.js dependencies"
+dir = "crates/liter-llm-node"
+run = "pnpm install"
+
+["node:install"]
+description = "Install Node.js dependencies (alias for deps)"
+run = [{ task = "node:deps" }]
+
+["node:update"]
+description = "Update Node/TypeScript dependencies (all workspace packages)"
+run = ["corepack up", "pnpm up --latest -r", "pnpm up --latest -w"]
+
+["node:build"]
+description = "Build NAPI-RS native module (release)"
+dir = "crates/liter-llm-node"
+run = "pnpm exec napi build --no-js --dts index.native.d.ts --release"
+
+["node:build:dev"]
+description = "Build NAPI-RS native module (debug)"
+dir = "crates/liter-llm-node"
+run = "pnpm exec napi build --no-js --dts index.native.d.ts"
+
+["node:test"]
+description = "Smoke test Node.js native module"
+dir = "crates/liter-llm-node"
+run = """node -e "const m = require('./'); console.log('Module loaded:', Object.keys(m))\""""
+
+["node:lint"]
+description = "Lint TypeScript/JavaScript code"
+run = "poly lint crates/liter-llm-node"
+
+["node:lint:check"]
+description = "Check TypeScript/JavaScript linting (CI)"
+run = "poly lint crates/liter-llm-node"
+
+["node:format"]
+description = "Format TypeScript/JavaScript code"
+run = "poly fmt --fix crates/liter-llm-node"
+
+["node:format:check"]
+description = "Check TypeScript/JavaScript formatting (CI)"
+run = "poly fmt --check crates/liter-llm-node"
+
+["node:typecheck"]
+description = "Check TypeScript types (tsc --noEmit)"
+run = "pnpm exec tsc --noEmit --project tsconfig.json"
+
+["node:clean"]
+description = "Clean Node.js build artifacts"
+dir = "crates/liter-llm-node"
+run = "rm -f *.node"
+
+["node:e2e:generate"]
+description = "Generate TypeScript/Node E2E tests from fixtures"
+run = "alef e2e generate --lang node"
+
+["node:e2e:test"]
+description = "Run TypeScript/Node E2E tests using Alef-configured test commands"
+run = "alef test --lang node --e2e"
+
+# ---- WASM --------------------------------------------------------------------------------------
+
+["wasm:deps"]
+description = "Install WASM build tools"
+run = [
+  "rustup target add wasm32-unknown-unknown",
+  "mise install github:rustwasm/wasm-pack",
+  "brew list wasi-libc >/dev/null 2>&1 || brew install wasi-libc",
+  "brew list llvm >/dev/null 2>&1 || brew install llvm",
+]
+
+["wasm:build:bundler"]
+description = "Build WASM package (bundler target)"
+run = [{ task = "wasm:build bundler" }]
+
+["wasm:build:node"]
+description = "Build WASM package (Node.js target → pkg/nodejs/)"
+run = [{ task = "wasm:build nodejs" }]
+
+["wasm:build:nodejs"]
+description = "Alias for build:node — produces a Node.js (CJS, self-initializing) pkg/ artifact"
+run = [{ task = "wasm:build:node" }]
+
+["wasm:test"]
+description = "Run WASM tests"
+dir = "crates/liter-llm-wasm"
+run = "wasm-pack test --headless --firefox"
+
+["wasm:lint:check"]
+description = "Lint liter-llm-wasm for wasm32-unknown-unknown (CI)"
+run = "cargo clippy --target wasm32-unknown-unknown -p liter-llm-wasm -- -D warnings"
+
+["wasm:test:wasm32"]
+description = "Run the liter-llm wasm32 tests in Node.js (CI). Needs wasm-bindgen-test-runner at the wasm-bindgen version in Cargo.lock."
+env.CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER = "wasm-bindgen-test-runner"
+run = "cargo test --target wasm32-unknown-unknown -p liter-llm --no-default-features --features wasm-http --test wasm_timeout"
+
+["wasm:clean"]
+description = "Clean WASM build artifacts"
+dir = "crates/liter-llm-wasm"
+run = "rm -rf pkg target"
+
+["wasm:e2e:generate"]
+description = "Generate WASM E2E tests from fixtures"
+run = "alef e2e generate --lang wasm"
+
+["wasm:e2e:setup"]
+description = "Build the Node.js-target WASM pkg and install e2e deps"
+depends = ["wasm:build:node"]
+dir = "e2e/wasm"
+run = "pnpm install"
+
+["wasm:update"]
+description = "Update WASM dependencies"
+run = "echo 'WASM dependencies updated via node:update (pnpm workspace)'"
+
+["wasm:e2e:test"]
+description = "Run WASM E2E tests using Alef-configured test commands"
+depends = ["wasm:e2e:setup"]
+run = "alef test --lang wasm --e2e"
+
+# ---- Go ----------------------------------------------------------------------------------------
+
+["go:install"]
+description = "Install Go tools and modules"
+dir = "packages/go"
+run = ["go mod tidy", "go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest"]
+run_windows = "go mod tidy"
+
+["go:setup"]
+description = "Setup Go tools and modules (alias for install)"
+run = [{ task = "go:install" }]
+
+["go:build:ffi"]
+description = "Build FFI static library for Go"
+run = "cargo build -p liter-llm-ffi --release"
+
+["go:build"]
+description = "Build Go bindings (requires Rust FFI to be built first)"
+dir = "packages/go"
+env.CGO_ENABLED = "1"
+run = "go build ./..."
+
+["go:build:dev"]
+description = "Build Go bindings in debug mode (requires Rust FFI to be built first)"
+dir = "packages/go"
+env.CGO_ENABLED = "1"
+run = "go build ./..."
+
+["go:build:release"]
+description = "Build Go bindings in release mode (optimized, requires Rust FFI to be built first)"
+dir = "packages/go"
+env.CGO_ENABLED = "1"
+run = 'go build -ldflags="-s -w" ./...'
+
+["go:build:ci"]
+description = "Build Go bindings in CI mode (requires Rust FFI to be built first)"
+dir = "packages/go"
+env.CGO_ENABLED = "1"
+run = "go build ./..."
+
+["go:test"]
+description = "Run Go unit tests"
+depends = ["go:build:ffi"]
+dir = "packages/go"
+env.CGO_ENABLED = "1"
+run = "go test -v ./..."
+
+["go:test:ci"]
+description = "Run Go tests in CI mode"
+dir = "packages/go"
+env = { RUST_BACKTRACE = "full", RUST_LIB_BACKTRACE = "1", CI = "true", CGO_ENABLED = "1" }
+run = "go test -timeout 10m -v ./..."
+
+["go:test:verbose"]
+description = "Run Go tests with verbose output"
+dir = "packages/go"
+run = "go test -v ./..."
+
+["go:lint"]
+description = "Lint and format Go code with auto-fix (golangci-lint + gofmt)"
+dir = "packages/go"
+env.CGO_ENABLED = "1"
+run = "gofmt -w . && golangci-lint run ./..."
+
+["go:lint:check"]
+description = "Lint and format Go code in check-only mode (golangci-lint + gofmt, no fixes)"
+dir = "packages/go"
+env.CGO_ENABLED = "1"
+run = "golangci-lint run ./..."
+
+["go:format"]
+description = "Format Go code with modifications (gofmt)"
+dir = "packages/go"
+run = "gofmt -w ."
+
+["go:format:check"]
+description = "Check Go code formatting without modifications (gofmt)"
+dir = "packages/go"
+run = 'test -z "$(gofmt -l .)"'
+run_windows = """pwsh -Command "$diff = gofmt -l .; if ($diff) { Write-Error 'Go formatting issues found'; exit 1 }\""""
+
+["go:vendor"]
+description = "Vendor FFI artifacts into Go package for distribution"
+depends = ["go:build:ffi"]
+run = "python3 scripts/ci/go/vendor-ffi.py"
+
+["go:vendor:clean"]
+description = "Remove vendored FFI artifacts from Go package"
+run = "python3 scripts/ci/go/vendor-ffi.py --clean"
+
+["go:clean"]
+description = "Clean Go build cache"
+dir = "packages/go"
+run = "go clean -cache"
+
+["go:update"]
+description = "Update Go dependencies and linters"
+dir = "packages/go"
+run = ["go get -u ./... && go mod tidy", "go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest"]
+run_windows = "go get -u ./... && go mod tidy"
+
+["go:e2e:generate"]
+description = "Generate Go E2E tests from fixtures"
+run = ["alef e2e generate --lang go", "gofmt -w e2e/go/"]
+
+["go:e2e:lint"]
+description = "Lint Go bindings using Alef-configured lint commands"
+run = "alef lint --lang go"
+
+["go:e2e:test"]
+description = "Run Go E2E tests using Alef-configured test commands"
+run = "alef test --lang go --e2e"
+
+["go:e2e:verify"]
+description = "Regenerate and validate Go E2E suite (generate + lint + test)"
+run = [{ task = "go:e2e:generate" }, { task = "go:e2e:lint" }, { task = "go:e2e:test" }]
+
+# ---- Java --------------------------------------------------------------------------------------
+# Every Maven call goes through the hidden java:mvn task (mise-tasks/java/mvn.sh). ~keep
+
+["java:install"]
+description = "Install Java dependencies"
+run = [{ task = "java:mvn clean install -DskipTests" }]
+
+["java:setup"]
+description = "Setup Java environment (alias for install)"
+run = [{ task = "java:install" }]
+
+["java:build"]
+description = "Build Java package (depends on Rust FFI)"
+run = [{ task = "java:mvn clean package -DskipTests" }]
+
+["java:build:dev"]
+description = "Build Java package in debug mode"
+run = [{ task = "java:mvn clean package -DskipTests -DdebugMode=true" }]
+
+["java:build:release"]
+description = "Build Java package in release mode (optimized)"
+run = [{ task = "java:mvn clean package -DskipTests -Pproduction" }]
+
+["java:build:ci"]
+description = "Build Java package in CI mode"
+run = [{ task = "java:mvn clean package -DskipTests" }]
+
+["java:test"]
+description = "Run Java tests"
+run = [{ task = "java:mvn test -q" }]
+
+["java:test:ci"]
+description = "Run Java tests in CI mode"
+env.MAVEN_OPTS = "-Xmx1024m"
+run = [{ task = "java:mvn test -B -q" }]
+
+["java:test:verbose"]
+description = "Run Java tests with verbose output"
+run = [{ task = "java:mvn test -X" }]
+
+["java:lint"]
+description = "Lint all Java code (spotless check + checkstyle + PMD)"
+run = [
+  { task = "java:mvn spotless:check" },
+  { task = "java:mvn checkstyle:check" },
+  { task = "java:mvn pmd:cpd-check" },
+]
+
+["java:lint:check"]
+description = "Check all Java code linting without modifications"
+run = [{ task = "java:lint" }]
+
+["java:format"]
+description = "Format all Java code (spotless)"
+run = [{ task = "java:mvn spotless:apply" }]
+
+["java:format:check"]
+description = "Check all Java code formatting (spotless)"
+run = [{ task = "java:mvn spotless:check" }]
+
+["java:clean"]
+description = "Clean Java build artifacts"
+run = [{ task = "java:mvn clean" }]
+
+["java:update"]
+description = "Update Java dependencies and plugins (including linters)"
+run = [
+  { task = "java:mvn -DallowSnapshots=false versions:use-latest-releases -DprocessDependencies=true -DprocessParent=false" },
+  { task = "java:mvn -DallowSnapshots=false versions:update-properties" },
+  { task = "java:mvn -DallowSnapshots=false versions:display-dependency-updates" },
+  { task = "java:mvn -DallowSnapshots=false versions:display-plugin-updates" },
+]
+
+["java:e2e:generate"]
+description = "Generate Java E2E tests from fixtures"
+run = ["alef e2e generate --lang java", { task = "java:e2e:format" }]
+
+["java:e2e:format"]
+description = "Format Java bindings using Alef-configured format commands"
+run = "alef fmt --lang java"
+
+["java:e2e:lint"]
+description = "Lint Java bindings using Alef-configured lint commands"
+run = "alef lint --lang java"
+
+["java:e2e:test"]
+description = "Run Java E2E tests using Alef-configured test commands"
+run = "alef test --lang java --e2e"
+
+["java:e2e:verify"]
+description = "Regenerate and validate Java E2E suite (build + generate + lint + test)"
+run = [{ task = "java:build" }, { task = "java:e2e:generate" }, { task = "java:e2e:lint" }, { task = "java:e2e:test" }]
+
+# ---- C# ----------------------------------------------------------------------------------------
+
+["csharp:install"]
+description = "Restore C# dependencies"
+dir = "packages/csharp"
+run = "dotnet restore LiterLlm/LiterLlm.csproj"
+
+["csharp:build:ffi"]
+description = "Build FFI shared library for C#"
+run = "cargo build -p liter-llm-ffi --release"
+
+["csharp:build"]
+description = "Build C# binding (depends on Rust FFI)"
+dir = "packages/csharp"
+run = "dotnet build LiterLlm/LiterLlm.csproj -c Release"
+
+["csharp:build:dev"]
+description = "Build C# binding in debug mode"
+dir = "packages/csharp"
+run = "dotnet build LiterLlm/LiterLlm.csproj -c Debug"
+
+["csharp:build:release"]
+description = "Build C# binding in release mode (optimized)"
+dir = "packages/csharp"
+run = "dotnet build LiterLlm/LiterLlm.csproj -c Release"
+
+["csharp:build:ci"]
+description = "Build C# binding in CI mode"
+dir = "packages/csharp"
+run = "dotnet build LiterLlm/LiterLlm.csproj -c Release"
+
+["csharp:package"]
+description = "Pack C# NuGet package for publishing"
+dir = "packages/csharp"
+run = "dotnet pack LiterLlm/LiterLlm.csproj -c Release --no-build"
+
+["csharp:test"]
+description = "Run C# tests (requires FFI built first)"
+depends = ["csharp:build:ffi"]
+dir = "packages/csharp"
+env.LD_LIBRARY_PATH = "{{config_root}}/target/release:{{ get_env(name='LD_LIBRARY_PATH', default='') }}"
+env.DYLD_LIBRARY_PATH = "{{config_root}}/target/release:{{ get_env(name='DYLD_LIBRARY_PATH', default='') }}"
+run = "dotnet test LiterLlm/LiterLlm.csproj -c Release"
+
+["csharp:test:ci"]
+description = "Run C# tests in CI mode"
+dir = "packages/csharp"
+env.DOTNET_CLI_TELEMETRY_OPTOUT = "true"
+run = "dotnet test LiterLlm/LiterLlm.csproj -c Release"
+
+["csharp:test:verbose"]
+description = "Run C# tests with verbose output"
+dir = "packages/csharp"
+run = "dotnet test LiterLlm/LiterLlm.csproj -c Release --verbosity detailed"
+
+["csharp:lint"]
+description = "Lint all C# code for style violations with auto-fix (dotnet format)"
+dir = "packages/csharp"
+run = "dotnet format LiterLlm/LiterLlm.csproj"
+
+["csharp:lint:check"]
+description = "Check all C# code style violations without modifications (dotnet format verify)"
+dir = "packages/csharp"
+run = ["dotnet restore LiterLlm/LiterLlm.csproj", "dotnet format LiterLlm/LiterLlm.csproj --verify-no-changes"]
+
+["csharp:format"]
+description = "Format C# code with automatic style corrections (dotnet format)"
+run = [{ task = "csharp:lint" }]
+
+["csharp:format:check"]
+description = "Check C# code formatting without modifications (dotnet format verify)"
+run = [{ task = "csharp:lint:check" }]
+
+["csharp:clean"]
+description = "Clean C# build artifacts"
+dir = "packages/csharp"
+run = [
+  """python -c "import shutil; [shutil.rmtree(d, ignore_errors=True) for d in ['bin', 'obj', '.vs']]\"""",
+  "dotnet clean LiterLlm/LiterLlm.csproj",
+]
+
+["csharp:update"]
+description = "Update C# dependencies to latest versions (including major versions)"
+dir = "packages/csharp"
+run = [
+  "dotnet tool install --global dotnet-outdated-tool || dotnet tool update --global dotnet-outdated-tool",
+  "dotnet outdated LiterLlm/LiterLlm.csproj --upgrade",
+  "dotnet list LiterLlm/LiterLlm.csproj package --outdated || true",
+]
+
+["csharp:e2e:generate"]
+description = "Generate C# E2E tests from fixtures"
+run = ["alef e2e generate --lang csharp", { task = "csharp:e2e:format" }]
+
+["csharp:e2e:format"]
+description = "Format C# bindings using Alef-configured format commands"
+run = "alef fmt --lang csharp"
+
+["csharp:e2e:lint"]
+description = "Lint C# bindings using Alef-configured lint commands"
+run = "alef lint --lang csharp"
+
+["csharp:e2e:test"]
+description = "Run C# E2E tests using Alef-configured test commands"
+run = "alef test --lang csharp --e2e"
+
+["csharp:e2e:verify"]
+description = "Regenerate and validate C# E2E suite (generate + lint + test)"
+run = [{ task = "csharp:e2e:generate" }, { task = "csharp:e2e:lint" }, { task = "csharp:e2e:test" }]
+
+# ---- PHP ---------------------------------------------------------------------------------------
+
+["php:build"]
+description = "Build PHP extension (requires php-config)"
+run = "cargo build --release --manifest-path crates/liter-llm-php/Cargo.toml"
+
+["php:build:dev"]
+description = "Build PHP extension in debug mode"
+run = "cargo build --manifest-path crates/liter-llm-php/Cargo.toml"
+
+["php:test"]
+description = "Run the PHP smoke test against the locally built extension (run php:build first)"
+run = "bash scripts/php/smoke.sh"
+
+["php:format"]
+description = "Format PHP code"
+run = "poly fmt --fix packages/php"
+
+["php:format:check"]
+description = "Check PHP formatting (CI)"
+run = "poly fmt --check packages/php"
+
+["php:lint"]
+description = "Lint PHP code"
+run = "poly lint packages/php"
+
+["php:lint:check"]
+description = "Check PHP linting without modifications (CI)"
+run = "poly lint packages/php"
+
+["php:clean"]
+description = "Clean PHP build artifacts"
+run = "rm -rf crates/liter-llm-php/vendor crates/liter-llm-php/target"
+
+["php:update"]
+description = "Update PHP dependencies to latest versions (including major versions)"
+run = [
+  "composer update --with-all-dependencies || true",
+  "composer outdated --direct || true",
+  "cd e2e/php && composer update --with-all-dependencies || true",
+  "cd e2e/php && composer outdated --direct || true",
+]
+
+["php:e2e:generate"]
+description = "Generate PHP E2E tests from fixtures"
+run = "alef e2e generate --lang php"
+
+["php:e2e:test"]
+description = "Run PHP E2E tests using Alef-configured test commands"
+run = "alef test --lang php --e2e"
+
+# ---- Ruby --------------------------------------------------------------------------------------
+
+["ruby:deps"]
+description = "Install Ruby dependencies"
+dir = "packages/ruby"
+run = "bundle install"
+
+["ruby:install"]
+description = "Install Ruby dependencies (alias for deps)"
+run = [{ task = "ruby:deps" }]
+
+["ruby:update"]
+description = "Update Ruby dependencies to latest versions"
+dir = "packages/ruby"
+run = ["bundle update --all --conservative=false", "bundle outdated || true"]
+
+["ruby:build"]
+description = "Build Ruby native extension (requires Ruby 3.2-3.4 via rbenv)"
+dir = "packages/ruby"
+env.CARGO_TARGET_DIR = "{{config_root}}/target"
+run = "bundle exec rake compile"
+
+["ruby:test"]
+description = "Run Ruby tests"
+dir = "packages/ruby"
+run = "bundle exec rspec"
+
+["ruby:format"]
+description = "Format Ruby code"
+dir = "packages/ruby"
+run = "bundle exec rubocop --config .rubocop.yml --autocorrect-all ."
+
+["ruby:format:check"]
+description = "Check Ruby formatting (CI)"
+dir = "packages/ruby"
+run = "bundle exec rubocop --config .rubocop.yml --format simple ."
+
+["ruby:lint"]
+description = "Lint Ruby code"
+dir = "packages/ruby"
+run = "bundle exec rubocop --config .rubocop.yml ."
+
+["ruby:lint:check"]
+description = "Check Ruby linting without modifications (CI)"
+run = [{ task = "ruby:format:check" }]
+
+["ruby:typecheck"]
+description = "Run Steep type checking"
+dir = "packages/ruby"
+run = "bundle exec steep check"
+
+["ruby:rbs-validate"]
+description = "Validate RBS type signatures"
+dir = "packages/ruby"
+run = "bundle exec rbs validate"
+
+["ruby:clean"]
+description = "Clean Ruby build artifacts"
+dir = "packages/ruby"
+run = "rm -rf tmp lib/liter_llm/liter_llm_ruby.* vendor/liter-llm-core vendor/Cargo.toml"
+
+["ruby:e2e:generate"]
+description = "Generate Ruby E2E tests from fixtures"
+run = "alef e2e generate --lang ruby"
+
+["ruby:e2e:test"]
+description = "Run Ruby E2E tests using Alef-configured test commands"
+run = "alef test --lang ruby --e2e"
+
+# ---- Elixir ------------------------------------------------------------------------------------
+
+["elixir:deps"]
+description = "Install Elixir dependencies"
+dir = "packages/elixir"
+run = "mix deps.get"
+
+["elixir:build"]
+description = "Compile Elixir project (includes Rustler NIF)"
+dir = "packages/elixir"
+env.LITER_LLM_BUILD = "1"
+run = "mix compile"
+
+["elixir:test"]
+description = "Run Elixir tests"
+dir = "packages/elixir"
+env = { MIX_ENV = "test", LITER_LLM_BUILD = "1" }
+run = "mix test"
+
+["elixir:format"]
+description = "Format Elixir code"
+dir = "packages/elixir"
+run = "mix format"
+
+["elixir:format:check"]
+description = "Check Elixir formatting (CI)"
+dir = "packages/elixir"
+run = "mix format --check-formatted"
+
+["elixir:lint"]
+description = "Lint Elixir code (credo, requires NIF built first)"
+dir = "packages/elixir"
+run = "mix credo --strict"
+
+["elixir:lint:check"]
+description = "Check Elixir linting without modifications (CI)"
+run = [{ task = "elixir:lint" }]
+
+["elixir:update"]
+description = "Update Elixir dependencies to latest versions"
+dir = "packages/elixir"
+run = [
+  "echo 'Note - Elixir requires manual mix.exs edits for major version updates'",
+  "mix hex.outdated || true",
+  "mix deps.update --all",
+  "mix hex.outdated || true",
+]
+
+["elixir:clean"]
+description = "Clean Elixir build artifacts"
+dir = "packages/elixir"
+run = "mix clean"
+
+["elixir:e2e:generate"]
+description = "Generate Elixir E2E tests from fixtures"
+run = "alef e2e generate --lang elixir"
+
+["elixir:e2e:test"]
+description = "Run Elixir E2E tests using Alef-configured test commands"
+run = "alef test --lang elixir --e2e"
+
+# ---- C and Swift -------------------------------------------------------------------------------
+
+["c:build:ffi"]
+description = "Build FFI library for C tests"
+run = "cargo build -p liter-llm-ffi --release"
+
+["c:build"]
+description = "Build FFI library (alias for build:ffi)"
+run = [{ task = "c:build:ffi" }]
+
+["c:test"]
+description = "Build and run C E2E tests"
+run = [{ task = "c:e2e:test" }]
+
+["c:clean"]
+description = "Clean C build artifacts"
+dir = "e2e/c"
+run = "rm -rf build"
+
+["c:e2e:generate"]
+description = "Generate C E2E tests from fixtures"
+run = "alef e2e generate --lang c"
+
+["c:e2e:build"]
+description = "Build C E2E tests using Alef-configured test setup"
+run = [{ task = "c:e2e:test" }]
+
+["c:e2e:test"]
+description = "Run C E2E tests using Alef-configured test commands"
+run = "alef test --lang ffi --e2e"
+
+# Task env stays on this task only; C and Ruby compilers must not inherit an iOS target. ~keep
+["swift:build"]
+description = "Build Swift native libraries for the declared minimum Apple OS versions"
+env = { MACOSX_DEPLOYMENT_TARGET = "13.0", IPHONEOS_DEPLOYMENT_TARGET = "16.0" }
+run = "cargo build --locked --release -p liter-llm-swift -p liter-llm-ffi"

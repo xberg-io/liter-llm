@@ -42,7 +42,7 @@ def test_smoke_files_exist() -> None:
 def test_missing_extension_fails_with_build_hint(tmp_path: Path) -> None:
     result = run_smoke(LITER_LLM_PHP_EXT=str(tmp_path / "missing.so"), PHP=str(fake_php(tmp_path, 0)))
     assert result.returncode != 0
-    assert "task php:build" in result.stderr
+    assert "mise run php:build" in result.stderr
     assert not (tmp_path / "args").exists(), "PHP must not run without an extension"
 
 
@@ -68,14 +68,17 @@ def test_smoke_script_fails_when_extension_is_not_loaded() -> None:
     assert "not loaded" in result.stderr
 
 
-@pytest.mark.skipif(shutil.which("task") is None, reason="task is not installed")
+@pytest.mark.skipif(shutil.which("mise") is None, reason="mise is not installed")
 def test_task_dispatch_runs_the_smoke_script(tmp_path: Path) -> None:
-    taskfile = tmp_path / "Taskfile.yml"
-    taskfile.write_text(f'version: "3"\nincludes:\n  php: "{ROOT / ".task/languages/php.yml"}"\n')
     environment = os.environ.copy()
-    environment.update(LITER_LLM_PHP_EXT=str(tmp_path / "missing.so"), PHP=str(fake_php(tmp_path, 0)))
+    environment.update(
+        LITER_LLM_PHP_EXT=str(tmp_path / "missing.so"),
+        PHP=str(fake_php(tmp_path, 0)),
+        MISE_TASK_RUN_AUTO_INSTALL="false",
+    )
     result = subprocess.run(
-        ["task", "--taskfile", str(taskfile), "php:test"],
+        ["mise", "run", "php:test"],
+        cwd=ROOT,
         env=environment,
         capture_output=True,
         text=True,

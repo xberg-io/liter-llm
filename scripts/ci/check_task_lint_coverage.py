@@ -1,33 +1,28 @@
 #!/usr/bin/env python3
-"""Assert that every Taskfile poly skips is skipped for the reason we expect.
+"""Assert that poly surveys every mise task file and skips none of them.
 
-poly cannot format Taskfile YAML that contains Go template syntax (``{{ }}``)
-and skips those files. That is correct behavior — the files genuinely are not
-parseable as plain YAML — but it means most of our task automation is linted by
-nothing. The danger is not the skip, it is that a *new* file can silently join
-the skipped set and look identical to a file that was checked and found clean.
+The task automation lives in ``mise.toml`` and under ``mise-tasks/`` (included
+TOML task files and ``.sh`` file tasks). poly lints and formats all of them, but
+a file poly declines to parse is reported as a skip, and a newly skipped file
+looks identical to one that was checked and found clean. The go-task YAML this
+replaced was skipped for its Go template syntax; nothing in the mise files has a
+reason to be skipped.
 
 This check reads poly's ``--format json`` report, which names every file it
 surveyed and, for each skip, the reason. So the assertion is made per file:
 
-    every skipped file must carry the Go/Helm template skip reason,
+    no file in the scan set may be skipped,
     and every file in the scan set must appear in the report
 
-Neither a count nor a list of expected filenames appears here. An earlier
-version reconstructed the expected skip set from "the file contains ``{{``" and
-compared counts; that broke the moment poly's YAML parser improved enough to
-format the root ``Taskfile.yml`` in place — 17 expected, 16 reported — even
-though coverage had strictly *increased*. Deriving the verdict from poly's own
-per-file reason means the check tracks poly instead of predicting it: more
-files getting linted is a pass, and a skip for any new reason is a failure that
-names the file.
+Neither a count nor a list of expected filenames appears here: the scan set is
+derived from the tree, so adding a task file widens it automatically.
 
 Retire this in favour of a poly flag (``--deny-skips`` / ``--max-skips=N``) if
 one ships; it was requested upstream. This is a workaround for a missing
 strict mode, not a thing worth keeping on its own merits.
 
 Usage:
-    python3 scripts/ci/check_task_lint_coverage.py    # exit 1 on unexpected skips
+    python3 scripts/ci/check_task_lint_coverage.py    # exit 1 on any skip or unsurveyed file
 """
 
 from __future__ import annotations
@@ -39,12 +34,6 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-
-# ~keep The exact `skipped` string poly reports for a file it declined to parse
-# because of Go template syntax. Matched case-insensitively on a substring so a
-# reworded suffix does not fail the build, but a genuinely different reason
-# (parse error, guard change, new engine restriction) still does.
-TEMPLATE_SKIP_REASON = "template syntax"
 
 # ~keep `poly fmt --check` exits 1 for "these files would reformat", which is a
 # real report this check deliberately ignores — it reads skip reasons, not
@@ -58,11 +47,12 @@ POLY_SURVEYED_EXIT_CODES = frozenset({POLY_ALL_FORMATTED, POLY_WOULD_REFORMAT})
 
 
 def scan_set() -> list[Path]:
-    """The files handed to poly: the root Taskfile plus every included task file."""
-    paths = sorted(ROOT.joinpath(".task").rglob("*.yml"))
-    root_taskfile = ROOT / "Taskfile.yml"
-    if root_taskfile.exists():
-        paths.append(root_taskfile)
+    """The files handed to poly: mise.toml plus every TOML and shell task file under mise-tasks/."""
+    tasks = ROOT / "mise-tasks"
+    paths = sorted([*tasks.rglob("*.toml"), *tasks.rglob("*.sh")])
+    root_config = ROOT / "mise.toml"
+    if root_config.exists():
+        paths.append(root_config)
     if not paths:
         raise SystemExit(f"no task files found under {ROOT}; the scan set cannot be empty")
     return paths
@@ -81,7 +71,7 @@ def poly_report(paths: list[Path]) -> list[dict]:
     """
     poly = shutil.which("poly")
     if poly is None:
-        raise SystemExit("poly is not on PATH; run `task setup` first")
+        raise SystemExit("poly is not on PATH; run `mise install` first")
 
     argv = [poly, "fmt", "--check", "--no-cache", "--format", "json", *[str(p) for p in paths]]
     result = subprocess.run(argv, capture_output=True, text=True, check=False)
@@ -127,7 +117,7 @@ def _display(path: str) -> str:
 
 
 def main() -> int:
-    """Assert every skip poly reports is a Go-template skip, and nothing went unsurveyed.
+    """Assert poly skipped no task file, and nothing went unsurveyed.
 
     The printed lines are this check's machine-readable result, not incidental
     logging, so `print` is the correct surface here (ruff T201 suppressed per
@@ -141,19 +131,10 @@ def main() -> int:
     reported = {Path(entry["path"]).resolve() for entry in report if entry.get("path")}
     unsurveyed = sorted(str(p.relative_to(ROOT)) for p in paths if p.resolve() not in reported)
 
-    unexplained = sorted(
-        (_display(entry["path"]), entry["skipped"])
-        for entry in report
-        if entry.get("skipped") and TEMPLATE_SKIP_REASON not in str(entry["skipped"]).lower()
-    )
+    skipped = sorted((_display(entry["path"]), entry["skipped"]) for entry in report if entry.get("skipped"))
 
-    skipped = [entry for entry in report if entry.get("skipped")]
-
-    if not unsurveyed and not unexplained:
-        print(  # noqa: T201
-            f"OK: {len(paths) - len(skipped)} task file(s) linted, {len(skipped)} skipped, "
-            f"and every skip is explained by Go template syntax."
-        )
+    if not unsurveyed and not skipped:
+        print(f"OK: {len(paths)} task file(s) linted, none skipped.")  # noqa: T201
         return 0
 
     print("Task lint coverage changed unexpectedly:", file=sys.stderr)  # noqa: T201
@@ -165,13 +146,13 @@ def main() -> int:
         )
         for path in unsurveyed:
             print(f"    {path}", file=sys.stderr)  # noqa: T201
-    if unexplained:
+    if skipped:
         print(  # noqa: T201
-            f"  {len(unexplained)} file(s) were skipped for a reason other than Go template syntax\n"
-            "  and are therefore silently unlinted — find out why before assuming this is benign:",
+            f"  {len(skipped)} file(s) were skipped and are therefore silently unlinted —\n"
+            "  find out why before assuming this is benign:",
             file=sys.stderr,
         )
-        for path, reason in unexplained:
+        for path, reason in skipped:
             print(f"    {path}: {reason}", file=sys.stderr)  # noqa: T201
     return 1
 

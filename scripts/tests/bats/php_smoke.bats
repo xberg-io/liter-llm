@@ -33,7 +33,7 @@ setup() {
 	run bash "$SCRIPT"
 
 	xberg_assert_status 1
-	xberg_assert_output_contains "liter_llm extension not found; run \`task php:build\`"
+	xberg_assert_output_contains "liter_llm extension not found; run \`mise run php:build\`"
 	xberg_assert_trace_empty
 }
 

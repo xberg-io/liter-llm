@@ -103,7 +103,7 @@ setup() {
 
 	xberg_assert_status 1
 	xberg_assert_output_contains "has drifted from xberg-io/actions@v1.2.3"
-	xberg_assert_output_contains "task test:scripts:lib:sync"
+	xberg_assert_output_contains "mise run test:scripts:lib:sync"
 	xberg_assert_file "$BATS_LIB_DEST/load.bash" "# an older copy"
 }
 

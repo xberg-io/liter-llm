@@ -185,7 +185,7 @@ crates/liter-llm-ffi/tests/c/*.dSYM/
 # NAPI-RS generated files (both index.js and index.d.ts are committed for npm packaging)
 
 # Transient lockfiles produced when alef runs package managers inside crate
-# source dirs during `task update`/`task upgrade`. Canonical lockfiles live
+# source dirs during `mise run update`/`mise run upgrade`. Canonical lockfiles live
 # under packages/<lang>/.
 crates/liter-llm-py/src/uv.lock
 crates/liter-llm-php/src/composer.lock

@@ -2,7 +2,7 @@
 # Run scripts/php/smoke.php against the locally built liter_llm extension.
 #
 # The extension is LITER_LLM_PHP_EXT when set, otherwise the release cdylib
-# from `task php:build`. PHP selects the interpreter (default: php). A missing
+# from `mise run php:build`. PHP selects the interpreter (default: php). A missing
 # extension, a version mismatch or a failing check exits non-zero.
 set -euo pipefail
 
@@ -23,7 +23,7 @@ if [[ -z "$ext" ]]; then
   done
 fi
 if [[ -z "$ext" || ! -f "$ext" ]]; then
-  echo "php smoke: liter_llm extension not found${ext:+ at $ext}; run \`task php:build\` or set LITER_LLM_PHP_EXT" >&2
+  echo "php smoke: liter_llm extension not found${ext:+ at $ext}; run \`mise run php:build\` or set LITER_LLM_PHP_EXT" >&2
   exit 1
 fi
 
