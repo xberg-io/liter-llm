@@ -25,8 +25,8 @@ After installing mise, set up your development environment:
 # One-time setup - installs all dependencies
 mise run setup
 
-# Build in dev mode (fast iteration)
-mise run build:dev
+# Build the core Rust library
+mise run build
 ```
 
 The setup command will install Rust, Python, Node.js, Go, Java, and Elixir tooling as needed.
@@ -38,9 +38,6 @@ The setup command will install Rust, Python, Node.js, Go, Java, and Elixir tooli
 ```bash
 # Build all crates
 mise run build
-
-# Build in dev mode (fast iteration)
-mise run build:dev
 
 # Build in release mode (optimized)
 mise run build:release
@@ -75,7 +72,7 @@ mise run clean
 
 ### Language-Specific Tasks
 
-Each language binding has its own namespace:
+Each language binding has its own namespace. Format and lint every language with the root `mise run format` and `mise run lint`.
 
 **Rust:**
 
@@ -90,9 +87,7 @@ mise run rust:lint
 
 ```bash
 mise run python:install
-mise run python:test
-mise run python:format
-mise run python:lint
+mise run python:build
 ```
 
 **Node.js:**
@@ -109,14 +104,12 @@ mise run node:test
 mise run go:build          # Build Go bindings (requires FFI)
 mise run go:build:ffi      # Build FFI static library for Go
 mise run go:test
-mise run go:format
 mise run go:lint
 ```
 
 **Java:**
 
 ```bash
-mise run java:build:ffi    # Build FFI shared library for Java
 mise run java:test
 ```
 
@@ -133,8 +126,6 @@ mise run elixir:deps
 ```bash
 mise run ruby:build        # Build Ruby native extension
 mise run ruby:test         # Run Ruby tests
-mise run ruby:format       # Format Ruby code
-mise run ruby:lint         # Lint Ruby code
 ```
 
 **WebAssembly:**
@@ -150,7 +141,6 @@ mise run wasm:test          # Run WASM tests
 
 ```bash
 mise run c:build:ffi       # Build FFI library for C tests
-mise run c:e2e:build       # Build C E2E tests
 mise run c:e2e:test        # Run C E2E tests
 ```
 
@@ -179,16 +169,10 @@ mise run c:e2e:test        # Run C E2E tests
    - `model_prefixes` (required): Model name prefixes that route to this provider
    - `parameter_mappings` (optional): Map OpenAI parameter names to provider-specific names
 
-1. **Regenerate types**
-
-   ```bash
-   mise run generate:types
-   ```
-
 1. **Build and test**
 
    ```bash
-   mise run build:dev
+   mise run build
    mise run test
    ```
 
@@ -205,19 +189,10 @@ E2E tests are generated from JSON fixtures in `tools/e2e-generator/fixtures/` an
 
 ```bash
 # Generate E2E tests for all languages
-mise run e2e:generate:all
-
-# Generate for a specific language
-mise run e2e:generate:rust
-mise run e2e:generate:python
-mise run e2e:generate:go
-mise run e2e:generate:java
-mise run e2e:generate:elixir
-mise run e2e:generate:ruby
-mise run e2e:generate:c
+mise run e2e:generate
 
 # Run Rust E2E tests
-mise run e2e:test:rust
+mise run rust:e2e:test
 ```
 
 Generated test files in `e2e/` should not be edited directly -- modify fixtures or the generator source instead.
