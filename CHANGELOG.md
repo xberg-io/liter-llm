@@ -7,14 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.2] - 2026-10-29
+
+### Added
+
+- WebAssembly: an assistant message has a `contentValue` getter. It returns the content as sent, a string or the list of parts. The `content` getter still returns the display text only (#412).
+
 ### Changed
 
-- Build: mise replaces go-task. `mise.toml` pins the toolchain at the xberg-io/toolchains v1.5.0 baseline, every
+- Build: mise replaces go-task. `mise.toml` pins the toolchain at the xberg-io/toolchains v1.7.1 baseline, every
   task keeps its name under `mise run`, and CI sets up tools with `setup-mise`. `Taskfile.yml` and `.task/` are gone.
+- Ruby: a message read back from the native extension is an instance of its variant class, such as `LiterLlm::MessageUser`, not a plain Hash. Code that expects a Hash can call `to_h` on it (#412).
+- Regenerate bindings and end-to-end suites with alef 0.115.5 (#412).
+- Sync the model catalog from models.dev (#446, #451).
 
 ### Fixed
 
-- Run generated Homebrew consumer checks through Bats, preserving version validation and command failures.
+- Security: update pulldown-cmark to 0.13.5 for RUSTSEC-2026-0414. The crate is a build dependency through prost-build (#448).
+- Build: `mise run version:sync` refreshes the ai-rulez lock, so a version bump no longer fails the lock check (#444).
+- CI: `alef verify` and the poly format check pass on main again (#448).
+- CI: pin poly to 0.31.2, so a new poly release cannot turn main red without a commit (#449).
+- Tests: the bad-purpose file fixture is skipped in Elixir, PHP and Swift, which reject the value before any HTTP request (#416). Every shell script has a Bats suite, and the generated Homebrew consumer checks run through Bats (#443).
 
 ## [2.4.1] - 2026-10-27
 
