@@ -53,7 +53,7 @@ run = "cargo doc --workspace --no-deps --open"
 
 ["rust:update"]
 description = "Update Rust dependencies"
-run = [{ task = "deps upgrade rust" }]
+run = ["mise run deps upgrade rust"]
 
 ["rust:e2e:generate"]
 description = "Generate and format Rust E2E tests from fixtures"
