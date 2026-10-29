@@ -169,7 +169,7 @@ run = ["poly lint .", { task = "lint:task-coverage" }]
 # `--format json` report and asserts each skip's reason per file, so poly parsing more of the
 # tree is a pass and only a new kind of skip fails. ~keep
 [tasks."lint:task-coverage"]
-description = "Assert poly surveys every mise task file and skips none for an unexpected reason"
+description = "Assert poly surveys every mise task file and skips none of them"
 run = "python3 scripts/ci/check_task_lint_coverage.py"
 
 [tasks.check]
