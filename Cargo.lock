@@ -4193,7 +4193,7 @@ dependencies = [
  "prettyplease",
  "prost",
  "prost-types",
- "pulldown-cmark 0.13.4",
+ "pulldown-cmark 0.13.5",
  "pulldown-cmark-to-cmark",
  "regex",
  "syn 2.0.119",
@@ -4235,9 +4235,9 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.13.4"
+version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9f068eba8e7071c5f9511831b44f32c740d5adf574e990f946ddb53db2f314e"
+checksum = "278e9268c93b9e498a2da46c34d90ba93a3255eb99009646398f34bc73ab36eb"
 dependencies = [
  "bitflags 2.13.2",
  "memchr",
@@ -4250,7 +4250,7 @@ version = "22.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84bbb29c624230c4bd1047bbdb2aa47e41c860e9665ce62ba9504eebe91bf867"
 dependencies = [
- "pulldown-cmark 0.13.4",
+ "pulldown-cmark 0.13.5",
 ]
 
 [[package]]
