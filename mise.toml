@@ -46,12 +46,12 @@ bats_lib_ref = "v1.29.0"
 
 [tasks."governance:hooks:install"]
 description = "Provision machine preferences and install reviewed AI governance hooks"
-file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.0/tasks/governance/hooks-install.sh"
+file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.1/tasks/governance/hooks-install.sh"
 
 [tasks.deps]
 description = "Update or upgrade one ecosystem's dependencies, or every ecosystem"
 hide = true
-file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.0/tasks/deps/refresh.sh"
+file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.1/tasks/deps/refresh.sh"
 env.DEPS_LANGS = "rust"
 env.DEPS_RUST_MANIFESTS = "e2e/rust/Cargo.toml"
 

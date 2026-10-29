@@ -4,12 +4,12 @@
 ["alef:regenerate"]
 description = "Regenerate every alef output that carries the version"
 hide = true
-file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.0/tasks/alef/regenerate.sh"
+file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.1/tasks/alef/regenerate.sh"
 
 ["alef:verify:strict"]
 description = "Run alef verify and fail on drifted frozen paths too"
 hide = true
-file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.0/tasks/alef/verify-strict.sh"
+file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.1/tasks/alef/verify-strict.sh"
 
 ["version:sync"]
 description = "Synchronize version across all package manifests"
@@ -33,7 +33,7 @@ run = ["python3 scripts/ci/check_consumer_versions.py", { task = "version:show" 
 
 ["version:show"]
 description = "Show current version from Cargo.toml"
-file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.0/tasks/version/cargo.sh"
+file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.1/tasks/version/cargo.sh"
 
 ["version:bump:major"]
 description = "Bump major version (X.0.0) and sync"
