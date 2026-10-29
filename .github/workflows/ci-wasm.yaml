@@ -1,7 +1,7 @@
 name: CI Wasm
 
 # ~keep The path filters match ci-rust.yaml: this workflow reads the same inputs (sources,
-# lockfile, toolchain pin, cargo config, task files) and adds its own file.
+# lockfile, toolchain pin, cargo config, mise tasks) and adds its own file.
 on:
   push:
     branches: [main]
@@ -11,8 +11,9 @@ on:
       - Cargo.lock
       - rust-toolchain.toml
       - .cargo/**
-      - .task/**
-      - Taskfile.yml
+      - mise.toml
+      - mise.lock
+      - mise-tasks/**
       - .github/workflows/ci-wasm.yaml
   pull_request:
     branches: [main]
@@ -22,8 +23,9 @@ on:
       - Cargo.lock
       - rust-toolchain.toml
       - .cargo/**
-      - .task/**
-      - Taskfile.yml
+      - mise.toml
+      - mise.lock
+      - mise-tasks/**
       - .github/workflows/ci-wasm.yaml
   workflow_dispatch:
 
@@ -76,17 +78,14 @@ jobs:
 
       # ~keep The tests start a mock HTTP server inside Node.js and need 22.3 or later.
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: xberg-io/actions/setup-mise@v1
         with:
-          node-version: "24"
-
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
+          install-args: node
 
       - name: Run clippy for wasm32
-        run: task wasm:lint:check
+        run: mise run wasm:lint:check
         shell: bash
 
       - name: Run wasm32 tests
-        run: task wasm:test:wasm32
+        run: mise run wasm:test:wasm32
         shell: bash

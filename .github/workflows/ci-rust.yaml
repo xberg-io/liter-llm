@@ -21,8 +21,9 @@ on:
       - .cargo/**
       - deny.toml
       - alef.toml
-      - .task/**
-      - Taskfile.yml
+      - mise.toml
+      - mise.lock
+      - mise-tasks/**
       - .github/workflows/ci-rust.yaml
   pull_request:
     branches: [main]
@@ -35,8 +36,9 @@ on:
       - .cargo/**
       - deny.toml
       - alef.toml
-      - .task/**
-      - Taskfile.yml
+      - mise.toml
+      - mise.lock
+      - mise-tasks/**
       - .github/workflows/ci-rust.yaml
   workflow_dispatch:
 
@@ -83,6 +85,7 @@ jobs:
           cache-key-prefix: rust-${{ matrix.os }}
           use-sccache: "true"
           components: rustfmt, clippy, llvm-tools-preview
+          install-llvm-cov: "false"
 
       # ~keep setup-rust installs protobuf-compiler without recommended packages on Linux. The
       # etcd-client build needs the well-known .proto files supplied by libprotobuf-dev.
@@ -93,21 +96,25 @@ jobs:
       - name: Setup PHP (required by ext-php-rs build script)
         uses: xberg-io/actions/setup-php@v1
 
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
+      # ~keep Linux runs cargo-deny and cargo-llvm-cov from mise.toml; macOS runs only tasks.
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install: ${{ runner.os == 'Linux' && 'true' || 'false' }}
+          install-args: ${{ runner.os == 'Linux' && 'cargo-deny github:taiki-e/cargo-llvm-cov' || '' }}
 
       - name: Run Rust tests
-        run: task rust:test
+        run: mise run rust:test
         shell: bash
 
       - name: Run clippy (Linux only)
         if: runner.os == 'Linux'
-        run: task rust:lint:check
+        run: mise run rust:lint:check
         shell: bash
 
       - name: Check Rust formatting (Linux only)
         if: runner.os == 'Linux'
-        run: task rust:format:check
+        run: mise run rust:format:check
         shell: bash
 
       - name: Install alef (Linux only)
@@ -126,36 +133,21 @@ jobs:
       # cargo-deny against it, so dependency vulnerabilities went unnoticed. The
       # allowlist documents each tolerated advisory and why it can't be fixed locally;
       # any new advisory fails this step. ~keep
-      # ~keep cargo-deny is installed as a native binary rather than run through the upstream
-      # cargo-deny Docker action, which failed for two independent reasons -- so re-adding it
-      # on an x86 runner would not help. First: the runner pre-builds a container action's
-      # image at job start, but the "Free disk space" step above prunes Docker images, so by
-      # the time this step ran the image was gone ("Unable to find image '20b7cf:...' locally"
-      # -> "pull access denied for 20b7cf"; run 33306733197). Second: that action's Dockerfile
-      # unconditionally downloads the x86_64-unknown-linux-musl cargo-deny tarball, which
-      # cannot execute on this ubuntu-24.04-arm leg even when the image survives.
-      # taiki-e/install-action fetches at step time (nothing left to prune) and its cargo-deny
-      # manifest carries an aarch64_linux_musl entry. The flags below reproduce the action
-      # defaults that were in effect (--all-features, log-level warn, manifest-path
-      # ./Cargo.toml) so the scan semantics are unchanged.
-      - name: Install cargo-deny (Linux only)
-        if: runner.os == 'Linux'
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-deny
-
+      # ~keep cargo-deny comes from mise.toml as a native binary rather than the upstream
+      # cargo-deny Docker action, which failed for two independent reasons. First: the runner
+      # pre-builds a container action's image at job start, but the "Free disk space" step above
+      # prunes Docker images, so by the time this step ran the image was gone ("Unable to find
+      # image '20b7cf:...' locally" -> "pull access denied for 20b7cf"; run 33306733197). Second:
+      # that action's Dockerfile unconditionally downloads the x86_64-unknown-linux-musl
+      # cargo-deny tarball, which cannot execute on this ubuntu-24.04-arm leg. The flags below
+      # reproduce the action defaults that were in effect (--all-features, log-level warn,
+      # manifest-path ./Cargo.toml) so the scan semantics are unchanged.
       - name: Dependency scan (cargo-deny, Linux only)
         if: runner.os == 'Linux'
         run: >-
           cargo deny --all-features --log-level warn --manifest-path ./Cargo.toml
           check advisories bans licenses sources
         shell: bash
-
-      - name: Install cargo-llvm-cov (Linux only)
-        if: runner.os == 'Linux'
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-llvm-cov
 
       - name: Rust coverage (Linux only)
         if: runner.os == 'Linux'

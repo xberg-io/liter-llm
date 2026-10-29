@@ -6,7 +6,8 @@ on:
     paths:
       - "docs-site/**"
       - "alef.toml"
-      - ".task/tools/docs.yml"
+      - "mise.toml"
+      - "mise-tasks/**"
       - ".textlintrc.json"
       - ".textlintignore"
       - "scripts/ci/check_prose_gate.py"
@@ -16,7 +17,8 @@ on:
     paths:
       - "docs-site/**"
       - "alef.toml"
-      - ".task/tools/docs.yml"
+      - "mise.toml"
+      - "mise-tasks/**"
       - ".textlintrc.json"
       - ".textlintignore"
       - "scripts/ci/check_prose_gate.py"

@@ -31,9 +31,11 @@ jobs:
         with:
           cache-key-prefix: catalog-verify
 
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install: "false"
 
       - name: Check catalog is up-to-date with models.dev
-        run: task generate:catalog:check
+        run: mise run generate:catalog:check
         shell: bash

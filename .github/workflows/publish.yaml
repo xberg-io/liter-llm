@@ -153,8 +153,11 @@ jobs:
       # the artifacts are built from, so the guard has to be handed the same spelling or every
       # prerelease would fail it on a version that is in fact correct. A final release has no
       # suffix and passes through both expressions untouched.
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install: "false"
+          config-ref: ${{ github.sha }}
 
       - name: Respell the release version for PyPI and RubyGems
         id: version_forms
@@ -166,7 +169,7 @@ jobs:
           IS_TAG: ${{ steps.meta.outputs.is_tag }}
           TARGET_SHA: ${{ steps.meta.outputs.target_sha }}
           REQUESTED_TAG: ${{ inputs.tag || github.event.client_payload.tag }}
-        run: task ci:release-version-forms
+        run: mise run ci:release-version-forms
 
       - name: Ensure GitHub Release exists for tag
         if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.dry_run != 'true' }}
@@ -623,9 +626,6 @@ jobs:
       - name: Install Bundler
         shell: bash
         run: (gem install bundler -v 4.0.0 --no-document || gem install bundler --no-document) && bundler --version
-
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
 
       - name: Rewrite native dependencies to registry versions
         if: needs.prepare.outputs.dry_run != 'true'
@@ -1340,13 +1340,16 @@ jobs:
           pattern: go-ffi-*
           path: go-ffi-release
           merge-multiple: true
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install: "false"
+          config-ref: ${{ github.sha }}
 
       - name: Prepare Go installer archive aliases and checksums
         env:
           RELEASE_VERSION: ${{ needs.prepare.outputs.artifact_version }}
-        run: task ci:prepare-go-release-assets
+        run: mise run ci:prepare-go-release-assets
         shell: bash
       - name: Upload to GitHub Release
         uses: xberg-io/actions/upload-release-assets@v1
@@ -3735,7 +3738,7 @@ jobs:
           expected="${VERSION%%-dryrun-*}"
           if [[ "${actual}" != "${expected}" ]]; then
             echo "::error::plugin/package.json declares ${actual} but the release is ${expected};" \
-              "regenerate the plugin bundle (task version:sync) before tagging"
+              "regenerate the plugin bundle (mise run version:sync) before tagging"
             exit 1
           fi
           echo "plugin/package.json matches the release at ${expected}"
@@ -3776,6 +3779,8 @@ jobs:
       ${{ !inputs.plugins-only && (!cancelled() && needs.prepare.outputs.is_tag == 'true' && needs.validate-versions.result == 'success' && needs.prepare.outputs.release_python == 'true') }}
     runs-on: ubuntu-latest
     environment: pypi
+    env:
+      UV_PYTHON_PREFERENCE: only-system
     permissions:
       contents: read
       id-token: write
@@ -3791,10 +3796,11 @@ jobs:
         uses: xberg-io/actions/verify-ai-rulez-plugin@v1
         with:
           config-directory: .ai-rulez
-      - name: Install uv
-        uses: astral-sh/setup-uv@v10.3.2
+      - name: Install Python and uv
+        uses: xberg-io/actions/setup-mise@v1
         with:
-          python-version: "3.13"
+          install-args: python uv
+          config-ref: ${{ github.sha }}
       # ~keep Same rendered-bundle gap as the npm job, but silent: this job had no guard at
       # all, and publish-pypi's skip-existing is not one — a stale
       # plugin/.hermes/package/pyproject.toml rebuilds an already-published wheel version, gets
@@ -3810,7 +3816,7 @@ jobs:
           expected="${{ needs.prepare.outputs.pypi_version }}"
           if [[ "${actual}" != "${expected}" ]]; then
             echo "::error::${pyproject} declares ${actual} but the release is ${expected};" \
-              "regenerate the plugin bundle (task version:sync) before tagging"
+              "regenerate the plugin bundle (mise run version:sync) before tagging"
             exit 1
           fi
           echo "${pyproject} matches the release at ${expected}"
@@ -3974,6 +3980,8 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.plugins-only && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: pypi
+    env:
+      UV_PYTHON_PREFERENCE: only-system
     permissions:
       contents: read
       id-token: write
@@ -3989,9 +3997,10 @@ jobs:
         uses: xberg-io/actions/verify-ai-rulez-plugin@v1
         with:
           version-sync-script: scripts/sync_plugin_version.py
-      - uses: astral-sh/setup-uv@v10.3.2
+      - name: Install Python and uv
+        uses: xberg-io/actions/setup-mise@v1
         with:
-          python-version: "3.13"
+          install-args: python uv
       - name: Read the verified Hermes version
         id: package
         shell: bash

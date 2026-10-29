@@ -42,11 +42,13 @@ jobs:
         with:
           cache-key-prefix: sync-catalog
 
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install: "false"
 
       - name: Refresh catalog
-        run: task generate:catalog
+        run: mise run generate:catalog
         shell: bash
 
       - name: Detect drift
@@ -70,7 +72,7 @@ jobs:
           body: |
             Automated refresh of `schemas/catalog.json` and
             `crates/liter-llm/schemas/catalog.json` from
-            [models.dev](https://models.dev), produced by `task generate:catalog`.
+            [models.dev](https://models.dev), produced by `mise run generate:catalog`.
 
             Merges automatically once required checks pass.
           branch: catalog-sync

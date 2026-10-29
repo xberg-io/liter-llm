@@ -103,14 +103,14 @@ class PublicSkillsTests(unittest.TestCase):
         assert self.module.synchronize(self.root, check=True) == (1, 2)
         assert (self.root / "skills/example/SKILL.md").read_text() == generated
 
-    def test_should_install_task_before_ci_executes_version_sync_regression(self) -> None:
+    def test_should_install_mise_before_ci_executes_version_sync_regression(self) -> None:
         """The public-skill job must provision the real recipe runner it exercises."""
         repository = Path(__file__).resolve().parents[2]
         workflow = (repository / ".github/workflows/ci-plugin.yaml").read_text()
         assert workflow.count("  launcher-contract:\n") == 1
         job = workflow.split("  launcher-contract:\n", 1)[1]
-        installers = list(re.finditer(r"uses: xberg-io/actions/install-task@v1\b", job))
-        assert len(installers) == 1, "Launcher job must install the pinned Task CLI exactly once"
+        installers = list(re.finditer(r"uses: xberg-io/actions/setup-mise@v1\b", job))
+        assert len(installers) == 1, "Launcher job must set up mise exactly once"
         command = "python3 scripts/tests/test_public_skills.py"
         assert job.count(command) == 1
         assert installers[0].start() < job.index(command)

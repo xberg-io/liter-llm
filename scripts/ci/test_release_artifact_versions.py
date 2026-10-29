@@ -222,14 +222,14 @@ def test_workflow_and_ci_run_the_real_tasks_and_regression_file() -> None:
     jobs = workflow_jobs()
     forms = [step for step in jobs["prepare"]["steps"] if step.get("id") == "version_forms"]
     assert len(forms) == 1
-    assert forms[0]["run"] == "task ci:release-version-forms"
+    assert forms[0]["run"] == "mise run ci:release-version-forms"
     aliases = [
         step
         for step in jobs["upload-go-ffi"]["steps"]
         if step.get("name") == "Prepare Go installer archive aliases and checksums"
     ]
     assert len(aliases) == 1
-    assert aliases[0]["run"] == "task ci:prepare-go-release-assets"
+    assert aliases[0]["run"] == "mise run ci:prepare-go-release-assets"
     with (ROOT / "mise.toml").open("rb") as config:
         tasks = tomllib.load(config)["tasks"]
     assert tasks["ci:release-version-forms"]["run"] == "python3 scripts/ci/release_artifact_versions.py"
@@ -241,8 +241,8 @@ def test_workflow_and_ci_run_the_real_tasks_and_regression_file() -> None:
     assert regression_commands.count("scripts/ci/test_release_artifact_versions.py") == 1
 
 
-TASK_ACTION = "xberg-io/actions/install-task@v1"
-RELEASE_TASKS = {"task ci:release-version-forms", "task ci:prepare-go-release-assets"}
+TASK_ACTION = "xberg-io/actions/setup-mise@v1"
+RELEASE_TASKS = {"mise run ci:release-version-forms", "mise run ci:prepare-go-release-assets"}
 
 
 def assert_release_task_prerequisites(jobs: dict) -> None:
@@ -255,7 +255,7 @@ def assert_release_task_prerequisites(jobs: dict) -> None:
         installers = [
             (index, step)
             for index, step in enumerate(steps)
-            if step.get("uses", "").startswith("xberg-io/actions/install-task@")
+            if step.get("uses", "").startswith("xberg-io/actions/setup-mise@")
         ]
         assert len(installers) == 1, f"Task installer count for {job}"
         index, installer = installers[0]
@@ -284,7 +284,7 @@ def test_task_prerequisite_guard_rejects_missing_late_or_mutable_installers(job:
         steps.append(installer)
         expected = f"Task installer order for {job}"
     else:
-        installer["uses"] = "xberg-io/actions/install-task@main"
+        installer["uses"] = "xberg-io/actions/setup-mise@main"
         expected = f"Task installer pin for {job}"
     with pytest.raises(AssertionError, match=expected):
         assert_release_task_prerequisites(jobs)

@@ -25,8 +25,9 @@ on:
       - composer.lock
       - go.mod
       - go.sum
-      - .task/**
-      - Taskfile.yml
+      - mise.toml
+      - mise.lock
+      - mise-tasks/**
       - .github/workflows/ci-e2e.yaml
   pull_request:
     branches: [main]
@@ -52,8 +53,9 @@ on:
       - composer.lock
       - go.mod
       - go.sum
-      - .task/**
-      - Taskfile.yml
+      - mise.toml
+      - mise.lock
+      - mise-tasks/**
       - .github/workflows/ci-e2e.yaml
   workflow_dispatch:
 
@@ -142,44 +144,44 @@ jobs:
       matrix:
         include:
           - lang: rust
-            test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task rust:e2e:test"
+            test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' mise run rust:e2e:test"
           - lang: python
             python-version: "3.13"
-            test-cmd: "cd packages/python && uv sync --no-install-project --no-install-workspace && uvx maturin develop --release && cd ../.. && task python:e2e:test"
+            test-cmd: "cd packages/python && uv sync --no-install-project --no-install-workspace && uvx maturin develop --release && cd ../.. && mise run python:e2e:test"
           - lang: node
             node-version: "24"
-            test-cmd: "task node:build && task node:e2e:test"
+            test-cmd: "mise run node:build && mise run node:e2e:test"
           - lang: wasm
             node-version: "24"
-            test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:build:node && (cd e2e/wasm && pnpm install --force) && RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:e2e:test"
+            test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' mise run wasm:build:node && (cd e2e/wasm && pnpm install --force) && RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' mise run wasm:e2e:test"
           - lang: go
-            go-version: "1.26"
-            test-cmd: "task go:e2e:test"
+            mise-tools: go
+            test-cmd: "mise run go:e2e:test"
           - lang: ruby
-            ruby-version: "3.4"
-            test-cmd: "cd packages/ruby && bundle exec rake compile && cd ../.. && task ruby:e2e:test"
+            mise-tools: ruby
+            test-cmd: "cd packages/ruby && bundle install && bundle exec rake compile && cd ../.. && mise run ruby:e2e:test"
           - lang: java
-            java-version: "25"
-            test-cmd: "task java:e2e:test"
+            mise-tools: java
+            test-cmd: "mise run java:e2e:test"
           - lang: csharp
             dotnet-version: "10.0.x"
-            test-cmd: "task csharp:install && task csharp:e2e:test"
+            test-cmd: "mise run csharp:install && mise run csharp:e2e:test"
           - lang: php
             php-version: "8.4"
-            test-cmd: "composer install --no-progress --prefer-dist && task php:build && task php:e2e:test"
+            test-cmd: "composer install --no-progress --prefer-dist && mise run php:build && mise run php:e2e:test"
           - lang: elixir
             elixir-version: "1.19"
             otp-version: "28"
-            test-cmd: "cd packages/elixir && mix deps.get && cd ../.. && task elixir:build && task elixir:e2e:test"
+            test-cmd: "cd packages/elixir && mix deps.get && cd ../.. && mise run elixir:build && mise run elixir:e2e:test"
           - lang: c
-            test-cmd: "task c:e2e:test"
+            test-cmd: "mise run c:e2e:test"
           - lang: dart
             dart-version: "stable"
             test-cmd: "alef test --lang dart --e2e"
           - lang: swift
             test-cmd: "cd e2e/swift_e2e && swift test"
           - lang: zig
-            zig-version: "0.16.0"
+            mise-tools: zig
             test-cmd: "alef test --lang zig --e2e"
           - lang: kotlin_android
             java-version: "21"
@@ -353,19 +355,13 @@ jobs:
         shell: bash
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-      - name: Setup Go
-        if: matrix.go-version
-        uses: actions/setup-go@v7
+      # ~keep One setup-mise per leg: Go, Ruby, the Java 25 JDK and Zig come from mise.toml; legs
+      # without mise-tools install nothing and run their tasks with the tools set up above.
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
         with:
-          go-version: ${{ matrix.go-version }}
-
-      - name: Setup Ruby
-        if: matrix.ruby-version
-        uses: ruby/setup-ruby@v1.335.0
-        with:
-          ruby-version: ${{ matrix.ruby-version }}
-          bundler-cache: true
-          working-directory: packages/ruby
+          install: ${{ matrix.mise-tools && 'true' || 'false' }}
+          install-args: ${{ matrix.mise-tools }}
 
       - name: Setup Java
         if: matrix.java-version
@@ -416,12 +412,6 @@ jobs:
         if: matrix.lang == 'dart'
         run: cargo install flutter_rust_bridge_codegen --locked
 
-      - name: Setup Zig
-        if: matrix.zig-version
-        uses: xberg-io/actions/setup-zig@v1
-        with:
-          version: ${{ matrix.zig-version }}
-
       - name: Setup C/C++ tools
         if: matrix.lang == 'c'
         uses: xberg-io/actions/setup-c-cpp-tools@v1
@@ -454,9 +444,6 @@ jobs:
         run: |
           echo "PKG_CONFIG_PATH=${PWD}/crates/liter-llm-ffi:${PKG_CONFIG_PATH:-}" >> "$GITHUB_ENV"
           echo "LD_LIBRARY_PATH=${PWD}/target/release:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
-
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
 
       - name: Install alef CLI
         uses: xberg-io/actions/install-alef@v1

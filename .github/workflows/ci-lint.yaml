@@ -35,7 +35,7 @@ jobs:
       # make every push/PR red for a reason contributors cannot fix locally.
       # Re-enable once B26 is resolved upstream. ~keep
       # The poly pin is deliberate: a new poly release must not turn main red with
-      # no commit. To raise it, change this value and POLY_VERSION in Taskfile.yml
+      # no commit. To raise it, change this value and the poly pin in mise.toml
       # (no "v" there), run `poly fmt`, and commit the reformat in the same PR. ~keep
       poly-version: "v0.31.2"
       setup-rust: true
@@ -64,6 +64,8 @@ jobs:
   release-regressions:
     name: Release regression tests
     runs-on: ubuntu-latest
+    env:
+      UV_PYTHON_PREFERENCE: only-system
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -73,8 +75,10 @@ jobs:
           python-version: "3.14"
           cache-prefix: release-regressions
           install-command: uv sync --locked --only-group dev --python 3.14 --no-install-project --no-install-workspace
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install-args: uv
       - name: Run release regression tests
-        run: task test:release-regressions
+        run: mise run test:release-regressions
         shell: bash

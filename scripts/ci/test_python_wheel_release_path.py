@@ -307,7 +307,7 @@ def test_invariant_pypi_checks_every_file_against_the_release_version() -> None:
     assert set(forms) == {"name", "id", "shell", "env", "run"}
     assert forms["env"]["VERSION"] == "${{ steps.meta.outputs.version }}"
     assert forms["env"]["RELEASE_TAG"] == "${{ steps.meta.outputs.tag }}"
-    assert forms["run"] == "task ci:release-version-forms"
+    assert forms["run"] == "mise run ci:release-version-forms"
 
 
 def test_invariant_release_builds_one_wheel_per_tag_and_no_other() -> None:
@@ -642,8 +642,9 @@ def test_release_regression_task_and_job_fail_when_this_file_fails() -> None:
     assert set(WHEEL_TEST_FILES) <= set(files)
 
     job = workflow("ci-lint.yaml")["jobs"]["release-regressions"]
-    assert set(job) == {"name", "runs-on", "steps"}
+    assert set(job) == {"name", "runs-on", "env", "steps"}
     assert job["runs-on"] == "ubuntu-latest"
+    assert job["env"] == {"UV_PYTHON_PREFERENCE": "only-system"}
     assert pinned_steps(job["steps"]) == [
         {"uses": "actions/checkout@vN"},
         {
@@ -654,8 +655,8 @@ def test_release_regression_task_and_job_fail_when_this_file_fails() -> None:
                 "install-command": REGRESSIONS_INSTALL,
             },
         },
-        {"uses": "xberg-io/actions/install-task@vN"},
-        {"run": "task test:release-regressions", "shell": "bash"},
+        {"uses": "xberg-io/actions/setup-mise@vN", "with": {"install-args": "uv"}},
+        {"run": "mise run test:release-regressions", "shell": "bash"},
     ]
 
 
@@ -887,7 +888,7 @@ def test_release_regression_job_runs_this_file() -> None:
     The test cannot see its own removal from CI: it fails when this file runs directly, as `pytest scripts/ci` does.
     """
     job = workflow("ci-lint.yaml")["jobs"]["release-regressions"]
-    assert [step["run"] for step in job["steps"] if "run" in step] == ["task test:release-regressions"]
+    assert [step["run"] for step in job["steps"] if "run" in step] == ["mise run test:release-regressions"]
     pytest_runs = [shlex.split(command) for command in regression_task()["run"] if "pytest" in command]
     assert len(pytest_runs) == 1
     for name in WHEEL_TEST_FILES:
