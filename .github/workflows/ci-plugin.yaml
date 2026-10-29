@@ -24,6 +24,9 @@ on:
       - ".task/tools/version-sync.yml"
       - ".task/tools/plugin.yml"
       - "scripts/tests/**"
+      # Every script under scripts/ has a Bats suite, so a script edit runs the suites. ~keep
+      - "scripts/**/*.sh"
+      - "Taskfile.yml"
       - "test_apps/homebrew/**"
       - "alef.toml"
       - ".task/tools/test-apps.yml"
@@ -46,6 +49,9 @@ on:
       - ".task/tools/version-sync.yml"
       - ".task/tools/plugin.yml"
       - "scripts/tests/**"
+      # Every script under scripts/ has a Bats suite, so a script edit runs the suites. ~keep
+      - "scripts/**/*.sh"
+      - "Taskfile.yml"
       - "test_apps/homebrew/**"
       - "alef.toml"
       - ".task/tools/test-apps.yml"
@@ -138,6 +144,10 @@ jobs:
 
       - name: Install Task for version synchronization regression
         uses: xberg-io/actions/install-task@v1
+
+      - name: Verify the vendored Bats helper library
+        if: runner.os == 'Linux'
+        run: task test:scripts:lib:check
 
       - name: Verify public skills and export ownership
         run: |

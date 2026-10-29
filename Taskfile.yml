@@ -59,6 +59,9 @@ vars:
   # Tasks and CI run the latest ai-rulez release; hooks use the one on PATH, which must be at least this. ~keep
   AI_RULEZ_MIN_VERSION: "5.7.0"
   AI_RULEZ: "uvx ai-rulez@latest"
+  # Immutable xberg-io/actions tag that the vendored Bats helper library comes from. Raise it,
+  # then run `task test:scripts:lib:sync`; CI runs `task test:scripts:lib:check`. ~keep
+  BATS_LIB_REF: "v1.29.0"
   PROJECT_ROOT:
     sh: pwd
   VERSION:
@@ -201,11 +204,15 @@ tasks:
 
   test:scripts:lib:sync:
     desc: "Refresh the vendored Bats helper library from xberg-io/actions"
+    env:
+      BATS_LIB_REF: "{{.BATS_LIB_REF}}"
     cmds:
       - scripts/task/sync-bats-lib.sh sync
 
   test:scripts:lib:check:
     desc: "Fail when the vendored Bats helper library has drifted from its pinned source"
+    env:
+      BATS_LIB_REF: "{{.BATS_LIB_REF}}"
     cmds:
       - scripts/task/sync-bats-lib.sh --check
 
