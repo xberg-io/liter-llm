@@ -65,44 +65,9 @@ run = "mise tasks ls"
 description = "Install all dependencies and dev tools"
 run = ["mise install", { task = "rust:install" }, "alef setup", { task = "governance:hooks:install" }]
 
-# Kept by name for existing callers: mise pins the JDK and Maven that .sdkmanrc used to select. ~keep
-[tasks."setup:sdkman"]
-description = "Install the pinned JDK and Maven (formerly via sdkman)"
-run = "mise install java maven"
-
-[tasks.ai-rulez]
-description = "Generate ai-rulez configuration files (CLAUDE.md, etc.)"
-run = [{ task = "tools:ai-rulez" }]
-
-[tasks."tools:ai-rulez"]
-description = "Generate ai-rulez configuration files (CLAUDE.md, etc.)"
-run = "ai-rulez generate"
-
 [tasks.build]
 description = "Build core Rust library"
 run = [{ task = "rust:build" }]
-
-[tasks."build:all"]
-description = "Build core libraries and ALL language bindings"
-run = [
-  { task = "rust:build" },
-  { task = "python:build" },
-  # ~keep node:build runs `pnpm install` across the workspace, and e2e/wasm
-  # depends on `file:../../crates/liter-llm-wasm/pkg/nodejs`. Only the nodejs
-  # target emits that directory, so it must exist before pnpm resolves.
-  { task = "wasm:build:node" },
-  { task = "node:build" },
-  { task = "go:build" },
-  { task = "java:build" },
-  { task = "csharp:build" },
-  { task = "php:build" },
-  # ~keep `setup` does not install per-language deps, so on a pristine tree
-  # `mix compile` fails with every Hex dependency unavailable.
-  { task = "elixir:deps" },
-  { task = "elixir:build" },
-  { task = "ruby:build" },
-  { task = "wasm:build" },
-]
 
 [tasks."build:release"]
 description = "Build in release mode (optimized)"
@@ -111,17 +76,6 @@ run = [{ task = "rust:build:release" }]
 [tasks.test]
 description = "Run Rust unit and FFI tests"
 run = [{ task = "rust:test" }]
-
-[tasks."test:all"]
-description = "Run ALL test suites across all languages"
-run = [
-  { task = "rust:test" },
-  { task = "go:test" },
-  { task = "java:test" },
-  { task = "csharp:test" },
-  { task = "elixir:test" },
-  { task = "test:scripts" },
-]
 
 [tasks."test:release-regressions"]
 description = "Run lightweight release guard regression tests"
@@ -153,10 +107,6 @@ run = "scripts/task/sync-bats-lib.sh sync"
 description = "Fail when the vendored Bats helper library has drifted from its pinned source"
 env.BATS_LIB_REF = "{{vars.bats_lib_ref}}"
 run = "scripts/task/sync-bats-lib.sh --check"
-
-[tasks."test:e2e"]
-description = "Generate and run e2e tests across all bindings (alias for e2e:verify:all)"
-run = [{ task = "e2e:verify:all" }]
 
 [tasks."ci:release-version-forms"]
 description = "Resolve canonical package version forms for release validation"
@@ -229,11 +179,6 @@ run = "python3 scripts/ci/docker/test_docker.py --image liter-llm:test --port 14
 description = "Stop local LLM infrastructure"
 run = "docker compose -f docker/docker-compose.local-llm.yml down -v"
 
-[tasks."local:test"]
-description = "Run local LLM integration tests (requires Ollama running)"
-env.OLLAMA_BASE_URL = "http://localhost:11434"
-run = "cargo test -p liter-llm --test local_llm -- --ignored --test-threads=1"
-
 # ---- Governance --------------------------------------------------------------------------------
 
 [tasks."governance:check"]
@@ -260,10 +205,6 @@ run = "alef publish package -o dist/"
 
 # ---- alef and generators -----------------------------------------------------------------------
 
-[tasks."alef:extract"]
-description = "Extract API surface from Rust source"
-run = "alef extract"
-
 [tasks."alef:generate"]
 description = "Fast regeneration of all alef-managed files (bindings, stubs, scaffolding, READMEs, e2e, test_apps, docs). Runs `alef all --clean` (formatting is always applied)."
 # ~keep `alef all` never builds the per-language artifacts that a `compile`/`typecheck`
@@ -272,10 +213,6 @@ description = "Fast regeneration of all alef-managed files (bindings, stubs, sca
 # reference-page audit and gap detection still run. Use `mise run alef:snippets` after
 # `alef build` when you actually want validation.
 run = "alef all --clean --skip-compile --skip-snippet-validation"
-
-[tasks."alef:all"]
-description = "Run full alef pipeline (extract + generate + stubs + scaffold + readme + docs + e2e)"
-run = "alef all"
 
 [tasks."alef:verify"]
 description = "Check bindings are up-to-date (CI)"
@@ -295,33 +232,13 @@ dir = "packages/kotlin-android"
 env.GRADLE_USER_HOME = ".gradle"
 run = "./gradlew assembleDebug --no-daemon --max-workers=1"
 
-[tasks."generate:all"]
-description = "Regenerate all generated code"
-run = "alef all"
-
-[tasks."generate:docs"]
-description = "Generate API reference documentation"
-run = "alef docs"
-
-[tasks."generate:docs:check"]
-description = "Validate API reference docs are up-to-date (CI)"
-run = "alef verify --exit-code"
-
 [tasks."generate:readme"]
 description = "Generate package READMEs"
 run = "alef readme"
 
-[tasks."generate:readme:check"]
-description = "Validate package READMEs are up-to-date (CI)"
-run = "alef verify --exit-code"
-
 [tasks."generate:providers-doc"]
 description = "Generate providers documentation from schemas/providers.json"
 run = "uv run --no-sync python scripts/generate_providers_doc.py"
-
-[tasks."generate:providers-doc:check"]
-description = "Validate providers documentation is up-to-date (CI)"
-run = "uv run --no-sync python scripts/generate_providers_doc.py --validate"
 
 [tasks."generate:catalog"]
 description = "Refresh schemas/catalog.json from models.dev (also runs as part of `mise run update`/`upgrade`)"
@@ -338,36 +255,20 @@ description = "Generate E2E tests for all languages from fixtures (alias for e2e
 run = [{ task = "e2e:generate:all" }]
 
 [tasks."e2e:test"]
-description = "Run E2E tests for all languages (alias for e2e:test:all)"
-run = [{ task = "e2e:test:all" }]
-
-[tasks."e2e:test:rust"]
-description = "Run Rust E2E tests (alias for rust:e2e:test)"
-run = [{ task = "rust:e2e:test" }]
-
-[tasks."e2e:mock-server:build"]
-description = "Build the standalone e2e mock HTTP server binary (used by non-Rust suites)"
-run = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+description = "Run all E2E tests across all supported languages"
+run = "alef test --e2e"
 
 [tasks."e2e:generate:all"]
 description = "Generate all E2E tests from fixtures across all supported languages"
 run = "alef e2e generate"
 
-[tasks."e2e:test:all"]
-description = "Run all E2E tests across all supported languages"
-run = "alef test --e2e"
-
-[tasks."e2e:test:quick"]
-description = "Quick E2E test (Rust only — fastest feedback)"
-run = "alef test --lang rust --e2e"
-
-[tasks."e2e:lint:all"]
+[tasks."e2e:lint"]
 description = "Lint generated bindings using Alef-configured lint commands"
 run = "alef lint"
 
-[tasks."e2e:verify:all"]
+[tasks."e2e:verify"]
 description = "Full E2E pipeline — generate, lint, and test all suites"
-run = [{ task = "e2e:generate:all" }, { task = "e2e:lint:all" }, { task = "e2e:test:all" }]
+run = [{ task = "e2e:generate:all" }, { task = "e2e:lint" }, { task = "e2e:test" }]
 
 # ---- Docs --------------------------------------------------------------------------------------
 
@@ -383,22 +284,11 @@ run = [{ task = "docs:build" }]
 description = "Serve documentation locally with live reload"
 run = ["pnpm --dir docs-site install", "pnpm --dir docs-site dev"]
 
-[tasks."docs:lint:links"]
-description = "Check links with lychee"
-run = [
-  { task = "docs:build" },
-  'lychee --offline --config .lychee.toml --root-dir "$PWD/docs-site/dist" docs-site/dist README.md',
-]
-
 [tasks."docs:lint:prose"]
 description = "Lint prose with textlint"
 run = ["pnpm --dir docs-site install --frozen-lockfile", """\
   docs-site/node_modules/.bin/textlint --rules-base-directory "$PWD/docs-site/node_modules" \
   'docs-site/src/content/docs/**/*.{md,mdx}'"""]
-
-[tasks."docs:lint:prose:test"]
-description = "Verify real prose rules reject Markdown and MDX defects"
-run = "python3 scripts/ci/check_prose_gate.py"
 
 [tasks."docs:snippets:list"]
 description = "List all documentation snippets discovered by alef"
@@ -409,21 +299,6 @@ description = "List snippets filtered to specific languages (e.g. rust,python)"
 usage = 'arg "<languages>" env="LANGUAGES" help="Comma-separated snippet languages"'
 run = 'alef snippets list --snippets docs-site/src/snippets --languages "$usage_languages"'
 
-# These two are the validation-only slice of `snippets:all`: `check` without the
-# audit and gaps passes, for fast iteration. They used to call `alef snippets
-# validate`, which no longer exists — `alef snippets` has only list, check, parse,
-# audit and gaps. The old `--level` flag has no replacement: the validation level is
-# config-owned (`validation_level = "typecheck"` in alef.toml), so per-language runs
-# now typecheck rather than defaulting to syntax. ~keep
-[tasks."docs:snippets:validate"]
-description = "Validate all snippet entries via alef (configured validation level)"
-run = "alef snippets check --strict"
-
-[tasks."docs:snippets:validate:lang"]
-description = "Validate snippets for specific languages (e.g. rust,python)"
-usage = 'arg "<languages>" env="LANGUAGES" help="Comma-separated snippet languages"'
-run = 'alef snippets check --strict --lang "$usage_languages"'
-
 [tasks."docs:snippets:gaps"]
 description = "Report unreferenced snippets + missing language variants"
 run = "alef snippets gaps --snippets docs-site/src/snippets --docs docs-site/src/content/docs"
@@ -432,17 +307,3 @@ run = "alef snippets gaps --snippets docs-site/src/snippets --docs docs-site/src
 description = "Audit snippet structure under docs-site/src/snippets"
 run = "alef snippets audit --snippets docs-site/src/snippets"
 
-# `check` is the validation gate: it reads alef.toml, so it honours
-# validation_level, strict, and the sessions blocks. `validate` does not —
-# it takes CLI flags only, defaults to syntax, and runs with an empty
-# session map, so it validates weaker than this repo is configured for.
-#
-# `check` does NOT subsume audit and gaps, despite its --help claiming
-# "discovery, validation, audit, and gap checks": run_check calls
-# discover_snippets, run_validation and missing_generated_snippets, and
-# never audit() or detect_gaps(). Verified against alef 3871e437f. So
-# structural audit, orphaned snippets, missing language variants and broken
-# MDX import targets still need their own commands. ~keep
-[tasks."docs:snippets:all"]
-description = "Audit + gaps + configured validation (canonical docs:snippets gate)"
-run = [{ task = "docs:snippets:audit" }, { task = "docs:snippets:gaps" }, { task = "docs:snippets:validate" }]

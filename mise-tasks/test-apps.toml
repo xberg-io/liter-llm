@@ -2,18 +2,6 @@
 # `alef e2e generate --registry` and runs against the currently-published version of each binding;
 # every dir is rooted at {{config_root}}. ~keep
 
-["test-apps:run"]
-description = "Run alef test-apps for every registry-mode language + brew + homebrew"
-run = "alef test-apps run"
-
-["test-apps:regenerate:scaffold"]
-description = "Regenerate alef test-app scaffolds for a single language (usage - mise run test-apps:regenerate:scaffold -- python)"
-run = "alef test-apps generate"
-
-["test-apps:regenerate"]
-description = "Regenerate test_apps/ via alef and re-sync versions"
-run = ["alef e2e generate --registry", "alef sync-versions"]
-
 ["test-apps:smoke"]
 description = "Run all test_app smoke tests"
 run = [

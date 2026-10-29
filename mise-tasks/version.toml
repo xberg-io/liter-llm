@@ -27,10 +27,6 @@ run = [
   { task = "alef:verify:strict" },
 ]
 
-["version:check"]
-description = "Check if versions are synchronized (dry-run)"
-run = ["python3 scripts/ci/check_consumer_versions.py", { task = "version:show" }]
-
 ["version:show"]
 description = "Show current version from Cargo.toml"
 file = "https://raw.githubusercontent.com/xberg-io/toolchains/v1.5.1/tasks/version/cargo.sh"
