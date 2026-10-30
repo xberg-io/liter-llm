@@ -77,7 +77,7 @@ gcp_auth = { version = "0.12", default-features = false, features = ["ring"] }
 hex = "0.4"
 http = "1"
 httpdate = "1"
-jsonschema = "0.58"
+jsonschema = "0.60"
 jsonwebtoken = { version = "11", default-features = false, features = ["use_pem"] }
 
 magnus = "0.9"
@@ -87,25 +87,25 @@ napi = { version = "3", features = ["napi4", "serde-json", "async"] }
 napi-build = "2"
 napi-derive = "3"
 notify = { version = "8", features = ["macos_kqueue"] }
-opendal = { version = "0.59.4", default-features = false, features = [
+opendal = { version = "0.59.5", default-features = false, features = [
     "services-memory",
     "services-redis",
     "services-fs",
     "services-s3",
 ] }
-opendal-http-transport-reqwest = { version = "0.59.4", default-features = false }
+opendal-http-transport-reqwest = { version = "0.59.5", default-features = false }
 opentelemetry = { version = "0.33", features = ["metrics"] }
 opentelemetry-otlp = { version = "0.33", features = ["grpc-tonic", "trace", "metrics"] }
 opentelemetry_sdk = { version = "0.33", features = ["rt-tokio"] }
 pin-project-lite = "0.2"
-pyo3 = { version = "0.29", features = ["abi3-py310", "multiple-pymethods"] }
-pyo3-async-runtimes = { version = "0.29", features = ["tokio-runtime"] }
+pyo3 = { version = "0.30", features = ["abi3-py310", "multiple-pymethods"] }
+pyo3-async-runtimes = { version = "0.30", features = ["tokio-runtime"] }
 rayon = "1"
 rb-sys = "0.9"
 regex = "1"
 # ~keep Async / HTTP: TLS-agnostic base only; each crate adds TLS features target-conditionally.
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "multipart", "form"] }
-rmcp = { version = "3.5", features = [
+rmcp = { version = "3.8", features = [
     "server",
     "macros",
     "transport-io",
