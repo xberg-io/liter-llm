@@ -153,6 +153,7 @@ jobs:
             test-cmd: "mise run node:build && mise run node:test && mise run node:e2e:test"
           - lang: wasm
             node-version: "24"
+            mise-tools: github:rustwasm/wasm-pack
             test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' mise run wasm:build:node && (cd e2e/wasm && pnpm install --force) && RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' mise run wasm:e2e:test"
           - lang: go
             mise-tools: go
@@ -350,13 +351,9 @@ jobs:
         if: matrix.lang == 'wasm'
         uses: xberg-io/actions/install-wasi-sdk@v1
 
-      - name: Install wasm-pack
-        if: matrix.lang == 'wasm'
-        shell: bash
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-      # ~keep One setup-mise per leg: Go, Ruby, the Java 25 JDK, Maven and Zig come from mise.toml; legs
-      # without mise-tools install nothing and run their tasks with the tools set up above.
+      # ~keep One setup-mise per leg: Go, Ruby, the Java 25 JDK, Maven, Zig and wasm-pack come from
+      # mise.toml; legs without mise-tools install nothing and run their tasks with the tools set up
+      # above.
       - name: Setup mise
         uses: xberg-io/actions/setup-mise@v1
         with:

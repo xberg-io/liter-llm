@@ -551,8 +551,10 @@ jobs:
           target: wasm32-unknown-unknown
           use-sccache: false
       - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-        shell: bash
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install-args: github:rustwasm/wasm-pack
+          config-ref: ${{ github.sha }}
       - name: Build WASM package
         env:
           CARGO_PROFILE_RELEASE_LTO: "false"
