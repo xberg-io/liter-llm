@@ -50,9 +50,11 @@ jobs:
         abi: [arm64-v8a, x86_64]
     steps:
       - uses: actions/checkout@v7
+      # ~keep rust is a mise lock gap (rustup script install); rust-toolchain.toml pins it.
       - uses: xberg-io/actions/setup-rust@v1
         with:
           cache-key-prefix: ci-mobile-android-${{ matrix.abi }}
+      # ~keep Android SDK/NDK stays on its setup action (org toolchain policy).
       - uses: xberg-io/actions/setup-android-ndk@v1
       - name: cargo ndk check liter-llm-dart
         run: cargo ndk --target ${{ matrix.abi }} --platform 21 -- check -p liter-llm-dart
@@ -70,6 +72,7 @@ jobs:
         target: [aarch64-apple-ios, aarch64-apple-ios-sim]
     steps:
       - uses: actions/checkout@v7
+      # ~keep rust is a mise lock gap (rustup script install); rust-toolchain.toml pins it.
       - uses: xberg-io/actions/setup-rust@v1
         with:
           target: ${{ matrix.target }}
@@ -86,6 +89,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
+      # ~keep rust is a mise lock gap (rustup script install); rust-toolchain.toml pins it.
       - uses: xberg-io/actions/setup-rust@v1
       - uses: xberg-io/actions/build-ios-xcframework@v1
         with:
@@ -103,9 +107,11 @@ jobs:
         abi: [arm64-v8a, x86_64]
     steps:
       - uses: actions/checkout@v7
+      # ~keep rust is a mise lock gap (rustup script install); rust-toolchain.toml pins it.
       - uses: xberg-io/actions/setup-rust@v1
         with:
           cache-key-prefix: ci-mobile-android-${{ matrix.abi }}
+      # ~keep Android SDK/NDK stays on its setup action (org toolchain policy).
       - uses: xberg-io/actions/setup-android-ndk@v1
       - name: Build liter-llm-jni for ${{ matrix.abi }}
         run: cargo ndk --target ${{ matrix.abi }} --platform 21 -- build -p liter-llm-jni --release

@@ -53,6 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # ~keep rust is a mise lock gap (rustup script install); rust-toolchain.toml pins it.
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
@@ -71,6 +72,7 @@ jobs:
           test -n "$version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      # ~keep Not on mise: the version is read from Cargo.lock per run, which a mise pin cannot follow.
       - name: Install wasm-bindgen-test-runner
         uses: taiki-e/install-action@v2
         with:

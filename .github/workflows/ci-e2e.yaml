@@ -95,6 +95,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # ~keep rust is a mise lock gap (rustup script install); rust-toolchain.toml pins it.
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
@@ -195,6 +196,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # ~keep rust is a mise lock gap (rustup script install); rust-toolchain.toml pins it.
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
@@ -367,6 +369,7 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java-version }}
 
+      # ~keep Android SDK/NDK stays on its setup action (org toolchain policy).
       - name: Setup Android SDK
         if: matrix.lang == 'kotlin_android'
         uses: android-actions/setup-android@v4
@@ -379,12 +382,14 @@ jobs:
         with:
           gradle-version: "wrapper"
 
+      # ~keep dotnet is a mise lock gap (script install, no checksummed artifact).
       - name: Setup .NET
         if: matrix.dotnet-version
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
 
+      # ~keep PHP stays on its setup action (org toolchain policy).
       - name: Setup PHP
         if: matrix.php-version
         uses: xberg-io/actions/setup-php@v1
@@ -392,6 +397,7 @@ jobs:
           php-version: ${{ matrix.php-version }}
           tools: composer
 
+      # ~keep BEAM stays on its setup action until evaluated for mise (org toolchain policy).
       - name: Setup Elixir
         if: matrix.elixir-version
         uses: xberg-io/actions/setup-elixir@v1
@@ -399,6 +405,7 @@ jobs:
           elixir-version: ${{ matrix.elixir-version }}
           otp-version: ${{ matrix.otp-version }}
 
+      # ~keep Dart/Flutter stays on its setup action (org toolchain policy).
       - name: Setup Dart
         if: matrix.dart-version
         uses: dart-lang/setup-dart@v1

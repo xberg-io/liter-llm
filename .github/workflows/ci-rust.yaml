@@ -79,6 +79,7 @@ jobs:
           show-initial: "false"
           show-final: "true"
 
+      # ~keep rust is a mise lock gap (rustup script install); rust-toolchain.toml pins it.
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
@@ -93,6 +94,7 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get install -y --no-install-recommends libprotobuf-dev
 
+      # ~keep PHP stays on its setup action (org toolchain policy).
       - name: Setup PHP (required by ext-php-rs build script)
         uses: xberg-io/actions/setup-php@v1
 
