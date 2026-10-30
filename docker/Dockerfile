@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM rust:1.91-bookworm AS builder
+FROM rust:1.99.1-bookworm AS builder
 
 ARG TARGETARCH
 

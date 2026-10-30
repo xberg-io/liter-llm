@@ -18,7 +18,3 @@ task_sets = [
 [task_overrides]
 "alef:snippets" = "stages the Java dependencies and the Kotlin build before alef snippets check"
 "plugin:test" = "also runs scripts/verify_pi_package.py"
-
-[overrides.rust]
-version = "1.95"
-reason = "rust-toolchain.toml pins 1.95; moving to 1.99 needs a separate clippy and MSRV pass"
