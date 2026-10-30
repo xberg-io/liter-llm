@@ -33,7 +33,6 @@ includes = [
   "mise-tasks/languages.toml",
   "mise-tasks/version.toml",
   "mise-tasks/plugin.toml",
-  "mise-tasks/test-apps.toml",
 ]
 
 [env]
