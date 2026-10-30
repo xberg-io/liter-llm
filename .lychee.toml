@@ -32,8 +32,6 @@ exclude = [
   "discord\\.gg/",
 
   "opendal\\.apache\\.org/docs/category/services",
-
-  "taskfile\\.dev/installation",
 ]
 
 accept = [200, 204, 301, 302, 429]

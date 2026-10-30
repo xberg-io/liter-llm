@@ -199,6 +199,11 @@ exclude = [
   "/.cursor-plugin/marketplace.json",
   "/.ai-rulez/.generated-manifest.json",
   "/plugin/.ai-rulez/.generated-manifest.json",
+  # The vendored Bats helper is copied byte-identical from xberg-io/actions, whose shell is
+  # tab-indented; reformatting it here would break `mise run test:scripts:lib:check`. Excluded
+  # from discovery rather than from fmt alone because poly has no per-engine exclude -- and the
+  # file is linted and formatted in the repo that owns it. ~keep
+  "scripts/tests/lib/**",
   "**/_generated/**",
   "Package.swift",
   "packages/**",
