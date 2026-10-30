@@ -9,6 +9,7 @@ task_sets = [
   "docs-site",
   "docs-snippets",
   "governance",
+  "governance-check",
   "plugin",
   "plugin-runtime",
   "rust",

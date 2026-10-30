@@ -134,12 +134,6 @@ run = [
 description = "Clean all build artifacts"
 run = [{ task = "rust:clean" }, "alef clean"]
 
-# ---- Governance --------------------------------------------------------------------------------
-
-[tasks."governance:check"]
-description = "Check materialized local governance outputs against shared sources"
-run = ["python3 scripts/ci/check_ai_rulez_version.py workflows", "ai-rulez generate --check --no-local --strict-config"]
-
 # ---- alef and generators -----------------------------------------------------------------------
 
 [tasks."alef:snippets"]
