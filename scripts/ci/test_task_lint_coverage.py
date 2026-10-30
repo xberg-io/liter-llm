@@ -80,7 +80,7 @@ class TestTaskLintCoverage:
             "mise.toml",
             "mise-tasks/version.toml",
             "mise-tasks/shared.toml",
-            "mise-tasks/local/up.sh",
+            "mise-tasks/wasm/build.sh",
             "mise-tasks/.shared/bats-suite/scripts.sh",
         } <= names
         assert all(name == "mise.toml" or name.startswith("mise-tasks/") for name in names)

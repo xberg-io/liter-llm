@@ -138,25 +138,6 @@ run = [
 description = "Clean all build artifacts"
 run = [{ task = "rust:clean" }, "alef clean"]
 
-# ---- Proxy and local LLM -----------------------------------------------------------------------
-
-[tasks."proxy:test"]
-description = "Run all proxy tests (unit + integration)"
-run = "cargo test -p liter-llm-proxy"
-
-[tasks."proxy:docker:build"]
-description = "Build proxy Docker image for testing"
-run = "docker build -f docker/Dockerfile -t liter-llm:test ."
-
-[tasks."proxy:docker:test"]
-description = "Run Docker integration tests locally"
-depends = ["proxy:docker:build"]
-run = "python3 scripts/ci/docker/test_docker.py --image liter-llm:test --port 14000"
-
-[tasks."local:down"]
-description = "Stop local LLM infrastructure"
-run = "docker compose -f docker/docker-compose.local-llm.yml down -v"
-
 # ---- Governance --------------------------------------------------------------------------------
 
 [tasks."governance:check"]

@@ -4,7 +4,7 @@
 version = 1
 ai_rulez_version = '5.9.2'
 scope = 'all'
-tree = 'sha256:e985cfea8d18cc38b8b0d839f36aad71cec075d6ee8c827bb4b8d72a0ebeb3f8'
+tree = 'sha256:36c164d4a1dc4148df20712cc2d86cc4952213d5b805b14f8617c44909ddf978'
 
 [[include]]
 name = 'xberg-bindings'
@@ -507,7 +507,7 @@ digest = 'sha256:7eef1c637ef5fd917f4def36542b5001089c04697f7d85cb57ec6d4239e4b8f
 kind = 'rule'
 id = 'proxy'
 path = 'rules/proxy.md'
-digest = 'sha256:30cac192ed76c3130236931ab8250f64573877f55205697d6ae681f80673898d'
+digest = 'sha256:9dd5aca1e4ff84f72c3ce6c6bd0a1c88a0add84c1c356b89c7ee84ba14d1b85e'
 
 [[item]]
 kind = 'rule'

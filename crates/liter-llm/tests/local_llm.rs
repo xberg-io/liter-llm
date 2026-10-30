@@ -2,7 +2,7 @@
 //! Integration tests against local LLM providers (Ollama).
 //!
 //! These tests require a running Ollama instance with models pulled.
-//! Start with: `mise run local:up`
+//! Start with: `docker compose -f docker/docker-compose.local-llm.yml up -d`
 //! Run with: `cargo test -p liter-llm --test local_llm -- --ignored`
 
 mod common;
