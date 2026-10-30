@@ -45,9 +45,8 @@ This will install the pinned toolchain from `mise.toml`, the dependencies, and p
 | `mise run lint`     | Run all linters (with auto-fix)                 |
 | `mise run format`   | Format all code                                 |
 | `mise run check`    | Combined lint + format check (no modifications) |
-| `mise run e2e:test` | Run the end-to-end suite                        |
 
-For language-specific commands, use the namespace pattern: `mise run rust:test`, `mise run python:build`, `mise run node:test`, etc. `mise tasks` lists them all.
+For language-specific commands, use the namespace pattern: `mise run rust:test`, `mise run node:test`, `mise run python:e2e:test`, etc. `mise tasks` lists them all.
 
 ## What to keep in mind
 

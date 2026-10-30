@@ -195,7 +195,10 @@ def main() -> int:
         if existing == content:
             logger.info("%s is up-to-date", OUTPUT_REL)
             return 0
-        logger.error("%s is out of date. Run 'mise run generate:providers-doc' to regenerate.", OUTPUT_REL)
+        logger.error(
+            "%s is out of date. Run 'uv run --no-sync python scripts/generate_providers_doc.py' to regenerate.",
+            OUTPUT_REL,
+        )
         return 1
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)

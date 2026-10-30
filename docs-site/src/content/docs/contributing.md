@@ -38,9 +38,6 @@ The setup command will install Rust, Python, Node.js, Go, Java, and Elixir tooli
 ```bash
 # Build all crates
 mise run build
-
-# Build in release mode (optimized)
-mise run build:release
 ```
 
 ```bash
@@ -59,7 +56,7 @@ mise run format
 mise run lint
 
 # Generate READMEs from templates
-mise run generate:readme
+alef readme
 ```
 
 ```bash
@@ -80,14 +77,7 @@ Each language binding has its own namespace. Format and lint every language with
 mise run rust:build
 mise run rust:test
 mise run rust:format
-mise run rust:lint
-```
-
-**Python:**
-
-```bash
-mise run python:install
-mise run python:build
+mise run rust:lint:check
 ```
 
 **Node.js:**
@@ -98,51 +88,34 @@ mise run node:build:dev    # Build in debug mode
 mise run node:test
 ```
 
-**Go:**
-
-```bash
-mise run go:build          # Build Go bindings (requires FFI)
-mise run go:build:ffi      # Build FFI static library for Go
-mise run go:test
-mise run go:lint
-```
-
-**Java:**
-
-```bash
-mise run java:test
-```
-
 **Elixir:**
 
 ```bash
 mise run elixir:build      # Compile (includes Rustler NIF)
-mise run elixir:test
-mise run elixir:deps
 ```
 
 **Ruby:**
 
 ```bash
-mise run ruby:build        # Build Ruby native extension
-mise run ruby:test         # Run Ruby tests
+mise run ruby:test         # Run Ruby tests (after `bundle exec rake compile` in packages/ruby)
+```
+
+**PHP:**
+
+```bash
+mise run php:build         # Build the PHP extension
+mise run php:test          # Smoke-test the built extension
 ```
 
 **WebAssembly:**
 
 ```bash
-mise run wasm:build         # Build WASM package (web target)
-mise run wasm:build:bundler # Build WASM package (bundler target)
+mise run wasm:build web     # Build WASM package (web, bundler or nodejs target)
 mise run wasm:build:node    # Build WASM package (Node.js target)
-mise run wasm:test          # Run WASM tests
+mise run wasm:test:wasm32   # Run the wasm32 tests in Node.js
 ```
 
-**C:**
-
-```bash
-mise run c:build:ffi       # Build FFI library for C tests
-mise run c:e2e:test        # Run C E2E tests
-```
+Every binding also has `mise run <lang>:e2e:test`, for example `mise run c:e2e:test`.
 
 ## Adding Providers
 
@@ -179,7 +152,7 @@ mise run c:e2e:test        # Run C E2E tests
 1. **Regenerate E2E tests**
 
    ```bash
-   mise run e2e:generate:all
+   mise run e2e:generate
    mise run test
    ```
 

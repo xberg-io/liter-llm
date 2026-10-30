@@ -19,4 +19,4 @@ x-ai-rulez:
 - Fields: `id`, `description`, `category`, `docs {topic, stem, title}`, `tags`, `call`, `input`, `mock_response {status, body}`, `assertions`, and optionally `env`, `skip {languages, reason}`, `requirements`.
 - `call` names an API: `chat` is the default; named calls include `chat_stream`, `embed`, `rerank`, `image_generate`, `list_models`, `moderate`, `search`, `create_response`, `speech`, `transcribe`, `ocr`, `create_batch` (full set in `alef.toml`). `input` is the request body.
 - Assertion types in use: `equals`, `not_error`, `error`, `count_equals`, `count_min`, `not_empty`, `is_true`, `greater_than`, `contains`. `error` takes the error kind as `value` (for example `Authentication`); assert the HTTP status with `field: error.status_code`.
-- Loop: `mise run e2e:generate` then `mise run e2e:test`; full pipeline `mise run e2e:verify`.
+- Loop: `mise run e2e:generate` then `alef test --e2e` (one binding: `mise run <lang>:e2e:test`); `alef lint` lints the generated suites.

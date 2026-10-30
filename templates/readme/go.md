@@ -376,8 +376,7 @@ for _, model := range []string{
 
 ## Testing / Tooling
 
-- `mise run go:lint` — runs `gofmt` and `golangci-lint`
-- `mise run go:test` — executes `go test ./...` (after building the static FFI library)
-- `mise run go:e2e:verify` — regenerates fixtures and runs `go test ./...` inside `e2e/go`
+- `mise run lint` — runs `gofmt` and `golangci-lint` through poly
+- `mise run go:e2e:test` — runs the generated suite inside `e2e/go`
 
 Need help? Open an issue at [github.com/xberg-io/liter-llm/issues](https://github.com/xberg-io/liter-llm/issues).

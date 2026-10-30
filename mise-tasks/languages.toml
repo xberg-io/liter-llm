@@ -14,19 +14,9 @@ run = "mise install github:bnjbvr/cargo-machete || true"
 description = "Build all crates"
 run = "cargo build --workspace"
 
-["rust:build:release"]
-description = "Build in release mode (optimized)"
-run = "cargo build --workspace --release"
-
 ["rust:test"]
 description = "Run all Rust tests"
 run = "cargo test --workspace"
-
-["rust:lint"]
-description = "Auto-fix Rust code linting (cargo fmt + clippy)"
-run = ["cargo fmt --all", """\
-  cargo clippy --workspace --exclude liter-llm-wasm --exclude liter-llm-swift --exclude liter-llm-dart \
-  --fix --allow-dirty --allow-staged -- -D warnings"""]
 
 ["rust:lint:check"]
 description = "Check Rust code linting without modifications"
@@ -44,15 +34,6 @@ description = "Run Rust E2E tests using Alef-configured test commands"
 run = "alef test --lang rust --e2e"
 
 # ---- Python ------------------------------------------------------------------------------------
-
-["python:install"]
-description = "Install Python dependencies via uv"
-run = ["python3 --version", "uv --version", "uv sync --no-install-project"]
-
-["python:build"]
-description = "Build Python wheel via maturin (uv sync)"
-dir = "{{config_root}}/packages/python"
-run = "uv sync"
 
 ["python:e2e:test"]
 description = "Run Python E2E tests using Alef-configured test commands"
@@ -81,18 +62,9 @@ run = "alef test --lang node --e2e"
 
 # ---- WASM --------------------------------------------------------------------------------------
 
-["wasm:build:bundler"]
-description = "Build WASM package (bundler target)"
-run = [{ task = "wasm:build bundler" }]
-
 ["wasm:build:node"]
 description = "Build WASM package (Node.js target → pkg/nodejs/)"
 run = [{ task = "wasm:build nodejs" }]
-
-["wasm:test"]
-description = "Run WASM tests"
-dir = "{{config_root}}/crates/liter-llm-wasm"
-run = "wasm-pack test --headless --firefox"
 
 ["wasm:lint:check"]
 description = "Lint liter-llm-wasm for wasm32-unknown-unknown (CI)"
@@ -116,51 +88,11 @@ run = "alef test --lang wasm --e2e"
 
 # ---- Go ----------------------------------------------------------------------------------------
 
-["go:build:ffi"]
-description = "Build FFI static library for Go"
-run = "cargo build -p liter-llm-ffi --release"
-
-["go:build"]
-description = "Build Go bindings (requires Rust FFI to be built first)"
-dir = "{{config_root}}/packages/go"
-env.CGO_ENABLED = "1"
-run = "go build ./..."
-
-["go:test"]
-description = "Run Go unit tests"
-depends = ["go:build:ffi"]
-dir = "{{config_root}}/packages/go"
-env.CGO_ENABLED = "1"
-run = "go test -v ./..."
-
-["go:lint"]
-description = "Lint and format Go code with auto-fix (golangci-lint + gofmt)"
-dir = "{{config_root}}/packages/go"
-env.CGO_ENABLED = "1"
-run = "gofmt -w . && golangci-lint run ./..."
-
-["go:e2e:generate"]
-description = "Generate Go E2E tests from fixtures"
-run = ["alef e2e generate --lang go", "gofmt -w e2e/go/"]
-
-["go:e2e:lint"]
-description = "Lint Go bindings using Alef-configured lint commands"
-run = "alef lint --lang go"
-
 ["go:e2e:test"]
 description = "Run Go E2E tests using Alef-configured test commands"
 run = "alef test --lang go --e2e"
 
-["go:e2e:verify"]
-description = "Regenerate and validate Go E2E suite (generate + lint + test)"
-run = [{ task = "go:e2e:generate" }, { task = "go:e2e:lint" }, { task = "go:e2e:test" }]
-
 # ---- Java --------------------------------------------------------------------------------------
-# Every Maven call goes through the hidden java:mvn task (mise-tasks/java/mvn.sh). ~keep
-
-["java:test"]
-description = "Run Java tests"
-run = [{ task = "java:mvn test -q" }]
 
 ["java:e2e:test"]
 description = "Run Java E2E tests using Alef-configured test commands"
@@ -193,12 +125,6 @@ run = "alef test --lang php --e2e"
 
 # ---- Ruby --------------------------------------------------------------------------------------
 
-["ruby:build"]
-description = "Build Ruby native extension (requires Ruby 3.2-3.4 via rbenv)"
-dir = "{{config_root}}/packages/ruby"
-env.CARGO_TARGET_DIR = "{{config_root}}/target"
-run = "bundle exec rake compile"
-
 ["ruby:test"]
 description = "Run Ruby tests"
 dir = "{{config_root}}/packages/ruby"
@@ -210,32 +136,17 @@ run = "alef test --lang ruby --e2e"
 
 # ---- Elixir ------------------------------------------------------------------------------------
 
-["elixir:deps"]
-description = "Install Elixir dependencies"
-dir = "{{config_root}}/packages/elixir"
-run = "mix deps.get"
-
 ["elixir:build"]
 description = "Compile Elixir project (includes Rustler NIF)"
 dir = "{{config_root}}/packages/elixir"
 env.LITER_LLM_BUILD = "1"
 run = "mix compile"
 
-["elixir:test"]
-description = "Run Elixir tests"
-dir = "{{config_root}}/packages/elixir"
-env = { MIX_ENV = "test", LITER_LLM_BUILD = "1" }
-run = "mix test"
-
 ["elixir:e2e:test"]
 description = "Run Elixir E2E tests using Alef-configured test commands"
 run = "alef test --lang elixir --e2e"
 
 # ---- C and Swift -------------------------------------------------------------------------------
-
-["c:build:ffi"]
-description = "Build FFI library for C tests"
-run = "cargo build -p liter-llm-ffi --release"
 
 ["c:e2e:test"]
 description = "Run C E2E tests using Alef-configured test commands"

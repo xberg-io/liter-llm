@@ -57,10 +57,6 @@ run = ["mise install", { task = "rust:install" }, "alef setup", { task = "govern
 description = "Build core Rust library"
 run = [{ task = "rust:build" }]
 
-[tasks."build:release"]
-description = "Build in release mode (optimized)"
-run = [{ task = "rust:build:release" }]
-
 [tasks.test]
 description = "Run Rust unit and FFI tests"
 run = [{ task = "rust:test" }]
@@ -146,15 +142,6 @@ run = ["python3 scripts/ci/check_ai_rulez_version.py workflows", "ai-rulez gener
 
 # ---- alef and generators -----------------------------------------------------------------------
 
-[tasks."alef:generate"]
-description = "Fast regeneration of all alef-managed files (bindings, stubs, scaffolding, READMEs, e2e, test_apps, docs). Runs `alef all --clean` (formatting is always applied)."
-# ~keep `alef all` never builds the per-language artifacts that a `compile`/`typecheck`
-# `docs.snippets.validation_level` needs (only `alef build` does), so leaving validation on
-# spawns a doomed toolchain per snippet and cannot pass by construction. Discovery, the
-# reference-page audit and gap detection still run. Use `mise run alef:snippets` after
-# `alef build` when you actually want validation.
-run = "alef all --clean --skip-compile --skip-snippet-validation"
-
 [tasks."alef:snippets"]
 description = "Validate documentation snippets (needs built artifacts; run after alef build)"
 run = [
@@ -169,14 +156,6 @@ dir = "packages/kotlin-android"
 env.GRADLE_USER_HOME = ".gradle"
 run = "./gradlew assembleDebug --no-daemon --max-workers=1"
 
-[tasks."generate:readme"]
-description = "Generate package READMEs"
-run = "alef readme"
-
-[tasks."generate:providers-doc"]
-description = "Generate providers documentation from schemas/providers.json"
-run = "uv run --no-sync python scripts/generate_providers_doc.py"
-
 [tasks."generate:catalog"]
 description = "Refresh schemas/catalog.json from models.dev (also runs as part of `mise run update`/`upgrade`)"
 run = "cargo run -p liter-llm-catalog-gen --release --"
@@ -184,42 +163,3 @@ run = "cargo run -p liter-llm-catalog-gen --release --"
 [tasks."generate:catalog:check"]
 description = "Validate catalog.json is up-to-date with models.dev (CI)"
 run = "cargo run -p liter-llm-catalog-gen --release -- --validate"
-
-# ---- E2E ---------------------------------------------------------------------------------------
-
-[tasks."e2e:test"]
-description = "Run all E2E tests across all supported languages"
-run = "alef test --e2e"
-
-[tasks."e2e:generate:all"]
-description = "Generate all E2E tests from fixtures across all supported languages"
-run = "alef e2e generate"
-
-[tasks."e2e:lint"]
-description = "Lint generated bindings using Alef-configured lint commands"
-run = "alef lint"
-
-[tasks."e2e:verify"]
-description = "Full E2E pipeline — generate, lint, and test all suites"
-run = [{ task = "e2e:generate:all" }, { task = "e2e:lint" }, { task = "e2e:test" }]
-
-# ---- Docs --------------------------------------------------------------------------------------
-
-[tasks."docs:build:strict"]
-description = "Build documentation (CI-equivalent; astro build fails on errors)"
-run = [{ task = "docs:build" }]
-
-[tasks."docs:lint:prose"]
-description = "Lint prose with textlint"
-run = ["pnpm --dir docs-site install --frozen-lockfile", """\
-  docs-site/node_modules/.bin/textlint --rules-base-directory "$PWD/docs-site/node_modules" \
-  'docs-site/src/content/docs/**/*.{md,mdx}'"""]
-
-[tasks."docs:snippets:list"]
-description = "List all documentation snippets discovered by alef"
-run = "alef snippets list --snippets docs-site/src/snippets"
-
-[tasks."docs:snippets:list:lang"]
-description = "List snippets filtered to specific languages (e.g. rust,python)"
-usage = 'arg "<languages>" env="LANGUAGES" help="Comma-separated snippet languages"'
-run = 'alef snippets list --snippets docs-site/src/snippets --languages "$usage_languages"'

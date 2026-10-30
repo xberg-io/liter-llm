@@ -4,7 +4,7 @@
 version = 1
 ai_rulez_version = '5.9.2'
 scope = 'all'
-tree = 'sha256:36c164d4a1dc4148df20712cc2d86cc4952213d5b805b14f8617c44909ddf978'
+tree = 'sha256:028fce688e241391395606f91a9513d9aae80885f1c75c6e4fd584908e4dcd92'
 
 [[include]]
 name = 'xberg-bindings'
@@ -153,7 +153,7 @@ digest = 'sha256:8f41215233c26441abed2b18f35575ce6b5614f91d9bef4885d550322542d4a
 name = 'e2e-fixtures'
 source = '.ai-rulez/skills/e2e-fixtures/SKILL.md'
 commit = ''
-digest = 'sha256:1c0022d498f750f1c7abdf81c7f0643a1bcc64821ee6d848ca2635ecf968daca'
+digest = 'sha256:4b54c7eee48bee59fb0e3e151cd97d8bc27040dfb6cc15441552fc2f1ace8bce'
 
 [[served]]
 name = 'e2e-generation'
@@ -524,4 +524,4 @@ digest = 'sha256:0c3ec1142275bddbddcc03caadc03358528d1b6a97aca401bc75e4471ba346c
 kind = 'skill'
 id = 'e2e-fixtures'
 path = 'skills/e2e-fixtures'
-digest = 'sha256:efaba9f3d89e8f94ce503dca6f55e31e0b6bf4e90bf19284e9b1b607d8116095'
+digest = 'sha256:955d4847e29ca01aef2f3bda20ff4afb4caae5fa7e4cb0ffe53340b99c01ac9d'
