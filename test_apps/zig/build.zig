@@ -24,8 +24,14 @@ pub fn build(b: *std.Build) void {
     var mock_servers_json: ?[]const u8 = null;
     var mock_servers_map = std.StringHashMap([]const u8).init(_alloc);
     if (mock_server_url == null) {
-        const _bin = b.pathFromRoot("../rust/target/release/mock-server");
-        const _fixtures = b.pathFromRoot("../../fixtures");
+        // Zig 0.17 replaced `build_root`/`pathFromRoot` with `root`; the compile-time field check
+        // keeps 0.16 working, matching alef's generated e2e build. ~keep
+        const _build_root = if (@hasField(std.Build, "root"))
+            b.root.toString(b.allocator) catch @panic("failed to resolve build root")
+        else
+            b.build_root.path orelse ".";
+        const _bin = b.pathResolve(&.{ _build_root, "../rust/target/release/mock-server" });
+        const _fixtures = b.pathResolve(&.{ _build_root, "../../fixtures" });
         var _threaded = std.Io.Threaded.init(_alloc, .{});
         const _io = _threaded.io();
         const _spawned = std.process.spawn(_io, .{

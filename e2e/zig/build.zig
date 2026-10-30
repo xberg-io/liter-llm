@@ -8,8 +8,14 @@ pub fn build(b: *std.Build) void {
     const smoke_step = b.step("smoke", "Run smoke tests only");
     const ffi_path = b.option([]const u8, "ffi_path", "Path to directory containing libliter_llm_ffi") orelse "../../target/release";
     const ffi_include = b.option([]const u8, "ffi_include_path", "Path to directory containing FFI header") orelse "../../crates/liter-llm-ffi/include";
-    const ffi_path_abs = b.pathFromRoot(ffi_path);
-    const ffi_include_abs = b.pathFromRoot(ffi_include);
+    // Zig 0.17 replaced `build_root`/`pathFromRoot` with `root`; the compile-time field check
+    // keeps 0.16 working, matching alef's generated e2e build. ~keep
+    const _build_root = if (@hasField(std.Build, "root"))
+        b.root.toString(b.allocator) catch @panic("failed to resolve build root")
+    else
+        b.build_root.path orelse ".";
+    const ffi_path_abs = b.pathResolve(&.{ _build_root, ffi_path });
+    const ffi_include_abs = b.pathResolve(&.{ _build_root, ffi_include });
     const translate_c = b.addTranslateC(.{
         .root_source_file = .{ .cwd_relative = b.pathJoin(&.{ ffi_include_abs, "liter_llm.h" }) },
         .target = target,
@@ -34,8 +40,8 @@ pub fn build(b: *std.Build) void {
     var mock_servers_json: ?[]const u8 = null;
     var mock_servers_map = std.StringHashMap([]const u8).init(_alloc);
     if (mock_server_url == null) {
-        const _bin = b.pathFromRoot("../rust/target/release/mock-server");
-        const _fixtures = b.pathFromRoot("../../fixtures");
+        const _bin = b.pathResolve(&.{ _build_root, "../rust/target/release/mock-server" });
+        const _fixtures = b.pathResolve(&.{ _build_root, "../../fixtures" });
         var _threaded = std.Io.Threaded.init(_alloc, .{});
         const _io = _threaded.io();
         const _spawned = std.process.spawn(_io, .{
