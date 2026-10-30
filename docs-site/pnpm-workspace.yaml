@@ -2,6 +2,6 @@ allowBuilds:
   esbuild: true
   sharp: true
 minimumReleaseAgeExclude:
-  - "@xberg-io/docs-theme@0.4.0 || 0.4.1"
+  - "@xberg-io/docs-theme@0.4.0 || 0.4.1 || 0.4.2"
 overrides:
   "js-yaml@>=4.0.0 <4.3.2": "4.3.2"
