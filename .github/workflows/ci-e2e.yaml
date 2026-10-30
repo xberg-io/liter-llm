@@ -150,7 +150,7 @@ jobs:
             test-cmd: "cd packages/python && uv sync --no-install-project --no-install-workspace && uvx maturin develop --release && cd ../.. && mise run python:e2e:test"
           - lang: node
             node-version: "24"
-            test-cmd: "mise run node:build && mise run node:e2e:test"
+            test-cmd: "mise run node:build && mise run node:test && mise run node:e2e:test"
           - lang: wasm
             node-version: "24"
             test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' mise run wasm:build:node && (cd e2e/wasm && pnpm install --force) && RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' mise run wasm:e2e:test"
@@ -159,7 +159,7 @@ jobs:
             test-cmd: "mise run go:e2e:test"
           - lang: ruby
             mise-tools: ruby
-            test-cmd: "cd packages/ruby && bundle install && bundle exec rake compile && cd ../.. && mise run ruby:e2e:test"
+            test-cmd: "cd packages/ruby && bundle install && bundle exec rake compile && cd ../.. && mise run ruby:test && mise run ruby:e2e:test"
           - lang: java
             mise-tools: java maven
             test-cmd: "mise run java:e2e:test"
@@ -168,7 +168,7 @@ jobs:
             test-cmd: "mise run csharp:install && mise run csharp:e2e:test"
           - lang: php
             php-version: "8.4"
-            test-cmd: "composer install --no-progress --prefer-dist && mise run php:build && mise run php:e2e:test"
+            test-cmd: "composer install --no-progress --prefer-dist && mise run php:build && mise run php:test && mise run php:e2e:test"
           - lang: elixir
             elixir-version: "1.19"
             otp-version: "28"
