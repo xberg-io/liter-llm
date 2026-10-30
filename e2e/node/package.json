@@ -14,5 +14,5 @@
     "@xberg-io/liter-llm": "workspace:*",
     "vitest": "^5.0.5"
   },
-  "packageManager": "pnpm@12.11.2"
+  "packageManager": "pnpm@12.15.0"
 }

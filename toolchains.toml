@@ -19,10 +19,6 @@ task_sets = [
 "alef:snippets" = "stages the Java dependencies and the Kotlin build before alef snippets check"
 "plugin:test" = "also runs scripts/verify_pi_package.py"
 
-[overrides.pnpm]
-version = "12.11.2"
-reason = "package.json packageManager pins pnpm 12.11.2, which wrote pnpm-lock.yaml; move both together"
-
 [overrides.rust]
 version = "1.95"
 reason = "rust-toolchain.toml pins 1.95; moving to 1.99 needs a separate clippy and MSRV pass"

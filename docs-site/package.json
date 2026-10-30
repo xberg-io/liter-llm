@@ -33,5 +33,5 @@
     "textlint-rule-terminology": "5.2.16",
     "textlint-rule-write-good": "2.0.0"
   },
-  "packageManager": "pnpm@12.11.2"
+  "packageManager": "pnpm@12.15.0"
 }

@@ -63,7 +63,7 @@
   "license": "MIT",
   "main": ".opencode/plugins/liter-llm.js",
   "name": "@xberg-io/opencode-liter-llm",
-  "packageManager": "pnpm@12.11.2",
+  "packageManager": "pnpm@12.15.0",
   "pi": {
     "prompts": [
       "./.pi/prompts/liter-llm-chat.md",

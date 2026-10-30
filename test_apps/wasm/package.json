@@ -14,5 +14,5 @@
     "rollup": "^4.64.6",
     "vitest": "^5.0.4"
   },
-  "packageManager": "pnpm@12.11.2"
+  "packageManager": "pnpm@12.15.0"
 }
