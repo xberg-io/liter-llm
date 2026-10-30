@@ -22,6 +22,47 @@ def assert_error(operation: Callable[[], object], message: str) -> None:
     assert message in received
 
 
+def deny_real_npx(root: Path) -> Path:
+    """Prevent the isolated recipe from escaping its command stub into a real Node package fetch."""
+    guard = root / "deny-real-npx.cjs"
+    guard.write_text(
+        "if (process.argv.some(value => value.includes('npx'))) {\n"
+        "  process.stderr.write('Real npx is forbidden in this fixture\\n');\n"
+        "  process.exit(88);\n"
+        "}\n"
+    )
+    blocked = subprocess.run(
+        ["npx", "--version"],
+        cwd=root,
+        env={**os.environ, "NODE_OPTIONS": f"--require={guard}"},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert blocked.returncode == 88 and "Real npx is forbidden" in blocked.stderr
+    return guard
+
+
+def stub_generators(root: Path) -> None:
+    """Replace generation commands while preserving the real task recipe and byte exporter."""
+    binary = root / "bin"
+    binary.mkdir()
+    for name, command in [
+        ("alef", ":"),
+        ("ai-rulez", ":"),
+        (
+            "npx",
+            (
+                'test "$#" -eq 4 && test "$*" = "-y ai-rulez@latest generate --plugin" || exit 89\n'
+                'printf "%s\\n" "$*" > npx-call.txt\ncp plugin/next.md plugin/skills/example/SKILL.md'
+            ),
+        ),
+    ]:
+        executable = binary / name
+        executable.write_text("#!/bin/sh\nset -eu\n" + command + "\n")
+        executable.chmod(0o755)
+
+
 class PublicSkillsTests(unittest.TestCase):
     """Use an independent source and export tree for every case."""
 
@@ -77,17 +118,15 @@ class PublicSkillsTests(unittest.TestCase):
             (scripts / script).write_text("")
         generated = "---\nname: example\ndescription: Updated skill.\n---\nUpdated body\n"
         (self.root / "plugin/next.md").write_text(generated)
+        stub_generators(self.root)
         binary = self.root / "bin"
-        binary.mkdir()
-        for name, command in [("alef", ":"), ("ai-rulez", "cp plugin/next.md plugin/skills/example/SKILL.md")]:
-            executable = binary / name
-            executable.write_text("#!/bin/sh\nset -eu\n" + command + "\n")
-            executable.chmod(0o755)
         # ~keep version:sync calls alef:regenerate, plugin:generate and alef:verify:strict from the
         # toolchains task sets; their file tasks resolve against the project root, so copy them in.
         shutil.copytree(repository / "mise-tasks/.shared", self.root / "mise-tasks/.shared")
         includes = [str(repository / "mise-tasks" / name) for name in ("version.toml", "plugin.toml", "shared.toml")]
-        (self.root / "mise.toml").write_text(f"[task_config]\nincludes = {includes!r}\n".replace("'", '"'))
+        (self.root / "mise.toml").write_text(
+            f'[env]\n_.path = ["bin"]\n[task_config]\nincludes = {includes!r}\n'.replace("'", '"')
+        )
         result = subprocess.run(
             ["mise", "run", "version:sync"],
             cwd=self.root,
@@ -96,12 +135,14 @@ class PublicSkillsTests(unittest.TestCase):
                 "PATH": str(binary) + os.pathsep + os.environ["PATH"],
                 "MISE_TRUSTED_CONFIG_PATHS": str(self.root),
                 "MISE_CEILING_PATHS": str(self.root.parent),
+                "NODE_OPTIONS": f"--require={deny_real_npx(self.root)}",
             },
             capture_output=True,
             text=True,
             check=False,
         )
         assert result.returncode == 0, result.stdout + result.stderr
+        assert (self.root / "npx-call.txt").read_text() == "-y ai-rulez@latest generate --plugin\n"
         assert (self.root / "plugin/skills/example/SKILL.md").read_text() == generated
         assert self.module.synchronize(self.root, check=True) == (1, 2)
         assert (self.root / "skills/example/SKILL.md").read_text() == generated
