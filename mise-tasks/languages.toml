@@ -44,12 +44,12 @@ run = "alef test --lang python --e2e"
 ["node:build"]
 description = "Build NAPI-RS native module (release)"
 dir = "{{config_root}}/crates/liter-llm-node"
-run = "pnpm exec napi build --no-js --dts index.native.d.ts --release"
+run = "pnpm exec napi build --platform --no-js --dts index.native.d.ts --release"
 
 ["node:build:dev"]
 description = "Build NAPI-RS native module (debug)"
 dir = "{{config_root}}/crates/liter-llm-node"
-run = "pnpm exec napi build --no-js --dts index.native.d.ts"
+run = "pnpm exec napi build --platform --no-js --dts index.native.d.ts"
 
 ["node:test"]
 description = "Smoke test Node.js native module"

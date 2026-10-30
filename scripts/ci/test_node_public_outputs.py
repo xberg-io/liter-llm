@@ -41,3 +41,4 @@ def test_native_build_preserves_public_files(path: str) -> None:
     assert "--no-js" in tokens, f"{path} would overwrite index.js"
     assert tokens.count("--dts") == 1, f"{path} must redirect native declarations"
     assert tokens[tokens.index("--dts") + 1] == "index.native.d.ts", path
+    assert "--platform" in tokens, f"{path} would write a .node file the index.js loader never looks for"
