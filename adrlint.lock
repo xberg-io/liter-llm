@@ -1,0 +1,37 @@
+version = 1
+canonical = 1
+
+[adrs."adrs/0000-record-architecture-decisions.md"]
+number = 0
+status = "accepted"
+blake3 = "3290b1ec65a38d66b7882be5087ff31fab1815d3d249091f58864114d0e0c67d"
+
+[adrs."adrs/0001-openai-wire-format-as-the-canonical-type-model.md"]
+number = 1
+status = "accepted"
+blake3 = "edcc4ae5075e6fd0130849d209a178bee33b4e7110e5964f25bc192ee6960c00"
+
+[adrs."adrs/0002-provider-registry-embedded-from-providers-json.md"]
+number = 2
+status = "accepted"
+blake3 = "9168e02f192aa2fd9d1e4641e9ed0fba67db974167f3124b1a7131204aefaf8b"
+
+[adrs."adrs/0003-tower-middleware-behind-the-tower-feature.md"]
+number = 3
+status = "accepted"
+blake3 = "75e19720da6daacc9e72f146a01615eb374c5e1c5e88b783cf6e427b13c4fa3a"
+
+[adrs."adrs/0004-proxy-server-and-mcp-tools-in-their-own-crate.md"]
+number = 4
+status = "accepted"
+blake3 = "db6ad29920341fa9b152aae509a69741d286316848d6e7daaea13c47b30914f8"
+
+[adrs."adrs/0005-separate-native-and-webassembly-http-features.md"]
+number = 5
+status = "accepted"
+blake3 = "70bb6a9e07f00251b7b61a18cf81b065fee1d335b493db3b4f7d68c7d7c7beca"
+
+[adrs."adrs/0006-model-catalog-generated-from-models-dev.md"]
+number = 6
+status = "accepted"
+blake3 = "e3d960a10d883652eac3f429994da6c7f7166fddaf5bde9f21373ddf38f60593"
