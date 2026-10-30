@@ -11,6 +11,8 @@ on:
       - ".textlintrc.json"
       - ".textlintignore"
       - "scripts/ci/check_prose_gate.py"
+      - "schemas/providers.json"
+      - "scripts/generate_providers_doc.py"
       - ".github/workflows/ci-docs.yaml"
   pull_request:
     branches: [main]
@@ -22,6 +24,8 @@ on:
       - ".textlintrc.json"
       - ".textlintignore"
       - "scripts/ci/check_prose_gate.py"
+      - "schemas/providers.json"
+      - "scripts/generate_providers_doc.py"
       - ".github/workflows/ci-docs.yaml"
   workflow_dispatch:
 
@@ -41,3 +45,18 @@ jobs:
     with:
       prose-dependency-directory: docs-site
       deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+
+  # providers.md is generated from schemas/providers.json; a schema change without a regenerated
+  # page fails here. ~keep
+  providers-page:
+    name: Providers page is current
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: xberg-io/actions/setup-mise@v1
+        with:
+          install-args: python
+      - name: Check docs-site/src/content/docs/providers.md
+        run: python3 scripts/generate_providers_doc.py --validate
