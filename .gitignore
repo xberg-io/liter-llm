@@ -319,7 +319,7 @@ poly.local.toml
 .ai-rulez/.generated-manifest.json
 .opencode/agents/
 .opencode/commands/
-opencode.json
+/opencode.json
 # END ai-rulez
 
 # ~keep Alef verifies these generated wrapper artifacts in fresh checkouts.
