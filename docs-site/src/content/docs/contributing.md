@@ -115,7 +115,9 @@ mise run wasm:build:node    # Build WASM package (Node.js target)
 mise run wasm:test:wasm32   # Run the wasm32 tests in Node.js
 ```
 
-Every binding also has `mise run <lang>:e2e:test`, for example `mise run c:e2e:test`.
+The c, csharp, elixir, go, java, node, php, python, ruby, rust and wasm bindings have
+`mise run <lang>:e2e:test`, for example `mise run c:e2e:test`; run the others with
+`alef test --lang <lang> --e2e`.
 
 ## Adding Providers
 
