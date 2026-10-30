@@ -159,6 +159,7 @@ export default defineConfig({
               { label: "Configuration", slug: "reference/configuration" },
               { label: "Types", slug: "reference/types" },
               { label: "Errors", slug: "reference/errors" },
+              { label: "Decision records", slug: "reference/decision-records" },
             ],
           },
           {
