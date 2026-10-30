@@ -521,6 +521,10 @@ fn cohere_content_delta_chunk(event: &Value) -> ChatCompletionChunk {
         .to_owned();
     let delta = StreamDelta {
         content: Some(text),
+        reasoning_content: event
+            .pointer("/delta/message/content/thinking")
+            .and_then(Value::as_str)
+            .map(str::to_owned),
         ..Default::default()
     };
     cohere_stream_chunk(String::new(), delta, None, None)
@@ -1099,6 +1103,48 @@ mod tests {
             .expect("should return Some");
 
         assert_eq!(chunk.choices[0].delta.content.as_deref(), Some(" world"));
+    }
+
+    #[test]
+    fn test_parse_stream_event_content_delta_preserves_thinking_and_text() {
+        let cases = [
+            (json!({"thinking": "step 1"}), Some("step 1"), ""),
+            (json!({"text": "answer"}), None, "answer"),
+            (
+                json!({"thinking": "reason", "text": "answer"}),
+                Some("reason"),
+                "answer",
+            ),
+            (json!({"thinking": "  \n", "text": " \t"}), Some("  \n"), " \t"),
+            (json!({"thinking": "", "text": ""}), Some(""), ""),
+            (json!({}), None, ""),
+        ];
+        for (content, reasoning, text) in cases {
+            let event = json!({"type": "content-delta", "index": 0, "delta": {"message": {"content": content}}});
+            let chunk = CohereProvider.parse_stream_event(&event.to_string()).unwrap().unwrap();
+            let delta = &chunk.choices[0].delta;
+            assert_eq!(delta.reasoning_content.as_deref(), reasoning, "{event}");
+            assert_eq!(delta.content.as_deref(), Some(text), "{event}");
+        }
+    }
+
+    #[test]
+    fn test_parse_stream_event_sequential_reasoning_and_answer() {
+        let mut reasoning = String::new();
+        let mut answer = String::new();
+        for content in [
+            json!({"thinking": "step "}),
+            json!({"thinking": "1"}),
+            json!({"text": "answer"}),
+        ] {
+            let event = json!({"type": "content-delta", "index": 0, "delta": {"message": {"content": content}}});
+            let chunk = CohereProvider.parse_stream_event(&event.to_string()).unwrap().unwrap();
+            let delta = &chunk.choices[0].delta;
+            reasoning.push_str(delta.reasoning_content.as_deref().unwrap_or(""));
+            answer.push_str(delta.content.as_deref().unwrap_or(""));
+        }
+        assert_eq!(reasoning, "step 1");
+        assert_eq!(answer, "answer");
     }
 
     #[test]
