@@ -31,6 +31,6 @@ minimumReleaseAgeExclude:
   - '@rollup/rollup-win32-x64-msvc@4.63.5'
   - rollup@4.63.5
 overrides:
-  "vite@>=8.0.0 <8.0.16": "8.0.16"
+  vite: ">=8.2.1 <9"
   "postcss@>=8.0.0 <8.5.23": "8.5.23"
   "nanoid@>=3.0.0 <3.3.18": "3.3.18"

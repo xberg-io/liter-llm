@@ -10,7 +10,7 @@
     }
   ],
   "name": "@xberg-io/liter-llm-win32-x64-msvc",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "license": "MIT",
   "repository": {
     "type": "git",

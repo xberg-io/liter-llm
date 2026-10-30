@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.3] - 2026-10-30
+
 ### Fixed
 
 - Cohere: preserve streamed thinking content separately from visible answer text (#453).
@@ -14,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Upgrade Rust dependencies, including PyO3 0.30, RMCP 3.8, JSON Schema 0.60 and OpenDAL 0.59.
+- Regenerate bindings and release scaffolding with Alef 0.115.7.
 
 ## [2.4.2] - 2026-10-29
 

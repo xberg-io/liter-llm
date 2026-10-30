@@ -260,8 +260,6 @@ mod tests {
     use std::task::{Context, Poll};
     use std::time::Duration;
 
-    use tower::{Layer as _, Service as _};
-
     use liter_llm::client::BoxFuture;
     use liter_llm::error::{LiterLlmError, Result};
     use liter_llm::tower::types::{LlmRequest, LlmResponse};

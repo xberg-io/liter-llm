@@ -1082,11 +1082,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "899def5c37c4fd7b2664648c28120ecec138e4d395b459e5ca34f9cce2dd77fd"
 dependencies = [
  "cfg-if",
- "js-sys",
  "libc",
  "r-efi 5.3.0",
  "wasip2",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -1096,9 +1094,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099"
 dependencies = [
  "cfg-if",
+ "js-sys",
  "libc",
  "r-efi 6.0.0",
  "rand_core 0.10.1",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -1680,7 +1680,7 @@ checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
 
 [[package]]
 name = "liter-llm"
-version = "2.4.2"
+version = "2.4.3"
 dependencies = [
  "ahash",
  "arc-swap",
@@ -1693,7 +1693,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "gcp_auth",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "gloo-timers",
  "hex",
  "http",
@@ -1728,7 +1728,7 @@ dependencies = [
 
 [[package]]
 name = "liter_llm_nif"
-version = "2.4.2"
+version = "2.4.3"
 dependencies = [
  "alloc-no-stdlib",
  "alloc-stdlib",
