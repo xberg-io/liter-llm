@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Cohere: streamed thinking deltas populate `reasoning_content` separately from visible text, including empty and whitespace deltas (#453).
+
 ## [2.4.2] - 2026-10-29
 
 ### Added
