@@ -60,6 +60,7 @@ jobs:
       setup-ruby: true
       setup-dart: true
       setup-elixir: true
+      check-adrs: true
 
   release-regressions:
     name: Release regression tests
