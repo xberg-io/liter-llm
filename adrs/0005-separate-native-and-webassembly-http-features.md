@@ -10,8 +10,8 @@ decision-makers: ["Na'aman Hirschfeld"]
 
 The core crate sends requests with reqwest on Tokio under the default `native-http` feature. Tokio's multi-thread
 runtime and mio do not build for `wasm32`, so the WebAssembly binding built the core with `default-features = false`
-and had no HTTP client. The WebAssembly package needed working requests in browsers, Cloudflare Workers, Deno
-and Bun (8c24a83ed, 2026-04-20).
+and had no HTTP client. The WebAssembly package needed working requests (8c24a83ed, 2026-04-20); the architecture docs list
+its targets as browsers, Cloudflare Workers, Deno and Bun (`docs-site/src/content/docs/concepts/architecture.md:142`).
 
 ## Considered Options
 

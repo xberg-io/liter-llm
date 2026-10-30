@@ -14,7 +14,7 @@ change as a new record.
 | --- | ----- | ------ | ---- |
 | [0000](https://github.com/xberg-io/liter-llm/blob/main/adrs/0000-record-architecture-decisions.md) | Record architecture decisions | accepted | 2026-10-30 |
 | [0001](https://github.com/xberg-io/liter-llm/blob/main/adrs/0001-openai-wire-format-as-the-canonical-type-model.md) | OpenAI wire format as the canonical type model | accepted | 2026-03-25 |
-| [0002](https://github.com/xberg-io/liter-llm/blob/main/adrs/0002-provider-registry-embedded-from-providers-json.md) | Provider registry embedded from providers.json | accepted | 2026-03-25 |
+| [0002](https://github.com/xberg-io/liter-llm/blob/main/adrs/0002-provider-registry-embedded-from-providers-json.md) | Provider registry embedded from providers.json | accepted | 2026-03-27 |
 | [0003](https://github.com/xberg-io/liter-llm/blob/main/adrs/0003-tower-middleware-behind-the-tower-feature.md) | Tower middleware behind the tower feature | accepted | 2026-03-26 |
 | [0004](https://github.com/xberg-io/liter-llm/blob/main/adrs/0004-proxy-server-and-mcp-tools-in-their-own-crate.md) | Proxy server and MCP tools in their own crate | accepted | 2026-03-29 |
 | [0005](https://github.com/xberg-io/liter-llm/blob/main/adrs/0005-separate-native-and-webassembly-http-features.md) | Separate native and WebAssembly HTTP features | accepted | 2026-04-20 |

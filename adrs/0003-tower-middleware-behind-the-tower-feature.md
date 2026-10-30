@@ -23,7 +23,8 @@ No alternatives were recorded.
 ## Decision Outcome
 
 Chosen option: "Tower `Layer` and `Service` middleware in an optional `tower` feature of the core crate", because, as
-the architecture page puts it (`docs-site/src/content/docs/concepts/architecture.md:73`), "the proxy builds the full stack; library users assemble any subset they need", and
+the architecture docs written later state (`docs-site/src/content/docs/concepts/architecture.md:73`), "the proxy
+builds the full stack; library users assemble any subset they need", and, as a later `Cargo.toml` comment states,
 the default build "avoids heavy deps" (`crates/liter-llm/Cargo.toml:110`).
 
 `LlmService` bridges `LlmClient` into the Tower `Service` trait, and each concern is its own layer under

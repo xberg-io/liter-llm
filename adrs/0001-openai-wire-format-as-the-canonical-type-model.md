@@ -22,8 +22,8 @@ No alternatives were recorded.
 ## Decision Outcome
 
 Chosen option: "The OpenAI REST API types as the canonical request and response model, with per-provider
-transforms", because most providers already speak the OpenAI format (114 of the 174 registry entries are not
-`complex_providers`), so their requests and replies pass through unchanged, and only providers with a native format
+transforms", because most providers already speak the OpenAI format (in today's registry, which postdates this
+decision, 114 of the 174 entries are not `complex_providers`), so their requests and replies pass through unchanged, and only providers with a native format
 need code of their own.
 
 The request and response types in `crates/liter-llm/src/types/` follow the OpenAI wire format, and

@@ -1,6 +1,6 @@
 ---
 status: accepted
-date: 2026-03-25
+date: 2026-03-27
 decision-makers: ["Na'aman Hirschfeld"]
 ---
 
@@ -17,26 +17,25 @@ contain it (b7bd3adb9, 2026-03-27).
 
 ## Considered Options
 
-* A crate-local `crates/liter-llm/schemas/providers.json`, embedded with `include_str!`, with a root copy kept
-  byte-equal
+* A crate-local `crates/liter-llm/schemas/providers.json`, embedded with `include_str!`
 * The repository-root `schemas/providers.json`, embedded with `include_str!` by a relative path outside the crate
 
 ## Decision Outcome
 
-Chosen option: "A crate-local `crates/liter-llm/schemas/providers.json`, embedded with `include_str!`, with a root
-copy kept byte-equal", because a provider that only needs a base URL and a bearer token becomes a data entry with no
+Chosen option: "A crate-local `crates/liter-llm/schemas/providers.json`, embedded with `include_str!`", because a provider that only needs a base URL and a bearer token becomes a data entry with no
 code, and only a file inside the crate ships in the crates.io package (b7bd3adb9).
 
 The registry is parsed once, lazily, and a parse failure surfaces as an error at call time instead of a panic.
 Providers that need their own auth or request code (Bedrock SigV4, Vertex OAuth2, Azure and others) are listed under
 `complex_providers`, are matched by prefix before the registry lookup, and are never routed as config-driven
-providers. The root copy at `schemas/providers.json` feeds tooling such as the generated providers page.
+providers. The root copy at `schemas/providers.json` feeds tooling such as the generated providers page; a test has
+kept the two copies byte-equal since 9ecf58be8 (2026-10-24, #335).
 
 ### Consequences
 
 * Good, because adding an OpenAI-compatible provider is a JSON change, with no new Rust type.
 * Good, because the registry is compiled into the binary and needs no network or file access at runtime.
-* Bad, because the two copies of the file can drift; a CI test exists only for that reason.
+* Bad, because the two copies of the file can drift, which went unchecked until 9ecf58be8.
 * Bad, because the provider count is pinned by a test that every registry change must update.
 
 ### Confirmation
@@ -45,5 +44,5 @@ providers. The root copy at `schemas/providers.json` feeds tooling such as the g
 * `crates/liter-llm/src/provider/mod.rs:1254` limits a config-driven route to entries with a `base_url` that are not
   complex providers, and `crates/liter-llm/src/provider/mod.rs:1495` skips complex providers in the prefix walk.
 * `crates/liter-llm/src/tests.rs:2140` (`schema_provider_count_is_174`) checks the embedded registry.
-* `scripts/ci/test_schema_copies.py:21` fails when the root and crate copies differ; `mise.toml:81` adds it to
+* `scripts/ci/test_schema_copies.py:21` fails when the root and crate copies differ; `mise.toml:82` adds it to
   `test:release-regressions`, which `.github/workflows/ci-lint.yaml:83` runs.

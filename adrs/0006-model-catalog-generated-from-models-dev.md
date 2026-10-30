@@ -44,7 +44,7 @@ downloaded catalog on the embedded one; it is off by default, so an air-gapped b
 
 * `crates/liter-llm-catalog-gen/src/lib.rs:30` sets the default source `https://models.dev/api.json`.
 * `crates/liter-llm/src/cost.rs:27` embeds `../schemas/catalog.json`.
-* `mise.toml:153` (`generate:catalog`) and `mise.toml:157` (`generate:catalog:check`) run the generator.
+* `mise.toml:154` (`generate:catalog`) and `mise.toml:158` (`generate:catalog:check`) run the generator.
 * `.github/workflows/sync-catalog.yml:5` schedules the daily refresh, which opens a pull request on drift.
 * `scripts/ci/test_schema_copies.py:12` keeps the two `catalog.json` copies byte-equal.
 * The `model-catalog` rule in `.ai-rulez/rules/model-catalog.md` forbids hand-editing either copy.

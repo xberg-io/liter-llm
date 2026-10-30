@@ -25,7 +25,8 @@ No alternatives were recorded.
 ## Decision Outcome
 
 Chosen option: "A separate `liter-llm-proxy` library crate that holds both the OpenAI-compatible HTTP server and the
-MCP server, run by the `liter-llm-cli` binary", because the core crate "never depends on any binding" and "all
+MCP server, run by the `liter-llm-cli` binary", because, as the architecture docs written later state, the core crate
+"never depends on any binding" and "all
 knowledge flows in one direction: core outward to bindings, CLI, and proxy"
 (`docs-site/src/content/docs/concepts/architecture.md:32`). The server dependencies, axum and rmcp, stay out of the
 core crate and its bindings, and one binary and one container image serve both protocols.
