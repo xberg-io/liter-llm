@@ -5,7 +5,7 @@ description: Call an LLM provider using liter-llm
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 Content-Hash: blake3:dc58c1c881db41b233402714bcc5ae0ca87dde33b30ae97d010db865ea6aa26b
-Source-Hash: blake3:d9e07712c8b5c20b87d07f1b715aeedda0cec14efe3a8c9dbe1a9cd97b89d653
+Source-Hash: blake3:7cd8d0bd7a2a8dbc274f5867aa3488157e9dbabbfaa766050a0e899e24cc5225
 Schema-Version: v1
 -->
 
