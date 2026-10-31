@@ -43,7 +43,7 @@ class TestWorkflowPins:
 
     def test_repository_inputs_are_latest(self) -> None:
         pins = check.workflow_pins()
-        assert sum(len(values) for values in pins.values()) == 8
+        assert sum(len(values) for values in pins.values()) == 7
         check.check_workflows(pins, check.mise_installs())
 
 
