@@ -132,10 +132,11 @@ jobs:
           for abi_dir in packages/kotlin-android/src/main/jniLibs/*/; do
             [ "$(basename "$abi_dir")" = "${{ matrix.abi }}" ] || rm -rf "$abi_dir"
           done
-      - uses: actions/setup-java@v6
+      # ~keep The CI profile locks JDK 17 besides mise.toml's JDK (mise.ci.toml).
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          distribution: temurin
-          java-version: "17"
+          mise-env: ci
+          tools: java=temurin-17
       - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "wrapper"
