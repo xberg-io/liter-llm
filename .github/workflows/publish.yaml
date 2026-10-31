@@ -1146,7 +1146,7 @@ jobs:
       - uses: xberg-io/actions/setup-mise@v1
         with:
           tools: java
-      - name: Setup Maven 3.9.11
+      - name: Setup Maven
         uses: xberg-io/actions/setup-maven@v1
       - name: Build Maven package
         run: mvn clean package -DskipTests -q
@@ -2116,7 +2116,7 @@ jobs:
         uses: xberg-io/actions/setup-mise@v1
         with:
           tools: java
-      - name: Setup Maven 3.9.11
+      - name: Setup Maven
         uses: xberg-io/actions/setup-maven@v1
       - name: Configure Maven GPG
         uses: xberg-io/actions/configure-maven-gpg@v1
