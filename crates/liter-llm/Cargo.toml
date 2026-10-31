@@ -121,6 +121,8 @@ rustls = { workspace = true, optional = true }
 # ~keep must be on for the crate to build for wasm32 without `liter-llm-wasm`.
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.4", features = ["wasm_js"] }
+# ~keep ahash still depends on getrandom 0.3, which needs its own `wasm_js` feature under that cfg.
+getrandom_03 = { package = "getrandom", version = "0.3", features = ["wasm_js"] }
 
 # ~keep Windows uses SChannel via native-tls to avoid aws-lc-sys MSVC build failures.
 # ~keep rustls is intentionally not pulled in on Windows.

@@ -2977,6 +2977,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "gcp_auth",
+ "getrandom 0.3.4",
  "getrandom 0.4.3",
  "gloo-timers",
  "hex",
