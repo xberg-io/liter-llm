@@ -4,9 +4,8 @@
 The task automation lives in ``mise.toml`` and under ``mise-tasks/`` (included
 TOML task files and ``.sh`` file tasks). poly lints and formats all of them, but
 a file poly declines to parse is reported as a skip, and a newly skipped file
-looks identical to one that was checked and found clean. The go-task YAML this
-replaced was skipped for its Go template syntax; nothing in the mise files has a
-reason to be skipped.
+looks identical to one that was checked and found clean. Nothing in the mise
+files has a reason to be skipped.
 
 This check reads poly's ``--format json`` report, which names every file it
 surveyed and, for each skip, the reason. So the assertion is made per file:
