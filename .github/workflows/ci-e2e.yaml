@@ -150,10 +150,10 @@ jobs:
             python-version: "3.13"
             test-cmd: "cd packages/python && uv sync --no-install-project --no-install-workspace && uvx maturin develop --release && cd ../.. && mise run python:e2e:test"
           - lang: node
-            node-version: "24"
+            setup-node: true
             test-cmd: "mise run node:build && mise run node:test && mise run node:e2e:test"
           - lang: wasm
-            node-version: "24"
+            setup-node: true
             mise-tools: github:rustwasm/wasm-pack
             test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' mise run wasm:build:node && (cd e2e/wasm && pnpm install --force) && RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' mise run wasm:e2e:test"
           - lang: go
@@ -334,7 +334,7 @@ jobs:
           echo "MOCK_SERVER_URL=${MOCK_SERVER_URL}" >> "$GITHUB_ENV"
 
       - name: Create WASM pkg stub
-        if: matrix.node-version || matrix.lang == 'wasm'
+        if: matrix.setup-node || matrix.lang == 'wasm'
         shell: bash
         run: mkdir -p crates/liter-llm-wasm/pkg/nodejs && echo '{"name":"liter_llm","version":"0.0.0"}' > crates/liter-llm-wasm/pkg/nodejs/package.json
 
@@ -346,7 +346,7 @@ jobs:
           cache-prefix: e2e-py-${{ matrix.python-version }}
 
       - name: Setup Node
-        if: matrix.node-version
+        if: matrix.setup-node
         uses: xberg-io/actions/setup-node-workspace@v1
 
       - name: Install WASI SDK
