@@ -362,12 +362,13 @@ jobs:
           install: ${{ matrix.mise-tools && 'true' || 'false' }}
           install-args: ${{ matrix.mise-tools }}
 
+      # ~keep The CI profile locks the JDK lines besides mise.toml's (mise.ci.toml).
       - name: Setup Java
         if: matrix.java-version
-        uses: actions/setup-java@v6
+        uses: xberg-io/actions/setup-mise@v1
         with:
-          distribution: temurin
-          java-version: ${{ matrix.java-version }}
+          mise-env: ci
+          tools: java=temurin-${{ matrix.java-version }}
 
       # ~keep Android SDK/NDK stays on its setup action (org toolchain policy).
       - name: Setup Android SDK
