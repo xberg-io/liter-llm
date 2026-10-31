@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM rust:1.99.1-bookworm AS builder
+FROM rust:1.99.1-trixie AS builder
 
 ARG TARGETARCH
 
@@ -15,7 +15,8 @@ RUN --mount=type=cache,id=cargo-registry-${TARGETARCH},target=/usr/local/cargo/r
     cargo build --release --package liter-llm-cli --features otel && \
     cp target/release/liter-llm /usr/local/bin/liter-llm
 
-FROM cgr.dev/chainguard/glibc-dynamic@sha256:7ff79e2caef2b8a137ddaf9940fb790e91148482092363760d6661e4591fd54c
+# cgr.dev/chainguard/glibc-dynamic:latest
+FROM cgr.dev/chainguard/glibc-dynamic@sha256:709673274b417a48f56374da8a7633ef7b2f5b27e34612ce98a335737318cc94
 
 COPY --from=builder /usr/local/bin/liter-llm /usr/bin/liter-llm
 
