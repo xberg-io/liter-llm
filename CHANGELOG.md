@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Refresh stale coding-agent plugin provenance that blocked OpenCode and Pi package publication.
 
+### Changed
+
+- Regenerate bindings with Alef 0.115.10, including private Swift `CodingKeys` and Java Maven Enforcer 3.7.0.
+
 ## [2.4.3] - 2026-10-30
 
 ### Fixed
