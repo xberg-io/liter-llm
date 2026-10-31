@@ -1,0 +1,7 @@
+# Loaded only with MISE_ENV=ci, so the versions CI selects with setup-mise `tools: <tool>=<version>` stay
+# locked. java: 17 runs the Kotlin Android Gradle builds and publish, 21 the kotlin_android e2e leg.
+# java 17 stays on 17.0.20 because mise has no Windows metadata for 17.0.21. ruby: 3.3 is the Ruby
+# the release builds the platform gems against. ~keep
+[tools]
+java = ["temurin-25.0.5+8.0.LTS", "temurin-21.0.13+9.0.LTS", "temurin-17.0.20+101"]
+ruby = ["3.4.12", "3.3.13"]
