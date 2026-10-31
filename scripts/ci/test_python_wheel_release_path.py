@@ -781,6 +781,16 @@ def test_sdist_job_builds_the_release_ref_and_uploads_under_the_name_the_pypi_jo
     ]
 
 
+def test_sdist_job_python_from_mise_can_run_the_sdist_scripts() -> None:
+    """The sdist job takes mise.toml's Python; build-python-sdist's workspace-closure check imports tomllib (3.11+)."""
+    import tomllib
+
+    with (ROOT / "mise.toml").open("rb") as config:
+        python = tomllib.load(config)["tools"]["python"]
+    assert isinstance(python, str), python
+    assert tuple(int(part) for part in python.split(".")[:2]) >= (3, 11), python
+
+
 def test_each_leg_runs_on_the_runner_its_wheel_is_built_for() -> None:
     """A wheel job pinned to one runner would build every leg's wheel on that runner's operating system."""
     job = wheel_job()
