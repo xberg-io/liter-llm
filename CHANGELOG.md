@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.4] - 2026-10-31
+
+### Fixed
+
+- Refresh stale coding-agent plugin provenance that blocked OpenCode and Pi package publication.
+
 ## [2.4.3] - 2026-10-30
 
 ### Fixed
