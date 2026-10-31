@@ -152,7 +152,7 @@ impl Provider for CohereProvider {
     /// (verified against Cohere's v2 API reference, `docs.cohere.com/reference/chat-stream`
     /// and `docs.cohere.com/v2/docs/streaming`):
     /// - `message-start`: beginning of stream; id is top-level, role at `delta.message.role`
-    /// - `content-delta`: text content token, extract from `delta.message.content.text`
+    /// - `content-delta`: visible text and reasoning at `delta.message.content.{text,thinking}`
     /// - `tool-call-start`: start of a tool call; id/name at `delta.message.tool_calls.{id,function.name}`
     /// - `tool-call-delta`: partial tool call arguments at `delta.message.tool_calls.function.arguments`
     /// - `tool-call-end`: end of a tool call (skipped)
@@ -1091,6 +1091,69 @@ mod tests {
         assert_eq!(chunk.choices[0].delta.content.as_deref(), Some("Hello"));
         assert!(chunk.choices[0].delta.role.is_none());
         assert!(chunk.choices[0].delta.tool_calls.is_none());
+    }
+
+    #[test]
+    fn test_parse_stream_event_content_delta_preserves_thinking_separately() {
+        let cases = [
+            ("text only", json!({"text": "answer"}), "answer", None),
+            ("thinking only", json!({"thinking": "step 1"}), "", Some("step 1")),
+            (
+                "both fields",
+                json!({"text": "answer", "thinking": "step 1"}),
+                "answer",
+                Some("step 1"),
+            ),
+            ("empty thinking", json!({"thinking": ""}), "", Some("")),
+            (
+                "whitespace",
+                json!({"text": " answer\n", "thinking": " step 1\n"}),
+                " answer\n",
+                Some(" step 1\n"),
+            ),
+            ("empty text", json!({"text": ""}), "", None),
+            ("missing fields", json!({}), "", None),
+            ("null fields", json!({"text": null, "thinking": null}), "", None),
+            ("non-string fields", json!({"text": 1, "thinking": false}), "", None),
+        ];
+        for (name, content, text, thinking) in cases {
+            let event = json!({"type": "content-delta", "index": 0, "delta": {"message": {"content": content}}});
+            let chunk = CohereProvider
+                .parse_stream_event(&event.to_string())
+                .expect("should parse")
+                .expect("should return Some");
+            let delta = &chunk.choices[0].delta;
+
+            assert_eq!(delta.content.as_deref(), Some(text), "{name}");
+            assert_eq!(delta.reasoning_content.as_deref(), thinking, "{name}");
+            assert!(delta.role.is_none(), "{name}");
+            assert!(delta.tool_calls.is_none(), "{name}");
+            assert!(chunk.choices[0].finish_reason.is_none(), "{name}");
+        }
+    }
+
+    #[test]
+    fn test_parse_stream_event_sequential_thinking_and_text() {
+        let contents = [
+            json!({"thinking": "step"}),
+            json!({"thinking": " 1\n"}),
+            json!({"text": "answer"}),
+        ];
+        let mut reasoning = String::new();
+        let mut text = String::new();
+        for content in contents {
+            let event = json!({"type": "content-delta", "index": 0, "delta": {"message": {"content": content}}});
+            let chunk = CohereProvider
+                .parse_stream_event(&event.to_string())
+                .expect("should parse")
+                .expect("should return Some");
+            let delta = &chunk.choices[0].delta;
+            text.push_str(delta.content.as_deref().unwrap_or_default());
+            reasoning.push_str(delta.reasoning_content.as_deref().unwrap_or_default());
+        }
+
+        assert_eq!(reasoning, "step 1\n");
+        assert_eq!(text, "answer");
     }
 
     #[test]
