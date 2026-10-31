@@ -65,7 +65,7 @@ merge_strategy = "local-override"
 [[installed_skills]]
 name = "alef"
 source = "https://github.com/xberg-io/alef.git"
-ref = "fc96f3c0ca138d0667144a0ae7e37b5ef04b420c"
+ref = "65c074a93b77339aa5adeb7c3c04ab49eadd9e71"
 
 [[mcp_servers]]
 name = "playwright"
