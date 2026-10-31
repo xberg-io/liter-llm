@@ -5,7 +5,7 @@ description: Stream responses with liter-llm
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 Content-Hash: blake3:aade12ea079f7659ca4d5976f09836820f645def49f3ded510aed0f4159e38b6
-Source-Hash: blake3:69026ebac0c1b270caa703e36d717ac33aca5c4867e5f6ade6f9b775b4bdd9e8
+Source-Hash: blake3:6aefbedb739ff1e9c287948d0a2509509daf9f0935e096c5ad7780cf2caa064d
 Schema-Version: v1
 -->
 
