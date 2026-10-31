@@ -12,6 +12,6 @@ run = [
   { task = "plugin:generate" },
   # ~keep The plugin skill files carry the version, so the ai-rulez lock digests change
   # with every bump. Refresh the lock here so the bump and the lock land in one commit.
-  "ai-rulez -C .ai-rulez lock",
+  "npx -y ai-rulez@latest -C .ai-rulez lock",
   { task = "alef:verify:strict" },
 ]

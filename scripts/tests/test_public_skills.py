@@ -49,12 +49,16 @@ def stub_generators(root: Path) -> None:
     binary.mkdir()
     for name, command in [
         ("alef", ":"),
-        ("ai-rulez", ":"),
+        ("ai-rulez", "exit 90"),
         (
             "npx",
             (
-                'test "$#" -eq 4 && test "$*" = "-y ai-rulez@latest generate --plugin" || exit 89\n'
-                'printf "%s\\n" "$*" > npx-call.txt\ncp plugin/next.md plugin/skills/example/SKILL.md'
+                'printf "%s\\n" "$*" >> npx-call.txt\n'
+                'case "$*" in\n'
+                '  "-y ai-rulez@latest generate --plugin") test "$#" -eq 4; '
+                "cp plugin/next.md plugin/skills/example/SKILL.md ;;\n"
+                '  "-y ai-rulez@latest -C .ai-rulez lock") test "$#" -eq 5 ;;\n'
+                "  *) exit 89 ;;\nesac"
             ),
         ),
     ]:
@@ -142,7 +146,10 @@ class PublicSkillsTests(unittest.TestCase):
             check=False,
         )
         assert result.returncode == 0, result.stdout + result.stderr
-        assert (self.root / "npx-call.txt").read_text() == "-y ai-rulez@latest generate --plugin\n"
+        assert (self.root / "npx-call.txt").read_text().splitlines() == [
+            "-y ai-rulez@latest generate --plugin",
+            "-y ai-rulez@latest -C .ai-rulez lock",
+        ]
         assert (self.root / "plugin/skills/example/SKILL.md").read_text() == generated
         assert self.module.synchronize(self.root, check=True) == (1, 2)
         assert (self.root / "skills/example/SKILL.md").read_text() == generated
