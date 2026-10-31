@@ -467,9 +467,9 @@ jobs:
       - uses: xberg-io/actions/setup-rust@v1
         with:
           use-sccache: false
-      - uses: actions/setup-python@v7
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          python-version: "3.14"
+          tools: python
       - uses: xberg-io/actions/build-python-sdist@v1
         with:
           package-dir: packages/python
@@ -523,9 +523,9 @@ jobs:
         with:
           target: ${{ matrix.napi_target }}
           use-sccache: false
-      - uses: actions/setup-node@v7
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          node-version: 22
+          tools: node
       - run: npm install -g @napi-rs/cli
         shell: bash
       - name: Build NAPI binding
@@ -623,12 +623,12 @@ jobs:
           cache-key-prefix: publish-ruby-${{ matrix.label }}
           use-sccache: false
 
+      # ~keep The CI profile locks Ruby 3.3 besides mise.toml's Ruby (mise.ci.toml).
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1.335.0
+        uses: xberg-io/actions/setup-mise@v1
         with:
-          ruby-version: "3.3"
-          bundler: none
-          bundler-cache: false
+          mise-env: ci
+          tools: ruby=3.3
 
       - name: Install Bundler
         shell: bash
@@ -1143,11 +1143,9 @@ jobs:
             find "ffi-artifacts/${ffi_rid}" -type f -print0 | xargs -0 -I{} cp {} "$dest/"
           done
         shell: bash
-      - uses: actions/setup-java@v6
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          java-version: "25"
-          distribution: temurin
-          cache: maven
+          tools: java
       - name: Setup Maven 3.9.11
         uses: xberg-io/actions/setup-maven@v1
       - name: Build Maven package
@@ -1259,10 +1257,11 @@ jobs:
           for abi_dir in packages/kotlin-android/src/main/jniLibs/*/; do
             [ "$(basename "$abi_dir")" = "${{ matrix.abi }}" ] || rm -rf "$abi_dir"
           done
-      - uses: actions/setup-java@v6
+      # ~keep The CI profile locks JDK 17 besides mise.toml's JDK (mise.ci.toml).
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          distribution: temurin
-          java-version: "17"
+          mise-env: ci
+          tools: java=temurin-17
       - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "wrapper"
@@ -1769,10 +1768,10 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup Node and pnpm
+        uses: xberg-io/actions/setup-mise@v1
         with:
-          package_json_file: package.json
+          tools: node pnpm
 
       - name: Download Node artifacts
         uses: actions/download-artifact@v8
@@ -1780,12 +1779,6 @@ jobs:
           pattern: node-native-*
           path: crates/liter-llm-node/artifacts
           merge-multiple: true
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org/
 
       - name: Install @napi-rs/cli
         run: npm install -g @napi-rs/cli
@@ -1923,10 +1916,9 @@ jobs:
           path: dist
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: xberg-io/actions/setup-mise@v1
         with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org/
+          tools: node
 
       - name: Check if version already published to npm
         id: npm_check
@@ -2000,12 +1992,12 @@ jobs:
           path: dist
           merge-multiple: true
 
+      # ~keep The CI profile locks Ruby 3.3 besides mise.toml's Ruby (mise.ci.toml).
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1.335.0
+        uses: xberg-io/actions/setup-mise@v1
         with:
-          ruby-version: "3.3"
-          bundler: none
-          bundler-cache: false
+          mise-env: ci
+          tools: ruby=3.3
 
       - name: Install Bundler
         shell: bash
@@ -2118,22 +2110,12 @@ jobs:
             find "ffi-artifacts/${ffi_rid}" -type f -print0 | xargs -0 -I{} cp {} "$dest/"
           done
         shell: bash
+      # ~keep publish-maven writes the ossrh server entry and imports MAVEN_GPG_PRIVATE_KEY, as
+      # setup-java did; Java goes first because setup-maven runs `mvn --version`.
       - name: Setup Java
-        id: setup-java
-        env:
-          MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        uses: actions/setup-java@v6
+        uses: xberg-io/actions/setup-mise@v1
         with:
-          distribution: temurin
-          java-version: "25"
-          cache: maven
-          server-id: ossrh
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+          tools: java
       - name: Setup Maven 3.9.11
         uses: xberg-io/actions/setup-maven@v1
       - name: Configure Maven GPG
@@ -2152,6 +2134,7 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
   publish-kotlin-android-maven:
     name: Publish Kotlin Android AAR to Maven Central
@@ -2212,16 +2195,17 @@ jobs:
           fi
           echo "jniLibs staging complete:"
           find packages/kotlin-android/src/main/jniLibs -type f -exec ls -lh {} \;
-      - uses: actions/setup-java@v6
+      # ~keep The CI profile locks JDK 17 besides mise.toml's JDK (mise.ci.toml).
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          distribution: temurin
-          java-version: "17"
-          cache: gradle
+          mise-env: ci
+          tools: java=temurin-17
       - uses: xberg-io/actions/setup-maven@v1
       - uses: xberg-io/actions/configure-maven-gpg@v1
       - uses: xberg-io/actions/publish-maven-gradle@v1
         with:
           working-directory: packages/kotlin-android
+          java-version: "17"
           gradle-task: publishAndReleaseToMavenCentral
           dry-run: ${{ needs.prepare.outputs.dry_run }}
         env:
@@ -3656,10 +3640,9 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: xberg-io/actions/setup-mise@v1
         with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org/
+          tools: node
       - name: Stamp release version into cli-proxy package.json
         shell: bash
         run: |
@@ -3715,13 +3698,9 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: actions/setup-node@v7
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org/"
-      - uses: pnpm/action-setup@v6
-        with:
-          run_install: false
+          tools: node pnpm
       - name: Upgrade npm (trusted publishing support)
         run: npm install -g npm@latest
       # ~keep validate-versions asserts the plugin *source* pin
@@ -3943,14 +3922,9 @@ jobs:
         uses: xberg-io/actions/verify-ai-rulez-plugin@v1
         with:
           version-sync-script: scripts/sync_plugin_version.py
-      - uses: actions/setup-node@v7
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          node-version: "24"
-          registry-url: https://registry.npmjs.org
-      - uses: pnpm/action-setup@v6
-        with:
-          version: "12.15.0"
-          run_install: false
+          tools: node pnpm
       - name: Read and check the exact npm version
         id: package
         shell: bash

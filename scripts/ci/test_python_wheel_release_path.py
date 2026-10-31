@@ -765,7 +765,7 @@ def test_sdist_job_builds_the_release_ref_and_uploads_under_the_name_the_pypi_jo
     assert pinned_steps(job["steps"]) == [
         {"uses": "actions/checkout@vN", "with": {"ref": "${{ needs.prepare.outputs.checkout_ref }}"}},
         {"uses": "xberg-io/actions/setup-rust@vN", "with": {"use-sccache": False}},
-        {"uses": "actions/setup-python@vN", "with": {"python-version": "3.14"}},
+        {"uses": "xberg-io/actions/setup-mise@vN", "with": {"tools": "python"}},
         {
             "uses": "xberg-io/actions/build-python-sdist@vN",
             "with": {
