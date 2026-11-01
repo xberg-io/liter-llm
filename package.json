@@ -7,7 +7,7 @@
     "e2e/node",
     "e2e/wasm"
   ],
-  "packageManager": "pnpm@12.15.0",
+  "packageManager": "pnpm@12.16.1",
   "pi": {
     "prompts": [
       "./plugin/.pi/prompts/liter-llm-chat.md",

@@ -4,4 +4,4 @@
 # the release builds the platform gems against. ~keep
 [tools]
 java = ["temurin-25.0.5+8.0.LTS", "temurin-21.0.13+9.0.LTS", "temurin-17.0.20+101"]
-ruby = ["3.4.12", "3.3.13"]
+ruby = ["4.0.9", "3.3.13"]

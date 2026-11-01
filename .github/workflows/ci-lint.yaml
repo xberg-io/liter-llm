@@ -44,7 +44,7 @@ jobs:
       # The poly pin is deliberate: a new poly release must not turn main red with
       # no commit. To raise it, change this value and the poly pin in mise.toml
       # (no "v" there), run `poly fmt`, and commit the reformat in the same PR. ~keep
-      poly-version: "v0.31.2"
+      poly-version: "v0.32.1"
       setup-rust: true
       setup-python: true
       # poly's checkstyle project check runs `mvn checkstyle:check` on packages/java,
