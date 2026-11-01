@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Mistral: preserve parallel tool-call control and presence/frequency penalties, including false and zero values (#458).
+
 ## [2.4.4] - 2026-10-31
 
 ### Fixed

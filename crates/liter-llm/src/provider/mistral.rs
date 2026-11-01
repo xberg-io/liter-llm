@@ -6,18 +6,13 @@ use crate::error::Result;
 use crate::provider::Provider;
 
 /// Parameters that Mistral does not support and should be stripped from requests.
-const UNSUPPORTED_PARAMS: &[&str] = &[
-    "parallel_tool_calls",
-    "logit_bias",
-    "presence_penalty",
-    "frequency_penalty",
-];
+const UNSUPPORTED_PARAMS: &[&str] = &["logit_bias"];
 
 /// Mistral AI provider.
 ///
 /// Mistral's API is largely OpenAI-compatible with a few differences:
 /// - `tool_choice: "required"` must be mapped to `"any"`.
-/// - Several OpenAI parameters are not supported and must be stripped.
+/// - Token bias maps are not supported and must be stripped.
 /// - Response format is OpenAI-compatible (no transform needed).
 pub struct MistralProvider;
 
@@ -54,8 +49,7 @@ impl Provider for MistralProvider {
     /// Transform the request body for Mistral compatibility.
     ///
     /// - Maps `tool_choice: "required"` to `"any"` (Mistral's equivalent).
-    /// - Strips unsupported parameters: `parallel_tool_calls`, `logit_bias`,
-    ///   `presence_penalty`, `frequency_penalty`.
+    /// - Strips the unsupported `logit_bias` parameter.
     fn transform_request(&self, body: &mut Value) -> Result<()> {
         if let Some(obj) = body.as_object_mut() {
             if let Some(tc) = obj.get_mut("tool_choice")
@@ -153,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mistral_transform_request_strips_unsupported_params() {
+    fn test_mistral_transform_request_preserves_supported_params_and_strips_logit_bias() {
         let provider = MistralProvider;
         let mut body = json!({
             "model": "mistral-large-latest",
@@ -166,12 +160,36 @@ mod tests {
         });
         provider.transform_request(&mut body).expect("transform should succeed");
 
-        assert!(body.get("parallel_tool_calls").is_none());
+        assert_eq!(body["parallel_tool_calls"], true);
         assert!(body.get("logit_bias").is_none());
-        assert!(body.get("presence_penalty").is_none());
-        assert!(body.get("frequency_penalty").is_none());
+        assert_eq!(body["presence_penalty"], 0.5);
+        assert_eq!(body["frequency_penalty"], 0.5);
         assert_eq!(body["temperature"], 0.7);
         assert_eq!(body["model"], "mistral-large-latest");
+    }
+
+    #[test]
+    fn test_mistral_transform_request_preserves_false_and_zero_settings() {
+        let mut body = json!({
+            "parallel_tool_calls": false,
+            "presence_penalty": 0.0,
+            "frequency_penalty": 0.0
+        });
+        let expected = body.clone();
+        MistralProvider
+            .transform_request(&mut body)
+            .expect("transform should succeed");
+        assert_eq!(body, expected);
+    }
+
+    #[test]
+    fn test_mistral_transform_request_does_not_add_optional_settings() {
+        let mut body = json!({"model": "mistral-small-latest"});
+        let expected = body.clone();
+        MistralProvider
+            .transform_request(&mut body)
+            .expect("transform should succeed");
+        assert_eq!(body, expected);
     }
 
     #[test]
