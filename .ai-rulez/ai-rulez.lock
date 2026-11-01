@@ -4,7 +4,7 @@
 version = 1
 ai_rulez_version = '5.9.8'
 scope = 'all'
-tree = 'sha256:64aa0af727365c2702f533178817b460f7f97370ab7ce25dbd8339a7f2fdcc5c'
+tree = 'sha256:79a18c611967e30af8e621f6d935c5cb93ed26884b67db9bae82a9a362cb8f87'
 
 [[include]]
 name = 'xberg-bindings'
@@ -60,9 +60,9 @@ digest = 'sha256:a1a929c5d6ae0250616ccac332501fe1d899136513ef1f8425d010572a27740
 name = 'alef'
 source = 'https://github.com/xberg-io/alef.git'
 path = 'skills/alef'
-ref = '65c074a93b77339aa5adeb7c3c04ab49eadd9e71'
-commit = '65c074a93b77339aa5adeb7c3c04ab49eadd9e71'
-digest = 'sha256:125512c24c2fe39c54bc2e4c68b2072a4b8147114cf528a2b07041f9e38be50a'
+ref = '305d5c0aa4642ddebf1d2fead01e48b55a230025'
+commit = '305d5c0aa4642ddebf1d2fead01e48b55a230025'
+digest = 'sha256:df90df92baaf8b29833da5f91da79ee74264126657542815d35666e8693b4320'
 
 [[served]]
 name = 'adr-authoring'
@@ -79,9 +79,9 @@ digest = 'sha256:496bf60b5d58799ea58b717fa0fe70984ad4e2e6298053de2e767fbe5e4d9ad
 [[served]]
 name = 'alef'
 source = 'https://github.com/xberg-io/alef.git'
-ref = '65c074a93b77339aa5adeb7c3c04ab49eadd9e71'
+ref = '305d5c0aa4642ddebf1d2fead01e48b55a230025'
 commit = ''
-digest = 'sha256:2e48403667c5bdc196af0b1e7c25a279702704fff2e5d645db2933d4f4272863'
+digest = 'sha256:36238558abea96bb59730e41ea86fcbc474022fd4f951a2548fb52eb46d08b79'
 
 [[served]]
 name = 'api'
