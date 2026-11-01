@@ -3711,8 +3711,6 @@ jobs:
       # release before anything is probed or uploaded.
       - name: Install ai-rulez
         uses: xberg-io/actions/setup-ai-rulez@v1
-        with:
-          ai-rulez-version: "latest"
       - name: Verify plugin bundles match the pinned generator
         run: |
           ai-rulez verify --plugin
@@ -3785,8 +3783,6 @@ jobs:
       # ~keep ai-rulez runs at its latest release, never a mise pin (org ADR-0015).
       - name: Install ai-rulez
         uses: xberg-io/actions/setup-ai-rulez@v1
-        with:
-          ai-rulez-version: "latest"
       - name: Verify plugin source and generated artifacts
         uses: xberg-io/actions/verify-ai-rulez-plugin@v1
         with:
@@ -3840,8 +3836,6 @@ jobs:
       # ~keep ai-rulez runs at its latest release, never a mise pin (org ADR-0015).
       - name: Install ai-rulez
         uses: xberg-io/actions/setup-ai-rulez@v1
-        with:
-          ai-rulez-version: "latest"
       - name: Verify public skill exports
         run: python3 scripts/sync_public_skills.py --check
       - name: Package all supported plugin runtimes
@@ -3912,8 +3906,6 @@ jobs:
       # ~keep ai-rulez runs at its latest release, never a mise pin (org ADR-0015).
       - name: Install ai-rulez
         uses: xberg-io/actions/setup-ai-rulez@v1
-        with:
-          ai-rulez-version: "latest"
       - name: Verify plugin versions and generated resources
         uses: xberg-io/actions/verify-ai-rulez-plugin@v1
         with:
@@ -3984,8 +3976,6 @@ jobs:
       # ~keep ai-rulez runs at its latest release, never a mise pin (org ADR-0015).
       - name: Install ai-rulez
         uses: xberg-io/actions/setup-ai-rulez@v1
-        with:
-          ai-rulez-version: "latest"
       - name: Verify plugin versions and generated resources
         uses: xberg-io/actions/verify-ai-rulez-plugin@v1
         with:
