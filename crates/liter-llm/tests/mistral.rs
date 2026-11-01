@@ -26,54 +26,7 @@ enum Mode {
 fn client(mode: Mode) -> (DefaultClient, thread::JoinHandle<Seen>) {
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind response server");
     let base_url = format!("http://{}/v1", listener.local_addr().expect("server address"));
-    let server = thread::spawn(move || {
-        let (mut stream, _) = listener.accept().expect("accept request");
-        stream
-            .set_read_timeout(Some(Duration::from_secs(10)))
-            .expect("set read timeout");
-        let mut reader = BufReader::new(stream.try_clone().expect("clone stream"));
-        let mut request_line = String::new();
-        reader.read_line(&mut request_line).expect("read request line");
-        let mut content_length = None;
-        loop {
-            let mut line = String::new();
-            assert!(reader.read_line(&mut line).expect("read request headers") > 0);
-            if line.trim().is_empty() {
-                break;
-            }
-            if let Some((name, value)) = line.split_once(':')
-                && name.eq_ignore_ascii_case("content-length")
-            {
-                content_length = Some(value.trim().parse().expect("request content length"));
-            }
-        }
-        let mut raw = vec![0; content_length.expect("content length header")];
-        reader.read_exact(&mut raw).expect("read request body");
-        let choice = if matches!(mode, Mode::Stream) {
-            json!({"index": 0, "delta": {"role": "assistant", "content": "Hello"}, "finish_reason": "stop"})
-        } else {
-            json!({"index": 0, "message": {"role": "assistant", "content": "Hello"}, "finish_reason": "stop"})
-        };
-        let reply = json!({
-            "id": "fixture", "object": if matches!(mode, Mode::Stream) { "chat.completion.chunk" } else { "chat.completion" },
-            "created": 1, "model": "mistral-small-latest", "choices": [choice]
-        });
-        let (content_type, body) = if matches!(mode, Mode::Stream) {
-            ("text/event-stream", format!("data: {reply}\n\ndata: [DONE]\n\n"))
-        } else {
-            ("application/json", reply.to_string())
-        };
-        write!(
-            stream,
-            "HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
-            body.len()
-        )
-        .expect("write response");
-        Seen {
-            request_line: request_line.trim().to_owned(),
-            body: serde_json::from_slice(&raw).expect("request body is JSON"),
-        }
-    });
+    let server = thread::spawn(move || serve_request(listener, mode));
     let config = ClientConfigBuilder::new("test-key")
         .base_url(base_url)
         .load_env(false)
@@ -81,6 +34,55 @@ fn client(mode: Mode) -> (DefaultClient, thread::JoinHandle<Seen>) {
         .build();
     let client = DefaultClient::new(config, Some("mistral/mistral-small-latest")).expect("create client");
     (client, server)
+}
+
+fn serve_request(listener: TcpListener, mode: Mode) -> Seen {
+    let (mut stream, _) = listener.accept().expect("accept request");
+    stream
+        .set_read_timeout(Some(Duration::from_secs(10)))
+        .expect("set read timeout");
+    let mut reader = BufReader::new(stream.try_clone().expect("clone stream"));
+    let mut request_line = String::new();
+    reader.read_line(&mut request_line).expect("read request line");
+    let mut content_length = None;
+    loop {
+        let mut line = String::new();
+        assert!(reader.read_line(&mut line).expect("read request headers") > 0);
+        if line.trim().is_empty() {
+            break;
+        }
+        if let Some((name, value)) = line.split_once(':')
+            && name.eq_ignore_ascii_case("content-length")
+        {
+            content_length = Some(value.trim().parse().expect("request content length"));
+        }
+    }
+    let mut raw = vec![0; content_length.expect("content length header")];
+    reader.read_exact(&mut raw).expect("read request body");
+    let choice = if matches!(mode, Mode::Stream) {
+        json!({"index": 0, "delta": {"role": "assistant", "content": "Hello"}, "finish_reason": "stop"})
+    } else {
+        json!({"index": 0, "message": {"role": "assistant", "content": "Hello"}, "finish_reason": "stop"})
+    };
+    let reply = json!({
+        "id": "fixture", "object": if matches!(mode, Mode::Stream) { "chat.completion.chunk" } else { "chat.completion" },
+        "created": 1, "model": "mistral-small-latest", "choices": [choice]
+    });
+    let (content_type, body) = if matches!(mode, Mode::Stream) {
+        ("text/event-stream", format!("data: {reply}\n\ndata: [DONE]\n\n"))
+    } else {
+        ("application/json", reply.to_string())
+    };
+    write!(
+        stream,
+        "HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+        body.len()
+    )
+    .expect("write response");
+    Seen {
+        request_line: request_line.trim().to_owned(),
+        body: serde_json::from_slice(&raw).expect("request body is JSON"),
+    }
 }
 
 fn settings() -> [Value; 3] {
