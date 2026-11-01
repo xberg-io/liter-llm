@@ -17,20 +17,16 @@ class TestWorkflowPins:
         (tmp_path / "c.yml").write_text("name: none\n")
         assert check.workflow_pins(tmp_path) == {"a.yaml": ["latest"], "b.yml": ["5.7.0"]}
 
-    def test_latest_inputs_pass(self) -> None:
-        check.check_workflows({"a.yaml": ["latest", "latest"]})
+    def test_no_inputs_pass(self) -> None:
+        check.check_workflows({})
 
-    def test_exact_pin_names_the_file(self) -> None:
-        with pytest.raises(SystemExit, match=r"b\.yml: 5\.7\.0"):
+    def test_any_input_names_the_file(self) -> None:
+        with pytest.raises(SystemExit, match=r"deprecated ai-rulez-version.*a\.yaml: latest; b\.yml: 5\.7\.0"):
             check.check_workflows({"a.yaml": ["latest"], "b.yml": ["5.7.0"]})
-
-    def test_no_inputs_fails(self) -> None:
-        with pytest.raises(SystemExit, match="No ai-rulez-version"):
-            check.check_workflows({})
 
     def test_setup_mise_install_names_the_file(self) -> None:
         with pytest.raises(SystemExit, match=r"setup-ai-rulez, not setup-mise: c\.yaml"):
-            check.check_workflows({"a.yaml": ["latest"]}, ["c.yaml"])
+            check.check_workflows({}, ["c.yaml"])
 
     def test_setup_mise_installs_are_collected(self, tmp_path: Path) -> None:
         (tmp_path / "a.yaml").write_text("with:\n  install-args: node github:Goldziher/ai-rulez\n")
@@ -41,10 +37,14 @@ class TestWorkflowPins:
         with pytest.raises(SystemExit, match="usage"):
             check.main(["check_ai_rulez_version.py", "installed"])
 
-    def test_repository_inputs_are_latest(self) -> None:
-        pins = check.workflow_pins()
-        assert sum(len(values) for values in pins.values()) == 7
-        check.check_workflows(pins, check.mise_installs())
+    def test_setup_action_users_are_collected(self, tmp_path: Path) -> None:
+        (tmp_path / "a.yaml").write_text("steps:\n  - uses: xberg-io/actions/setup-ai-rulez@v1\n")
+        (tmp_path / "b.yml").write_text("steps:\n  - uses: xberg-io/actions/setup-mise@v1\n")
+        assert check.setup_users(tmp_path) == ["a.yaml"]
+
+    def test_repository_sets_no_input(self) -> None:
+        assert len(check.setup_users()) == 3, "the scan must see the setup-ai-rulez workflows"
+        check.check_workflows(check.workflow_pins(), check.mise_installs())
 
 
 class TestMisePin:
