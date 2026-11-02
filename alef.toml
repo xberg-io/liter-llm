@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.115.10"
+alef_version = "0.115.15"
 languages = [
   "python",
   "node",
@@ -1155,7 +1155,7 @@ client_factory_from_json = "create_client_from_json"
 [crates.e2e.call.overrides.rust]
 client_factory = "create_client"
 client_factory_from_json = "create_client_from_json"
-trait_imports = ["LlmClient", "FileClient", "BatchClient", "ResponseClient"]
+trait_imports = ["LlmClient"]
 
 [crates.e2e.call.overrides.csharp]
 class = "LiterLlmConverter"
@@ -1855,6 +1855,9 @@ field = "input"
 type = "json_object"
 owned = true
 
+[crates.e2e.calls.create_file.overrides.rust]
+trait_imports = ["FileClient"]
+
 [crates.e2e.calls.create_file.overrides.c]
 options_type = "CreateFileRequest"
 result_type = "FileObject"
@@ -1898,6 +1901,9 @@ method = "GET"
 module = "liter_llm"
 async = true
 
+[crates.e2e.calls.retrieve_file.overrides.rust]
+trait_imports = ["FileClient"]
+
 [crates.e2e.calls.retrieve_file.overrides.elixir]
 function = "defaultclient_retrieve_file"
 
@@ -1915,6 +1921,9 @@ path = "/files"
 method = "DELETE"
 module = "liter_llm"
 async = true
+
+[crates.e2e.calls.delete_file.overrides.rust]
+trait_imports = ["FileClient"]
 
 [crates.e2e.calls.delete_file.overrides.elixir]
 function = "defaultclient_delete_file"
@@ -1939,6 +1948,7 @@ function = "defaultclient_list_files"
 extra_args = ["nil"]
 
 [crates.e2e.calls.list_files.overrides.rust]
+trait_imports = ["FileClient"]
 extra_args = ["None"]
 
 [crates.e2e.calls.list_files.overrides.go]
@@ -1987,6 +1997,7 @@ field = "input.file_id"
 type = "string"
 
 [crates.e2e.calls.file_content.overrides.rust]
+trait_imports = ["FileClient"]
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.node]
@@ -2032,6 +2043,9 @@ name = "req"
 field = "input"
 type = "json_object"
 owned = true
+
+[crates.e2e.calls.create_batch.overrides.rust]
+trait_imports = ["BatchClient"]
 
 [crates.e2e.calls.create_batch.overrides.c]
 options_type = "CreateBatchRequest"
@@ -2090,6 +2104,9 @@ method = "GET"
 module = "liter_llm"
 async = true
 
+[crates.e2e.calls.retrieve_batch.overrides.rust]
+trait_imports = ["BatchClient"]
+
 [crates.e2e.calls.retrieve_batch.overrides.elixir]
 function = "defaultclient_retrieve_batch"
 enum_fields = { "status" = "BatchStatus" }
@@ -2138,6 +2155,7 @@ function = "defaultclient_list_batches"
 extra_args = ["nil"]
 
 [crates.e2e.calls.list_batches.overrides.rust]
+trait_imports = ["BatchClient"]
 extra_args = ["None"]
 
 [crates.e2e.calls.list_batches.overrides.go]
@@ -2174,6 +2192,9 @@ function = "cancel_batch"
 path = "/batches"
 module = "liter_llm"
 async = true
+
+[crates.e2e.calls.cancel_batch.overrides.rust]
+trait_imports = ["BatchClient"]
 
 [crates.e2e.calls.cancel_batch.overrides.elixir]
 function = "defaultclient_cancel_batch"
@@ -2223,6 +2244,9 @@ field = "input"
 type = "json_object"
 owned = true
 
+[crates.e2e.calls.create_response.overrides.rust]
+trait_imports = ["ResponseClient"]
+
 [crates.e2e.calls.create_response.overrides.c]
 options_type = "CreateResponseRequest"
 result_type = "ResponseObject"
@@ -2267,6 +2291,9 @@ method = "GET"
 module = "liter_llm"
 async = true
 
+[crates.e2e.calls.retrieve_response.overrides.rust]
+trait_imports = ["ResponseClient"]
+
 [crates.e2e.calls.retrieve_response.overrides.elixir]
 function = "defaultclient_retrieve_response"
 
@@ -2283,6 +2310,9 @@ function = "cancel_response"
 path = "/responses"
 module = "liter_llm"
 async = true
+
+[crates.e2e.calls.cancel_response.overrides.rust]
+trait_imports = ["ResponseClient"]
 
 [crates.e2e.calls.cancel_response.overrides.elixir]
 function = "defaultclient_cancel_response"
