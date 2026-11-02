@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep CI Python imports sorted and use the builtin exception group in the Hermes bridge.
 - Regenerate Rust E2E suites with compatible Alef 0.115.15 and per-call client trait imports, preserving stream checks without unused bindings under strict warnings.
 - Refresh generated error-family interfaces and required collection JSON serializers while preserving the existing Dart bindings.
 - Align the generated Python package README with the Python 3.11 minimum requirement.

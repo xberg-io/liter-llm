@@ -3,10 +3,10 @@
 import os
 import shutil
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
-import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 APPLE_TARGETS = {"IPHONEOS_DEPLOYMENT_TARGET": "16.0", "MACOSX_DEPLOYMENT_TARGET": "13.0"}

@@ -1,9 +1,9 @@
 """Ensure every maintained registry consumer is checked during version synchronization."""
 
+import tomllib
 from pathlib import Path
 
 import pytest
-import tomllib
 from check_consumer_versions import OWNED_PINS, PINS, expected_pin, replace_pin, sync_owned, verify_all, verify_pin
 
 ROOT = Path(__file__).resolve().parents[2]

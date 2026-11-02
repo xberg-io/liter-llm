@@ -2,10 +2,10 @@
 
 import os
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
-import tomllib
 
 
 @pytest.mark.parametrize(("reported", "matches"), [("2.0.0", True), ("1.0.0", False)])

@@ -3,10 +3,10 @@
 import os
 import shutil
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
-import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 SMOKE_SH = ROOT / "scripts/php/smoke.sh"
