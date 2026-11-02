@@ -63,6 +63,13 @@ pub struct ClientConfig {
     pub max_retries: u32,
     /// Optional maximum retained HTTP response body size; None preserves unbounded reads.
     pub max_response_bytes: Option<usize>,
+    /// CIDR networks the client never connects to, such as `"169.254.0.0/16"`.
+    ///
+    /// The client checks every address a host name resolves to when it opens the connection, and
+    /// an IP-literal host before it sends the request. An IPv6 address that carries an IPv4 address
+    /// is checked as that IPv4 address too, and an ISATAP address is always refused. A list turns
+    /// proxies off. `None` or an empty list sets no rule. `wasm32` refuses a list that is not empty.
+    pub blocked_networks: Option<Vec<String>>,
     /// Extra headers sent on every request.
     ///
     /// Use `Vec<(String, String)>` rather than `HashMap` to preserve insertion
@@ -189,6 +196,7 @@ impl ClientConfig {
             connect_timeout: Duration::from_secs(10),
             max_retries: 3,
             max_response_bytes: None,
+            blocked_networks: None,
             extra_headers: Vec::new(),
             credential_provider: None,
             load_env: true,
@@ -243,6 +251,7 @@ impl std::fmt::Debug for ClientConfig {
             .field("connect_timeout", &self.connect_timeout)
             .field("max_retries", &self.max_retries)
             .field("max_response_bytes", &self.max_response_bytes)
+            .field("blocked_networks", &self.blocked_networks)
             .field("extra_headers", &redacted_headers)
             .field("load_env", &self.load_env)
             .field(
@@ -372,6 +381,12 @@ impl ClientConfigBuilder {
         validate_response_limit(Some(limit))?;
         self.config.max_response_bytes = Some(limit);
         Ok(self)
+    }
+
+    /// Set the CIDR networks the client never connects to. See [`ClientConfig::blocked_networks`].
+    pub fn blocked_networks(mut self, networks: Vec<String>) -> Self {
+        self.config.blocked_networks = Some(networks);
+        self
     }
 
     /// Set a dynamic credential provider for token-based or refreshable auth.

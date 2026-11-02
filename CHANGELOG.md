@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `blocked_networks`: a per-client list of CIDR networks the client never connects to. A host name is refused when any address it resolves to is in a listed network, and an IP-literal URL is refused before the request is sent. Set it on `ClientConfigBuilder`, `ClientBuilder`, `ClientOptions` (every binding) or the config file. A refused request fails with `OutboundForbidden`. `wasm32` refuses a list that is not empty with a `BadRequest` error.
+
 ### Changed
 
 - Minimum supported versions raised: Node.js 22, PHP 8.3, Elixir 1.17, Go 1.27, Android API 24, Dart 3.13, Zig 0.17, macOS 26.

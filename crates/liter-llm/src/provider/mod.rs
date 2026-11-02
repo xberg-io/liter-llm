@@ -879,9 +879,12 @@ pub(crate) mod azure;
 pub(crate) mod bedrock;
 pub(crate) mod cohere;
 pub mod custom;
+pub(crate) mod embedded_ip;
 pub(crate) mod github_copilot;
 pub(crate) mod google_ai;
 pub(crate) mod mistral;
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) mod network_rule;
 pub(crate) mod ollama;
 pub mod outbound_policy;
 pub(crate) mod rebased;
@@ -894,15 +897,21 @@ pub(crate) mod voyage;
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub(crate) use tool_call_numbering::ToolCallNumbering;
 
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) use network_rule::NetworkRule;
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
 pub use outbound_policy::configure_outbound_client_builder;
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub(crate) use outbound_policy::outbound_forbidden_from_reqwest;
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) use outbound_policy::validate_literal_host_for;
 pub use outbound_policy::{
     OutboundPolicy, current_policy, set_outbound_policy, validate_outbound_url, validate_outbound_url_sync,
 };
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
-pub(crate) use outbound_policy::{authenticated_outbound_client, configure_credential_free_outbound_client_builder};
+pub(crate) use outbound_policy::{
+    authenticated_outbound_client, configure_credential_free_outbound_client_builder, configure_rule_client_builder,
+};
 
 /// Built-in OpenAI provider.
 pub(crate) struct OpenAiProvider;

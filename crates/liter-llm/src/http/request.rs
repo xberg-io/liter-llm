@@ -77,6 +77,7 @@ where
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
         &[],
         send,
@@ -93,12 +94,16 @@ where
 /// `invalid_key_as_400` is [`Provider::reports_invalid_key_as_400`] of the provider that
 /// gets the request. It tells the error classifier whether a 400 with the reason
 /// `API_KEY_INVALID` is an authentication error.
+///
+/// `network_rule` is the client's blocked networks, checked against an IP-literal host before
+/// the request is sent. It borrows the rule so the options stay `Copy`.
 #[derive(Clone, Copy)]
-pub(crate) struct ResponseReadOptions {
+pub(crate) struct ResponseReadOptions<'a> {
     pub max_retries: u32,
     pub max_response_bytes: Option<usize>,
     pub timeout: Option<std::time::Duration>,
     pub invalid_key_as_400: bool,
+    pub network_rule: Option<&'a crate::provider::NetworkRule>,
 }
 
 /// The request half of a streaming JSON `POST`: where it goes, which headers
@@ -124,7 +129,7 @@ impl StreamingPost<'_> {
     pub(crate) async fn send(
         &self,
         client: &reqwest::Client,
-        options: ResponseReadOptions,
+        options: ResponseReadOptions<'_>,
     ) -> Result<reqwest::Response> {
         let mut retry_count = 0u32;
 
@@ -269,7 +274,7 @@ mod retry_header_tests {
 /// choose how to consume the body (JSON deserialisation, byte stream, …).
 pub(crate) async fn with_retry_bounded<F, Fut>(
     url: &str,
-    options: ResponseReadOptions,
+    options: ResponseReadOptions<'_>,
     sensitive_values: &[&str],
     mut send: F,
 ) -> Result<(reqwest::Response, Deadline)>
@@ -282,8 +287,10 @@ where
         max_response_bytes,
         timeout,
         invalid_key_as_400,
+        network_rule,
     } = options;
     crate::provider::validate_outbound_url(url).await?;
+    crate::provider::validate_literal_host_for(url, network_rule)?;
     let mut attempt = 0u32;
 
     loop {
@@ -375,6 +382,7 @@ pub async fn post_json_raw(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await
@@ -398,7 +406,7 @@ pub(crate) async fn post_json_raw_bounded(
     auth_header: Option<(&str, &str)>,
     extra_headers: &[(&str, &str)],
     body: Bytes,
-    options: ResponseReadOptions,
+    options: ResponseReadOptions<'_>,
 ) -> Result<serde_json::Value> {
     let max_response_bytes = options.max_response_bytes;
     let mut retry_count = 0u32;
@@ -456,6 +464,7 @@ pub async fn post_binary(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await
@@ -479,7 +488,7 @@ pub(crate) async fn post_binary_bounded(
     auth_header: Option<(&str, &str)>,
     extra_headers: &[(&str, &str)],
     body: Bytes,
-    options: ResponseReadOptions,
+    options: ResponseReadOptions<'_>,
 ) -> Result<Bytes> {
     let max_response_bytes = options.max_response_bytes;
     let mut retry_count = 0u32;
@@ -537,6 +546,7 @@ pub async fn post_multipart(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await
@@ -559,16 +569,18 @@ pub(crate) async fn post_multipart_bounded(
     auth_header: Option<(&str, &str)>,
     extra_headers: &[(&str, &str)],
     form: reqwest::multipart::Form,
-    options: ResponseReadOptions,
+    options: ResponseReadOptions<'_>,
 ) -> Result<serde_json::Value> {
     // ~keep A multipart body is sent once, so `max_retries` is not used.
     let ResponseReadOptions {
         max_response_bytes,
         timeout,
         invalid_key_as_400,
+        network_rule,
         ..
     } = options;
     crate::provider::validate_outbound_url(url).await?;
+    crate::provider::validate_literal_host_for(url, network_rule)?;
     let deadline = Deadline::after(timeout);
     let mut builder = client.post(url).multipart(form);
     if let Some((name, value)) = auth_header {
@@ -631,6 +643,7 @@ pub async fn get_json_raw(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await
@@ -653,7 +666,7 @@ pub(crate) async fn get_json_raw_bounded(
     url: &str,
     auth_header: Option<(&str, &str)>,
     extra_headers: &[(&str, &str)],
-    options: ResponseReadOptions,
+    options: ResponseReadOptions<'_>,
 ) -> Result<serde_json::Value> {
     let max_response_bytes = options.max_response_bytes;
     let mut retry_count = 0u32;
@@ -705,6 +718,7 @@ pub async fn delete_json(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await
@@ -727,7 +741,7 @@ pub(crate) async fn delete_json_bounded(
     url: &str,
     auth_header: Option<(&str, &str)>,
     extra_headers: &[(&str, &str)],
-    options: ResponseReadOptions,
+    options: ResponseReadOptions<'_>,
 ) -> Result<serde_json::Value> {
     let max_response_bytes = options.max_response_bytes;
     let mut retry_count = 0u32;
@@ -779,6 +793,7 @@ pub async fn get_binary(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await
@@ -801,7 +816,7 @@ pub(crate) async fn get_binary_bounded(
     url: &str,
     auth_header: Option<(&str, &str)>,
     extra_headers: &[(&str, &str)],
-    options: ResponseReadOptions,
+    options: ResponseReadOptions<'_>,
 ) -> Result<Bytes> {
     let max_response_bytes = options.max_response_bytes;
     let mut retry_count = 0u32;

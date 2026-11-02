@@ -34,6 +34,11 @@ pub struct ClientOptions {
     pub max_response_bytes: Option<u64>,
     /// Optional model or provider hint used for initial provider selection.
     pub model_hint: Option<String>,
+    /// Optional CIDR networks the client never connects to, such as `"169.254.0.0/16"`.
+    /// A host name is refused when any address it resolves to is in a listed network.
+    /// A bad entry is a `BadRequest` error that names the value.
+    /// `wasm32` refuses a list that is not empty with a `BadRequest` error.
+    pub blocked_networks: Option<Vec<String>>,
 }
 
 /// Create a client from binding-friendly options.
@@ -41,7 +46,8 @@ pub struct ClientOptions {
 /// # Errors
 ///
 /// Returns [`LiterLlmError::BadRequest`] for a zero or platform-overflowing
-/// `max_response_bytes`, a zero `connect_timeout_secs`, plus the errors documented by [`create_client`].
+/// `max_response_bytes`, a zero `connect_timeout_secs`, a `blocked_networks` entry that is not a CIDR
+/// network, plus the errors documented by [`create_client`].
 #[cfg(feature = "native-http")]
 pub fn create_client_with_options(options: ClientOptions) -> Result<DefaultClient> {
     let mut builder = ClientConfigBuilder::new(options.api_key);
@@ -63,6 +69,9 @@ pub fn create_client_with_options(options: ClientOptions) -> Result<DefaultClien
             status: 400,
         })?;
         builder = builder.max_response_bytes(limit)?;
+    }
+    if let Some(networks) = options.blocked_networks {
+        builder = builder.blocked_networks(networks);
     }
     DefaultClient::new(builder.build(), options.model_hint.as_deref())
 }
@@ -237,6 +246,34 @@ mod tests {
             serde_json::from_str(r#"{"api_key":"sk-test","connect_timeout_secs":3}"#).expect("options parse");
         assert_eq!(options.connect_timeout_secs, Some(3));
         assert!(create_client_with_options(options).is_ok());
+    }
+
+    #[cfg(feature = "native-http")]
+    #[test]
+    fn create_client_with_options_accepts_blocked_networks() {
+        let options: ClientOptions =
+            serde_json::from_str(r#"{"api_key":"sk-test","blocked_networks":["169.254.0.0/16","64:ff9b::/96"]}"#)
+                .expect("options parse");
+        assert_eq!(options.blocked_networks.as_ref().map(Vec::len), Some(2));
+        assert!(create_client_with_options(options).is_ok());
+    }
+
+    #[cfg(feature = "native-http")]
+    #[test]
+    fn create_client_with_options_rejects_a_bad_blocked_network() {
+        let error = create_client_with_options(ClientOptions {
+            api_key: "sk-test".into(),
+            blocked_networks: Some(vec!["not-a-network".into()]),
+            ..ClientOptions::default()
+        })
+        .err()
+        .expect("a bad entry must be refused");
+        match error {
+            LiterLlmError::BadRequest { message, .. } => {
+                assert!(message.contains("not-a-network"), "{message}");
+            }
+            other => panic!("expected BadRequest, got {other:?}"),
+        }
     }
 
     #[cfg(not(all(feature = "native-http", feature = "tower")))]
