@@ -2332,7 +2332,7 @@ jobs:
           path: nuget-output
       - uses: xberg-io/actions/publish-nuget@v1
         with:
-          nuget-user: naaman
+          nuget-user: naaman-xberg
           packages-dir: nuget-output
           dry-run: ${{ needs.prepare.outputs.dry_run }}
           expected-version: ${{ needs.prepare.outputs.version }}
