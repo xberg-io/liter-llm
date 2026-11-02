@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Refresh served skill lock digests after regenerating coding-agent plugin artifacts.
 - Keep macOS extension linker flags out of iOS checks and XCFramework builds.
 - Keep CI Python imports sorted and use the builtin exception group in the Hermes bridge.
 - Regenerate Rust E2E suites with compatible Alef 0.115.15 and per-call client trait imports, preserving stream checks without unused bindings under strict warnings.
