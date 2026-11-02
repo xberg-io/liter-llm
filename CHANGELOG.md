@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Python 3.11 is now the minimum supported version; Python 3.10 reached end of life.
+
 ### Fixed
 
 - Mistral: preserve parallel tool-call control and presence/frequency penalties, including false and zero values (#458).

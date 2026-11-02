@@ -268,7 +268,7 @@ dotnet add package {{ package_name }}
 
 {% if language == "python" %}
 
-- **Python 3.10+** required
+- **Python 3.11+** required
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% elif language == "typescript" %}
 - **Node.js 22+** required (NAPI-RS native bindings)

@@ -98,7 +98,7 @@ opentelemetry = { version = "0.33", features = ["metrics"] }
 opentelemetry-otlp = { version = "0.33", features = ["grpc-tonic", "trace", "metrics"] }
 opentelemetry_sdk = { version = "0.33", features = ["rt-tokio"] }
 pin-project-lite = "0.2"
-pyo3 = { version = "0.30", features = ["abi3-py310", "multiple-pymethods"] }
+pyo3 = { version = "0.30", features = ["abi3-py311", "multiple-pymethods"] }
 pyo3-async-runtimes = { version = "0.30", features = ["tokio-runtime"] }
 rayon = "1"
 rb-sys = "0.9"
