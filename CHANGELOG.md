@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Regenerate Rust E2E suites with Alef 0.116.0 and per-call client trait imports, preserving stream checks without unused bindings under strict warnings.
 - Mistral: preserve parallel tool-call control and presence/frequency penalties, including false and zero values (#458).
 
 ## [2.4.4] - 2026-10-31
