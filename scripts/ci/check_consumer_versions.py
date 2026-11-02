@@ -2,9 +2,9 @@
 
 import re
 import sys
+import tomllib
 from pathlib import Path
 
-import tomllib
 from check_kotlin_consumer_version import synchronize_coordinates, verify_coordinates
 from sync_dart_consumer_version import synchronize
 

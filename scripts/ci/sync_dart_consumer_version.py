@@ -2,9 +2,8 @@
 
 import re
 import sys
-from pathlib import Path
-
 import tomllib
+from pathlib import Path
 
 REQUIREMENT = re.compile(r"(?m)^  liter_llm:[^\n]*$")
 

@@ -3,10 +3,10 @@
 import copy
 import os
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
-import tomllib
 import yaml
 from packaging.version import Version
 from prepare_go_release_assets import prepare

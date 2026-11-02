@@ -77,6 +77,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           cache-key-prefix: ci-mobile-ios-${{ matrix.target }}
+          macos-dynamic-lookup: "false"
       - name: cargo check liter-llm-dart
         run: cargo check -p liter-llm-dart --target ${{ matrix.target }}
       - name: cargo check liter-llm-swift
@@ -91,6 +92,8 @@ jobs:
       - uses: actions/checkout@v7
       # ~keep rust is a mise lock gap (rustup script install); rust-toolchain.toml pins it.
       - uses: xberg-io/actions/setup-rust@v1
+        with:
+          macos-dynamic-lookup: "false"
       - uses: xberg-io/actions/build-ios-xcframework@v1
         with:
           crate-name: liter-llm-swift
