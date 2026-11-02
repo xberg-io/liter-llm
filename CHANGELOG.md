@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Python 3.11 is now the minimum supported version; Python 3.10 reached end of life.
+
 ### Fixed
 
 - Regenerate Rust E2E suites with compatible Alef 0.115.15 and per-call client trait imports, preserving stream checks without unused bindings under strict warnings.

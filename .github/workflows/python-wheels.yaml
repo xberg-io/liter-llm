@@ -63,7 +63,7 @@ jobs:
       - uses: xberg-io/actions/build-python-wheels@v1
         with:
           package-dir: packages/python
-          cibw-build: "cp310-*"
+          cibw-build: "cp311-*"
           cibw-skip: "*-musllinux* *-win32 *-manylinux_i686"
           cibw-environment: 'MATURIN_BUILD_ARGS="--compatibility linux" CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=cc'
           # ~keep 11.0 is the floor of the arm64 wheel and of the FFI builds (#248). cibuildwheel

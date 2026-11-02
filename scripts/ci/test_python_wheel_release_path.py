@@ -169,7 +169,7 @@ def test_check_step_gives_each_leg_its_own_tag_and_architecture(tmp_path: Path) 
 def test_wheel_build_inputs_are_pinned() -> None:
     job = wheel_job()
     build = next(s for s in job["steps"] if "build-python-wheels" in s.get("uses", ""))["with"]
-    assert build["cibw-build"] == "cp310-*"
+    assert build["cibw-build"] == "cp311-*"
     assert "--compatibility linux" in build["cibw-environment"]
     assert (ROOT / build["package-dir"] / "pyproject.toml").is_file()
     assert job["timeout-minutes"] == 90
@@ -471,7 +471,7 @@ MACOS_BEFORE_BUILD = {
 }
 WHEEL_BUILD_INPUTS = {
     "package-dir": "packages/python",
-    "cibw-build": "cp310-*",
+    "cibw-build": "cp311-*",
     "cibw-skip": "*-musllinux* *-win32 *-manylinux_i686",
     "cibw-environment": 'MATURIN_BUILD_ARGS="--compatibility linux" CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=cc',
     "cibw-environment-macos": 'MATURIN_BUILD_ARGS="" CARGO_BUILD_LOCKED=true MACOSX_DEPLOYMENT_TARGET=11.0',
