@@ -322,14 +322,44 @@ fn check_allowlist(url: &Url, _raw: &str, allowed: &[Url]) -> Result<(), LiterLl
 /// multi-tenant proxy.
 ///
 /// Covers loopback, unspecified, private (RFC 1918), link-local, multicast,
-/// broadcast, CGNAT (100.64/10), IPv4-mapped IPv6, ULA (fc00::/7), and IPv6
+/// broadcast, CGNAT (100.64/10), IPv4-mapped IPv6, IPv6 forms that embed a
+/// forbidden IPv4 address (SIIT, Teredo, ISATAP), ULA (fc00::/7), and IPv6
 /// link-local (fe80::/10).
 #[cfg_attr(alef, alef(skip))]
 pub fn is_forbidden(ip: IpAddr) -> bool {
     match ip {
         IpAddr::V4(v4) => is_forbidden_v4(v4),
-        IpAddr::V6(v6) => v6.to_ipv4_mapped().map_or_else(|| is_forbidden_v6(v6), is_forbidden_v4),
+        IpAddr::V6(v6) => match v6.to_ipv4_mapped() {
+            Some(v4) => is_forbidden_v4(v4),
+            None => is_forbidden_v6(v6) || embedded_ipv4(v6).is_some_and(is_forbidden_v4),
+        },
     }
+}
+
+/// Decodes the IPv4 address carried by an IPv6 transition form, so the IPv4
+/// rule applies to it.
+///
+/// - SIIT `::ffff:0:a.b.c.d` (RFC 6145): the last 32 bits.
+/// - Teredo `2001::/32` (RFC 4380): the client address, bit-inverted in the last 32 bits.
+/// - ISATAP interface ID `::0:5efe:a.b.c.d` / `::200:5efe:a.b.c.d` (RFC 5214), under any
+///   prefix: the last 32 bits. The universal/local and group bits of the interface ID
+///   are ignored.
+///
+/// IPv4-mapped, IPv4-compatible, NAT64 `64:ff9b::/96` and 6to4 `2002::/16` are
+/// handled elsewhere.
+fn embedded_ipv4(ip: std::net::Ipv6Addr) -> Option<std::net::Ipv4Addr> {
+    let segments = ip.segments();
+    let join = |high: u16, low: u16| std::net::Ipv4Addr::from((u32::from(high) << 16) | u32::from(low));
+    if segments[..4] == [0, 0, 0, 0] && segments[4] == 0xffff && segments[5] == 0 {
+        return Some(join(segments[6], segments[7]));
+    }
+    if segments[0] == 0x2001 && segments[1] == 0 {
+        return Some(join(!segments[6], !segments[7]));
+    }
+    if segments[4] & 0xfcff == 0 && segments[5] == 0x5efe {
+        return Some(join(segments[6], segments[7]));
+    }
+    None
 }
 
 /// Inclusive `(a, b, c)` octet ranges that must not be reached; the fourth octet is never inspected.
@@ -941,6 +971,45 @@ mod tests {
             let result = validate_outbound_url_sync("http://169.254.169.254/");
             assert!(result.is_err(), "metadata IP should be rejected");
         });
+    }
+
+    #[test]
+    #[serial(outbound_policy)]
+    fn validate_sync_deny_private_rejects_ipv6_embedding_metadata_ip() {
+        with_policy(OutboundPolicy::DenyPrivate, || {
+            for url in [
+                "http://[::ffff:0:169.254.169.254]/",
+                "http://[2001:0:4136:e378:8000:63bf:5601:5601]/",
+                "http://[2001:db8::5efe:a9fe:a9fe]/",
+            ] {
+                assert!(validate_outbound_url_sync(url).is_err(), "{url} should be rejected");
+            }
+        });
+    }
+
+    #[test]
+    fn is_forbidden_ipv6_transition_forms_follow_v4_table() {
+        for (addr, expected) in [
+            ("::ffff:0:169.254.169.254", true),
+            ("::ffff:0:10.0.0.1", true),
+            ("::ffff:0:8.8.8.8", false),
+            // Teredo: client 169.254.169.254, bit-inverted
+            ("2001:0:4136:e378:8000:63bf:5601:5601", true),
+            // Teredo: client 127.0.0.1, bit-inverted
+            ("2001:0:4136:e378:8000:63bf:80ff:fffe", true),
+            // Teredo: client 8.8.8.8, bit-inverted
+            ("2001:0:4136:e378:8000:63bf:f7f7:f7f7", false),
+            // ISATAP, local and universal interface IDs
+            ("2001:db8::5efe:a9fe:a9fe", true),
+            ("2001:db8::200:5efe:a9fe:a9fe", true),
+            ("2001:db8::5efe:c0a8:101", true),
+            ("2001:db8::200:5efe:808:808", false),
+            // 0x5efe outside the ISATAP position is not a transition form
+            ("2001:4860:4860::5efe:a9fe", false),
+        ] {
+            let ip: IpAddr = addr.parse().expect("valid IPv6");
+            assert_eq!(is_forbidden(ip), expected, "is_forbidden({addr}) should be {expected}");
+        }
     }
 
     #[test]
