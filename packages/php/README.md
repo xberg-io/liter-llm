@@ -79,7 +79,7 @@
   </a>
 </div>
 
-Universal LLM API client for PHP. Access 174 LLM providers through a single interface with modern PHP 8.2+ support and a type-safe API.
+Universal LLM API client for PHP. Access 174 LLM providers through a single interface with modern PHP 8.3+ support and a type-safe API.
 
 ## What This Package Provides
 
@@ -87,7 +87,7 @@ Universal LLM API client for PHP. Access 174 LLM providers through a single inte
 - **Provider/model routing** — call models with the `provider/model` convention and keep provider-specific request code out of application paths.
 - **Production controls** — retries, fallback, rate limits, cache layers, budgets, health checks, OpenTelemetry spans, and redacted secrets.
 - **Same core as every binding** — Rust, Python, Node.js, Go, Java, PHP, Ruby, .NET, Elixir, WASM, Kotlin Android, Swift, Dart, Zig, and C FFI use the same Rust implementation.
-- **PHP package** — PHP 8.2+ API for unified provider calls.
+- **PHP package** — PHP 8.3+ API for unified provider calls.
 
 ## Installation
 
@@ -101,7 +101,7 @@ composer require xberg-io/liter-llm
 
 ### System Requirements
 
-- **PHP 8.2+** required
+- **PHP 8.3+** required
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
 
 ## Quick Start

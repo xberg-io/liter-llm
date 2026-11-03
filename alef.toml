@@ -2663,7 +2663,7 @@ name = "PHP"
 package_name = "xberg-io/liter-llm"
 badge_url = "https://img.shields.io/packagist/v/xberg-io/liter-llm?label=PHP&color=007ec6"
 docs_url = "https://github.com/xberg-io/liter-llm"
-description = "Universal LLM API client for PHP. Access 174 LLM providers through a single interface with modern PHP 8.2+ support and a type-safe API."
+description = "Universal LLM API client for PHP. Access 174 LLM providers through a single interface with modern PHP 8.3+ support and a type-safe API."
 package_manager = ["composer"]
 
 [crates.readme.languages.php.features]

@@ -284,35 +284,35 @@ Pre-built binaries available for:
 
 {% elif language == "go" %}
 
-- **Go 1.26+** required
+- **Go 1.27+** required
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% elif language == "java" %}
 - **Java 21+** required (Panama FFM API)
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% elif language == "ruby" %}
-- **Ruby 3.2+** required
+- **Ruby 3.3+** required
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% elif language == "php" %}
-- **PHP 8.2+** required
+- **PHP 8.3+** required
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% elif language == "csharp" %}
 - **.NET 8.0+** required
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% elif language == "elixir" %}
-- **Elixir 1.14+** and **Erlang/OTP 25+** required
+- **Elixir 1.17+** and **Erlang/OTP 25+** required
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% elif language == "wasm" %}
 - Modern browser with WebAssembly support, or Deno 1.0+, or Cloudflare Workers
 - API keys via environment variables or runtime configuration
   {% elif language == "swift" %}
-- **Swift 6.0+** with SwiftPM
+- **Swift 6.2+** with SwiftPM
 - Pre-built artifact bundle for macOS (arm64, x86_64), iOS, iOS Simulator
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% elif language == "dart" %}
-- **Dart 3.11+** required
+- **Dart 3.13+** required
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% elif language == "zig" %}
-- **Zig 0.16.0+** required
+- **Zig 0.17.0+** required
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% elif language == "kotlin_android" %}
 - **Android API 24+** (Android 7.0)

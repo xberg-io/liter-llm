@@ -135,7 +135,7 @@ Link it as above via `CGO_LDFLAGS`. The module's cgo directives define `LITERLLM
 
 ### System Requirements
 
-- **Go 1.26+** required, with cgo enabled and a C toolchain
+- **Go 1.27+** required, with cgo enabled and a C toolchain
 - macOS 11.0 or later on Apple platforms
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
 

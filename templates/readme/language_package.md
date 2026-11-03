@@ -30,7 +30,7 @@
   {% elif language == "java" %}
 - **Java package** — type-safe FFM binding for JVM services.
   {% elif language == "php" %}
-- **PHP package** — PHP 8.2+ API for unified provider calls.
+- **PHP package** — PHP 8.3+ API for unified provider calls.
   {% elif language == "ruby" %}
 - **Ruby package** — native extension with idiomatic Ruby request and response objects.
   {% elif language == "csharp" %}
