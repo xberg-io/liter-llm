@@ -437,6 +437,7 @@ impl ClientBuilder<WithApiKey, WithProvider> {
             credential_provider: self.credential_provider,
             load_env: self.load_env,
             transport: self.transport,
+            blocked_networks: Vec::new(),
             bedrock_region: None,
             bedrock_cross_region_prefix: None,
             bedrock_access_key_id: None,

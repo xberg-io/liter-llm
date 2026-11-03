@@ -113,6 +113,7 @@ where
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            blocked_networks: None,
         },
     )
     .await
@@ -163,8 +164,9 @@ where
     P: Fn(&str) -> Result<Option<T>> + Send + 'static,
     T: Send + 'static,
 {
+    let idle_timeout = options.timeout;
     let resp = request.send(client, options).await?;
-    let byte_stream = crate::http::deadline::idle_timeout(resp.bytes_stream(), options.timeout);
+    let byte_stream = crate::http::deadline::idle_timeout(resp.bytes_stream(), idle_timeout);
     let stream = SseParser::new_with_framing(byte_stream, parse_event, is_final, None, framing);
     Ok(Box::pin(stream))
 }
@@ -198,6 +200,7 @@ where
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            blocked_networks: None,
         },
     )
     .await

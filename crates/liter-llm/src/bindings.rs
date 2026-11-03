@@ -34,6 +34,11 @@ pub struct ClientOptions {
     pub max_response_bytes: Option<u64>,
     /// Optional model or provider hint used for initial provider selection.
     pub model_hint: Option<String>,
+    /// Networks the client must never reach, as CIDR strings or single addresses.
+    /// Checked at connect time for DNS answers and before sending for IP-literal hosts.
+    /// A non-empty list turns off proxies. Empty adds no rule.
+    #[serde(default)]
+    pub blocked_networks: Vec<String>,
 }
 
 /// Create a client from binding-friendly options.
@@ -41,7 +46,8 @@ pub struct ClientOptions {
 /// # Errors
 ///
 /// Returns [`LiterLlmError::BadRequest`] for a zero or platform-overflowing
-/// `max_response_bytes`, a zero `connect_timeout_secs`, plus the errors documented by [`create_client`].
+/// `max_response_bytes`, a zero `connect_timeout_secs`, a `blocked_networks` entry that is not an IP
+/// address or CIDR network, plus the errors documented by [`create_client`].
 #[cfg(feature = "native-http")]
 pub fn create_client_with_options(options: ClientOptions) -> Result<DefaultClient> {
     let mut builder = ClientConfigBuilder::new(options.api_key);
@@ -57,6 +63,7 @@ pub fn create_client_with_options(options: ClientOptions) -> Result<DefaultClien
     if let Some(retries) = options.max_retries {
         builder = builder.max_retries(retries);
     }
+    builder = builder.blocked_networks(options.blocked_networks);
     if let Some(limit) = options.max_response_bytes {
         let limit = usize::try_from(limit).map_err(|_| LiterLlmError::BadRequest {
             message: "max_response_bytes exceeds the platform limit".into(),

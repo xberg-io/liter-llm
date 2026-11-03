@@ -77,6 +77,7 @@ where
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            blocked_networks: None,
         },
         &[],
         send,
@@ -93,12 +94,14 @@ where
 /// `invalid_key_as_400` is [`Provider::reports_invalid_key_as_400`] of the provider that
 /// gets the request. It tells the error classifier whether a 400 with the reason
 /// `API_KEY_INVALID` is an authentication error.
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub(crate) struct ResponseReadOptions {
     pub max_retries: u32,
     pub max_response_bytes: Option<usize>,
     pub timeout: Option<std::time::Duration>,
     pub invalid_key_as_400: bool,
+    /// The client's blocked networks; an IP-literal URL inside one is refused before sending.
+    pub blocked_networks: Option<crate::provider::blocked_networks::BlockedNetworks>,
 }
 
 /// The request half of a streaming JSON `POST`: where it goes, which headers
@@ -251,6 +254,15 @@ mod retry_header_tests {
     }
 }
 
+/// Checks `url` against the process-wide outbound policy and the client's blocked networks.
+async fn validate_request_url(
+    url: &str,
+    blocked_networks: Option<&crate::provider::blocked_networks::BlockedNetworks>,
+) -> Result<()> {
+    crate::provider::validate_outbound_url(url).await?;
+    blocked_networks.map_or(Ok(()), |blocked| blocked.check_url(url))
+}
+
 /// Drive a single-request closure through the retry / back-off loop.
 ///
 /// `send` is called once per attempt and must return a future that resolves to
@@ -282,8 +294,9 @@ where
         max_response_bytes,
         timeout,
         invalid_key_as_400,
+        blocked_networks,
     } = options;
-    crate::provider::validate_outbound_url(url).await?;
+    validate_request_url(url, blocked_networks.as_ref()).await?;
     let mut attempt = 0u32;
 
     loop {
@@ -375,6 +388,7 @@ pub async fn post_json_raw(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            blocked_networks: None,
         },
     )
     .await
@@ -456,6 +470,7 @@ pub async fn post_binary(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            blocked_networks: None,
         },
     )
     .await
@@ -537,6 +552,7 @@ pub async fn post_multipart(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            blocked_networks: None,
         },
     )
     .await
@@ -566,9 +582,10 @@ pub(crate) async fn post_multipart_bounded(
         max_response_bytes,
         timeout,
         invalid_key_as_400,
+        blocked_networks,
         ..
     } = options;
-    crate::provider::validate_outbound_url(url).await?;
+    validate_request_url(url, blocked_networks.as_ref()).await?;
     let deadline = Deadline::after(timeout);
     let mut builder = client.post(url).multipart(form);
     if let Some((name, value)) = auth_header {
@@ -631,6 +648,7 @@ pub async fn get_json_raw(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            blocked_networks: None,
         },
     )
     .await
@@ -705,6 +723,7 @@ pub async fn delete_json(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            blocked_networks: None,
         },
     )
     .await
@@ -779,6 +798,7 @@ pub async fn get_binary(
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            blocked_networks: None,
         },
     )
     .await

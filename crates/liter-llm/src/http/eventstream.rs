@@ -62,6 +62,7 @@ where
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            blocked_networks: None,
         },
     )
     .await
@@ -87,8 +88,9 @@ pub(crate) async fn post_eventstream_bounded<P>(
 where
     P: Fn(&str, &str) -> Result<Option<ChatCompletionChunk>> + Send + 'static,
 {
+    let idle_timeout = options.timeout;
     let resp = request.send(client, options).await?;
-    let byte_stream = crate::http::deadline::idle_timeout(resp.bytes_stream(), options.timeout);
+    let byte_stream = crate::http::deadline::idle_timeout(resp.bytes_stream(), idle_timeout);
     let stream = EventStreamParser::new(byte_stream, parse_event);
     Ok(Box::pin(stream))
 }

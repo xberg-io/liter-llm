@@ -877,6 +877,7 @@ pub(crate) fn carry_extra_body(from: &mut serde_json::Value, to: &mut serde_json
 pub(crate) mod anthropic;
 pub(crate) mod azure;
 pub(crate) mod bedrock;
+pub(crate) mod blocked_networks;
 pub(crate) mod cohere;
 pub mod custom;
 pub(crate) mod github_copilot;

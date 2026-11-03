@@ -148,6 +148,18 @@ pub struct ClientConfig {
     /// HTTP transport configuration for connection pooling, DNS caching, and protocol selection.
     pub transport: TransportConfig,
 
+    /// Networks this client must never reach, as CIDR strings (`"10.0.0.0/8"`, `"fd00::/8"`)
+    /// or single addresses (`"169.254.169.254"`).
+    ///
+    /// Every address a DNS lookup returns is checked at connect time, and the lookup fails
+    /// when any of them is blocked. An IP-literal host is checked before the request is sent.
+    /// The process-wide [`OutboundPolicy`](crate::provider::OutboundPolicy) still applies.
+    /// A non-empty list turns off proxies, because a proxy would resolve the host on the
+    /// client's behalf. Empty (the default) adds no rule. An entry that does not parse is an
+    /// error when the client is created. On `wasm32` the browser resolves hosts, so only
+    /// IP-literal hosts are checked.
+    pub blocked_networks: Vec<String>,
+
     /// AWS region for the Bedrock provider (`bedrock/` model prefix).
     ///
     /// When unset, resolution falls back to `AWS_DEFAULT_REGION`, then
@@ -193,6 +205,7 @@ impl ClientConfig {
             credential_provider: None,
             load_env: true,
             transport: TransportConfig::default(),
+            blocked_networks: Vec::new(),
             bedrock_region: None,
             bedrock_cross_region_prefix: None,
             bedrock_access_key_id: None,
@@ -245,6 +258,7 @@ impl std::fmt::Debug for ClientConfig {
             .field("max_response_bytes", &self.max_response_bytes)
             .field("extra_headers", &redacted_headers)
             .field("load_env", &self.load_env)
+            .field("blocked_networks", &self.blocked_networks)
             .field(
                 "credential_provider",
                 &self.credential_provider.as_ref().map(|_| "[configured]"),
@@ -352,6 +366,18 @@ impl ClientConfigBuilder {
     /// other value.
     pub fn connect_timeout(mut self, timeout: Duration) -> Self {
         self.config.connect_timeout = timeout;
+        self
+    }
+
+    /// Block networks for this client, as CIDR strings or single addresses.
+    ///
+    /// See [`ClientConfig::blocked_networks`]. Replaces any list set before.
+    pub fn blocked_networks<I, S>(mut self, networks: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.config.blocked_networks = networks.into_iter().map(Into::into).collect();
         self
     }
 
