@@ -345,9 +345,9 @@ dependencies = [
 
 [[package]]
 name = "brotli-decompressor"
-version = "6.0.1"
+version = "6.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "941cd9bd4ddab83cb46fa5a2d428f1c857b24ac78cb876cf7beb710840934bd7"
+checksum = "34c6783f42c21c952ad7112b354f0ba2f10760e9decea5b1b60523d6e270faaf"
 dependencies = [
  "alloc-no-stdlib",
  "alloc-stdlib",
@@ -1680,7 +1680,7 @@ checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
 
 [[package]]
 name = "liter-llm"
-version = "2.4.4"
+version = "2.5.0"
 dependencies = [
  "ahash",
  "arc-swap",
@@ -1699,6 +1699,7 @@ dependencies = [
  "hex",
  "http",
  "httpdate",
+ "ipnet",
  "jsonwebtoken",
  "memchr",
  "opendal",
@@ -1729,7 +1730,7 @@ dependencies = [
 
 [[package]]
 name = "liter_llm_nif"
-version = "2.4.4"
+version = "2.5.0"
 dependencies = [
  "alloc-no-stdlib",
  "alloc-stdlib",

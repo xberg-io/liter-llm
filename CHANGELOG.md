@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-11-03
+
 ### Added
 
 - `blocked_networks`: a per-client list of CIDR networks the client never connects to. A host name is refused when any address it resolves to is in a listed network, and an IP-literal URL is refused before the request is sent. Set it on `ClientConfigBuilder`, `ClientBuilder`, `ClientOptions` (every binding) or the config file. A refused request fails with `OutboundForbidden`. `wasm32` refuses a list that is not empty with a `BadRequest` error.
@@ -25,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refresh generated error-family interfaces and required collection JSON serializers while preserving the existing Dart bindings.
 - Align the generated Python package README with the Python 3.11 minimum requirement.
 - Mistral: preserve parallel tool-call control and presence/frequency penalties, including false and zero values (#458).
+- Outbound policy: refuse IPv6 forms that carry a blocked IPv4 address, such as IPv4-mapped, IPv4-compatible, SIIT, NAT64, 6to4 and Teredo addresses, and every ISATAP address (#462).
 
 ## [2.4.4] - 2026-10-31
 

@@ -1705,7 +1705,7 @@ checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
 
 [[package]]
 name = "liter-llm"
-version = "2.4.4"
+version = "2.5.0"
 dependencies = [
  "ahash",
  "arc-swap",
@@ -1724,6 +1724,7 @@ dependencies = [
  "hex",
  "http",
  "httpdate",
+ "ipnet",
  "jsonwebtoken",
  "memchr",
  "opendal",
@@ -1754,7 +1755,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-rb"
-version = "2.4.4"
+version = "2.5.0"
 dependencies = [
  "futures",
  "liter-llm",
