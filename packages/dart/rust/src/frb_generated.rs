@@ -5777,6 +5777,7 @@ const _: fn() = || {
         let _: Option<i64> = ClientOptions.max_retries;
         let _: Option<i64> = ClientOptions.max_response_bytes;
         let _: Option<String> = ClientOptions.model_hint;
+        let _: Option<Vec<String>> = ClientOptions.blocked_networks;
     }
     {
         let CompletionTokensDetails = None::<crate::CompletionTokensDetails>.unwrap();
@@ -7255,6 +7256,7 @@ impl SseDecode for crate::ClientOptions {
         let mut var_maxRetries = <Option<i64>>::sse_decode(deserializer);
         let mut var_maxResponseBytes = <Option<i64>>::sse_decode(deserializer);
         let mut var_modelHint = <Option<String>>::sse_decode(deserializer);
+        let mut var_blockedNetworks = <Option<Vec<String>>>::sse_decode(deserializer);
         return crate::ClientOptions {
             api_key: var_apiKey,
             base_url: var_baseUrl,
@@ -7263,6 +7265,7 @@ impl SseDecode for crate::ClientOptions {
             max_retries: var_maxRetries,
             max_response_bytes: var_maxResponseBytes,
             model_hint: var_modelHint,
+            blocked_networks: var_blockedNetworks,
         };
     }
 }
@@ -10939,6 +10942,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::ClientOptions> {
             self.0.max_retries.into_into_dart().into_dart(),
             self.0.max_response_bytes.into_into_dart().into_dart(),
             self.0.model_hint.into_into_dart().into_dart(),
+            self.0.blocked_networks.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -13438,6 +13442,7 @@ impl SseEncode for crate::ClientOptions {
         <Option<i64>>::sse_encode(self.max_retries, serializer);
         <Option<i64>>::sse_encode(self.max_response_bytes, serializer);
         <Option<String>>::sse_encode(self.model_hint, serializer);
+        <Option<Vec<String>>>::sse_encode(self.blocked_networks, serializer);
     }
 }
 

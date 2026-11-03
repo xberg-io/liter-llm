@@ -3610,11 +3610,6 @@ public class ClientOptions: ClientOptionsRefMut {
         }
     }
 }
-extension ClientOptions {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ api_key: GenericIntoRustString, _ base_url: Optional<GenericIntoRustString>, _ timeout_secs: Optional<UInt64>, _ connect_timeout_secs: Optional<UInt64>, _ max_retries: Optional<UInt32>, _ max_response_bytes: Optional<UInt64>, _ model_hint: Optional<GenericIntoRustString>) {
-        self.init(ptr: __swift_bridge__$ClientOptions$new({ let rustString = api_key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let rustString = optionalStringIntoRustString(base_url) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), timeout_secs.intoFfiRepr(), connect_timeout_secs.intoFfiRepr(), max_retries.intoFfiRepr(), max_response_bytes.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(model_hint) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
-    }
-}
 public class ClientOptionsRefMut: ClientOptionsRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -3654,6 +3649,10 @@ extension ClientOptionsRef {
 
     public func modelHint() -> Optional<RustString> {
         { let val = __swift_bridge__$ClientOptions$model_hint(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func blockedNetworks() -> RustString {
+        RustString(ptr: __swift_bridge__$ClientOptions$blocked_networks(ptr))
     }
 }
 extension ClientOptions: Vectorizable {
