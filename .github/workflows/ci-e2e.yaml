@@ -10,6 +10,7 @@ on:
       - fixtures/**
       - scripts/tests/test_python_content_accessors.py
       - scripts/tests/test_python_stub_matches_reply.py
+      - scripts/tests/test_python_blocked_networks.py
       - schemas/**
       - Cargo.toml
       - Cargo.lock
@@ -38,6 +39,7 @@ on:
       - fixtures/**
       - scripts/tests/test_python_content_accessors.py
       - scripts/tests/test_python_stub_matches_reply.py
+      - scripts/tests/test_python_blocked_networks.py
       - schemas/**
       - Cargo.toml
       - Cargo.lock

@@ -2966,6 +2966,17 @@ int32_t literllm_client_options_has_max_response_bytes(LITERLLMAlefHandle handle
 
 #if (defined(LITERLLM_FEATURE_NATIVE_HTTP) || defined(LITERLLM_FEATURE_WASM_HTTP))
 /**
+ * Get the `blocked_networks` field from a `ClientOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_client_options_blocked_networks(LITERLLMAlefHandle handle);
+#endif
+
+#if (defined(LITERLLM_FEATURE_NATIVE_HTTP) || defined(LITERLLM_FEATURE_WASM_HTTP))
+/**
  * Get the `model_hint` field from a `ClientOptions`.
  * A non-null returned pointer is owned by the caller.
  * It must be freed with `literllm_free_string`.
@@ -10168,7 +10179,8 @@ LITERLLMAlefHandle literllm_create_client_from_json(const char *json);
 /**
  * Create a client from binding-friendly options.
  * \note Returns `LiterLlmError.BadRequest` for a zero or platform-overflowing
- * `max_response_bytes`, a zero `connect_timeout_secs`, plus the errors documented by `create_client`.
+ * `max_response_bytes`, a zero `connect_timeout_secs`, a `blocked_networks` entry that is not a CIDR
+ * network, plus the errors documented by `create_client`.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */

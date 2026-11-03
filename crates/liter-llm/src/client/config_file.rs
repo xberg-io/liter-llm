@@ -50,6 +50,7 @@ pub struct FileConfig {
     pub connect_timeout_secs: Option<u64>,
     pub max_retries: Option<u32>,
     pub max_response_bytes: Option<usize>,
+    pub blocked_networks: Option<Vec<String>>,
     pub extra_headers: Option<HashMap<String, String>>,
     pub cache: Option<FileCacheConfig>,
     pub budget: Option<FileBudgetConfig>,
@@ -195,6 +196,9 @@ impl FileConfig {
         }
         if let Some(limit) = self.max_response_bytes {
             builder.config.max_response_bytes = Some(limit);
+        }
+        if let Some(networks) = &self.blocked_networks {
+            builder = builder.blocked_networks(networks.clone());
         }
 
         #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -440,5 +444,42 @@ max_retries = 2
     fn empty_config_is_valid() {
         let config = FileConfig::from_toml_str("").expect("TOML should parse");
         assert!(config.api_key.is_none());
+    }
+
+    #[test]
+    fn blocked_networks_key_reaches_the_client_config() {
+        let toml = r#"
+api_key = "sk-test"
+blocked_networks = ["169.254.0.0/16", "64:ff9b::/96"]
+"#;
+        let config = FileConfig::from_toml_str(toml)
+            .expect("TOML should parse")
+            .into_builder()
+            .build();
+        assert_eq!(
+            config.blocked_networks,
+            Some(vec!["169.254.0.0/16".to_owned(), "64:ff9b::/96".to_owned()])
+        );
+        let absent = FileConfig::from_toml_str(r#"api_key = "sk-test""#)
+            .expect("TOML should parse")
+            .into_builder()
+            .build();
+        assert!(absent.blocked_networks.is_none());
+    }
+
+    #[cfg(feature = "native-http")]
+    #[test]
+    fn a_bad_blocked_networks_entry_in_the_file_fails_client_creation() {
+        let config = FileConfig::from_toml_str("api_key = \"sk-test\"\nblocked_networks = [\"nope\"]")
+            .expect("TOML should parse")
+            .into_builder()
+            .build();
+        let error = crate::client::DefaultClient::new(config, None)
+            .err()
+            .expect("a bad entry must be refused");
+        assert!(
+            matches!(error, crate::error::LiterLlmError::BadRequest { .. }),
+            "{error:?}"
+        );
     }
 }

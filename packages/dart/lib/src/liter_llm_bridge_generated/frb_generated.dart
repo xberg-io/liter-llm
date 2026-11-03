@@ -11,10 +11,12 @@ import 'dart:core' as _DartCore;
 import 'dart:core';
 import 'dart:async';
 import 'dart:convert';
+
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'lib.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
@@ -7843,8 +7845,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ClientOptions dco_decode_client_options(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return ClientOptions(
       apiKey: dco_decode_String(arr[0]),
       baseUrl: dco_decode_opt_String(arr[1]),
@@ -7853,6 +7855,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       maxRetries: dco_decode_opt_box_autoadd_i_64(arr[4]),
       maxResponseBytes: dco_decode_opt_box_autoadd_i_64(arr[5]),
       modelHint: dco_decode_opt_String(arr[6]),
+      blockedNetworks: dco_decode_opt_list_String(arr[7]),
     );
   }
 
@@ -11061,6 +11064,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_maxRetries = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_maxResponseBytes = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_modelHint = sse_decode_opt_String(deserializer);
+    var var_blockedNetworks = sse_decode_opt_list_String(deserializer);
     return ClientOptions(
       apiKey: var_apiKey,
       baseUrl: var_baseUrl,
@@ -11069,6 +11073,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       maxRetries: var_maxRetries,
       maxResponseBytes: var_maxResponseBytes,
       modelHint: var_modelHint,
+      blockedNetworks: var_blockedNetworks,
     );
   }
 
@@ -14867,6 +14872,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_i_64(self.maxRetries, serializer);
     sse_encode_opt_box_autoadd_i_64(self.maxResponseBytes, serializer);
     sse_encode_opt_String(self.modelHint, serializer);
+    sse_encode_opt_list_String(self.blockedNetworks, serializer);
   }
 
   @protected

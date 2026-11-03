@@ -35,6 +35,7 @@ async fn should_reject_binary_response_above_configured_limit() {
             max_response_bytes: Some(RESPONSE_LIMIT),
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await;
@@ -73,6 +74,7 @@ async fn request_body(operation: BodyOperation, url: &str, limit: Option<usize>)
                     max_response_bytes: limit,
                     timeout: None,
                     invalid_key_as_400: false,
+                    network_rule: None,
                 },
             )
             .await
@@ -88,6 +90,7 @@ async fn request_body(operation: BodyOperation, url: &str, limit: Option<usize>)
                     max_response_bytes: limit,
                     timeout: None,
                     invalid_key_as_400: false,
+                    network_rule: None,
                 },
             )
             .await
@@ -106,6 +109,7 @@ async fn request_body(operation: BodyOperation, url: &str, limit: Option<usize>)
                             max_response_bytes: limit,
                             timeout: None,
                             invalid_key_as_400: false,
+                            network_rule: None,
                         },
                     )
                     .await
@@ -122,6 +126,7 @@ async fn request_body(operation: BodyOperation, url: &str, limit: Option<usize>)
                             max_response_bytes: limit,
                             timeout: None,
                             invalid_key_as_400: false,
+                            network_rule: None,
                         },
                     )
                     .await
@@ -137,6 +142,7 @@ async fn request_body(operation: BodyOperation, url: &str, limit: Option<usize>)
                             max_response_bytes: limit,
                             timeout: None,
                             invalid_key_as_400: false,
+                            network_rule: None,
                         },
                     )
                     .await
@@ -152,6 +158,7 @@ async fn request_body(operation: BodyOperation, url: &str, limit: Option<usize>)
                             max_response_bytes: limit,
                             timeout: None,
                             invalid_key_as_400: false,
+                            network_rule: None,
                         },
                     )
                     .await
@@ -187,6 +194,7 @@ async fn successful_non_json_response_is_a_serialization_error() {
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await;
@@ -324,6 +332,7 @@ async fn should_bound_final_stream_errors_without_limiting_successful_streams() 
             max_response_bytes: Some(BODY_LIMIT),
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await;
@@ -345,6 +354,7 @@ async fn should_bound_final_stream_errors_without_limiting_successful_streams() 
             max_response_bytes: Some(BODY_LIMIT),
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await;
@@ -433,6 +443,7 @@ async fn should_discard_oversized_retry_body_before_reading_bounded_final_succes
             max_response_bytes: Some(BODY_LIMIT),
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await;
@@ -467,6 +478,7 @@ async fn should_keep_successful_stream_traffic_above_retained_body_limit() {
             max_response_bytes: Some(BODY_LIMIT),
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await;

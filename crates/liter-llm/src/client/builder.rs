@@ -91,6 +91,7 @@ pub struct ClientBuilder<K = NoApiKey, P = NoProvider> {
     connect_timeout: Duration,
     max_retries: u32,
     max_response_bytes: Option<usize>,
+    blocked_networks: Option<Vec<String>>,
     transport: TransportConfig,
     load_env: bool,
     credential_provider: Option<Arc<dyn CredentialProvider>>,
@@ -132,6 +133,7 @@ impl ClientBuilder<NoApiKey, NoProvider> {
             connect_timeout: Duration::from_secs(10),
             max_retries: 3,
             max_response_bytes: None,
+            blocked_networks: None,
             transport: TransportConfig::default(),
             load_env: false,
             credential_provider: None,
@@ -184,6 +186,7 @@ impl<K, P> ClientBuilder<K, P> {
             connect_timeout: self.connect_timeout,
             max_retries: self.max_retries,
             max_response_bytes: self.max_response_bytes,
+            blocked_networks: self.blocked_networks,
             transport: self.transport,
             load_env: self.load_env,
             credential_provider: self.credential_provider,
@@ -230,6 +233,7 @@ impl<K, P> ClientBuilder<K, P> {
             connect_timeout: self.connect_timeout,
             max_retries: self.max_retries,
             max_response_bytes: self.max_response_bytes,
+            blocked_networks: self.blocked_networks,
             transport: self.transport,
             load_env: self.load_env,
             credential_provider: self.credential_provider,
@@ -299,6 +303,14 @@ impl<K, P> ClientBuilder<K, P> {
         super::config::validate_response_limit(Some(limit))?;
         self.max_response_bytes = Some(limit);
         Ok(self)
+    }
+
+    /// Set the CIDR networks the client never connects to. See [`ClientConfig::blocked_networks`].
+    ///
+    /// A bad entry makes [`build`](ClientBuilder::build) return `LiterLlmError::BadRequest`.
+    pub fn blocked_networks(mut self, networks: Vec<String>) -> Self {
+        self.blocked_networks = Some(networks);
+        self
     }
 
     /// Set HTTP connection pooling, TCP keepalive, DNS caching, and version selection.
@@ -433,6 +445,7 @@ impl ClientBuilder<WithApiKey, WithProvider> {
             connect_timeout: self.connect_timeout,
             max_retries: self.max_retries,
             max_response_bytes: self.max_response_bytes,
+            blocked_networks: self.blocked_networks,
             extra_headers: Vec::new(),
             credential_provider: self.credential_provider,
             load_env: self.load_env,
@@ -517,5 +530,56 @@ mod tests {
             .build()
             .expect("build the client");
         assert_eq!(client.config.connect_timeout, Duration::from_secs(3));
+    }
+
+    fn networks() -> Vec<String> {
+        vec!["169.254.0.0/16".to_owned(), "64:ff9b::/96".to_owned()]
+    }
+
+    #[test]
+    fn the_blocked_networks_are_unset_by_default() {
+        assert!(ClientBuilder::new().blocked_networks.is_none());
+    }
+
+    #[cfg(feature = "native-http")]
+    #[test]
+    fn blocked_networks_set_on_the_builder_reach_the_client() {
+        let client = ClientBuilder::new()
+            .api_key("sk-test")
+            .provider("openai")
+            .blocked_networks(networks())
+            .build()
+            .expect("build the client");
+        assert_eq!(client.config.blocked_networks, Some(networks()));
+    }
+
+    #[cfg(feature = "native-http")]
+    #[test]
+    fn blocked_networks_set_before_api_key_and_provider_reach_the_client() {
+        let client = ClientBuilder::new()
+            .blocked_networks(networks())
+            .provider("openai")
+            .api_key("sk-test")
+            .build()
+            .expect("build the client");
+        assert_eq!(client.config.blocked_networks, Some(networks()));
+    }
+
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    fn a_bad_blocked_network_fails_the_build_and_names_the_value() {
+        let error = ClientBuilder::new()
+            .api_key("sk-test")
+            .provider("openai")
+            .blocked_networks(vec!["not-a-network".to_owned()])
+            .build()
+            .err()
+            .expect("a bad entry must be refused");
+        match error {
+            crate::error::LiterLlmError::BadRequest { message, .. } => {
+                assert!(message.contains("not-a-network"), "{message}");
+            }
+            other => panic!("expected BadRequest, got {other:?}"),
+        }
     }
 }

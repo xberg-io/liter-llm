@@ -17,6 +17,7 @@ use std::sync::{OnceLock, RwLock};
 use url::Url;
 
 use crate::error::LiterLlmError;
+use crate::provider::embedded_ip::{embedded_ipv4, is_isatap};
 
 /// Controls which upstream URLs the library is allowed to connect to.
 ///
@@ -232,6 +233,33 @@ fn validate_literal_host(url: &Url, _raw_url: &str) -> Result<(), LiterLlmError>
     Ok(())
 }
 
+/// Refuse a URL whose host is an IP address in `rule`; a host name is checked when it resolves.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub(crate) fn validate_literal_host_for(
+    raw_url: &str,
+    rule: Option<&crate::provider::network_rule::NetworkRule>,
+) -> Result<(), LiterLlmError> {
+    let Some(rule) = rule else {
+        return Ok(());
+    };
+    let url = Url::parse(raw_url).map_err(|e| LiterLlmError::OutboundForbidden {
+        url: "<invalid URL>".to_owned(),
+        reason: format!("invalid URL: {e}"),
+    })?;
+    let address = match url.host() {
+        Some(url::Host::Ipv4(v4)) => IpAddr::V4(v4),
+        Some(url::Host::Ipv6(v6)) => IpAddr::V6(v6),
+        _ => return Ok(()),
+    };
+    if rule.refuses(address) {
+        return Err(LiterLlmError::OutboundForbidden {
+            url: endpoint_label(&url),
+            reason: format!("host is a blocked address {address}"),
+        });
+    }
+    Ok(())
+}
+
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
 fn outbound_redirect_policy(allow_cross_origin: bool) -> reqwest::redirect::Policy {
     let default_policy = reqwest::redirect::Policy::default();
@@ -322,13 +350,14 @@ fn check_allowlist(url: &Url, _raw: &str, allowed: &[Url]) -> Result<(), LiterLl
 /// multi-tenant proxy.
 ///
 /// Covers loopback, unspecified, private (RFC 1918), link-local, multicast,
-/// broadcast, CGNAT (100.64/10), IPv4-mapped IPv6, ULA (fc00::/7), and IPv6
-/// link-local (fe80::/10).
+/// broadcast, CGNAT (100.64/10), ULA (fc00::/7), IPv6 link-local (fe80::/10),
+/// every ISATAP address, and any IPv6 form that carries a forbidden IPv4 address
+/// (IPv4-mapped, SIIT, NAT64, 6to4, Teredo, IPv4-compatible).
 #[cfg_attr(alef, alef(skip))]
 pub fn is_forbidden(ip: IpAddr) -> bool {
     match ip {
         IpAddr::V4(v4) => is_forbidden_v4(v4),
-        IpAddr::V6(v6) => v6.to_ipv4_mapped().map_or_else(|| is_forbidden_v6(v6), is_forbidden_v4),
+        IpAddr::V6(v6) => is_isatap(v6) || is_forbidden_v6(v6) || embedded_ipv4(v6).is_some_and(is_forbidden_v4),
     }
 }
 
@@ -402,6 +431,7 @@ mod resolver_impl {
     use reqwest::dns::{Addrs, Name, Resolve, Resolving};
 
     use super::{GuardedResolver, LiterLlmError, OutboundPolicy, current_policy, is_forbidden};
+    use crate::provider::network_rule::NetworkRule;
 
     #[derive(Clone)]
     struct DnsCacheEntry {
@@ -412,14 +442,87 @@ mod resolver_impl {
     struct CachedGuardedResolver {
         cache_ttl: Option<Duration>,
         cache: Arc<Mutex<HashMap<String, DnsCacheEntry>>>,
+        lookup: Arc<dyn Resolve>,
     }
 
     impl CachedGuardedResolver {
         fn new(cache_ttl: Option<Duration>) -> Self {
+            Self::with_lookup(cache_ttl, Arc::new(SystemLookup))
+        }
+
+        fn with_lookup(cache_ttl: Option<Duration>, lookup: Arc<dyn Resolve>) -> Self {
             Self {
                 cache_ttl,
                 cache: Arc::new(Mutex::new(HashMap::new())),
+                lookup,
             }
+        }
+    }
+
+    /// The system DNS lookup, with no policy check.
+    struct SystemLookup;
+
+    impl Resolve for SystemLookup {
+        fn resolve(&self, name: Name) -> Resolving {
+            Box::pin(async move {
+                let addrs = resolve_system(name.as_str()).await?;
+                let iter: Addrs = Box::new(addrs.into_iter());
+                Ok(iter)
+            })
+        }
+    }
+
+    /// Refuses a host when any address its inner resolver answers is in the client's [`NetworkRule`].
+    ///
+    /// It checks the answer after the inner resolver returns, so a process policy exemption for
+    /// the host never removes a per-client network.
+    struct PolicyResolver {
+        rule: Arc<NetworkRule>,
+        inner: Arc<dyn Resolve>,
+    }
+
+    impl Resolve for PolicyResolver {
+        fn resolve(&self, name: Name) -> Resolving {
+            let rule = Arc::clone(&self.rule);
+            let inner = Arc::clone(&self.inner);
+            Box::pin(async move {
+                let host = name.as_str().to_owned();
+                let addrs: Vec<SocketAddr> = inner.resolve(name).await?.collect();
+                if let Some(blocked) = addrs.iter().find(|sa| rule.refuses(sa.ip())) {
+                    let err: Box<dyn std::error::Error + Send + Sync> = Box::new(LiterLlmError::OutboundForbidden {
+                        url: format!("dns://{host}"),
+                        reason: format!("DNS resolution produced blocked address {}", blocked.ip()),
+                    });
+                    return Err(err);
+                }
+                let iter: Addrs = Box::new(addrs.into_iter());
+                Ok(iter)
+            })
+        }
+    }
+
+    /// The resolver a client installs, or `None` to keep reqwest's own.
+    ///
+    /// The process check and the DNS cache run inside, and `rule` runs on the answer they return.
+    /// `lookup` replaces the system lookup under both; `None` keeps the system lookup.
+    pub(crate) fn outbound_resolver(
+        cache_ttl: Option<Duration>,
+        rule: Option<Arc<NetworkRule>>,
+        lookup: Option<Arc<dyn Resolve>>,
+    ) -> Option<Arc<dyn Resolve>> {
+        let inner: Option<Arc<dyn Resolve>> = if !matches!(current_policy(), OutboundPolicy::Off) || cache_ttl.is_some()
+        {
+            let lookup = lookup.unwrap_or_else(|| Arc::new(SystemLookup));
+            Some(Arc::new(CachedGuardedResolver::with_lookup(cache_ttl, lookup)))
+        } else {
+            lookup
+        };
+        match rule {
+            Some(rule) => Some(Arc::new(PolicyResolver {
+                rule,
+                inner: inner.unwrap_or_else(|| Arc::new(SystemLookup)),
+            })),
+            None => inner,
         }
     }
 
@@ -524,6 +627,7 @@ mod resolver_impl {
             let host = name.as_str().to_string();
             let cache_ttl = self.cache_ttl;
             let cache = Arc::clone(&self.cache);
+            let lookup = Arc::clone(&self.lookup);
 
             Box::pin(async move {
                 if let Some(addrs) = cached_addrs(&cache, cache_ttl, &host) {
@@ -532,7 +636,7 @@ mod resolver_impl {
                     return Ok(iter);
                 }
 
-                let addrs = resolve_system(&host).await?;
+                let addrs: Vec<SocketAddr> = lookup.resolve(host.parse::<Name>()?).await?.collect();
                 validate_addrs(policy, &host, &addrs)?;
                 store_addrs(&cache, cache_ttl, host, addrs.clone());
 
@@ -617,6 +721,8 @@ mod resolver_impl {
 }
 
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+pub(crate) use resolver_impl::outbound_resolver;
+#[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
 pub use resolver_impl::{cached_guarded_resolver, guarded_resolver};
 
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
@@ -633,15 +739,29 @@ pub use resolver_impl::{cached_guarded_resolver, guarded_resolver};
 /// These hooks therefore do not enforce the complete initial-origin policy.
 #[cfg_attr(alef, alef(skip))]
 pub fn configure_outbound_client_builder(
-    mut builder: reqwest::ClientBuilder,
+    builder: reqwest::ClientBuilder,
     dns_cache_ttl: Option<std::time::Duration>,
 ) -> reqwest::ClientBuilder {
+    configure_rule_client_builder(builder, dns_cache_ttl, None, None)
+}
+
+/// [`configure_outbound_client_builder`] for a client with its own blocked networks.
+///
+/// `rule` is checked on every address the client connects to, and turns proxies off.
+/// `lookup` replaces the system DNS lookup; `None` keeps it.
+#[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+pub(crate) fn configure_rule_client_builder(
+    mut builder: reqwest::ClientBuilder,
+    dns_cache_ttl: Option<std::time::Duration>,
+    rule: Option<std::sync::Arc<crate::provider::network_rule::NetworkRule>>,
+    lookup: Option<std::sync::Arc<dyn reqwest::dns::Resolve>>,
+) -> reqwest::ClientBuilder {
     builder = builder.redirect(reqwest::redirect::Policy::none());
-    if !matches!(current_policy(), OutboundPolicy::Off) {
+    if rule.is_some() || !matches!(current_policy(), OutboundPolicy::Off) {
         builder = builder.no_proxy();
-        builder = builder.dns_resolver(cached_guarded_resolver(dns_cache_ttl));
-    } else if dns_cache_ttl.is_some() {
-        builder = builder.dns_resolver(cached_guarded_resolver(dns_cache_ttl));
+    }
+    if let Some(resolver) = outbound_resolver(dns_cache_ttl, rule, lookup) {
+        builder = builder.dns_resolver(resolver);
     }
     builder
 }
@@ -761,10 +881,11 @@ mod tests {
 
     /// Helper for sync tests — `#[serial(outbound_policy)]` on the test fn
     /// guarantees no other policy-mutating test is running concurrently.
-    fn with_policy<F: FnOnce()>(policy: OutboundPolicy, f: F) {
+    fn with_policy<T, F: FnOnce() -> T>(policy: OutboundPolicy, f: F) -> T {
         set_outbound_policy(policy);
-        f();
+        let value = f();
         set_outbound_policy(OutboundPolicy::Off);
+        value
     }
 
     #[test]
@@ -868,6 +989,49 @@ mod tests {
         for (addr, expected) in [("::ffff:10.0.0.1", true), ("::ffff:8.8.8.8", false)] {
             let ip: IpAddr = addr.parse().expect("valid IPv6");
             assert_eq!(is_forbidden(ip), expected, "is_forbidden({addr}) should be {expected}");
+        }
+    }
+
+    /// Every form of the cloud metadata address 169.254.169.254 that an IPv6 literal can carry.
+    const METADATA_FORMS: [(&str, &str); 4] = [
+        ("IPv4-mapped", "::ffff:169.254.169.254"),
+        ("SIIT", "::ffff:0:169.254.169.254"),
+        ("Teredo", "2001:0:4136:e378:8000:63bf:5601:5601"),
+        ("ISATAP", "2001:db8::5efe:a9fe:a9fe"),
+    ];
+
+    #[test]
+    fn is_forbidden_refuses_ipv6_forms_of_the_metadata_address() {
+        let allowed: Vec<&str> = METADATA_FORMS
+            .iter()
+            .filter(|(_, addr)| !is_forbidden(addr.parse().expect("valid IPv6")))
+            .map(|(name, _)| *name)
+            .collect();
+        assert!(allowed.is_empty(), "forms of 169.254.169.254 allowed: {allowed:?}");
+    }
+
+    #[test]
+    #[serial(outbound_policy)]
+    fn validate_sync_deny_private_rejects_ipv6_forms_of_the_metadata_address() {
+        let accepted: Vec<&str> = with_policy(OutboundPolicy::DenyPrivate, || {
+            METADATA_FORMS
+                .iter()
+                .filter(|(_, addr)| validate_outbound_url_sync(&format!("http://[{addr}]/")).is_ok())
+                .map(|(name, _)| *name)
+                .collect()
+        });
+        assert!(accepted.is_empty(), "forms of 169.254.169.254 accepted: {accepted:?}");
+    }
+
+    #[test]
+    fn is_forbidden_allows_ipv6_forms_of_a_public_address() {
+        for addr in [
+            "::ffff:8.8.8.8",
+            "::ffff:0:8.8.8.8",
+            "2001:0:4136:e378:8000:63bf:f7f7:f7f7",
+        ] {
+            let ip: IpAddr = addr.parse().expect("valid IPv6");
+            assert!(!is_forbidden(ip), "{addr} carries a public IPv4 and must be allowed");
         }
     }
 

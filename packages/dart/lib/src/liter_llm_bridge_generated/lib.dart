@@ -17,7 +17,8 @@ part 'lib.freezed.dart';
 /// **Errors:**
 ///
 /// Returns `LiterLlmError.BadRequest` for a zero or platform-overflowing
-/// `max_response_bytes`, a zero `connect_timeout_secs`, plus the errors documented by `create_client`.
+/// `max_response_bytes`, a zero `connect_timeout_secs`, a `blocked_networks` entry that is not a CIDR
+/// network, plus the errors documented by `create_client`.
 Future<DefaultClient> createClientWithOptions({
   required ClientOptions options,
 }) => RustLib.instance.api.crateCreateClientWithOptions(options: options);
@@ -2147,6 +2148,12 @@ class ClientOptions {
   /// Optional model or provider hint used for initial provider selection.
   final String? modelHint;
 
+  /// Optional CIDR networks the client never connects to, such as `"169.254.0.0/16"`.
+  /// A host name is refused when any address it resolves to is in a listed network.
+  /// A bad entry is a `BadRequest` error that names the value.
+  /// `wasm32` refuses a list that is not empty with a `BadRequest` error.
+  final List<String>? blockedNetworks;
+
   const ClientOptions({
     required this.apiKey,
     this.baseUrl,
@@ -2155,6 +2162,7 @@ class ClientOptions {
     this.maxRetries,
     this.maxResponseBytes,
     this.modelHint,
+    this.blockedNetworks,
   });
 
   @override
@@ -2165,7 +2173,8 @@ class ClientOptions {
       connectTimeoutSecs.hashCode ^
       maxRetries.hashCode ^
       maxResponseBytes.hashCode ^
-      modelHint.hashCode;
+      modelHint.hashCode ^
+      blockedNetworks.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -2178,7 +2187,8 @@ class ClientOptions {
           connectTimeoutSecs == other.connectTimeoutSecs &&
           maxRetries == other.maxRetries &&
           maxResponseBytes == other.maxResponseBytes &&
-          modelHint == other.modelHint;
+          modelHint == other.modelHint &&
+          blockedNetworks == other.blockedNetworks;
 }
 
 /// Breakdown of tokens used in the completion portion of a request.

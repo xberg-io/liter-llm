@@ -928,12 +928,34 @@ pub struct DefaultClient {
     /// The OpenAI-compatible endpoint at `base_url` for a model with another provider's
     /// prefix, on a client whose hint named Ollama. `None` for every other client.
     prefixed_model_provider: Option<Arc<dyn Provider>>,
+    /// The networks this client never connects to, from `config.blocked_networks`.
+    network_rule: Option<Arc<provider::NetworkRule>>,
     /// Tower middleware stack installed by [`create_client_from_json`](crate::create_client_from_json).
     ///
     /// ~keep The managed client wraps a separate `DefaultClient` whose own `managed` is `None`,
     /// so delegation never recurses.
     #[cfg_attr(not(all(feature = "native-http", feature = "tower")), allow(dead_code))]
     managed: Option<ManagedHandle>,
+}
+
+/// The DNS lookup a client uses in place of the system one; `None` keeps the system lookup.
+#[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+pub(crate) type DnsLookup = Option<Arc<dyn reqwest::dns::Resolve>>;
+
+/// Parse `config.blocked_networks`; an empty or absent list sets no rule.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+fn network_rule_from(config: &ClientConfig) -> Result<Option<Arc<provider::NetworkRule>>> {
+    let Some(entries) = config.blocked_networks.as_deref().filter(|entries| !entries.is_empty()) else {
+        return Ok(None);
+    };
+    let rule = provider::NetworkRule::parse(entries)?;
+    if cfg!(not(all(feature = "native-http", not(target_arch = "wasm32")))) {
+        return Err(LiterLlmError::BadRequest {
+            message: "blocked_networks needs the native HTTP client; this build cannot check DNS answers".into(),
+            status: 400,
+        });
+    }
+    Ok(Some(Arc::new(rule)))
 }
 
 /// Handle to the managed middleware stack; uninhabited when the stack is not compiled in.
@@ -956,12 +978,13 @@ impl DefaultClient {
 
     /// The options for a request that goes to `provider`. The provider is the one that
     /// serves the model, which can differ from `self.provider`.
-    fn response_read_options(&self, provider: &dyn Provider) -> http::request::ResponseReadOptions {
+    fn response_read_options(&self, provider: &dyn Provider) -> http::request::ResponseReadOptions<'_> {
         http::request::ResponseReadOptions {
             max_retries: self.config.max_retries,
             max_response_bytes: self.config.max_response_bytes,
             timeout: Some(self.config.timeout),
             invalid_key_as_400: provider.reports_invalid_key_as_400(),
+            network_rule: self.network_rule.as_deref(),
         }
     }
 
@@ -994,10 +1017,30 @@ impl DefaultClient {
     /// Returns `LiterLlmError::BadRequest` if `max_response_bytes` or `connect_timeout` is zero.
     /// Returns `LiterLlmError::InvalidHeader` if pre-validated headers somehow
     /// become invalid during client construction (extremely rare; indicates a bug).
+    /// Returns `LiterLlmError::BadRequest` if a `blocked_networks` entry is not a CIDR network,
+    /// or, on `wasm32`, if `blocked_networks` is not empty.
     /// Returns `LiterLlmError::Http` if the underlying HTTP client cannot be constructed.
     pub fn new(config: ClientConfig, model_hint: Option<&str>) -> Result<Self> {
+        #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+        {
+            Self::new_with_lookup(config, model_hint, DnsLookup::default())
+        }
+        #[cfg(not(all(feature = "native-http", not(target_arch = "wasm32"))))]
+        {
+            Self::new_with_lookup(config, model_hint)
+        }
+    }
+
+    /// [`DefaultClient::new`] with `lookup` in place of the system DNS lookup.
+    /// Where the client has no Rust resolver, the function takes no `lookup`.
+    pub(crate) fn new_with_lookup(
+        config: ClientConfig,
+        model_hint: Option<&str>,
+        #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))] lookup: DnsLookup,
+    ) -> Result<Self> {
         config::validate_response_limit(config.max_response_bytes)?;
         config::validate_connect_timeout(config.connect_timeout)?;
+        let network_rule = network_rule_from(&config)?;
         let BuiltProvider {
             provider,
             hint_pins_provider,
@@ -1062,7 +1105,12 @@ impl DefaultClient {
         let build_http = |stream: bool| -> Result<reqwest::Client> {
             let builder = reqwest::Client::builder().default_headers(header_map.clone());
             #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
-            let builder = crate::provider::configure_outbound_client_builder(builder, config.transport.dns_cache_ttl);
+            let builder = crate::provider::configure_rule_client_builder(
+                builder,
+                config.transport.dns_cache_ttl,
+                network_rule.clone(),
+                lookup.clone(),
+            );
             #[cfg(not(target_arch = "wasm32"))]
             let builder = builder.connect_timeout(config.connect_timeout);
             #[cfg(not(target_arch = "wasm32"))]
@@ -1097,6 +1145,7 @@ impl DefaultClient {
             cached_auth_header,
             cached_extra_headers,
             prefixed_model_provider,
+            network_rule,
             managed: None,
         })
     }
@@ -3024,6 +3073,9 @@ impl ResponseClient for DefaultClient {
         })
     }
 }
+
+#[cfg(all(test, feature = "native-http", not(target_arch = "wasm32")))]
+mod per_client_rule_tests;
 
 #[cfg(all(test, any(feature = "native-http", feature = "wasm-http")))]
 mod stream_termination_tests {

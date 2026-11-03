@@ -62,6 +62,7 @@ where
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await
@@ -82,7 +83,7 @@ pub(crate) async fn post_eventstream_bounded<P>(
     client: &reqwest::Client,
     request: StreamingPost<'_>,
     parse_event: P,
-    options: ResponseReadOptions,
+    options: ResponseReadOptions<'_>,
 ) -> Result<crate::client::BoxStream<'static, Result<ChatCompletionChunk>>>
 where
     P: Fn(&str, &str) -> Result<Option<ChatCompletionChunk>> + Send + 'static,

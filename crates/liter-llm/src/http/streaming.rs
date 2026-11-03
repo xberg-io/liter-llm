@@ -113,6 +113,7 @@ where
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await
@@ -140,7 +141,7 @@ pub(crate) async fn post_stream_bounded<P, T>(
     request: StreamingPost<'_>,
     parse_event: P,
     is_final: Option<fn(&T) -> bool>,
-    options: ResponseReadOptions,
+    options: ResponseReadOptions<'_>,
 ) -> Result<crate::client::BoxStream<'static, Result<T>>>
 where
     P: Fn(&str) -> Result<Option<T>> + Send + 'static,
@@ -156,7 +157,7 @@ pub(crate) async fn post_stream_framed<P, T>(
     request: StreamingPost<'_>,
     parse_event: P,
     is_final: Option<fn(&T) -> bool>,
-    options: ResponseReadOptions,
+    options: ResponseReadOptions<'_>,
     framing: Framing,
 ) -> Result<crate::client::BoxStream<'static, Result<T>>>
 where
@@ -198,6 +199,7 @@ where
             max_response_bytes: None,
             timeout: None,
             invalid_key_as_400: false,
+            network_rule: None,
         },
     )
     .await
@@ -228,7 +230,7 @@ pub(crate) async fn post_stream_with_cancel_bounded<P, T>(
     parse_event: P,
     is_final: Option<fn(&T) -> bool>,
     cancel: CancellationToken,
-    options: ResponseReadOptions,
+    options: ResponseReadOptions<'_>,
 ) -> Result<crate::client::BoxStream<'static, Result<T>>>
 where
     P: Fn(&str) -> Result<Option<T>> + Send + 'static,
