@@ -4,7 +4,6 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import 'frb_generated.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
@@ -36,7 +35,7 @@ Future<DefaultClient> createClientWithOptions({
 Future<DefaultClient> createClient({
   required String apiKey,
   String? baseUrl,
-  BigInt? timeoutSecs,
+  PlatformInt64? timeoutSecs,
   PlatformInt64? maxRetries,
   String? modelHint,
 }) => RustLib.instance.api.crateCreateClient(
@@ -147,8 +146,8 @@ Future<List<String>> complexProviderNames() =>
 /// `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 Future<double?> completionCost({
   required String model,
-  required BigInt promptTokens,
-  required BigInt completionTokens,
+  required PlatformInt64 promptTokens,
+  required PlatformInt64 completionTokens,
 }) => RustLib.instance.api.crateCompletionCost(
   model: model,
   promptTokens: promptTokens,
@@ -175,9 +174,9 @@ Future<double?> completionCost({
 /// unchanged, matching the original flat-rate behaviour.
 Future<double?> completionCostWithCache({
   required String model,
-  required BigInt promptTokens,
-  required BigInt cachedTokens,
-  required BigInt completionTokens,
+  required PlatformInt64 promptTokens,
+  required PlatformInt64 cachedTokens,
+  required PlatformInt64 completionTokens,
 }) => RustLib.instance.api.crateCompletionCostWithCache(
   model: model,
   promptTokens: promptTokens,
@@ -188,10 +187,10 @@ Future<double?> completionCostWithCache({
 /// Calculate completion cost including both prompt-cache reads and writes.
 Future<double?> completionCostWithCacheDetails({
   required String model,
-  required BigInt promptTokens,
-  required BigInt cachedTokens,
-  required BigInt cacheCreationTokens,
-  required BigInt completionTokens,
+  required PlatformInt64 promptTokens,
+  required PlatformInt64 cachedTokens,
+  required PlatformInt64 cacheCreationTokens,
+  required PlatformInt64 completionTokens,
 }) => RustLib.instance.api.crateCompletionCostWithCacheDetails(
   model: model,
   promptTokens: promptTokens,
@@ -1174,16 +1173,16 @@ class BatchObject {
   final String? errorFileId;
 
   /// Unix timestamp of batch creation.
-  final BigInt createdAt;
+  final PlatformInt64 createdAt;
 
   /// Unix timestamp of completion (if completed).
-  final BigInt? completedAt;
+  final PlatformInt64? completedAt;
 
   /// Unix timestamp of failure (if failed).
-  final BigInt? failedAt;
+  final PlatformInt64? failedAt;
 
   /// Unix timestamp of expiration (if expired).
-  final BigInt? expiredAt;
+  final PlatformInt64? expiredAt;
 
   /// Request processing counts.
   final BatchRequestCounts? requestCounts;
@@ -1249,13 +1248,13 @@ class BatchObject {
 /// Request processing counts for a batch.
 class BatchRequestCounts {
   /// Total requests in the batch.
-  final BigInt total;
+  final PlatformInt64 total;
 
   /// Completed requests.
-  final BigInt completed;
+  final PlatformInt64 completed;
 
   /// Failed requests.
-  final BigInt failed;
+  final PlatformInt64 failed;
 
   const BatchRequestCounts({
     required this.total,
@@ -1455,7 +1454,7 @@ class CatalogInfo {
   final String libraryVersion;
 
   /// Catalog schema version.
-  final BigInt schemaVersion;
+  final PlatformInt64 schemaVersion;
 
   /// Active catalog origin: `"embedded"` or `"overlay"`.
   final String origin;
@@ -1511,13 +1510,13 @@ class CatalogModel {
   final String? mode;
 
   /// Total context window size in tokens (input + output).
-  final BigInt? maxTokens;
+  final PlatformInt64? maxTokens;
 
   /// Maximum input (prompt) tokens accepted.
-  final BigInt? maxInputTokens;
+  final PlatformInt64? maxInputTokens;
 
   /// Maximum output (completion) tokens the model can generate.
-  final BigInt? maxOutputTokens;
+  final PlatformInt64? maxOutputTokens;
 
   /// The model accepts image input.
   final bool? supportsVision;
@@ -1612,7 +1611,7 @@ class CatalogRefreshConfig {
 
   /// How long a cached `catalog.json` remains valid before a network
   /// refetch is attempted, in seconds.
-  final BigInt ttlSeconds;
+  final PlatformInt64 ttlSeconds;
 
   /// Filesystem path for the on-disk cache. `None` uses a default path
   /// under the current user's platform cache directory.
@@ -1693,7 +1692,7 @@ class ChatCompletionChunk {
   final String object;
 
   /// Unix timestamp of chunk creation.
-  final BigInt created;
+  final PlatformInt64 created;
 
   /// Provider-reported model identifier. Gemini chunks without `modelVersion`
   /// retain the last reported model, or the requested model if none was reported.
@@ -1788,7 +1787,7 @@ class ChatCompletionRequest {
   final StopSequence? stop;
 
   /// Max output tokens. Different from max_completion_tokens in some providers.
-  final BigInt? maxTokens;
+  final PlatformInt64? maxTokens;
 
   /// Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.
   final double? presencePenalty;
@@ -1841,7 +1840,7 @@ class ChatCompletionRequest {
   ///
   /// Supersedes `max_tokens` on OpenAI reasoning models, which reject
   /// `max_tokens` outright.
-  final BigInt? maxCompletionTokens;
+  final PlatformInt64? maxCompletionTokens;
 
   /// Latency tier to process the request under (e.g. `"auto"`, `"default"`,
   /// `"flex"`).
@@ -1987,7 +1986,7 @@ class ChatCompletionResponse {
   final String object;
 
   /// Unix timestamp of response creation.
-  final BigInt created;
+  final PlatformInt64 created;
 
   /// Provider-reported model identifier. For Gemini, this is `modelVersion`;
   /// when omitted, the client retains the requested model, which may be an alias
@@ -2133,17 +2132,17 @@ class ClientOptions {
   final String? baseUrl;
 
   /// Optional request timeout in seconds.
-  final BigInt? timeoutSecs;
+  final PlatformInt64? timeoutSecs;
 
   /// Optional connect timeout in seconds. A connect timeout is retried up to `max_retries` times.
   /// Zero is an error on every target. `wasm32` ignores any other value.
-  final BigInt? connectTimeoutSecs;
+  final PlatformInt64? connectTimeoutSecs;
 
   /// Optional retry count for retryable provider failures.
   final PlatformInt64? maxRetries;
 
   /// Optional maximum number of response bytes retained in memory.
-  final BigInt? maxResponseBytes;
+  final PlatformInt64? maxResponseBytes;
 
   /// Optional model or provider hint used for initial provider selection.
   final String? modelHint;
@@ -2188,7 +2187,7 @@ class ClientOptions {
 /// additional usage on top of the completion token count.
 class CompletionTokensDetails {
   /// Reasoning or thinking tokens present in the completion. Defaults to 0 when absent.
-  final BigInt reasoningTokens;
+  final PlatformInt64 reasoningTokens;
 
   const CompletionTokensDetails({required this.reasoningTokens});
 
@@ -2402,7 +2401,7 @@ class CreateResponseRequest {
   final double? temperature;
 
   /// Maximum output tokens.
-  final BigInt? maxOutputTokens;
+  final PlatformInt64? maxOutputTokens;
 
   /// Optional metadata.
   final String? metadata;
@@ -2960,10 +2959,10 @@ class FileObject {
   final String object;
 
   /// File size in bytes.
-  final BigInt bytes;
+  final PlatformInt64 bytes;
 
   /// Unix timestamp of file creation.
-  final BigInt createdAt;
+  final PlatformInt64 createdAt;
 
   /// Filename.
   final String filename;
@@ -3201,7 +3200,7 @@ class ImageUrl {
 /// Response containing generated images.
 class ImagesResponse {
   /// Unix timestamp of image creation.
-  final BigInt created;
+  final PlatformInt64 created;
 
   /// List of generated images.
   final List<Image> data;
@@ -3455,7 +3454,7 @@ class LlmCacheConfig {
   final PlatformInt64? maxEntries;
 
   /// Cache entry time-to-live, in seconds.
-  final BigInt? ttlSeconds;
+  final PlatformInt64? ttlSeconds;
 
   /// Cache backend name (e.g. `"memory"`, or an `opendal` scheme).
   final String? backend;
@@ -3516,11 +3515,11 @@ class LlmConfig {
   final String? baseUrl;
 
   /// Request timeout, in seconds.
-  final BigInt? timeoutSecs;
+  final PlatformInt64? timeoutSecs;
 
   /// Connect timeout, in seconds. A connect timeout is retried up to `max_retries` times.
   /// Zero is an error on every target. `wasm32` ignores any other value.
-  final BigInt? connectTimeoutSecs;
+  final PlatformInt64? connectTimeoutSecs;
 
   /// Maximum number of retries on 429 / 5xx responses.
   final PlatformInt64? maxRetries;
@@ -3529,7 +3528,7 @@ class LlmConfig {
   final double? temperature;
 
   /// Maximum number of tokens to generate for requests built from this config.
-  final BigInt? maxTokens;
+  final PlatformInt64? maxTokens;
 
   /// Automatically load the API key from the provider's environment variable
   /// when no explicit key is provided (default: `true`).
@@ -3560,10 +3559,10 @@ class LlmConfig {
   final bool? tracing;
 
   /// Cooldown duration after transient errors, in seconds.
-  final BigInt? cooldownSecs;
+  final PlatformInt64? cooldownSecs;
 
   /// Background health check interval, in seconds.
-  final BigInt? healthCheckSecs;
+  final PlatformInt64? healthCheckSecs;
 
   /// AWS Bedrock configuration (region, credentials, cross-region routing).
   final BedrockConfig? bedrock;
@@ -3704,10 +3703,10 @@ class LlmRateLimitConfig {
   final PlatformInt64? rpm;
 
   /// Tokens per minute limit.
-  final BigInt? tpm;
+  final PlatformInt64? tpm;
 
   /// Rate limit window, in seconds.
-  final BigInt? windowSeconds;
+  final PlatformInt64? windowSeconds;
 
   const LlmRateLimitConfig({this.rpm, this.tpm, this.windowSeconds});
 
@@ -3807,13 +3806,13 @@ class ModelInfo {
   final double? outputCostPerReasoningToken;
 
   /// Total context window size in tokens (input + output).
-  final BigInt? maxTokens;
+  final PlatformInt64? maxTokens;
 
   /// Maximum input (prompt) tokens accepted.
-  final BigInt? maxInputTokens;
+  final PlatformInt64? maxInputTokens;
 
   /// Maximum output (completion) tokens the model can generate.
-  final BigInt? maxOutputTokens;
+  final PlatformInt64? maxOutputTokens;
 
   /// Best-effort operating mode, e.g. `"chat"`, `"embedding"`.
   final String? mode;
@@ -3936,7 +3935,7 @@ class ModelObject {
   ///
   /// Defaults to `0` when a provider omits it — DeepSeek and some other
   /// OpenAI-compatible providers do not return `created` from `/v1/models`.
-  final BigInt created;
+  final PlatformInt64 created;
 
   /// Organization or entity that owns the model.
   /// Defaults to empty when a provider omits the field.
@@ -3969,7 +3968,7 @@ class ModelObject {
 class ModelTier {
   /// The tier applies when the prompt/context token count is at least
   /// this value.
-  final BigInt minContextTokens;
+  final PlatformInt64 minContextTokens;
 
   /// Cost in USD per input (prompt) token within this tier.
   final double inputCostPerToken;
@@ -4499,13 +4498,13 @@ class PageDimensions {
 /// discounted rate and the remainder at the regular input rate.
 class PromptTokensDetails {
   /// Cached tokens present in the prompt. Defaults to 0 when absent.
-  final BigInt cachedTokens;
+  final PlatformInt64 cachedTokens;
 
   /// Tokens written to the provider prompt cache. Defaults to 0 when absent.
-  final BigInt cacheCreationTokens;
+  final PlatformInt64 cacheCreationTokens;
 
   /// Audio input tokens present in the prompt. Defaults to 0 when absent.
-  final BigInt audioTokens;
+  final PlatformInt64 audioTokens;
 
   const PromptTokensDetails({
     required this.cachedTokens,
@@ -4678,7 +4677,7 @@ class RateLimitConfig {
   final PlatformInt64? rpm;
 
   /// Maximum tokens per window.  `None` means unlimited.
-  final BigInt? tpm;
+  final PlatformInt64? tpm;
 
   /// Fixed window duration (defaults to 60 s).
   final PlatformInt64 window;
@@ -4891,7 +4890,7 @@ class ResponseObject {
   final String object;
 
   /// Unix timestamp of response creation.
-  final BigInt createdAt;
+  final PlatformInt64 createdAt;
 
   /// Model used to generate the response.
   final String model;
@@ -4992,13 +4991,13 @@ class ResponseTool {
 /// Token usage for a response.
 class ResponseUsage {
   /// Input tokens used.
-  final BigInt inputTokens;
+  final PlatformInt64 inputTokens;
 
   /// Output tokens used.
-  final BigInt outputTokens;
+  final PlatformInt64 outputTokens;
 
   /// Total tokens used.
-  final BigInt totalTokens;
+  final PlatformInt64 totalTokens;
 
   const ResponseUsage({
     required this.inputTokens,
@@ -5555,13 +5554,13 @@ class TranscriptionSegment {
 /// Token-usage accounting returned by the provider on each completion / embedding call.
 class Usage {
   /// Prompt tokens used. Defaults to 0 when absent (some providers omit this).
-  final BigInt promptTokens;
+  final PlatformInt64 promptTokens;
 
   /// Completion tokens used. Defaults to 0 when absent (e.g. embedding responses).
-  final BigInt completionTokens;
+  final PlatformInt64 completionTokens;
 
   /// Total tokens used. Defaults to 0 when absent (some providers omit this).
-  final BigInt totalTokens;
+  final PlatformInt64 totalTokens;
 
   /// Breakdown of tokens used in the prompt, including cached tokens served
   /// at the provider's discounted cache-read rate. Absent when the provider
