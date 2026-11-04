@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Regenerate the bindings with Alef 0.122.0. The published Python package now declares `requires-python = ">=3.11"` and builds `abi3-py311` wheels, matching the Python 3.11 minimum. Python option enums subclass `StrEnum`.
+
 ## [2.5.0] - 2026-11-03
 
 ### Added

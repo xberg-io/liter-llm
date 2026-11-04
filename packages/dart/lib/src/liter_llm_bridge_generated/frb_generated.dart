@@ -435,23 +435,23 @@ abstract class RustLibApi extends BaseApi {
 
   Future<double?> crateCompletionCost({
     required String model,
-    required PlatformInt64 promptTokens,
-    required PlatformInt64 completionTokens,
+    required BigInt promptTokens,
+    required BigInt completionTokens,
   });
 
   Future<double?> crateCompletionCostWithCache({
     required String model,
-    required PlatformInt64 promptTokens,
-    required PlatformInt64 cachedTokens,
-    required PlatformInt64 completionTokens,
+    required BigInt promptTokens,
+    required BigInt cachedTokens,
+    required BigInt completionTokens,
   });
 
   Future<double?> crateCompletionCostWithCacheDetails({
     required String model,
-    required PlatformInt64 promptTokens,
-    required PlatformInt64 cachedTokens,
-    required PlatformInt64 cacheCreationTokens,
-    required PlatformInt64 completionTokens,
+    required BigInt promptTokens,
+    required BigInt cachedTokens,
+    required BigInt cacheCreationTokens,
+    required BigInt completionTokens,
   });
 
   Future<List<String>> crateComplexProviderNames();
@@ -543,7 +543,7 @@ abstract class RustLibApi extends BaseApi {
   Future<DefaultClient> crateCreateClient({
     required String apiKey,
     String? baseUrl,
-    PlatformInt64? timeoutSecs,
+    BigInt? timeoutSecs,
     PlatformInt64? maxRetries,
     String? modelHint,
   });
@@ -2099,16 +2099,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<double?> crateCompletionCost({
     required String model,
-    required PlatformInt64 promptTokens,
-    required PlatformInt64 completionTokens,
+    required BigInt promptTokens,
+    required BigInt completionTokens,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(model, serializer);
-          sse_encode_i_64(promptTokens, serializer);
-          sse_encode_i_64(completionTokens, serializer);
+          sse_encode_u_64(promptTokens, serializer);
+          sse_encode_u_64(completionTokens, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -2135,18 +2135,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<double?> crateCompletionCostWithCache({
     required String model,
-    required PlatformInt64 promptTokens,
-    required PlatformInt64 cachedTokens,
-    required PlatformInt64 completionTokens,
+    required BigInt promptTokens,
+    required BigInt cachedTokens,
+    required BigInt completionTokens,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(model, serializer);
-          sse_encode_i_64(promptTokens, serializer);
-          sse_encode_i_64(cachedTokens, serializer);
-          sse_encode_i_64(completionTokens, serializer);
+          sse_encode_u_64(promptTokens, serializer);
+          sse_encode_u_64(cachedTokens, serializer);
+          sse_encode_u_64(completionTokens, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -2174,20 +2174,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<double?> crateCompletionCostWithCacheDetails({
     required String model,
-    required PlatformInt64 promptTokens,
-    required PlatformInt64 cachedTokens,
-    required PlatformInt64 cacheCreationTokens,
-    required PlatformInt64 completionTokens,
+    required BigInt promptTokens,
+    required BigInt cachedTokens,
+    required BigInt cacheCreationTokens,
+    required BigInt completionTokens,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(model, serializer);
-          sse_encode_i_64(promptTokens, serializer);
-          sse_encode_i_64(cachedTokens, serializer);
-          sse_encode_i_64(cacheCreationTokens, serializer);
-          sse_encode_i_64(completionTokens, serializer);
+          sse_encode_u_64(promptTokens, serializer);
+          sse_encode_u_64(cachedTokens, serializer);
+          sse_encode_u_64(cacheCreationTokens, serializer);
+          sse_encode_u_64(completionTokens, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -3095,7 +3095,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Future<DefaultClient> crateCreateClient({
     required String apiKey,
     String? baseUrl,
-    PlatformInt64? timeoutSecs,
+    BigInt? timeoutSecs,
     PlatformInt64? maxRetries,
     String? modelHint,
   }) {
@@ -3105,7 +3105,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(apiKey, serializer);
           sse_encode_opt_String(baseUrl, serializer);
-          sse_encode_opt_box_autoadd_i_64(timeoutSecs, serializer);
+          sse_encode_opt_box_autoadd_u_64(timeoutSecs, serializer);
           sse_encode_opt_box_autoadd_i_64(maxRetries, serializer);
           sse_encode_opt_String(modelHint, serializer);
           pdeCallFfi(
@@ -7154,10 +7154,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       status: dco_decode_batch_status(arr[5]),
       outputFileId: dco_decode_opt_String(arr[6]),
       errorFileId: dco_decode_opt_String(arr[7]),
-      createdAt: dco_decode_i_64(arr[8]),
-      completedAt: dco_decode_opt_box_autoadd_i_64(arr[9]),
-      failedAt: dco_decode_opt_box_autoadd_i_64(arr[10]),
-      expiredAt: dco_decode_opt_box_autoadd_i_64(arr[11]),
+      createdAt: dco_decode_u_64(arr[8]),
+      completedAt: dco_decode_opt_box_autoadd_u_64(arr[9]),
+      failedAt: dco_decode_opt_box_autoadd_u_64(arr[10]),
+      expiredAt: dco_decode_opt_box_autoadd_u_64(arr[11]),
       requestCounts: dco_decode_opt_box_autoadd_batch_request_counts(arr[12]),
       metadata: dco_decode_opt_String(arr[13]),
     );
@@ -7170,9 +7170,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 3)
       throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return BatchRequestCounts(
-      total: dco_decode_i_64(arr[0]),
-      completed: dco_decode_i_64(arr[1]),
-      failed: dco_decode_i_64(arr[2]),
+      total: dco_decode_u_64(arr[0]),
+      completed: dco_decode_u_64(arr[1]),
+      failed: dco_decode_u_64(arr[2]),
     );
   }
 
@@ -7579,6 +7579,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt dco_decode_box_autoadd_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_u_64(raw);
+  }
+
+  @protected
   Usage dco_decode_box_autoadd_usage(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_usage(raw);
@@ -7661,7 +7667,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       sourceSha256: dco_decode_String(arr[1]),
       fetched: dco_decode_String(arr[2]),
       libraryVersion: dco_decode_String(arr[3]),
-      schemaVersion: dco_decode_i_64(arr[4]),
+      schemaVersion: dco_decode_u_64(arr[4]),
       origin: dco_decode_String(arr[5]),
     );
   }
@@ -7677,9 +7683,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       provider: dco_decode_String(arr[1]),
       model: dco_decode_String(arr[2]),
       mode: dco_decode_opt_String(arr[3]),
-      maxTokens: dco_decode_opt_box_autoadd_i_64(arr[4]),
-      maxInputTokens: dco_decode_opt_box_autoadd_i_64(arr[5]),
-      maxOutputTokens: dco_decode_opt_box_autoadd_i_64(arr[6]),
+      maxTokens: dco_decode_opt_box_autoadd_u_64(arr[4]),
+      maxInputTokens: dco_decode_opt_box_autoadd_u_64(arr[5]),
+      maxOutputTokens: dco_decode_opt_box_autoadd_u_64(arr[6]),
       supportsVision: dco_decode_opt_box_autoadd_bool(arr[7]),
       supportsFunctionCalling: dco_decode_opt_box_autoadd_bool(arr[8]),
       supportsReasoning: dco_decode_opt_box_autoadd_bool(arr[9]),
@@ -7699,7 +7705,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return CatalogRefreshConfig(
       enabled: dco_decode_bool(arr[0]),
       sourceUrl: dco_decode_String(arr[1]),
-      ttlSeconds: dco_decode_i_64(arr[2]),
+      ttlSeconds: dco_decode_u_64(arr[2]),
       cachePath: dco_decode_opt_String(arr[3]),
     );
   }
@@ -7742,7 +7748,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return ChatCompletionChunk(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
-      created: dco_decode_i_64(arr[2]),
+      created: dco_decode_u_64(arr[2]),
       model: dco_decode_String(arr[3]),
       choices: dco_decode_list_stream_choice(arr[4]),
       usage: dco_decode_opt_box_autoadd_usage(arr[5]),
@@ -7765,7 +7771,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       n: dco_decode_opt_box_autoadd_i_64(arr[4]),
       stream: dco_decode_opt_box_autoadd_bool(arr[5]),
       stop: dco_decode_opt_box_autoadd_stop_sequence(arr[6]),
-      maxTokens: dco_decode_opt_box_autoadd_i_64(arr[7]),
+      maxTokens: dco_decode_opt_box_autoadd_u_64(arr[7]),
       presencePenalty: dco_decode_opt_box_autoadd_f_64(arr[8]),
       frequencyPenalty: dco_decode_opt_box_autoadd_f_64(arr[9]),
       logitBias: dco_decode_opt_Map_String_f_64_None(arr[10]),
@@ -7780,7 +7786,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       modalities: dco_decode_opt_list_modality(arr[19]),
       logprobs: dco_decode_opt_box_autoadd_bool(arr[20]),
       topLogprobs: dco_decode_opt_box_autoadd_i_64(arr[21]),
-      maxCompletionTokens: dco_decode_opt_box_autoadd_i_64(arr[22]),
+      maxCompletionTokens: dco_decode_opt_box_autoadd_u_64(arr[22]),
       serviceTier: dco_decode_opt_String(arr[23]),
       store: dco_decode_opt_box_autoadd_bool(arr[24]),
       metadata: dco_decode_opt_Map_String_String_None(arr[25]),
@@ -7800,7 +7806,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return ChatCompletionResponse(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
-      created: dco_decode_i_64(arr[2]),
+      created: dco_decode_u_64(arr[2]),
       model: dco_decode_String(arr[3]),
       choices: dco_decode_list_choice(arr[4]),
       usage: dco_decode_opt_box_autoadd_usage(arr[5]),
@@ -7850,10 +7856,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return ClientOptions(
       apiKey: dco_decode_String(arr[0]),
       baseUrl: dco_decode_opt_String(arr[1]),
-      timeoutSecs: dco_decode_opt_box_autoadd_i_64(arr[2]),
-      connectTimeoutSecs: dco_decode_opt_box_autoadd_i_64(arr[3]),
+      timeoutSecs: dco_decode_opt_box_autoadd_u_64(arr[2]),
+      connectTimeoutSecs: dco_decode_opt_box_autoadd_u_64(arr[3]),
       maxRetries: dco_decode_opt_box_autoadd_i_64(arr[4]),
-      maxResponseBytes: dco_decode_opt_box_autoadd_i_64(arr[5]),
+      maxResponseBytes: dco_decode_opt_box_autoadd_u_64(arr[5]),
       modelHint: dco_decode_opt_String(arr[6]),
       blockedNetworks: dco_decode_opt_list_String(arr[7]),
     );
@@ -7865,7 +7871,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 1)
       throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return CompletionTokensDetails(reasoningTokens: dco_decode_i_64(arr[0]));
+    return CompletionTokensDetails(reasoningTokens: dco_decode_u_64(arr[0]));
   }
 
   @protected
@@ -7949,7 +7955,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       instructions: dco_decode_opt_String(arr[2]),
       tools: dco_decode_opt_list_response_tool(arr[3]),
       temperature: dco_decode_opt_box_autoadd_f_64(arr[4]),
-      maxOutputTokens: dco_decode_opt_box_autoadd_i_64(arr[5]),
+      maxOutputTokens: dco_decode_opt_box_autoadd_u_64(arr[5]),
       metadata: dco_decode_opt_String(arr[6]),
       extraBody: dco_decode_opt_String(arr[7]),
       stream: dco_decode_opt_box_autoadd_bool(arr[8]),
@@ -8186,8 +8192,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return FileObject(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
-      bytes: dco_decode_i_64(arr[2]),
-      createdAt: dco_decode_i_64(arr[3]),
+      bytes: dco_decode_u_64(arr[2]),
+      createdAt: dco_decode_u_64(arr[3]),
       filename: dco_decode_String(arr[4]),
       purpose: dco_decode_String(arr[5]),
       status: dco_decode_opt_String(arr[6]),
@@ -8300,7 +8306,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 2)
       throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ImagesResponse(
-      created: dco_decode_i_64(arr[0]),
+      created: dco_decode_u_64(arr[0]),
       data: dco_decode_list_image(arr[1]),
     );
   }
@@ -8657,7 +8663,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return LlmCacheConfig(
       maxEntries: dco_decode_opt_box_autoadd_i_64(arr[0]),
-      ttlSeconds: dco_decode_opt_box_autoadd_i_64(arr[1]),
+      ttlSeconds: dco_decode_opt_box_autoadd_u_64(arr[1]),
       backend: dco_decode_opt_String(arr[2]),
       backendConfig: dco_decode_opt_Map_String_String_None(arr[3]),
     );
@@ -8673,11 +8679,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       model: dco_decode_String(arr[0]),
       apiKey: dco_decode_opt_String(arr[1]),
       baseUrl: dco_decode_opt_String(arr[2]),
-      timeoutSecs: dco_decode_opt_box_autoadd_i_64(arr[3]),
-      connectTimeoutSecs: dco_decode_opt_box_autoadd_i_64(arr[4]),
+      timeoutSecs: dco_decode_opt_box_autoadd_u_64(arr[3]),
+      connectTimeoutSecs: dco_decode_opt_box_autoadd_u_64(arr[4]),
       maxRetries: dco_decode_opt_box_autoadd_i_64(arr[5]),
       temperature: dco_decode_opt_box_autoadd_f_64(arr[6]),
-      maxTokens: dco_decode_opt_box_autoadd_i_64(arr[7]),
+      maxTokens: dco_decode_opt_box_autoadd_u_64(arr[7]),
       loadEnv: dco_decode_opt_box_autoadd_bool(arr[8]),
       headers: dco_decode_opt_Map_String_String_None(arr[9]),
       providers: dco_decode_opt_list_llm_provider_config(arr[10]),
@@ -8689,8 +8695,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ),
       costTracking: dco_decode_opt_box_autoadd_bool(arr[15]),
       tracing: dco_decode_opt_box_autoadd_bool(arr[16]),
-      cooldownSecs: dco_decode_opt_box_autoadd_i_64(arr[17]),
-      healthCheckSecs: dco_decode_opt_box_autoadd_i_64(arr[18]),
+      cooldownSecs: dco_decode_opt_box_autoadd_u_64(arr[17]),
+      healthCheckSecs: dco_decode_opt_box_autoadd_u_64(arr[18]),
       bedrock: dco_decode_opt_box_autoadd_bedrock_config(arr[19]),
     );
   }
@@ -8728,8 +8734,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return LlmRateLimitConfig(
       rpm: dco_decode_opt_box_autoadd_i_64(arr[0]),
-      tpm: dco_decode_opt_box_autoadd_i_64(arr[1]),
-      windowSeconds: dco_decode_opt_box_autoadd_i_64(arr[2]),
+      tpm: dco_decode_opt_box_autoadd_u_64(arr[1]),
+      windowSeconds: dco_decode_opt_box_autoadd_u_64(arr[2]),
     );
   }
 
@@ -8789,9 +8795,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       inputCostPerAudioToken: dco_decode_opt_box_autoadd_f_64(arr[7]),
       outputCostPerAudioToken: dco_decode_opt_box_autoadd_f_64(arr[8]),
       outputCostPerReasoningToken: dco_decode_opt_box_autoadd_f_64(arr[9]),
-      maxTokens: dco_decode_opt_box_autoadd_i_64(arr[10]),
-      maxInputTokens: dco_decode_opt_box_autoadd_i_64(arr[11]),
-      maxOutputTokens: dco_decode_opt_box_autoadd_i_64(arr[12]),
+      maxTokens: dco_decode_opt_box_autoadd_u_64(arr[10]),
+      maxInputTokens: dco_decode_opt_box_autoadd_u_64(arr[11]),
+      maxOutputTokens: dco_decode_opt_box_autoadd_u_64(arr[12]),
       mode: dco_decode_opt_String(arr[13]),
       supportsVision: dco_decode_opt_box_autoadd_bool(arr[14]),
       supportsFunctionCalling: dco_decode_opt_box_autoadd_bool(arr[15]),
@@ -8813,7 +8819,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return ModelObject(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
-      created: dco_decode_i_64(arr[2]),
+      created: dco_decode_u_64(arr[2]),
       ownedBy: dco_decode_String(arr[3]),
     );
   }
@@ -8825,7 +8831,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 8)
       throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return ModelTier(
-      minContextTokens: dco_decode_i_64(arr[0]),
+      minContextTokens: dco_decode_u_64(arr[0]),
       inputCostPerToken: dco_decode_f_64(arr[1]),
       outputCostPerToken: dco_decode_f_64(arr[2]),
       cacheReadInputTokenCost: dco_decode_opt_box_autoadd_f_64(arr[3]),
@@ -9251,6 +9257,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_u_64(raw);
+  }
+
+  @protected
   Usage? dco_decode_opt_box_autoadd_usage(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_usage(raw);
@@ -9341,9 +9353,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 3)
       throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return PromptTokensDetails(
-      cachedTokens: dco_decode_i_64(arr[0]),
-      cacheCreationTokens: dco_decode_i_64(arr[1]),
-      audioTokens: dco_decode_i_64(arr[2]),
+      cachedTokens: dco_decode_u_64(arr[0]),
+      cacheCreationTokens: dco_decode_u_64(arr[1]),
+      audioTokens: dco_decode_u_64(arr[2]),
     );
   }
 
@@ -9389,7 +9401,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return RateLimitConfig(
       rpm: dco_decode_opt_box_autoadd_i_64(arr[0]),
-      tpm: dco_decode_opt_box_autoadd_i_64(arr[1]),
+      tpm: dco_decode_opt_box_autoadd_u_64(arr[1]),
       window: dco_decode_i_64(arr[2]),
     );
   }
@@ -9516,7 +9528,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return ResponseObject(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
-      createdAt: dco_decode_i_64(arr[2]),
+      createdAt: dco_decode_u_64(arr[2]),
       model: dco_decode_String(arr[3]),
       status: dco_decode_String(arr[4]),
       output: dco_decode_list_response_output_item(arr[5]),
@@ -9556,9 +9568,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 3)
       throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ResponseUsage(
-      inputTokens: dco_decode_i_64(arr[0]),
-      outputTokens: dco_decode_i_64(arr[1]),
-      totalTokens: dco_decode_i_64(arr[2]),
+      inputTokens: dco_decode_u_64(arr[0]),
+      outputTokens: dco_decode_u_64(arr[1]),
+      totalTokens: dco_decode_u_64(arr[2]),
     );
   }
 
@@ -9802,6 +9814,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt dco_decode_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
+  }
+
+  @protected
   int dco_decode_u_8(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -9820,9 +9838,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 5)
       throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return Usage(
-      promptTokens: dco_decode_i_64(arr[0]),
-      completionTokens: dco_decode_i_64(arr[1]),
-      totalTokens: dco_decode_i_64(arr[2]),
+      promptTokens: dco_decode_u_64(arr[0]),
+      completionTokens: dco_decode_u_64(arr[1]),
+      totalTokens: dco_decode_u_64(arr[2]),
       promptTokensDetails: dco_decode_opt_box_autoadd_prompt_tokens_details(
         arr[3],
       ),
@@ -10181,10 +10199,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_status = sse_decode_batch_status(deserializer);
     var var_outputFileId = sse_decode_opt_String(deserializer);
     var var_errorFileId = sse_decode_opt_String(deserializer);
-    var var_createdAt = sse_decode_i_64(deserializer);
-    var var_completedAt = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_failedAt = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_expiredAt = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_createdAt = sse_decode_u_64(deserializer);
+    var var_completedAt = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_failedAt = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_expiredAt = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_requestCounts = sse_decode_opt_box_autoadd_batch_request_counts(
       deserializer,
     );
@@ -10212,9 +10230,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_total = sse_decode_i_64(deserializer);
-    var var_completed = sse_decode_i_64(deserializer);
-    var var_failed = sse_decode_i_64(deserializer);
+    var var_total = sse_decode_u_64(deserializer);
+    var var_completed = sse_decode_u_64(deserializer);
+    var var_failed = sse_decode_u_64(deserializer);
     return BatchRequestCounts(
       total: var_total,
       completed: var_completed,
@@ -10708,6 +10726,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_u_64(deserializer));
+  }
+
+  @protected
   Usage sse_decode_box_autoadd_usage(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_usage(deserializer));
@@ -10793,7 +10817,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_sourceSha256 = sse_decode_String(deserializer);
     var var_fetched = sse_decode_String(deserializer);
     var var_libraryVersion = sse_decode_String(deserializer);
-    var var_schemaVersion = sse_decode_i_64(deserializer);
+    var var_schemaVersion = sse_decode_u_64(deserializer);
     var var_origin = sse_decode_String(deserializer);
     return CatalogInfo(
       source: var_source,
@@ -10812,9 +10836,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_provider = sse_decode_String(deserializer);
     var var_model = sse_decode_String(deserializer);
     var var_mode = sse_decode_opt_String(deserializer);
-    var var_maxTokens = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_maxInputTokens = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_maxOutputTokens = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_maxTokens = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_maxInputTokens = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_maxOutputTokens = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_supportsVision = sse_decode_opt_box_autoadd_bool(deserializer);
     var var_supportsFunctionCalling = sse_decode_opt_box_autoadd_bool(
       deserializer,
@@ -10853,7 +10877,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_enabled = sse_decode_bool(deserializer);
     var var_sourceUrl = sse_decode_String(deserializer);
-    var var_ttlSeconds = sse_decode_i_64(deserializer);
+    var var_ttlSeconds = sse_decode_u_64(deserializer);
     var var_cachePath = sse_decode_opt_String(deserializer);
     return CatalogRefreshConfig(
       enabled: var_enabled,
@@ -10902,7 +10926,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_String(deserializer);
     var var_object = sse_decode_String(deserializer);
-    var var_created = sse_decode_i_64(deserializer);
+    var var_created = sse_decode_u_64(deserializer);
     var var_model = sse_decode_String(deserializer);
     var var_choices = sse_decode_list_stream_choice(deserializer);
     var var_usage = sse_decode_opt_box_autoadd_usage(deserializer);
@@ -10932,7 +10956,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_n = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_stream = sse_decode_opt_box_autoadd_bool(deserializer);
     var var_stop = sse_decode_opt_box_autoadd_stop_sequence(deserializer);
-    var var_maxTokens = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_maxTokens = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_presencePenalty = sse_decode_opt_box_autoadd_f_64(deserializer);
     var var_frequencyPenalty = sse_decode_opt_box_autoadd_f_64(deserializer);
     var var_logitBias = sse_decode_opt_Map_String_f_64_None(deserializer);
@@ -10953,7 +10977,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_modalities = sse_decode_opt_list_modality(deserializer);
     var var_logprobs = sse_decode_opt_box_autoadd_bool(deserializer);
     var var_topLogprobs = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_maxCompletionTokens = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_maxCompletionTokens = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_serviceTier = sse_decode_opt_String(deserializer);
     var var_store = sse_decode_opt_box_autoadd_bool(deserializer);
     var var_metadata = sse_decode_opt_Map_String_String_None(deserializer);
@@ -11002,7 +11026,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_String(deserializer);
     var var_object = sse_decode_String(deserializer);
-    var var_created = sse_decode_i_64(deserializer);
+    var var_created = sse_decode_u_64(deserializer);
     var var_model = sse_decode_String(deserializer);
     var var_choices = sse_decode_list_choice(deserializer);
     var var_usage = sse_decode_opt_box_autoadd_usage(deserializer);
@@ -11059,10 +11083,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_apiKey = sse_decode_String(deserializer);
     var var_baseUrl = sse_decode_opt_String(deserializer);
-    var var_timeoutSecs = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_connectTimeoutSecs = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_timeoutSecs = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_connectTimeoutSecs = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_maxRetries = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_maxResponseBytes = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_maxResponseBytes = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_modelHint = sse_decode_opt_String(deserializer);
     var var_blockedNetworks = sse_decode_opt_list_String(deserializer);
     return ClientOptions(
@@ -11082,7 +11106,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_reasoningTokens = sse_decode_i_64(deserializer);
+    var var_reasoningTokens = sse_decode_u_64(deserializer);
     return CompletionTokensDetails(reasoningTokens: var_reasoningTokens);
   }
 
@@ -11180,7 +11204,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_instructions = sse_decode_opt_String(deserializer);
     var var_tools = sse_decode_opt_list_response_tool(deserializer);
     var var_temperature = sse_decode_opt_box_autoadd_f_64(deserializer);
-    var var_maxOutputTokens = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_maxOutputTokens = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_metadata = sse_decode_opt_String(deserializer);
     var var_extraBody = sse_decode_opt_String(deserializer);
     var var_stream = sse_decode_opt_box_autoadd_bool(deserializer);
@@ -11435,8 +11459,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_String(deserializer);
     var var_object = sse_decode_String(deserializer);
-    var var_bytes = sse_decode_i_64(deserializer);
-    var var_createdAt = sse_decode_i_64(deserializer);
+    var var_bytes = sse_decode_u_64(deserializer);
+    var var_createdAt = sse_decode_u_64(deserializer);
     var var_filename = sse_decode_String(deserializer);
     var var_purpose = sse_decode_String(deserializer);
     var var_status = sse_decode_opt_String(deserializer);
@@ -11548,7 +11572,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   ImagesResponse sse_decode_images_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_created = sse_decode_i_64(deserializer);
+    var var_created = sse_decode_u_64(deserializer);
     var var_data = sse_decode_list_image(deserializer);
     return ImagesResponse(created: var_created, data: var_data);
   }
@@ -12142,7 +12166,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LlmCacheConfig sse_decode_llm_cache_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_maxEntries = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_ttlSeconds = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_ttlSeconds = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_backend = sse_decode_opt_String(deserializer);
     var var_backendConfig = sse_decode_opt_Map_String_String_None(deserializer);
     return LlmCacheConfig(
@@ -12159,11 +12183,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_model = sse_decode_String(deserializer);
     var var_apiKey = sse_decode_opt_String(deserializer);
     var var_baseUrl = sse_decode_opt_String(deserializer);
-    var var_timeoutSecs = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_connectTimeoutSecs = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_timeoutSecs = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_connectTimeoutSecs = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_maxRetries = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_temperature = sse_decode_opt_box_autoadd_f_64(deserializer);
-    var var_maxTokens = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_maxTokens = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_loadEnv = sse_decode_opt_box_autoadd_bool(deserializer);
     var var_headers = sse_decode_opt_Map_String_String_None(deserializer);
     var var_providers = sse_decode_opt_list_llm_provider_config(deserializer);
@@ -12176,8 +12200,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_decode_opt_box_autoadd_llm_in_flight_limit_config(deserializer);
     var var_costTracking = sse_decode_opt_box_autoadd_bool(deserializer);
     var var_tracing = sse_decode_opt_box_autoadd_bool(deserializer);
-    var var_cooldownSecs = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_healthCheckSecs = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_cooldownSecs = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_healthCheckSecs = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_bedrock = sse_decode_opt_box_autoadd_bedrock_config(deserializer);
     return LlmConfig(
       model: var_model,
@@ -12235,8 +12259,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_rpm = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_tpm = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_windowSeconds = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_tpm = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_windowSeconds = sse_decode_opt_box_autoadd_u_64(deserializer);
     return LlmRateLimitConfig(
       rpm: var_rpm,
       tpm: var_tpm,
@@ -12303,9 +12327,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_outputCostPerReasoningToken = sse_decode_opt_box_autoadd_f_64(
       deserializer,
     );
-    var var_maxTokens = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_maxInputTokens = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_maxOutputTokens = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_maxTokens = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_maxInputTokens = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_maxOutputTokens = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_mode = sse_decode_opt_String(deserializer);
     var var_supportsVision = sse_decode_opt_box_autoadd_bool(deserializer);
     var var_supportsFunctionCalling = sse_decode_opt_box_autoadd_bool(
@@ -12352,7 +12376,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_String(deserializer);
     var var_object = sse_decode_String(deserializer);
-    var var_created = sse_decode_i_64(deserializer);
+    var var_created = sse_decode_u_64(deserializer);
     var var_ownedBy = sse_decode_String(deserializer);
     return ModelObject(
       id: var_id,
@@ -12365,7 +12389,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   ModelTier sse_decode_model_tier(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_minContextTokens = sse_decode_i_64(deserializer);
+    var var_minContextTokens = sse_decode_u_64(deserializer);
     var var_inputCostPerToken = sse_decode_f_64(deserializer);
     var var_outputCostPerToken = sse_decode_f_64(deserializer);
     var var_cacheReadInputTokenCost = sse_decode_opt_box_autoadd_f_64(
@@ -13044,6 +13068,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_u_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   Usage? sse_decode_opt_box_autoadd_usage(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -13189,9 +13224,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_cachedTokens = sse_decode_i_64(deserializer);
-    var var_cacheCreationTokens = sse_decode_i_64(deserializer);
-    var var_audioTokens = sse_decode_i_64(deserializer);
+    var var_cachedTokens = sse_decode_u_64(deserializer);
+    var var_cacheCreationTokens = sse_decode_u_64(deserializer);
+    var var_audioTokens = sse_decode_u_64(deserializer);
     return PromptTokensDetails(
       cachedTokens: var_cachedTokens,
       cacheCreationTokens: var_cacheCreationTokens,
@@ -13247,7 +13282,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RateLimitConfig sse_decode_rate_limit_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_rpm = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_tpm = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_tpm = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_window = sse_decode_i_64(deserializer);
     return RateLimitConfig(rpm: var_rpm, tpm: var_tpm, window: var_window);
   }
@@ -13378,7 +13413,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_String(deserializer);
     var var_object = sse_decode_String(deserializer);
-    var var_createdAt = sse_decode_i_64(deserializer);
+    var var_createdAt = sse_decode_u_64(deserializer);
     var var_model = sse_decode_String(deserializer);
     var var_status = sse_decode_String(deserializer);
     var var_output = sse_decode_list_response_output_item(deserializer);
@@ -13417,9 +13452,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   ResponseUsage sse_decode_response_usage(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_inputTokens = sse_decode_i_64(deserializer);
-    var var_outputTokens = sse_decode_i_64(deserializer);
-    var var_totalTokens = sse_decode_i_64(deserializer);
+    var var_inputTokens = sse_decode_u_64(deserializer);
+    var var_outputTokens = sse_decode_u_64(deserializer);
+    var var_totalTokens = sse_decode_u_64(deserializer);
     return ResponseUsage(
       inputTokens: var_inputTokens,
       outputTokens: var_outputTokens,
@@ -13681,6 +13716,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
+  }
+
+  @protected
   int sse_decode_u_8(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8();
@@ -13694,9 +13735,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   Usage sse_decode_usage(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_promptTokens = sse_decode_i_64(deserializer);
-    var var_completionTokens = sse_decode_i_64(deserializer);
-    var var_totalTokens = sse_decode_i_64(deserializer);
+    var var_promptTokens = sse_decode_u_64(deserializer);
+    var var_completionTokens = sse_decode_u_64(deserializer);
+    var var_totalTokens = sse_decode_u_64(deserializer);
     var var_promptTokensDetails =
         sse_decode_opt_box_autoadd_prompt_tokens_details(deserializer);
     var var_completionTokensDetails =
@@ -14053,10 +14094,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_batch_status(self.status, serializer);
     sse_encode_opt_String(self.outputFileId, serializer);
     sse_encode_opt_String(self.errorFileId, serializer);
-    sse_encode_i_64(self.createdAt, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.completedAt, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.failedAt, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.expiredAt, serializer);
+    sse_encode_u_64(self.createdAt, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.completedAt, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.failedAt, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.expiredAt, serializer);
     sse_encode_opt_box_autoadd_batch_request_counts(
       self.requestCounts,
       serializer,
@@ -14070,9 +14111,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.total, serializer);
-    sse_encode_i_64(self.completed, serializer);
-    sse_encode_i_64(self.failed, serializer);
+    sse_encode_u_64(self.total, serializer);
+    sse_encode_u_64(self.completed, serializer);
+    sse_encode_u_64(self.failed, serializer);
   }
 
   @protected
@@ -14623,6 +14664,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_usage(Usage self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usage(self, serializer);
@@ -14700,7 +14747,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.sourceSha256, serializer);
     sse_encode_String(self.fetched, serializer);
     sse_encode_String(self.libraryVersion, serializer);
-    sse_encode_i_64(self.schemaVersion, serializer);
+    sse_encode_u_64(self.schemaVersion, serializer);
     sse_encode_String(self.origin, serializer);
   }
 
@@ -14711,9 +14758,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.provider, serializer);
     sse_encode_String(self.model, serializer);
     sse_encode_opt_String(self.mode, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.maxTokens, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.maxInputTokens, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.maxOutputTokens, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxTokens, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxInputTokens, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxOutputTokens, serializer);
     sse_encode_opt_box_autoadd_bool(self.supportsVision, serializer);
     sse_encode_opt_box_autoadd_bool(self.supportsFunctionCalling, serializer);
     sse_encode_opt_box_autoadd_bool(self.supportsReasoning, serializer);
@@ -14731,7 +14778,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_bool(self.enabled, serializer);
     sse_encode_String(self.sourceUrl, serializer);
-    sse_encode_i_64(self.ttlSeconds, serializer);
+    sse_encode_u_64(self.ttlSeconds, serializer);
     sse_encode_opt_String(self.cachePath, serializer);
   }
 
@@ -14772,7 +14819,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.id, serializer);
     sse_encode_String(self.object, serializer);
-    sse_encode_i_64(self.created, serializer);
+    sse_encode_u_64(self.created, serializer);
     sse_encode_String(self.model, serializer);
     sse_encode_list_stream_choice(self.choices, serializer);
     sse_encode_opt_box_autoadd_usage(self.usage, serializer);
@@ -14793,7 +14840,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_i_64(self.n, serializer);
     sse_encode_opt_box_autoadd_bool(self.stream, serializer);
     sse_encode_opt_box_autoadd_stop_sequence(self.stop, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.maxTokens, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxTokens, serializer);
     sse_encode_opt_box_autoadd_f_64(self.presencePenalty, serializer);
     sse_encode_opt_box_autoadd_f_64(self.frequencyPenalty, serializer);
     sse_encode_opt_Map_String_f_64_None(self.logitBias, serializer);
@@ -14811,7 +14858,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_list_modality(self.modalities, serializer);
     sse_encode_opt_box_autoadd_bool(self.logprobs, serializer);
     sse_encode_opt_box_autoadd_i_64(self.topLogprobs, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.maxCompletionTokens, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxCompletionTokens, serializer);
     sse_encode_opt_String(self.serviceTier, serializer);
     sse_encode_opt_box_autoadd_bool(self.store, serializer);
     sse_encode_opt_Map_String_String_None(self.metadata, serializer);
@@ -14829,7 +14876,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.id, serializer);
     sse_encode_String(self.object, serializer);
-    sse_encode_i_64(self.created, serializer);
+    sse_encode_u_64(self.created, serializer);
     sse_encode_String(self.model, serializer);
     sse_encode_list_choice(self.choices, serializer);
     sse_encode_opt_box_autoadd_usage(self.usage, serializer);
@@ -14867,10 +14914,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.apiKey, serializer);
     sse_encode_opt_String(self.baseUrl, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.timeoutSecs, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.connectTimeoutSecs, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.timeoutSecs, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.connectTimeoutSecs, serializer);
     sse_encode_opt_box_autoadd_i_64(self.maxRetries, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.maxResponseBytes, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxResponseBytes, serializer);
     sse_encode_opt_String(self.modelHint, serializer);
     sse_encode_opt_list_String(self.blockedNetworks, serializer);
   }
@@ -14881,7 +14928,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.reasoningTokens, serializer);
+    sse_encode_u_64(self.reasoningTokens, serializer);
   }
 
   @protected
@@ -14954,7 +15001,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.instructions, serializer);
     sse_encode_opt_list_response_tool(self.tools, serializer);
     sse_encode_opt_box_autoadd_f_64(self.temperature, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.maxOutputTokens, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxOutputTokens, serializer);
     sse_encode_opt_String(self.metadata, serializer);
     sse_encode_opt_String(self.extraBody, serializer);
     sse_encode_opt_box_autoadd_bool(self.stream, serializer);
@@ -15168,8 +15215,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.id, serializer);
     sse_encode_String(self.object, serializer);
-    sse_encode_i_64(self.bytes, serializer);
-    sse_encode_i_64(self.createdAt, serializer);
+    sse_encode_u_64(self.bytes, serializer);
+    sse_encode_u_64(self.createdAt, serializer);
     sse_encode_String(self.filename, serializer);
     sse_encode_String(self.purpose, serializer);
     sse_encode_opt_String(self.status, serializer);
@@ -15261,7 +15308,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.created, serializer);
+    sse_encode_u_64(self.created, serializer);
     sse_encode_list_image(self.data, serializer);
   }
 
@@ -15811,7 +15858,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_opt_box_autoadd_i_64(self.maxEntries, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.ttlSeconds, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.ttlSeconds, serializer);
     sse_encode_opt_String(self.backend, serializer);
     sse_encode_opt_Map_String_String_None(self.backendConfig, serializer);
   }
@@ -15822,11 +15869,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.model, serializer);
     sse_encode_opt_String(self.apiKey, serializer);
     sse_encode_opt_String(self.baseUrl, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.timeoutSecs, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.connectTimeoutSecs, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.timeoutSecs, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.connectTimeoutSecs, serializer);
     sse_encode_opt_box_autoadd_i_64(self.maxRetries, serializer);
     sse_encode_opt_box_autoadd_f_64(self.temperature, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.maxTokens, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxTokens, serializer);
     sse_encode_opt_box_autoadd_bool(self.loadEnv, serializer);
     sse_encode_opt_Map_String_String_None(self.headers, serializer);
     sse_encode_opt_list_llm_provider_config(self.providers, serializer);
@@ -15842,8 +15889,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
     sse_encode_opt_box_autoadd_bool(self.costTracking, serializer);
     sse_encode_opt_box_autoadd_bool(self.tracing, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.cooldownSecs, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.healthCheckSecs, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.cooldownSecs, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.healthCheckSecs, serializer);
     sse_encode_opt_box_autoadd_bedrock_config(self.bedrock, serializer);
   }
 
@@ -15875,8 +15922,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_opt_box_autoadd_i_64(self.rpm, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.tpm, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.windowSeconds, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.tpm, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.windowSeconds, serializer);
   }
 
   @protected
@@ -15929,9 +15976,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       self.outputCostPerReasoningToken,
       serializer,
     );
-    sse_encode_opt_box_autoadd_i_64(self.maxTokens, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.maxInputTokens, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.maxOutputTokens, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxTokens, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxInputTokens, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.maxOutputTokens, serializer);
     sse_encode_opt_String(self.mode, serializer);
     sse_encode_opt_box_autoadd_bool(self.supportsVision, serializer);
     sse_encode_opt_box_autoadd_bool(self.supportsFunctionCalling, serializer);
@@ -15948,14 +15995,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.id, serializer);
     sse_encode_String(self.object, serializer);
-    sse_encode_i_64(self.created, serializer);
+    sse_encode_u_64(self.created, serializer);
     sse_encode_String(self.ownedBy, serializer);
   }
 
   @protected
   void sse_encode_model_tier(ModelTier self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.minContextTokens, serializer);
+    sse_encode_u_64(self.minContextTokens, serializer);
     sse_encode_f_64(self.inputCostPerToken, serializer);
     sse_encode_f_64(self.outputCostPerToken, serializer);
     sse_encode_opt_box_autoadd_f_64(self.cacheReadInputTokenCost, serializer);
@@ -16563,6 +16610,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_u_64(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_usage(Usage? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -16718,9 +16775,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.cachedTokens, serializer);
-    sse_encode_i_64(self.cacheCreationTokens, serializer);
-    sse_encode_i_64(self.audioTokens, serializer);
+    sse_encode_u_64(self.cachedTokens, serializer);
+    sse_encode_u_64(self.cacheCreationTokens, serializer);
+    sse_encode_u_64(self.audioTokens, serializer);
   }
 
   @protected
@@ -16760,7 +16817,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_opt_box_autoadd_i_64(self.rpm, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.tpm, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.tpm, serializer);
     sse_encode_i_64(self.window, serializer);
   }
 
@@ -16885,7 +16942,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.id, serializer);
     sse_encode_String(self.object, serializer);
-    sse_encode_i_64(self.createdAt, serializer);
+    sse_encode_u_64(self.createdAt, serializer);
     sse_encode_String(self.model, serializer);
     sse_encode_String(self.status, serializer);
     sse_encode_list_response_output_item(self.output, serializer);
@@ -16913,9 +16970,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_response_usage(ResponseUsage self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.inputTokens, serializer);
-    sse_encode_i_64(self.outputTokens, serializer);
-    sse_encode_i_64(self.totalTokens, serializer);
+    sse_encode_u_64(self.inputTokens, serializer);
+    sse_encode_u_64(self.outputTokens, serializer);
+    sse_encode_u_64(self.totalTokens, serializer);
   }
 
   @protected
@@ -17112,6 +17169,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(_alefCheckU64BeforeEncode(self));
+  }
+
+  @protected
   void sse_encode_u_8(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self);
@@ -17125,9 +17188,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_usage(Usage self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.promptTokens, serializer);
-    sse_encode_i_64(self.completionTokens, serializer);
-    sse_encode_i_64(self.totalTokens, serializer);
+    sse_encode_u_64(self.promptTokens, serializer);
+    sse_encode_u_64(self.completionTokens, serializer);
+    sse_encode_u_64(self.totalTokens, serializer);
     sse_encode_opt_box_autoadd_prompt_tokens_details(
       self.promptTokensDetails,
       serializer,
@@ -17161,7 +17224,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putBigUint64(self);
+    serializer.buffer.putBigUint64(_alefCheckU64BeforeEncode(self));
   }
 
   @protected
@@ -17305,4 +17368,13 @@ class DefaultClientImpl extends RustOpaque implements DefaultClient {
     batchId: batchId,
     config: config,
   );
+}
+
+BigInt _alefCheckU64BeforeEncode(BigInt value) {
+  if (value.isNegative || value.bitLength > 64) {
+    throw RangeError(
+      'u64 unsigned value must be between 0 and 18446744073709551615: $value',
+    );
+  }
+  return value;
 }

@@ -1371,8 +1371,8 @@ fn wire__crate__completion_cost_impl(
             };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_model = <String>::sse_decode(&mut deserializer);
-            let api_prompt_tokens = <i64>::sse_decode(&mut deserializer);
-            let api_completion_tokens = <i64>::sse_decode(&mut deserializer);
+            let api_prompt_tokens = <u64>::sse_decode(&mut deserializer);
+            let api_completion_tokens = <u64>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -1405,9 +1405,9 @@ fn wire__crate__completion_cost_with_cache_impl(
             };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_model = <String>::sse_decode(&mut deserializer);
-            let api_prompt_tokens = <i64>::sse_decode(&mut deserializer);
-            let api_cached_tokens = <i64>::sse_decode(&mut deserializer);
-            let api_completion_tokens = <i64>::sse_decode(&mut deserializer);
+            let api_prompt_tokens = <u64>::sse_decode(&mut deserializer);
+            let api_cached_tokens = <u64>::sse_decode(&mut deserializer);
+            let api_completion_tokens = <u64>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -1441,10 +1441,10 @@ fn wire__crate__completion_cost_with_cache_details_impl(
             };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_model = <String>::sse_decode(&mut deserializer);
-            let api_prompt_tokens = <i64>::sse_decode(&mut deserializer);
-            let api_cached_tokens = <i64>::sse_decode(&mut deserializer);
-            let api_cache_creation_tokens = <i64>::sse_decode(&mut deserializer);
-            let api_completion_tokens = <i64>::sse_decode(&mut deserializer);
+            let api_prompt_tokens = <u64>::sse_decode(&mut deserializer);
+            let api_cached_tokens = <u64>::sse_decode(&mut deserializer);
+            let api_cache_creation_tokens = <u64>::sse_decode(&mut deserializer);
+            let api_completion_tokens = <u64>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -2243,7 +2243,7 @@ fn wire__crate__create_client_impl(
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_api_key = <String>::sse_decode(&mut deserializer);
             let api_base_url = <Option<String>>::sse_decode(&mut deserializer);
-            let api_timeout_secs = <Option<i64>>::sse_decode(&mut deserializer);
+            let api_timeout_secs = <Option<u64>>::sse_decode(&mut deserializer);
             let api_max_retries = <Option<i64>>::sse_decode(&mut deserializer);
             let api_model_hint = <Option<String>>::sse_decode(&mut deserializer);
             deserializer.end();
@@ -5608,18 +5608,18 @@ const _: fn() = || {
         let _: crate::BatchStatus = BatchObject.status;
         let _: Option<String> = BatchObject.output_file_id;
         let _: Option<String> = BatchObject.error_file_id;
-        let _: i64 = BatchObject.created_at;
-        let _: Option<i64> = BatchObject.completed_at;
-        let _: Option<i64> = BatchObject.failed_at;
-        let _: Option<i64> = BatchObject.expired_at;
+        let _: u64 = BatchObject.created_at;
+        let _: Option<u64> = BatchObject.completed_at;
+        let _: Option<u64> = BatchObject.failed_at;
+        let _: Option<u64> = BatchObject.expired_at;
         let _: Option<crate::BatchRequestCounts> = BatchObject.request_counts;
         let _: Option<String> = BatchObject.metadata;
     }
     {
         let BatchRequestCounts = None::<crate::BatchRequestCounts>.unwrap();
-        let _: i64 = BatchRequestCounts.total;
-        let _: i64 = BatchRequestCounts.completed;
-        let _: i64 = BatchRequestCounts.failed;
+        let _: u64 = BatchRequestCounts.total;
+        let _: u64 = BatchRequestCounts.completed;
+        let _: u64 = BatchRequestCounts.failed;
     }
     {
         let BedrockConfig = None::<crate::BedrockConfig>.unwrap();
@@ -5654,7 +5654,7 @@ const _: fn() = || {
         let _: String = CatalogInfo.source_sha256;
         let _: String = CatalogInfo.fetched;
         let _: String = CatalogInfo.library_version;
-        let _: i64 = CatalogInfo.schema_version;
+        let _: u64 = CatalogInfo.schema_version;
         let _: String = CatalogInfo.origin;
     }
     {
@@ -5663,9 +5663,9 @@ const _: fn() = || {
         let _: String = CatalogModel.provider;
         let _: String = CatalogModel.model;
         let _: Option<String> = CatalogModel.mode;
-        let _: Option<i64> = CatalogModel.max_tokens;
-        let _: Option<i64> = CatalogModel.max_input_tokens;
-        let _: Option<i64> = CatalogModel.max_output_tokens;
+        let _: Option<u64> = CatalogModel.max_tokens;
+        let _: Option<u64> = CatalogModel.max_input_tokens;
+        let _: Option<u64> = CatalogModel.max_output_tokens;
         let _: Option<bool> = CatalogModel.supports_vision;
         let _: Option<bool> = CatalogModel.supports_function_calling;
         let _: Option<bool> = CatalogModel.supports_reasoning;
@@ -5678,7 +5678,7 @@ const _: fn() = || {
         let CatalogRefreshConfig = None::<crate::CatalogRefreshConfig>.unwrap();
         let _: bool = CatalogRefreshConfig.enabled;
         let _: String = CatalogRefreshConfig.source_url;
-        let _: i64 = CatalogRefreshConfig.ttl_seconds;
+        let _: u64 = CatalogRefreshConfig.ttl_seconds;
         let _: Option<String> = CatalogRefreshConfig.cache_path;
     }
     match None::<crate::CatalogRefreshError>.unwrap() {
@@ -5705,7 +5705,7 @@ const _: fn() = || {
         let ChatCompletionChunk = None::<crate::ChatCompletionChunk>.unwrap();
         let _: String = ChatCompletionChunk.id;
         let _: String = ChatCompletionChunk.object;
-        let _: i64 = ChatCompletionChunk.created;
+        let _: u64 = ChatCompletionChunk.created;
         let _: String = ChatCompletionChunk.model;
         let _: Vec<crate::StreamChoice> = ChatCompletionChunk.choices;
         let _: Option<crate::Usage> = ChatCompletionChunk.usage;
@@ -5721,7 +5721,7 @@ const _: fn() = || {
         let _: Option<i64> = ChatCompletionRequest.n;
         let _: Option<bool> = ChatCompletionRequest.stream;
         let _: Option<crate::StopSequence> = ChatCompletionRequest.stop;
-        let _: Option<i64> = ChatCompletionRequest.max_tokens;
+        let _: Option<u64> = ChatCompletionRequest.max_tokens;
         let _: Option<f64> = ChatCompletionRequest.presence_penalty;
         let _: Option<f64> = ChatCompletionRequest.frequency_penalty;
         let _: Option<std::collections::HashMap<String, f64>> = ChatCompletionRequest.logit_bias;
@@ -5736,7 +5736,7 @@ const _: fn() = || {
         let _: Option<Vec<crate::Modality>> = ChatCompletionRequest.modalities;
         let _: Option<bool> = ChatCompletionRequest.logprobs;
         let _: Option<i64> = ChatCompletionRequest.top_logprobs;
-        let _: Option<i64> = ChatCompletionRequest.max_completion_tokens;
+        let _: Option<u64> = ChatCompletionRequest.max_completion_tokens;
         let _: Option<String> = ChatCompletionRequest.service_tier;
         let _: Option<bool> = ChatCompletionRequest.store;
         let _: Option<std::collections::HashMap<String, String>> = ChatCompletionRequest.metadata;
@@ -5749,7 +5749,7 @@ const _: fn() = || {
         let ChatCompletionResponse = None::<crate::ChatCompletionResponse>.unwrap();
         let _: String = ChatCompletionResponse.id;
         let _: String = ChatCompletionResponse.object;
-        let _: i64 = ChatCompletionResponse.created;
+        let _: u64 = ChatCompletionResponse.created;
         let _: String = ChatCompletionResponse.model;
         let _: Vec<crate::Choice> = ChatCompletionResponse.choices;
         let _: Option<crate::Usage> = ChatCompletionResponse.usage;
@@ -5772,16 +5772,16 @@ const _: fn() = || {
         let ClientOptions = None::<crate::ClientOptions>.unwrap();
         let _: String = ClientOptions.api_key;
         let _: Option<String> = ClientOptions.base_url;
-        let _: Option<i64> = ClientOptions.timeout_secs;
-        let _: Option<i64> = ClientOptions.connect_timeout_secs;
+        let _: Option<u64> = ClientOptions.timeout_secs;
+        let _: Option<u64> = ClientOptions.connect_timeout_secs;
         let _: Option<i64> = ClientOptions.max_retries;
-        let _: Option<i64> = ClientOptions.max_response_bytes;
+        let _: Option<u64> = ClientOptions.max_response_bytes;
         let _: Option<String> = ClientOptions.model_hint;
         let _: Option<Vec<String>> = ClientOptions.blocked_networks;
     }
     {
         let CompletionTokensDetails = None::<crate::CompletionTokensDetails>.unwrap();
-        let _: i64 = CompletionTokensDetails.reasoning_tokens;
+        let _: u64 = CompletionTokensDetails.reasoning_tokens;
     }
     match None::<crate::ContentPart>.unwrap() {
         crate::ContentPart::Text { text } => {
@@ -5829,7 +5829,7 @@ const _: fn() = || {
         let _: Option<String> = CreateResponseRequest.instructions;
         let _: Option<Vec<crate::ResponseTool>> = CreateResponseRequest.tools;
         let _: Option<f64> = CreateResponseRequest.temperature;
-        let _: Option<i64> = CreateResponseRequest.max_output_tokens;
+        let _: Option<u64> = CreateResponseRequest.max_output_tokens;
         let _: Option<String> = CreateResponseRequest.metadata;
         let _: Option<String> = CreateResponseRequest.extra_body;
         let _: Option<bool> = CreateResponseRequest.stream;
@@ -5941,8 +5941,8 @@ const _: fn() = || {
         let FileObject = None::<crate::FileObject>.unwrap();
         let _: String = FileObject.id;
         let _: String = FileObject.object;
-        let _: i64 = FileObject.bytes;
-        let _: i64 = FileObject.created_at;
+        let _: u64 = FileObject.bytes;
+        let _: u64 = FileObject.created_at;
         let _: String = FileObject.filename;
         let _: String = FileObject.purpose;
         let _: Option<String> = FileObject.status;
@@ -5977,7 +5977,7 @@ const _: fn() = || {
     }
     {
         let ImagesResponse = None::<crate::ImagesResponse>.unwrap();
-        let _: i64 = ImagesResponse.created;
+        let _: u64 = ImagesResponse.created;
         let _: Vec<crate::Image> = ImagesResponse.data;
     }
     {
@@ -6078,7 +6078,7 @@ const _: fn() = || {
     {
         let LlmCacheConfig = None::<crate::LlmCacheConfig>.unwrap();
         let _: Option<i64> = LlmCacheConfig.max_entries;
-        let _: Option<i64> = LlmCacheConfig.ttl_seconds;
+        let _: Option<u64> = LlmCacheConfig.ttl_seconds;
         let _: Option<String> = LlmCacheConfig.backend;
         let _: Option<std::collections::HashMap<String, String>> = LlmCacheConfig.backend_config;
     }
@@ -6087,11 +6087,11 @@ const _: fn() = || {
         let _: String = LlmConfig.model;
         let _: Option<String> = LlmConfig.api_key;
         let _: Option<String> = LlmConfig.base_url;
-        let _: Option<i64> = LlmConfig.timeout_secs;
-        let _: Option<i64> = LlmConfig.connect_timeout_secs;
+        let _: Option<u64> = LlmConfig.timeout_secs;
+        let _: Option<u64> = LlmConfig.connect_timeout_secs;
         let _: Option<i64> = LlmConfig.max_retries;
         let _: Option<f64> = LlmConfig.temperature;
-        let _: Option<i64> = LlmConfig.max_tokens;
+        let _: Option<u64> = LlmConfig.max_tokens;
         let _: Option<bool> = LlmConfig.load_env;
         let _: Option<std::collections::HashMap<String, String>> = LlmConfig.headers;
         let _: Option<Vec<crate::LlmProviderConfig>> = LlmConfig.providers;
@@ -6101,8 +6101,8 @@ const _: fn() = || {
         let _: Option<crate::LlmInFlightLimitConfig> = LlmConfig.in_flight_limit;
         let _: Option<bool> = LlmConfig.cost_tracking;
         let _: Option<bool> = LlmConfig.tracing;
-        let _: Option<i64> = LlmConfig.cooldown_secs;
-        let _: Option<i64> = LlmConfig.health_check_secs;
+        let _: Option<u64> = LlmConfig.cooldown_secs;
+        let _: Option<u64> = LlmConfig.health_check_secs;
         let _: Option<crate::BedrockConfig> = LlmConfig.bedrock;
     }
     {
@@ -6119,8 +6119,8 @@ const _: fn() = || {
     {
         let LlmRateLimitConfig = None::<crate::LlmRateLimitConfig>.unwrap();
         let _: Option<i64> = LlmRateLimitConfig.rpm;
-        let _: Option<i64> = LlmRateLimitConfig.tpm;
-        let _: Option<i64> = LlmRateLimitConfig.window_seconds;
+        let _: Option<u64> = LlmRateLimitConfig.tpm;
+        let _: Option<u64> = LlmRateLimitConfig.window_seconds;
     }
     match None::<crate::Message>.unwrap() {
         crate::Message::System { field0 } => {
@@ -6154,9 +6154,9 @@ const _: fn() = || {
         let _: Option<f64> = ModelInfo.input_cost_per_audio_token;
         let _: Option<f64> = ModelInfo.output_cost_per_audio_token;
         let _: Option<f64> = ModelInfo.output_cost_per_reasoning_token;
-        let _: Option<i64> = ModelInfo.max_tokens;
-        let _: Option<i64> = ModelInfo.max_input_tokens;
-        let _: Option<i64> = ModelInfo.max_output_tokens;
+        let _: Option<u64> = ModelInfo.max_tokens;
+        let _: Option<u64> = ModelInfo.max_input_tokens;
+        let _: Option<u64> = ModelInfo.max_output_tokens;
         let _: Option<String> = ModelInfo.mode;
         let _: Option<bool> = ModelInfo.supports_vision;
         let _: Option<bool> = ModelInfo.supports_function_calling;
@@ -6171,12 +6171,12 @@ const _: fn() = || {
         let ModelObject = None::<crate::ModelObject>.unwrap();
         let _: String = ModelObject.id;
         let _: String = ModelObject.object;
-        let _: i64 = ModelObject.created;
+        let _: u64 = ModelObject.created;
         let _: String = ModelObject.owned_by;
     }
     {
         let ModelTier = None::<crate::ModelTier>.unwrap();
-        let _: i64 = ModelTier.min_context_tokens;
+        let _: u64 = ModelTier.min_context_tokens;
         let _: f64 = ModelTier.input_cost_per_token;
         let _: f64 = ModelTier.output_cost_per_token;
         let _: Option<f64> = ModelTier.cache_read_input_token_cost;
@@ -6286,9 +6286,9 @@ const _: fn() = || {
     }
     {
         let PromptTokensDetails = None::<crate::PromptTokensDetails>.unwrap();
-        let _: i64 = PromptTokensDetails.cached_tokens;
-        let _: i64 = PromptTokensDetails.cache_creation_tokens;
-        let _: i64 = PromptTokensDetails.audio_tokens;
+        let _: u64 = PromptTokensDetails.cached_tokens;
+        let _: u64 = PromptTokensDetails.cache_creation_tokens;
+        let _: u64 = PromptTokensDetails.audio_tokens;
     }
     {
         let ProviderCapabilities = None::<crate::ProviderCapabilities>.unwrap();
@@ -6313,7 +6313,7 @@ const _: fn() = || {
     {
         let RateLimitConfig = None::<crate::RateLimitConfig>.unwrap();
         let _: Option<i64> = RateLimitConfig.rpm;
-        let _: Option<i64> = RateLimitConfig.tpm;
+        let _: Option<u64> = RateLimitConfig.tpm;
         let _: i64 = RateLimitConfig.window;
     }
     match None::<crate::RerankDocument>.unwrap() {
@@ -6360,7 +6360,7 @@ const _: fn() = || {
         let ResponseObject = None::<crate::ResponseObject>.unwrap();
         let _: String = ResponseObject.id;
         let _: String = ResponseObject.object;
-        let _: i64 = ResponseObject.created_at;
+        let _: u64 = ResponseObject.created_at;
         let _: String = ResponseObject.model;
         let _: String = ResponseObject.status;
         let _: Vec<crate::ResponseOutputItem> = ResponseObject.output;
@@ -6379,9 +6379,9 @@ const _: fn() = || {
     }
     {
         let ResponseUsage = None::<crate::ResponseUsage>.unwrap();
-        let _: i64 = ResponseUsage.input_tokens;
-        let _: i64 = ResponseUsage.output_tokens;
-        let _: i64 = ResponseUsage.total_tokens;
+        let _: u64 = ResponseUsage.input_tokens;
+        let _: u64 = ResponseUsage.output_tokens;
+        let _: u64 = ResponseUsage.total_tokens;
     }
     {
         let SearchRequest = None::<crate::SearchRequest>.unwrap();
@@ -6493,9 +6493,9 @@ const _: fn() = || {
     }
     {
         let Usage = None::<crate::Usage>.unwrap();
-        let _: i64 = Usage.prompt_tokens;
-        let _: i64 = Usage.completion_tokens;
-        let _: i64 = Usage.total_tokens;
+        let _: u64 = Usage.prompt_tokens;
+        let _: u64 = Usage.completion_tokens;
+        let _: u64 = Usage.total_tokens;
         let _: Option<crate::PromptTokensDetails> = Usage.prompt_tokens_details;
         let _: Option<crate::CompletionTokensDetails> = Usage.completion_tokens_details;
     }
@@ -6827,10 +6827,10 @@ impl SseDecode for crate::BatchObject {
         let mut var_status = <crate::BatchStatus>::sse_decode(deserializer);
         let mut var_outputFileId = <Option<String>>::sse_decode(deserializer);
         let mut var_errorFileId = <Option<String>>::sse_decode(deserializer);
-        let mut var_createdAt = <i64>::sse_decode(deserializer);
-        let mut var_completedAt = <Option<i64>>::sse_decode(deserializer);
-        let mut var_failedAt = <Option<i64>>::sse_decode(deserializer);
-        let mut var_expiredAt = <Option<i64>>::sse_decode(deserializer);
+        let mut var_createdAt = <u64>::sse_decode(deserializer);
+        let mut var_completedAt = <Option<u64>>::sse_decode(deserializer);
+        let mut var_failedAt = <Option<u64>>::sse_decode(deserializer);
+        let mut var_expiredAt = <Option<u64>>::sse_decode(deserializer);
         let mut var_requestCounts = <Option<crate::BatchRequestCounts>>::sse_decode(deserializer);
         let mut var_metadata = <Option<String>>::sse_decode(deserializer);
         return crate::BatchObject {
@@ -6855,9 +6855,9 @@ impl SseDecode for crate::BatchObject {
 impl SseDecode for crate::BatchRequestCounts {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_total = <i64>::sse_decode(deserializer);
-        let mut var_completed = <i64>::sse_decode(deserializer);
-        let mut var_failed = <i64>::sse_decode(deserializer);
+        let mut var_total = <u64>::sse_decode(deserializer);
+        let mut var_completed = <u64>::sse_decode(deserializer);
+        let mut var_failed = <u64>::sse_decode(deserializer);
         return crate::BatchRequestCounts {
             total: var_total,
             completed: var_completed,
@@ -6981,7 +6981,7 @@ impl SseDecode for crate::CatalogInfo {
         let mut var_sourceSha256 = <String>::sse_decode(deserializer);
         let mut var_fetched = <String>::sse_decode(deserializer);
         let mut var_libraryVersion = <String>::sse_decode(deserializer);
-        let mut var_schemaVersion = <i64>::sse_decode(deserializer);
+        let mut var_schemaVersion = <u64>::sse_decode(deserializer);
         let mut var_origin = <String>::sse_decode(deserializer);
         return crate::CatalogInfo {
             source: var_source,
@@ -7001,9 +7001,9 @@ impl SseDecode for crate::CatalogModel {
         let mut var_provider = <String>::sse_decode(deserializer);
         let mut var_model = <String>::sse_decode(deserializer);
         let mut var_mode = <Option<String>>::sse_decode(deserializer);
-        let mut var_maxTokens = <Option<i64>>::sse_decode(deserializer);
-        let mut var_maxInputTokens = <Option<i64>>::sse_decode(deserializer);
-        let mut var_maxOutputTokens = <Option<i64>>::sse_decode(deserializer);
+        let mut var_maxTokens = <Option<u64>>::sse_decode(deserializer);
+        let mut var_maxInputTokens = <Option<u64>>::sse_decode(deserializer);
+        let mut var_maxOutputTokens = <Option<u64>>::sse_decode(deserializer);
         let mut var_supportsVision = <Option<bool>>::sse_decode(deserializer);
         let mut var_supportsFunctionCalling = <Option<bool>>::sse_decode(deserializer);
         let mut var_supportsReasoning = <Option<bool>>::sse_decode(deserializer);
@@ -7035,7 +7035,7 @@ impl SseDecode for crate::CatalogRefreshConfig {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_enabled = <bool>::sse_decode(deserializer);
         let mut var_sourceUrl = <String>::sse_decode(deserializer);
-        let mut var_ttlSeconds = <i64>::sse_decode(deserializer);
+        let mut var_ttlSeconds = <u64>::sse_decode(deserializer);
         let mut var_cachePath = <Option<String>>::sse_decode(deserializer);
         return crate::CatalogRefreshConfig {
             enabled: var_enabled,
@@ -7094,7 +7094,7 @@ impl SseDecode for crate::ChatCompletionChunk {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_id = <String>::sse_decode(deserializer);
         let mut var_object = <String>::sse_decode(deserializer);
-        let mut var_created = <i64>::sse_decode(deserializer);
+        let mut var_created = <u64>::sse_decode(deserializer);
         let mut var_model = <String>::sse_decode(deserializer);
         let mut var_choices = <Vec<crate::StreamChoice>>::sse_decode(deserializer);
         let mut var_usage = <Option<crate::Usage>>::sse_decode(deserializer);
@@ -7123,7 +7123,7 @@ impl SseDecode for crate::ChatCompletionRequest {
         let mut var_n = <Option<i64>>::sse_decode(deserializer);
         let mut var_stream = <Option<bool>>::sse_decode(deserializer);
         let mut var_stop = <Option<crate::StopSequence>>::sse_decode(deserializer);
-        let mut var_maxTokens = <Option<i64>>::sse_decode(deserializer);
+        let mut var_maxTokens = <Option<u64>>::sse_decode(deserializer);
         let mut var_presencePenalty = <Option<f64>>::sse_decode(deserializer);
         let mut var_frequencyPenalty = <Option<f64>>::sse_decode(deserializer);
         let mut var_logitBias = <Option<std::collections::HashMap<String, f64>>>::sse_decode(deserializer);
@@ -7138,7 +7138,7 @@ impl SseDecode for crate::ChatCompletionRequest {
         let mut var_modalities = <Option<Vec<crate::Modality>>>::sse_decode(deserializer);
         let mut var_logprobs = <Option<bool>>::sse_decode(deserializer);
         let mut var_topLogprobs = <Option<i64>>::sse_decode(deserializer);
-        let mut var_maxCompletionTokens = <Option<i64>>::sse_decode(deserializer);
+        let mut var_maxCompletionTokens = <Option<u64>>::sse_decode(deserializer);
         let mut var_serviceTier = <Option<String>>::sse_decode(deserializer);
         let mut var_store = <Option<bool>>::sse_decode(deserializer);
         let mut var_metadata = <Option<std::collections::HashMap<String, String>>>::sse_decode(deserializer);
@@ -7186,7 +7186,7 @@ impl SseDecode for crate::ChatCompletionResponse {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_id = <String>::sse_decode(deserializer);
         let mut var_object = <String>::sse_decode(deserializer);
-        let mut var_created = <i64>::sse_decode(deserializer);
+        let mut var_created = <u64>::sse_decode(deserializer);
         let mut var_model = <String>::sse_decode(deserializer);
         let mut var_choices = <Vec<crate::Choice>>::sse_decode(deserializer);
         let mut var_usage = <Option<crate::Usage>>::sse_decode(deserializer);
@@ -7251,10 +7251,10 @@ impl SseDecode for crate::ClientOptions {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_apiKey = <String>::sse_decode(deserializer);
         let mut var_baseUrl = <Option<String>>::sse_decode(deserializer);
-        let mut var_timeoutSecs = <Option<i64>>::sse_decode(deserializer);
-        let mut var_connectTimeoutSecs = <Option<i64>>::sse_decode(deserializer);
+        let mut var_timeoutSecs = <Option<u64>>::sse_decode(deserializer);
+        let mut var_connectTimeoutSecs = <Option<u64>>::sse_decode(deserializer);
         let mut var_maxRetries = <Option<i64>>::sse_decode(deserializer);
-        let mut var_maxResponseBytes = <Option<i64>>::sse_decode(deserializer);
+        let mut var_maxResponseBytes = <Option<u64>>::sse_decode(deserializer);
         let mut var_modelHint = <Option<String>>::sse_decode(deserializer);
         let mut var_blockedNetworks = <Option<Vec<String>>>::sse_decode(deserializer);
         return crate::ClientOptions {
@@ -7273,7 +7273,7 @@ impl SseDecode for crate::ClientOptions {
 impl SseDecode for crate::CompletionTokensDetails {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_reasoningTokens = <i64>::sse_decode(deserializer);
+        let mut var_reasoningTokens = <u64>::sse_decode(deserializer);
         return crate::CompletionTokensDetails {
             reasoning_tokens: var_reasoningTokens,
         };
@@ -7376,7 +7376,7 @@ impl SseDecode for crate::CreateResponseRequest {
         let mut var_instructions = <Option<String>>::sse_decode(deserializer);
         let mut var_tools = <Option<Vec<crate::ResponseTool>>>::sse_decode(deserializer);
         let mut var_temperature = <Option<f64>>::sse_decode(deserializer);
-        let mut var_maxOutputTokens = <Option<i64>>::sse_decode(deserializer);
+        let mut var_maxOutputTokens = <Option<u64>>::sse_decode(deserializer);
         let mut var_metadata = <Option<String>>::sse_decode(deserializer);
         let mut var_extraBody = <Option<String>>::sse_decode(deserializer);
         let mut var_stream = <Option<bool>>::sse_decode(deserializer);
@@ -7668,8 +7668,8 @@ impl SseDecode for crate::FileObject {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_id = <String>::sse_decode(deserializer);
         let mut var_object = <String>::sse_decode(deserializer);
-        let mut var_bytes = <i64>::sse_decode(deserializer);
-        let mut var_createdAt = <i64>::sse_decode(deserializer);
+        let mut var_bytes = <u64>::sse_decode(deserializer);
+        let mut var_createdAt = <u64>::sse_decode(deserializer);
         let mut var_filename = <String>::sse_decode(deserializer);
         let mut var_purpose = <String>::sse_decode(deserializer);
         let mut var_status = <Option<String>>::sse_decode(deserializer);
@@ -7823,7 +7823,7 @@ impl SseDecode for crate::ImageUrl {
 impl SseDecode for crate::ImagesResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_created = <i64>::sse_decode(deserializer);
+        let mut var_created = <u64>::sse_decode(deserializer);
         let mut var_data = <Vec<crate::Image>>::sse_decode(deserializer);
         return crate::ImagesResponse {
             created: var_created,
@@ -8421,7 +8421,7 @@ impl SseDecode for crate::LlmCacheConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_maxEntries = <Option<i64>>::sse_decode(deserializer);
-        let mut var_ttlSeconds = <Option<i64>>::sse_decode(deserializer);
+        let mut var_ttlSeconds = <Option<u64>>::sse_decode(deserializer);
         let mut var_backend = <Option<String>>::sse_decode(deserializer);
         let mut var_backendConfig = <Option<std::collections::HashMap<String, String>>>::sse_decode(deserializer);
         return crate::LlmCacheConfig {
@@ -8439,11 +8439,11 @@ impl SseDecode for crate::LlmConfig {
         let mut var_model = <String>::sse_decode(deserializer);
         let mut var_apiKey = <Option<String>>::sse_decode(deserializer);
         let mut var_baseUrl = <Option<String>>::sse_decode(deserializer);
-        let mut var_timeoutSecs = <Option<i64>>::sse_decode(deserializer);
-        let mut var_connectTimeoutSecs = <Option<i64>>::sse_decode(deserializer);
+        let mut var_timeoutSecs = <Option<u64>>::sse_decode(deserializer);
+        let mut var_connectTimeoutSecs = <Option<u64>>::sse_decode(deserializer);
         let mut var_maxRetries = <Option<i64>>::sse_decode(deserializer);
         let mut var_temperature = <Option<f64>>::sse_decode(deserializer);
-        let mut var_maxTokens = <Option<i64>>::sse_decode(deserializer);
+        let mut var_maxTokens = <Option<u64>>::sse_decode(deserializer);
         let mut var_loadEnv = <Option<bool>>::sse_decode(deserializer);
         let mut var_headers = <Option<std::collections::HashMap<String, String>>>::sse_decode(deserializer);
         let mut var_providers = <Option<Vec<crate::LlmProviderConfig>>>::sse_decode(deserializer);
@@ -8453,8 +8453,8 @@ impl SseDecode for crate::LlmConfig {
         let mut var_inFlightLimit = <Option<crate::LlmInFlightLimitConfig>>::sse_decode(deserializer);
         let mut var_costTracking = <Option<bool>>::sse_decode(deserializer);
         let mut var_tracing = <Option<bool>>::sse_decode(deserializer);
-        let mut var_cooldownSecs = <Option<i64>>::sse_decode(deserializer);
-        let mut var_healthCheckSecs = <Option<i64>>::sse_decode(deserializer);
+        let mut var_cooldownSecs = <Option<u64>>::sse_decode(deserializer);
+        let mut var_healthCheckSecs = <Option<u64>>::sse_decode(deserializer);
         let mut var_bedrock = <Option<crate::BedrockConfig>>::sse_decode(deserializer);
         return crate::LlmConfig {
             model: var_model,
@@ -8511,8 +8511,8 @@ impl SseDecode for crate::LlmRateLimitConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_rpm = <Option<i64>>::sse_decode(deserializer);
-        let mut var_tpm = <Option<i64>>::sse_decode(deserializer);
-        let mut var_windowSeconds = <Option<i64>>::sse_decode(deserializer);
+        let mut var_tpm = <Option<u64>>::sse_decode(deserializer);
+        let mut var_windowSeconds = <Option<u64>>::sse_decode(deserializer);
         return crate::LlmRateLimitConfig {
             rpm: var_rpm,
             tpm: var_tpm,
@@ -8583,9 +8583,9 @@ impl SseDecode for crate::ModelInfo {
         let mut var_inputCostPerAudioToken = <Option<f64>>::sse_decode(deserializer);
         let mut var_outputCostPerAudioToken = <Option<f64>>::sse_decode(deserializer);
         let mut var_outputCostPerReasoningToken = <Option<f64>>::sse_decode(deserializer);
-        let mut var_maxTokens = <Option<i64>>::sse_decode(deserializer);
-        let mut var_maxInputTokens = <Option<i64>>::sse_decode(deserializer);
-        let mut var_maxOutputTokens = <Option<i64>>::sse_decode(deserializer);
+        let mut var_maxTokens = <Option<u64>>::sse_decode(deserializer);
+        let mut var_maxInputTokens = <Option<u64>>::sse_decode(deserializer);
+        let mut var_maxOutputTokens = <Option<u64>>::sse_decode(deserializer);
         let mut var_mode = <Option<String>>::sse_decode(deserializer);
         let mut var_supportsVision = <Option<bool>>::sse_decode(deserializer);
         let mut var_supportsFunctionCalling = <Option<bool>>::sse_decode(deserializer);
@@ -8627,7 +8627,7 @@ impl SseDecode for crate::ModelObject {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_id = <String>::sse_decode(deserializer);
         let mut var_object = <String>::sse_decode(deserializer);
-        let mut var_created = <i64>::sse_decode(deserializer);
+        let mut var_created = <u64>::sse_decode(deserializer);
         let mut var_ownedBy = <String>::sse_decode(deserializer);
         return crate::ModelObject {
             id: var_id,
@@ -8641,7 +8641,7 @@ impl SseDecode for crate::ModelObject {
 impl SseDecode for crate::ModelTier {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_minContextTokens = <i64>::sse_decode(deserializer);
+        let mut var_minContextTokens = <u64>::sse_decode(deserializer);
         let mut var_inputCostPerToken = <f64>::sse_decode(deserializer);
         let mut var_outputCostPerToken = <f64>::sse_decode(deserializer);
         let mut var_cacheReadInputTokenCost = <Option<f64>>::sse_decode(deserializer);
@@ -9265,6 +9265,17 @@ impl SseDecode for Option<crate::ToolType> {
     }
 }
 
+impl SseDecode for Option<u64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<u64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<crate::Usage> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -9401,9 +9412,9 @@ impl SseDecode for crate::PageDimensions {
 impl SseDecode for crate::PromptTokensDetails {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_cachedTokens = <i64>::sse_decode(deserializer);
-        let mut var_cacheCreationTokens = <i64>::sse_decode(deserializer);
-        let mut var_audioTokens = <i64>::sse_decode(deserializer);
+        let mut var_cachedTokens = <u64>::sse_decode(deserializer);
+        let mut var_cacheCreationTokens = <u64>::sse_decode(deserializer);
+        let mut var_audioTokens = <u64>::sse_decode(deserializer);
         return crate::PromptTokensDetails {
             cached_tokens: var_cachedTokens,
             cache_creation_tokens: var_cacheCreationTokens,
@@ -9460,7 +9471,7 @@ impl SseDecode for crate::RateLimitConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_rpm = <Option<i64>>::sse_decode(deserializer);
-        let mut var_tpm = <Option<i64>>::sse_decode(deserializer);
+        let mut var_tpm = <Option<u64>>::sse_decode(deserializer);
         let mut var_window = <i64>::sse_decode(deserializer);
         return crate::RateLimitConfig {
             rpm: var_rpm,
@@ -9622,7 +9633,7 @@ impl SseDecode for crate::ResponseObject {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_id = <String>::sse_decode(deserializer);
         let mut var_object = <String>::sse_decode(deserializer);
-        let mut var_createdAt = <i64>::sse_decode(deserializer);
+        let mut var_createdAt = <u64>::sse_decode(deserializer);
         let mut var_model = <String>::sse_decode(deserializer);
         let mut var_status = <String>::sse_decode(deserializer);
         let mut var_output = <Vec<crate::ResponseOutputItem>>::sse_decode(deserializer);
@@ -9668,9 +9679,9 @@ impl SseDecode for crate::ResponseTool {
 impl SseDecode for crate::ResponseUsage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_inputTokens = <i64>::sse_decode(deserializer);
-        let mut var_outputTokens = <i64>::sse_decode(deserializer);
-        let mut var_totalTokens = <i64>::sse_decode(deserializer);
+        let mut var_inputTokens = <u64>::sse_decode(deserializer);
+        let mut var_outputTokens = <u64>::sse_decode(deserializer);
+        let mut var_totalTokens = <u64>::sse_decode(deserializer);
         return crate::ResponseUsage {
             input_tokens: var_inputTokens,
             output_tokens: var_outputTokens,
@@ -9968,6 +9979,13 @@ impl SseDecode for crate::TranscriptionSegment {
     }
 }
 
+impl SseDecode for u64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_u64::<NativeEndian>().unwrap()
+    }
+}
+
 impl SseDecode for u8 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -9983,9 +10001,9 @@ impl SseDecode for () {
 impl SseDecode for crate::Usage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_promptTokens = <i64>::sse_decode(deserializer);
-        let mut var_completionTokens = <i64>::sse_decode(deserializer);
-        let mut var_totalTokens = <i64>::sse_decode(deserializer);
+        let mut var_promptTokens = <u64>::sse_decode(deserializer);
+        let mut var_completionTokens = <u64>::sse_decode(deserializer);
+        let mut var_totalTokens = <u64>::sse_decode(deserializer);
         let mut var_promptTokensDetails = <Option<crate::PromptTokensDetails>>::sse_decode(deserializer);
         let mut var_completionTokensDetails = <Option<crate::CompletionTokensDetails>>::sse_decode(deserializer);
         return crate::Usage {
@@ -13146,10 +13164,10 @@ impl SseEncode for crate::BatchObject {
         <crate::BatchStatus>::sse_encode(self.status, serializer);
         <Option<String>>::sse_encode(self.output_file_id, serializer);
         <Option<String>>::sse_encode(self.error_file_id, serializer);
-        <i64>::sse_encode(self.created_at, serializer);
-        <Option<i64>>::sse_encode(self.completed_at, serializer);
-        <Option<i64>>::sse_encode(self.failed_at, serializer);
-        <Option<i64>>::sse_encode(self.expired_at, serializer);
+        <u64>::sse_encode(self.created_at, serializer);
+        <Option<u64>>::sse_encode(self.completed_at, serializer);
+        <Option<u64>>::sse_encode(self.failed_at, serializer);
+        <Option<u64>>::sse_encode(self.expired_at, serializer);
         <Option<crate::BatchRequestCounts>>::sse_encode(self.request_counts, serializer);
         <Option<String>>::sse_encode(self.metadata, serializer);
     }
@@ -13158,9 +13176,9 @@ impl SseEncode for crate::BatchObject {
 impl SseEncode for crate::BatchRequestCounts {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i64>::sse_encode(self.total, serializer);
-        <i64>::sse_encode(self.completed, serializer);
-        <i64>::sse_encode(self.failed, serializer);
+        <u64>::sse_encode(self.total, serializer);
+        <u64>::sse_encode(self.completed, serializer);
+        <u64>::sse_encode(self.failed, serializer);
     }
 }
 
@@ -13262,7 +13280,7 @@ impl SseEncode for crate::CatalogInfo {
         <String>::sse_encode(self.source_sha256, serializer);
         <String>::sse_encode(self.fetched, serializer);
         <String>::sse_encode(self.library_version, serializer);
-        <i64>::sse_encode(self.schema_version, serializer);
+        <u64>::sse_encode(self.schema_version, serializer);
         <String>::sse_encode(self.origin, serializer);
     }
 }
@@ -13274,9 +13292,9 @@ impl SseEncode for crate::CatalogModel {
         <String>::sse_encode(self.provider, serializer);
         <String>::sse_encode(self.model, serializer);
         <Option<String>>::sse_encode(self.mode, serializer);
-        <Option<i64>>::sse_encode(self.max_tokens, serializer);
-        <Option<i64>>::sse_encode(self.max_input_tokens, serializer);
-        <Option<i64>>::sse_encode(self.max_output_tokens, serializer);
+        <Option<u64>>::sse_encode(self.max_tokens, serializer);
+        <Option<u64>>::sse_encode(self.max_input_tokens, serializer);
+        <Option<u64>>::sse_encode(self.max_output_tokens, serializer);
         <Option<bool>>::sse_encode(self.supports_vision, serializer);
         <Option<bool>>::sse_encode(self.supports_function_calling, serializer);
         <Option<bool>>::sse_encode(self.supports_reasoning, serializer);
@@ -13292,7 +13310,7 @@ impl SseEncode for crate::CatalogRefreshConfig {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.enabled, serializer);
         <String>::sse_encode(self.source_url, serializer);
-        <i64>::sse_encode(self.ttl_seconds, serializer);
+        <u64>::sse_encode(self.ttl_seconds, serializer);
         <Option<String>>::sse_encode(self.cache_path, serializer);
     }
 }
@@ -13338,7 +13356,7 @@ impl SseEncode for crate::ChatCompletionChunk {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.id, serializer);
         <String>::sse_encode(self.object, serializer);
-        <i64>::sse_encode(self.created, serializer);
+        <u64>::sse_encode(self.created, serializer);
         <String>::sse_encode(self.model, serializer);
         <Vec<crate::StreamChoice>>::sse_encode(self.choices, serializer);
         <Option<crate::Usage>>::sse_encode(self.usage, serializer);
@@ -13357,7 +13375,7 @@ impl SseEncode for crate::ChatCompletionRequest {
         <Option<i64>>::sse_encode(self.n, serializer);
         <Option<bool>>::sse_encode(self.stream, serializer);
         <Option<crate::StopSequence>>::sse_encode(self.stop, serializer);
-        <Option<i64>>::sse_encode(self.max_tokens, serializer);
+        <Option<u64>>::sse_encode(self.max_tokens, serializer);
         <Option<f64>>::sse_encode(self.presence_penalty, serializer);
         <Option<f64>>::sse_encode(self.frequency_penalty, serializer);
         <Option<std::collections::HashMap<String, f64>>>::sse_encode(self.logit_bias, serializer);
@@ -13372,7 +13390,7 @@ impl SseEncode for crate::ChatCompletionRequest {
         <Option<Vec<crate::Modality>>>::sse_encode(self.modalities, serializer);
         <Option<bool>>::sse_encode(self.logprobs, serializer);
         <Option<i64>>::sse_encode(self.top_logprobs, serializer);
-        <Option<i64>>::sse_encode(self.max_completion_tokens, serializer);
+        <Option<u64>>::sse_encode(self.max_completion_tokens, serializer);
         <Option<String>>::sse_encode(self.service_tier, serializer);
         <Option<bool>>::sse_encode(self.store, serializer);
         <Option<std::collections::HashMap<String, String>>>::sse_encode(self.metadata, serializer);
@@ -13388,7 +13406,7 @@ impl SseEncode for crate::ChatCompletionResponse {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.id, serializer);
         <String>::sse_encode(self.object, serializer);
-        <i64>::sse_encode(self.created, serializer);
+        <u64>::sse_encode(self.created, serializer);
         <String>::sse_encode(self.model, serializer);
         <Vec<crate::Choice>>::sse_encode(self.choices, serializer);
         <Option<crate::Usage>>::sse_encode(self.usage, serializer);
@@ -13437,10 +13455,10 @@ impl SseEncode for crate::ClientOptions {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.api_key, serializer);
         <Option<String>>::sse_encode(self.base_url, serializer);
-        <Option<i64>>::sse_encode(self.timeout_secs, serializer);
-        <Option<i64>>::sse_encode(self.connect_timeout_secs, serializer);
+        <Option<u64>>::sse_encode(self.timeout_secs, serializer);
+        <Option<u64>>::sse_encode(self.connect_timeout_secs, serializer);
         <Option<i64>>::sse_encode(self.max_retries, serializer);
-        <Option<i64>>::sse_encode(self.max_response_bytes, serializer);
+        <Option<u64>>::sse_encode(self.max_response_bytes, serializer);
         <Option<String>>::sse_encode(self.model_hint, serializer);
         <Option<Vec<String>>>::sse_encode(self.blocked_networks, serializer);
     }
@@ -13449,7 +13467,7 @@ impl SseEncode for crate::ClientOptions {
 impl SseEncode for crate::CompletionTokensDetails {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i64>::sse_encode(self.reasoning_tokens, serializer);
+        <u64>::sse_encode(self.reasoning_tokens, serializer);
     }
 }
 
@@ -13522,7 +13540,7 @@ impl SseEncode for crate::CreateResponseRequest {
         <Option<String>>::sse_encode(self.instructions, serializer);
         <Option<Vec<crate::ResponseTool>>>::sse_encode(self.tools, serializer);
         <Option<f64>>::sse_encode(self.temperature, serializer);
-        <Option<i64>>::sse_encode(self.max_output_tokens, serializer);
+        <Option<u64>>::sse_encode(self.max_output_tokens, serializer);
         <Option<String>>::sse_encode(self.metadata, serializer);
         <Option<String>>::sse_encode(self.extra_body, serializer);
         <Option<bool>>::sse_encode(self.stream, serializer);
@@ -13736,8 +13754,8 @@ impl SseEncode for crate::FileObject {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.id, serializer);
         <String>::sse_encode(self.object, serializer);
-        <i64>::sse_encode(self.bytes, serializer);
-        <i64>::sse_encode(self.created_at, serializer);
+        <u64>::sse_encode(self.bytes, serializer);
+        <u64>::sse_encode(self.created_at, serializer);
         <String>::sse_encode(self.filename, serializer);
         <String>::sse_encode(self.purpose, serializer);
         <Option<String>>::sse_encode(self.status, serializer);
@@ -13875,7 +13893,7 @@ impl SseEncode for crate::ImageUrl {
 impl SseEncode for crate::ImagesResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i64>::sse_encode(self.created, serializer);
+        <u64>::sse_encode(self.created, serializer);
         <Vec<crate::Image>>::sse_encode(self.data, serializer);
     }
 }
@@ -14359,7 +14377,7 @@ impl SseEncode for crate::LlmCacheConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Option<i64>>::sse_encode(self.max_entries, serializer);
-        <Option<i64>>::sse_encode(self.ttl_seconds, serializer);
+        <Option<u64>>::sse_encode(self.ttl_seconds, serializer);
         <Option<String>>::sse_encode(self.backend, serializer);
         <Option<std::collections::HashMap<String, String>>>::sse_encode(self.backend_config, serializer);
     }
@@ -14371,11 +14389,11 @@ impl SseEncode for crate::LlmConfig {
         <String>::sse_encode(self.model, serializer);
         <Option<String>>::sse_encode(self.api_key, serializer);
         <Option<String>>::sse_encode(self.base_url, serializer);
-        <Option<i64>>::sse_encode(self.timeout_secs, serializer);
-        <Option<i64>>::sse_encode(self.connect_timeout_secs, serializer);
+        <Option<u64>>::sse_encode(self.timeout_secs, serializer);
+        <Option<u64>>::sse_encode(self.connect_timeout_secs, serializer);
         <Option<i64>>::sse_encode(self.max_retries, serializer);
         <Option<f64>>::sse_encode(self.temperature, serializer);
-        <Option<i64>>::sse_encode(self.max_tokens, serializer);
+        <Option<u64>>::sse_encode(self.max_tokens, serializer);
         <Option<bool>>::sse_encode(self.load_env, serializer);
         <Option<std::collections::HashMap<String, String>>>::sse_encode(self.headers, serializer);
         <Option<Vec<crate::LlmProviderConfig>>>::sse_encode(self.providers, serializer);
@@ -14385,8 +14403,8 @@ impl SseEncode for crate::LlmConfig {
         <Option<crate::LlmInFlightLimitConfig>>::sse_encode(self.in_flight_limit, serializer);
         <Option<bool>>::sse_encode(self.cost_tracking, serializer);
         <Option<bool>>::sse_encode(self.tracing, serializer);
-        <Option<i64>>::sse_encode(self.cooldown_secs, serializer);
-        <Option<i64>>::sse_encode(self.health_check_secs, serializer);
+        <Option<u64>>::sse_encode(self.cooldown_secs, serializer);
+        <Option<u64>>::sse_encode(self.health_check_secs, serializer);
         <Option<crate::BedrockConfig>>::sse_encode(self.bedrock, serializer);
     }
 }
@@ -14412,8 +14430,8 @@ impl SseEncode for crate::LlmRateLimitConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Option<i64>>::sse_encode(self.rpm, serializer);
-        <Option<i64>>::sse_encode(self.tpm, serializer);
-        <Option<i64>>::sse_encode(self.window_seconds, serializer);
+        <Option<u64>>::sse_encode(self.tpm, serializer);
+        <Option<u64>>::sse_encode(self.window_seconds, serializer);
     }
 }
 
@@ -14482,9 +14500,9 @@ impl SseEncode for crate::ModelInfo {
         <Option<f64>>::sse_encode(self.input_cost_per_audio_token, serializer);
         <Option<f64>>::sse_encode(self.output_cost_per_audio_token, serializer);
         <Option<f64>>::sse_encode(self.output_cost_per_reasoning_token, serializer);
-        <Option<i64>>::sse_encode(self.max_tokens, serializer);
-        <Option<i64>>::sse_encode(self.max_input_tokens, serializer);
-        <Option<i64>>::sse_encode(self.max_output_tokens, serializer);
+        <Option<u64>>::sse_encode(self.max_tokens, serializer);
+        <Option<u64>>::sse_encode(self.max_input_tokens, serializer);
+        <Option<u64>>::sse_encode(self.max_output_tokens, serializer);
         <Option<String>>::sse_encode(self.mode, serializer);
         <Option<bool>>::sse_encode(self.supports_vision, serializer);
         <Option<bool>>::sse_encode(self.supports_function_calling, serializer);
@@ -14502,7 +14520,7 @@ impl SseEncode for crate::ModelObject {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.id, serializer);
         <String>::sse_encode(self.object, serializer);
-        <i64>::sse_encode(self.created, serializer);
+        <u64>::sse_encode(self.created, serializer);
         <String>::sse_encode(self.owned_by, serializer);
     }
 }
@@ -14510,7 +14528,7 @@ impl SseEncode for crate::ModelObject {
 impl SseEncode for crate::ModelTier {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i64>::sse_encode(self.min_context_tokens, serializer);
+        <u64>::sse_encode(self.min_context_tokens, serializer);
         <f64>::sse_encode(self.input_cost_per_token, serializer);
         <f64>::sse_encode(self.output_cost_per_token, serializer);
         <Option<f64>>::sse_encode(self.cache_read_input_token_cost, serializer);
@@ -15017,6 +15035,16 @@ impl SseEncode for Option<crate::ToolType> {
     }
 }
 
+impl SseEncode for Option<u64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <u64>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<crate::Usage> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -15138,9 +15166,9 @@ impl SseEncode for crate::PageDimensions {
 impl SseEncode for crate::PromptTokensDetails {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i64>::sse_encode(self.cached_tokens, serializer);
-        <i64>::sse_encode(self.cache_creation_tokens, serializer);
-        <i64>::sse_encode(self.audio_tokens, serializer);
+        <u64>::sse_encode(self.cached_tokens, serializer);
+        <u64>::sse_encode(self.cache_creation_tokens, serializer);
+        <u64>::sse_encode(self.audio_tokens, serializer);
     }
 }
 
@@ -15174,7 +15202,7 @@ impl SseEncode for crate::RateLimitConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Option<i64>>::sse_encode(self.rpm, serializer);
-        <Option<i64>>::sse_encode(self.tpm, serializer);
+        <Option<u64>>::sse_encode(self.tpm, serializer);
         <i64>::sse_encode(self.window, serializer);
     }
 }
@@ -15314,7 +15342,7 @@ impl SseEncode for crate::ResponseObject {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.id, serializer);
         <String>::sse_encode(self.object, serializer);
-        <i64>::sse_encode(self.created_at, serializer);
+        <u64>::sse_encode(self.created_at, serializer);
         <String>::sse_encode(self.model, serializer);
         <String>::sse_encode(self.status, serializer);
         <Vec<crate::ResponseOutputItem>>::sse_encode(self.output, serializer);
@@ -15342,9 +15370,9 @@ impl SseEncode for crate::ResponseTool {
 impl SseEncode for crate::ResponseUsage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i64>::sse_encode(self.input_tokens, serializer);
-        <i64>::sse_encode(self.output_tokens, serializer);
-        <i64>::sse_encode(self.total_tokens, serializer);
+        <u64>::sse_encode(self.input_tokens, serializer);
+        <u64>::sse_encode(self.output_tokens, serializer);
+        <u64>::sse_encode(self.total_tokens, serializer);
     }
 }
 
@@ -15572,6 +15600,13 @@ impl SseEncode for crate::TranscriptionSegment {
     }
 }
 
+impl SseEncode for u64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_u64::<NativeEndian>(self).unwrap();
+    }
+}
+
 impl SseEncode for u8 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -15587,9 +15622,9 @@ impl SseEncode for () {
 impl SseEncode for crate::Usage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i64>::sse_encode(self.prompt_tokens, serializer);
-        <i64>::sse_encode(self.completion_tokens, serializer);
-        <i64>::sse_encode(self.total_tokens, serializer);
+        <u64>::sse_encode(self.prompt_tokens, serializer);
+        <u64>::sse_encode(self.completion_tokens, serializer);
+        <u64>::sse_encode(self.total_tokens, serializer);
         <Option<crate::PromptTokensDetails>>::sse_encode(self.prompt_tokens_details, serializer);
         <Option<crate::CompletionTokensDetails>>::sse_encode(self.completion_tokens_details, serializer);
     }

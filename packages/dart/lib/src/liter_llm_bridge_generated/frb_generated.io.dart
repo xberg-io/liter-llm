@@ -314,6 +314,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ToolType dco_decode_box_autoadd_tool_type(dynamic raw);
 
   @protected
+  BigInt dco_decode_box_autoadd_u_64(dynamic raw);
+
+  @protected
   Usage dco_decode_box_autoadd_usage(dynamic raw);
 
   @protected
@@ -785,6 +788,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ToolType? dco_decode_opt_box_autoadd_tool_type(dynamic raw);
 
   @protected
+  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
+
+  @protected
   Usage? dco_decode_opt_box_autoadd_usage(dynamic raw);
 
   @protected
@@ -937,6 +943,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   TranscriptionSegment dco_decode_transcription_segment(dynamic raw);
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
@@ -1339,6 +1348,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ToolType sse_decode_box_autoadd_tool_type(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
   Usage sse_decode_box_autoadd_usage(SseDeserializer deserializer);
@@ -1942,6 +1954,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ToolType? sse_decode_opt_box_autoadd_tool_type(SseDeserializer deserializer);
 
   @protected
+  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
+
+  @protected
   Usage? sse_decode_opt_box_autoadd_usage(SseDeserializer deserializer);
 
   @protected
@@ -2118,6 +2133,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TranscriptionSegment sse_decode_transcription_segment(
     SseDeserializer deserializer,
   );
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -2624,6 +2642,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     ToolType self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_usage(Usage self, SseSerializer serializer);
@@ -3391,6 +3412,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_box_autoadd_usage(Usage? self, SseSerializer serializer);
 
   @protected
@@ -3635,6 +3659,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     TranscriptionSegment self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
