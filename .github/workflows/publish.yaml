@@ -21,12 +21,12 @@ on:
         default: false
         type: boolean
       force_republish:
-        description: "Force publish even if the version already exists in registries"
+        description: "Dry runs only: real runs reject it, release tags are immutable"
         required: false
         type: boolean
         default: false
       republish:
-        description: "Delete and re-create the tag on current HEAD before publishing (retag + full republish)"
+        description: "Dry runs only: real runs reject it, release tags are immutable"
         required: false
         type: boolean
         default: false
@@ -106,7 +106,31 @@ jobs:
       release_dart: ${{ steps.meta.outputs.release_dart }}
       release_zig: ${{ steps.meta.outputs.release_zig }}
       release_swift: ${{ steps.meta.outputs.release_swift }}
+      release_id: ${{ steps.swift-seed.outputs.release_id }}
+      tag_object: ${{ steps.swift-seed.outputs.tag_object }}
+      swift_bundle_sha256: ${{ steps.swift-seed.outputs.swift_bundle_sha256 }}
+      swift_receipt_sha256: ${{ steps.swift-seed.outputs.swift_receipt_sha256 }}
     steps:
+      # ~keep Release tags are immutable: Prepare Swift release creates the tag once on the commit that
+      # pins the Swift checksum, so no run may delete, recreate or re-publish over it.
+      - name: Reject destructive release options
+        shell: bash
+        env:
+          REPUBLISH: ${{ inputs.republish }}
+          FORCE_REPUBLISH: ${{ inputs.force_republish }}
+          PAYLOAD_REPUBLISH: ${{ github.event.client_payload.republish }}
+          PAYLOAD_FORCE_REPUBLISH: ${{ github.event.client_payload.force_republish }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          PAYLOAD_DRY_RUN: ${{ github.event.client_payload.dry_run }}
+        run: |
+          set -euo pipefail
+          if [[ "$DRY_RUN" != "true" && "$PAYLOAD_DRY_RUN" != "true" &&
+                ( "$REPUBLISH" == "true" || "$FORCE_REPUBLISH" == "true" ||
+                  "$PAYLOAD_REPUBLISH" == "true" || "$PAYLOAD_FORCE_REPUBLISH" == "true" ) ]]; then
+            echo "Immutable releases forbid republish and force_republish; prepare a new version instead." >&2
+            exit 1
+          fi
+
       - uses: actions/create-github-app-token@v3
         id: app-token
         with:
@@ -124,22 +148,6 @@ jobs:
                   github.event.client_payload.dry_run == true || github.event.client_payload.dry_run == 'true') && github.sha) || github.ref }}
           token: ${{ steps.app-token.outputs.token }}
           persist-credentials: true
-
-      # The App token has to go through the action's `token` INPUT, not the caller's `env`.
-      # retag-for-republish is a composite action whose own step sets
-      # `GH_TOKEN: ${{ inputs.token }}`, and a step-level env in a composite action overrides
-      # anything the caller set — so the App token here was silently discarded and the action
-      # fell back to its `github.token` default. GITHUB_TOKEN cannot write git refs, which is
-      # the HTTP 403 on `POST /git/refs` that made `republish: true` unusable. ~keep
-      - name: Retag for republish
-        if: >-
-          ${{ (inputs.republish == true || github.event.client_payload.republish == true) &&
-              inputs.dry_run != true && inputs.dry_run != 'true' &&
-              github.event.client_payload.dry_run != true && github.event.client_payload.dry_run != 'true' }}
-        uses: xberg-io/actions/retag-for-republish@v1
-        with:
-          tag: ${{ inputs.tag || github.event.client_payload.tag }}
-          token: ${{ steps.app-token.outputs.token }}
 
       - name: Extract release metadata
         id: meta
@@ -175,6 +183,42 @@ jobs:
           TARGET_SHA: ${{ steps.meta.outputs.target_sha }}
           REQUESTED_TAG: ${{ inputs.tag || github.event.client_payload.tag }}
         run: mise run ci:release-version-forms
+
+      # ~keep Gates every publisher, since each one needs this job: Prepare Swift release pinned the checksum
+      # on the tagged commit and attached these exact bytes to the draft before the tag existed. The digests
+      # and release identity let promote-release recheck the live release before it flips the draft.
+      - name: Download the Swift release seed
+        id: swift-seed
+        if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.release_swift == 'true' && steps.meta.outputs.dry_run != 'true' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+          tag_object="$(git ls-remote origin "refs/tags/${TAG}" | cut -f1)"
+          [[ "${tag_object}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Release tag ${TAG} does not exist" >&2; exit 1; }
+          release_id="$(gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" --json databaseId --jq .databaseId)"
+          [[ "${release_id}" =~ ^[1-9][0-9]*$ ]] || { echo "::error::No release for ${TAG}; run Prepare Swift release" >&2; exit 1; }
+          mkdir -p dist/swift-artifactbundle
+          gh release download "${TAG}" --repo "${GITHUB_REPOSITORY}" --dir dist/swift-artifactbundle \
+            --pattern LiterLlm-rs.artifactbundle.zip --pattern LiterLlm-rs.artifactbundle.release.json
+          {
+            echo "tag_object=${tag_object}"
+            echo "release_id=${release_id}"
+            echo "swift_bundle_sha256=$(sha256sum dist/swift-artifactbundle/LiterLlm-rs.artifactbundle.zip | cut -d' ' -f1)"
+            echo "swift_receipt_sha256=$(sha256sum dist/swift-artifactbundle/LiterLlm-rs.artifactbundle.release.json | cut -d' ' -f1)"
+          } >>"$GITHUB_OUTPUT"
+
+      - name: Verify the Swift release seed
+        if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.release_swift == 'true' && steps.meta.outputs.dry_run != 'true' }}
+        uses: xberg-io/actions/publish-swift-release@v1
+        with:
+          tag: ${{ steps.meta.outputs.tag }}
+          bundle-zip: dist/swift-artifactbundle/LiterLlm-rs.artifactbundle.zip
+          receipt: dist/swift-artifactbundle/LiterLlm-rs.artifactbundle.release.json
+          dry-run: "true"
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Ensure GitHub Release exists for tag
         if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.dry_run != 'true' }}
@@ -2434,7 +2478,7 @@ jobs:
     name: Publish Swift release
     needs: [prepare, validate-versions]
     if: >-
-      ${{ !inputs.plugins-only && (needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_swift == 'true' && needs.validate-versions.result == 'success') }}
+      ${{ !inputs.plugins-only && (needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.prepare.outputs.release_swift == 'true' && needs.validate-versions.result == 'success') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@v3
@@ -2465,11 +2509,9 @@ jobs:
           tag: ${{ needs.prepare.outputs.tag }}
           bundle-zip: ""
           receipt: dist/swift-artifactbundle/LiterLlm-rs.artifactbundle.release.json
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Update release notes with Swift install instructions
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           VERSION: ${{ needs.prepare.outputs.version }}
@@ -2682,7 +2724,7 @@ jobs:
       - upload-kotlin-android-aars
       - upload-swift-release
     if: >-
-      ${{ !inputs.plugins-only && (!cancelled() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.validate-versions.result == 'success' && needs.crates-gate.outputs.ok == 'true' && needs.upload-cli-binaries.result == 'success' && needs.upload-c-ffi.result == 'success') }}
+      ${{ !inputs.plugins-only && (!cancelled() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.validate-versions.result == 'success' && needs.crates-gate.outputs.ok == 'true' && needs.upload-cli-binaries.result == 'success' && needs.upload-c-ffi.result == 'success' && (needs.prepare.outputs.release_swift != 'true' || needs.upload-swift-release.result == 'success')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -2701,8 +2743,31 @@ jobs:
           TAG: ${{ needs.prepare.outputs.tag }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GH_REPO: ${{ github.repository }}
+          RELEASE_SWIFT: ${{ needs.prepare.outputs.release_swift }}
+          RELEASE_ID: ${{ needs.prepare.outputs.release_id }}
+          TAG_OBJECT: ${{ needs.prepare.outputs.tag_object }}
+          SWIFT_BUNDLE_SHA256: ${{ needs.prepare.outputs.swift_bundle_sha256 }}
+          SWIFT_RECEIPT_SHA256: ${{ needs.prepare.outputs.swift_receipt_sha256 }}
         run: |
-          gh release edit "${TAG}" --draft=false
+          set -euo pipefail
+          # ~keep The Swift tag and assets were verified in prepare; recheck that neither changed since,
+          # because a published release is what SwiftPM consumers resolve.
+          if [[ "${RELEASE_SWIFT}" == "true" ]]; then
+            [[ "${RELEASE_ID}" =~ ^[1-9][0-9]*$ && "${TAG_OBJECT}" =~ ^[0-9a-f]{40}$ &&
+              "${SWIFT_BUNDLE_SHA256}" =~ ^[0-9a-f]{64}$ && "${SWIFT_RECEIPT_SHA256}" =~ ^[0-9a-f]{64}$ ]] ||
+              { echo "::error::prepare recorded no Swift release seed" >&2; exit 1; }
+            current_tag="$(gh api "repos/${GH_REPO}/git/ref/tags/${TAG}" --jq .object.sha)"
+            [[ "${current_tag}" == "${TAG_OBJECT}" ]] || { echo "::error::Tag ${TAG} changed before publication" >&2; exit 1; }
+            gh api "repos/${GH_REPO}/releases/${RELEASE_ID}" | jq -e --arg tag "${TAG}" \
+              --arg bundle "sha256:${SWIFT_BUNDLE_SHA256}" --arg receipt "sha256:${SWIFT_RECEIPT_SHA256}" '
+              def digests($name): [.assets[] | select(.name == $name and .state == "uploaded") | .digest];
+              .tag_name == $tag and
+              digests("LiterLlm-rs.artifactbundle.zip") == [$bundle] and
+              digests("LiterLlm-rs.artifactbundle.release.json") == [$receipt]
+            ' >/dev/null || { echo "::error::Release ${TAG} or its Swift assets changed before publication" >&2; exit 1; }
+          fi
+          [[ "$(gh api --method PATCH "repos/${GH_REPO}/releases/$(gh release view "${TAG}" --json databaseId --jq .databaseId)" \
+            -F draft=false --jq .draft)" == "false" ]]
           echo "promoted=true" >>"$GITHUB_OUTPUT"
 
   verify-binstall:
@@ -3394,7 +3459,7 @@ jobs:
     # result reuses the corrected judgement instead of duplicating the skipped-detection logic
     # here and drifting from it again.
     if: >-
-      ${{ !inputs.plugins-only && (always() && !cancelled() && needs.prepare.outputs.dry_run != 'true' && needs.release-finalize.result == 'success') }}
+      ${{ !inputs.plugins-only && (always() && !cancelled() && needs.prepare.result == 'success' && needs.prepare.outputs.dry_run != 'true' && needs.release-finalize.result == 'success') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@v3
@@ -3614,7 +3679,7 @@ jobs:
       contents: write
     needs: [prepare, release-finalize]
     if: >-
-      ${{ !inputs.plugins-only && (!cancelled() && needs.prepare.outputs.dry_run != 'true' && needs.release-finalize.result == 'success') }}
+      ${{ !inputs.plugins-only && (!cancelled() && needs.prepare.result == 'success' && needs.prepare.outputs.dry_run != 'true' && needs.release-finalize.result == 'success') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

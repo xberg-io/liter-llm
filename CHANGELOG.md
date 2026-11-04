@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Swift: the core `vX.Y.Z` tag's `Package.swift` now pins the artifact bundle checksum, so `from:` and `exact:` consumers resolve a working manifest. A release is now two steps: dispatch Prepare Swift release on main, which calls the shared xberg-io/actions workflow to build the bundle once, push the checksum pin with the tag and attach the exact ZIP and receipt to a draft release; then dispatch Publish Release on the tag, which verifies that state, never rebuilds the bundle and creates `release/swift/<version>` at the tagged commit ([procedure](https://github.com/xberg-io/actions/blob/v1/prepare-swift-release/README.md)). The `swift-<version>` tags are no longer created (#460).
+- Swift: the core `vX.Y.Z` tag's `Package.swift` now pins the artifact bundle checksum, so `from:` and `exact:` consumers resolve a working manifest. A release is now two steps: dispatch Prepare Swift release on main, which calls the shared xberg-io/actions workflow to build the bundle once, push the checksum pin with the tag and attach the exact ZIP and receipt to a draft release; then dispatch Publish Release on the tag, which verifies that state, never rebuilds the bundle and creates `release/swift/<version>` at the tagged commit ([procedure](https://github.com/xberg-io/actions/blob/v1/prepare-swift-release/README.md)). Publish Release verifies the tag and the attached Swift bundle before any registry publishes, rechecks them before it publishes the draft, and rejects `republish` and `force_republish` outside dry runs. The `swift-<version>` tags are no longer created (#460).
 
 ## [2.5.0] - 2026-11-03
 

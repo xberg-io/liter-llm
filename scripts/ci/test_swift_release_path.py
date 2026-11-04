@@ -52,6 +52,7 @@ def test_no_release_workflow_creates_or_moves_a_swift_tag() -> None:
         ]
         assert [line for line in tagging if "MODULE_TAG" not in line] == [], name
         assert not [line for line in lines if "swift-${VERSION}" in line or "SWIFT_TAG" in line], name
+        assert not [line for line in lines if "retag-for-republish" in line], name
 
 
 def test_publish_never_rebuilds_or_rewrites_the_swift_manifest() -> None:
@@ -83,7 +84,6 @@ def test_publish_verifies_the_tag_through_the_shared_action() -> None:
         "tag": "${{ needs.prepare.outputs.tag }}",
         "bundle-zip": "",
         "receipt": RECEIPT,
-        "dry-run": "${{ needs.prepare.outputs.dry_run }}",
         "token": "${{ steps.app-token.outputs.token }}",
     }
     steps = job["steps"]
@@ -109,6 +109,108 @@ def test_jobs_gated_on_the_swift_job_still_reference_it() -> None:
         assert "upload-swift-release" in needs(jobs[name]), name
     for name, job in jobs.items():
         assert set(needs(job)) <= set(jobs), name
+
+
+PREPARE_OUTPUTS = "needs.prepare.outputs"
+PREPARE_OK = "needs.prepare.result == 'success'"
+VALIDATED = "needs.validate-versions.result == 'success'"
+SEED = (
+    "${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.release_swift == 'true' && "
+    "steps.meta.outputs.dry_run != 'true' }}"
+)
+
+
+def ancestors(jobs: dict, name: str) -> set[str]:
+    seen: set[str] = set()
+    pending = needs(jobs[name])
+    while pending:
+        parent = pending.pop()
+        if parent not in seen:
+            seen.add(parent)
+            pending.extend(needs(jobs[parent]))
+    return seen
+
+
+def test_dry_run_never_touches_the_swift_tag() -> None:
+    """A dry run's tag is a synthesized `<version>-dryrun-<sha>` that does not exist."""
+    job = publish_jobs()["upload-swift-release"]
+    assert f"{PREPARE_OUTPUTS}.dry_run != 'true'" in job["if"]
+    assert "dry_run" not in yaml.safe_dump(job["steps"])
+    (seed,) = uses(publish_jobs()["prepare"], "xberg-io/actions/publish-swift-release")
+    assert seed["if"] == SEED
+
+
+def test_prepare_verifies_the_swift_seed_before_the_release_is_touched() -> None:
+    job = publish_jobs()["prepare"]
+    steps = job["steps"]
+    (checkout,) = uses(job, "actions/checkout")
+    assert checkout["with"]["fetch-depth"] == 0
+    (seed,) = uses(job, "xberg-io/actions/publish-swift-release")
+    assert seed["uses"] == "xberg-io/actions/publish-swift-release@v1"
+    assert seed["with"] == {
+        "tag": "${{ steps.meta.outputs.tag }}",
+        "bundle-zip": f"dist/swift-artifactbundle/{BUNDLE}",
+        "receipt": RECEIPT,
+        "dry-run": "true",
+        "token": "${{ steps.app-token.outputs.token }}",
+    }
+    download = next(step for step in steps if step.get("id") == "swift-seed")
+    assert download["if"] == SEED
+    assert BUNDLE in download["run"]
+    assert "LiterLlm-rs.artifactbundle.release.json" in download["run"]
+    for output in ("release_id", "tag_object", "swift_bundle_sha256", "swift_receipt_sha256"):
+        assert job["outputs"][output] == f"${{{{ steps.swift-seed.outputs.{output} }}}}"
+    ensure = next(step for step in steps if step.get("name") == "Ensure GitHub Release exists for tag")
+    catalog = next(step for step in steps if step.get("name") == "Attach model catalog snapshot to release")
+    assert steps.index(download) < steps.index(seed) < steps.index(ensure) < steps.index(catalog)
+
+
+def test_every_publisher_is_gated_on_prepare() -> None:
+    """A failed Swift seed fails prepare, which must stop every job that writes a registry or the release."""
+    jobs = publish_jobs()
+    writers = [
+        name for name in jobs if re.match(r"(publish|upload|trigger|promote|announce|dispatch)-|cli-proxy$", name)
+    ]
+    assert len(writers) > 20
+    for name in writers:
+        condition = str(jobs[name].get("if", ""))
+        if condition.startswith("${{ github.event_name == 'workflow_dispatch' && inputs.plugins-only &&"):
+            continue
+        assert "prepare" in ancestors(jobs, name), name
+        opts_out = "always()" in condition or "!cancelled()" in condition
+        assert not opts_out or PREPARE_OK in condition or VALIDATED in condition, name
+    validate = jobs["validate-versions"]
+    assert needs(validate) == ["prepare"]
+    assert "always()" not in validate["if"]
+    assert "!cancelled()" not in validate["if"]
+
+
+def test_promotion_requires_swift_and_rechecks_the_live_release() -> None:
+    job = publish_jobs()["promote-release"]
+    assert f"({PREPARE_OUTPUTS}.release_swift != 'true' || needs.upload-swift-release.result == 'success')" in job["if"]
+    (flip,) = [step for step in job["steps"] if step.get("id") == "flip"]
+    for output in ("release_id", "tag_object", "swift_bundle_sha256", "swift_receipt_sha256", "release_swift"):
+        assert f"{PREPARE_OUTPUTS}.{output}" in yaml.safe_dump(flip["env"]), output
+    script = flip["run"]
+    assert script.index("git/ref/tags/") < script.index("draft=false")
+    assert script.index(".digest") < script.index("draft=false")
+    assert "gh release edit" not in script
+
+
+def test_prepare_rejects_tag_moving_options_on_real_runs() -> None:
+    steps = publish_jobs()["prepare"]["steps"]
+    reject = steps[0]
+    assert reject["name"] == "Reject destructive release options"
+    assert set(reject["env"]) == {
+        "REPUBLISH",
+        "FORCE_REPUBLISH",
+        "PAYLOAD_REPUBLISH",
+        "PAYLOAD_FORCE_REPUBLISH",
+        "DRY_RUN",
+        "PAYLOAD_DRY_RUN",
+    }
+    assert "exit 1" in reject["run"]
+    assert not uses(publish_jobs()["prepare"], "xberg-io/actions/retag-for-republish")
 
 
 def test_prepare_calls_the_shared_workflow_with_this_repository_bundle() -> None:

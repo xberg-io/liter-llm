@@ -2,6 +2,7 @@
 
 import ast
 import hashlib
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -127,12 +128,16 @@ def evaluate_workflow_expression(expression: str, values: dict[str, object]) -> 
     return evaluate(ast.parse(translated, mode="eval").body)
 
 
-def evaluate_retag_condition(expression: str, values: dict[str, object]) -> bool:
-    """Retag conditions require a boolean result from the shared expression subset."""
-    return bool(evaluate_workflow_expression(expression, values))
-
-
-@pytest.mark.parametrize("republish", [(False, False), (True, False), (False, True), (True, True)])
+@pytest.mark.parametrize(
+    "destructive",
+    [
+        (False, False, False, False),
+        (True, False, False, False),
+        (False, True, False, False),
+        (False, False, True, False),
+        (False, False, False, True),
+    ],
+)
 @pytest.mark.parametrize(
     "dry_run",
     [
@@ -147,20 +152,29 @@ def evaluate_retag_condition(expression: str, values: dict[str, object]) -> bool
         ("true", "true"),
     ],
 )
-def test_release_retag_never_mutates_dry_run_tags(republish: tuple[bool, bool], dry_run: tuple[object, object]) -> None:
-    """Both dispatch channels must reject boolean and string dry-run requests."""
+def test_real_runs_reject_tag_moving_options(
+    destructive: tuple[bool, bool, bool, bool], dry_run: tuple[object, object]
+) -> None:
+    """Release tags are immutable: both dispatch channels reject republish and force_republish unless dry."""
     workflow = yaml.safe_load(PUBLISH_WORKFLOW.read_text())
     steps = workflow["jobs"]["prepare"]["steps"]
-    retag = [step for step in steps if step.get("name") == "Retag for republish"]
-    assert len(retag) == 1
-    values = {
-        "inputs.republish": republish[0],
-        "github.event.client_payload.republish": republish[1],
-        "inputs.dry_run": dry_run[0],
-        "github.event.client_payload.dry_run": dry_run[1],
-    }
-    expected = any(republish) and not any(value is True or value == "true" for value in dry_run)
-    assert evaluate_retag_condition(retag[0]["if"], values) is expected
+    assert not [step for step in steps if "retag-for-republish" in step.get("uses", "")]
+    (reject,) = [step for step in steps if step.get("name") == "Reject destructive release options"]
+
+    def text(value: object) -> str:
+        return "" if value is None else str(value).lower()
+
+    env = dict(
+        zip(
+            ("REPUBLISH", "FORCE_REPUBLISH", "PAYLOAD_REPUBLISH", "PAYLOAD_FORCE_REPUBLISH"),
+            map(text, destructive),
+            strict=True,
+        )
+    )
+    env |= {"DRY_RUN": text(dry_run[0]), "PAYLOAD_DRY_RUN": text(dry_run[1])}
+    result = subprocess.run(["bash", "-c", reject["run"]], env=env, capture_output=True, text=True, check=False)
+    rejected = any(destructive) and not any(value is True or value == "true" for value in dry_run)
+    assert result.returncode == (1 if rejected else 0), result.stderr
 
 
 @pytest.mark.parametrize("dry_run", ["true", "false"])
