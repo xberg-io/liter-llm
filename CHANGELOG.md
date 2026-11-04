@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Regenerate the bindings with Alef 0.122.0. The published Python package now declares `requires-python = ">=3.11"` and builds `abi3-py311` wheels, matching the Python 3.11 minimum. Python option enums subclass `StrEnum`.
+- Regenerate the bindings with Alef 0.124.0. The published Python package now declares `requires-python = ">=3.11"` and builds `abi3-py311` wheels, matching the Python 3.11 minimum. Python option enums subclass `StrEnum`.
 - Swift: the package minimum is macOS 26 again, the org-wide floor. 2.5.0 declared macOS 14 in the root and in-tree `Package.swift`; the generated e2e and test_apps packages already declare macOS 26 (#470).
 - Every macOS binary the release ships (FFI libraries, language extensions, CLI, Swift bundle and Python wheels) now targets macOS 26, the `Package.swift` minimum, instead of macOS 11 or 13. The macOS Python wheels are tagged `macosx_26_0`.
 
