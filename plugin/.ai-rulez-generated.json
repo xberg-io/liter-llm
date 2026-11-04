@@ -1,6 +1,6 @@
 {
   "schema_version": "v1",
-  "source_hash": "blake3:83373d1352c4260093e400690b2c3eae748ff855f416b79711f4c53bfd2ac259",
+  "source_hash": "blake3:7653ae5fd9b3a1a386fbff675c1605a7e0fd0ecbe9d7686f7347c6c4aead6da2",
   "outputs": {
     ".claude-plugin/plugin.json": {
       "content_hash": "blake3:d54a010ff0fd71de70f5db2abede17b51bbfbdf7c8320340c6dcd718d3a042ad",
@@ -427,7 +427,7 @@
       "mode": "0644"
     },
     "scripts/mcp-launch.sh": {
-      "content_hash": "blake3:43cea7740137dba774b1a39f2663801f9e9f99c1a727884e268aee596c05bcf5",
+      "content_hash": "blake3:21c42851c546c0dcf5a7ff27afe4adf25dc2d669e4739db1a35ade4320bafbb3",
       "mode": "0755"
     },
     "skills/liter-llm-calling-llms/SKILL.md": {
