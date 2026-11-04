@@ -40,7 +40,7 @@ jobs:
           - label: macos-arm64
             runner: macos-26
             cibw_archs_macos: arm64
-            wheel_platform: "macosx_11_0_arm64"
+            wheel_platform: "macosx_26_0_arm64"
             wheel_macho_arch: arm64
           # ~keep Cross-compiled from the arm64 image on purpose, mirroring build-node-native:
           # the Intel runners queue for hours and wedged two releases (v1.14.0, v1.15.0).
@@ -49,7 +49,7 @@ jobs:
           - label: macos-x86_64
             runner: macos-26
             cibw_archs_macos: x86_64
-            wheel_platform: "macosx_11_0_x86_64"
+            wheel_platform: "macosx_26_0_x86_64"
             wheel_macho_arch: x86_64
             before_build_macos: pip install maturin uv && source ~/.cargo/env && rustup target add x86_64-apple-darwin
           - label: windows-x86_64
@@ -66,11 +66,11 @@ jobs:
           cibw-build: "cp311-*"
           cibw-skip: "*-musllinux* *-win32 *-manylinux_i686"
           cibw-environment: 'MATURIN_BUILD_ARGS="--compatibility linux" CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=cc'
-          # ~keep 11.0 is the floor of the arm64 wheel and of the FFI builds (#248). cibuildwheel
-          # defaults an x86_64 build to 10.9, so without it the C objects of the build scripts
-          # take the SDK's minos instead of the target the Rust objects use. The shared library
-          # then has minos 11.0, and the wheel repair step raises the tag from 10.9 to macosx_11_0_x86_64.
-          cibw-environment-macos: 'MATURIN_BUILD_ARGS="" CARGO_BUILD_LOCKED=true MACOSX_DEPLOYMENT_TARGET=11.0'
+          # ~keep 26.0 is the macOS minimum of the root Package.swift, which every macOS binary
+          # targets (#248). cibuildwheel defaults an x86_64 build to 10.9, so without it the C
+          # objects of the build scripts take the SDK's minos instead of the target the Rust objects
+          # use, and the wheel tag would not match the shared library's minos.
+          cibw-environment-macos: 'MATURIN_BUILD_ARGS="" CARGO_BUILD_LOCKED=true MACOSX_DEPLOYMENT_TARGET=26.0'
           cibw-before-build-macos: ${{ matrix.before_build_macos || 'pip install maturin uv && source ~/.cargo/env' }}
           # ~keep The action uploads after the build, so the check below would run too late.
           # Upload here, after the check, under the name the action would have used.

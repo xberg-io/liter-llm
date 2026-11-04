@@ -65,7 +65,7 @@ Each release publishes `liter-llm-go-v{{ version }}-<platform>.tar.gz` (plus a `
 | Windows x86_64   | `windows-x86_64`  |
 | Windows arm64    | `windows-arm64`   |
 
-Linux release assets cover both glibc (`*-unknown-linux-gnu`) and musl (`*-unknown-linux-musl`). `cmd/setup` detects musl systems automatically; use `-platform linux-x86_64-musl` or `-platform linux-aarch64-musl` to override detection. macOS binaries use a deployment target of 11.0.
+Linux release assets cover both glibc (`*-unknown-linux-gnu`) and musl (`*-unknown-linux-musl`). `cmd/setup` detects musl systems automatically; use `-platform linux-x86_64-musl` or `-platform linux-aarch64-musl` to override detection. macOS binaries use a deployment target of 26.0.
 
 ```bash
 # Example: Linux x86_64

@@ -30,7 +30,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 180
     env:
-      MACOSX_DEPLOYMENT_TARGET: "13.0"
+      MACOSX_DEPLOYMENT_TARGET: "26.0"
       IPHONEOS_DEPLOYMENT_TARGET: "16.0"
     steps:
       - uses: actions/create-github-app-token@v3

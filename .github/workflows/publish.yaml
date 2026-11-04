@@ -56,6 +56,11 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   GH_REPO: ${{ github.repository }}
+  # ~keep Every macOS binary this workflow ships targets the macOS minimum of the root
+  # Package.swift. Rust and the cc-built C objects inside each library (ring, etc.) both read
+  # it, so their minos agree and consumers get no "built for newer macOS" link warnings (#248).
+  # Ignored on non-Apple legs; scripts/ci/test_macos_deployment_target.py holds it to Package.swift.
+  MACOSX_DEPLOYMENT_TARGET: "26.0"
 
 jobs:
   prepare:
@@ -898,12 +903,6 @@ jobs:
       ${{ !inputs.plugins-only && (always() && needs.prepare.result == 'success' && needs.validate-versions.result == 'success' && ( (needs.prepare.outputs.release_go == 'true' && (needs.registry-results.outputs.go != 'true' || needs.prepare.outputs.force_republish == 'true')) || (needs.prepare.outputs.release_java == 'true' && (needs.registry-results.outputs.maven != 'true' || needs.prepare.outputs.force_republish == 'true')) || (needs.prepare.outputs.release_csharp == 'true' && (needs.registry-results.outputs.nuget != 'true' || needs.prepare.outputs.force_republish == 'true')) )) }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
-    env:
-      # ~keep Without this, cc-built C objects inside the staticlib (ring, etc.)
-      # take the runner SDK's minos while Rust objects use 11.0, so every Go
-      # consumer linking libliter_llm_ffi.a gets "built for newer macOS" warnings
-      # (#248). Ignored on non-Apple legs.
-      MACOSX_DEPLOYMENT_TARGET: "11.0"
     strategy:
       fail-fast: false
       matrix:

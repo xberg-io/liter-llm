@@ -155,5 +155,5 @@ run = "alef test --lang ffi --e2e"
 # Task env stays on this task only; C and Ruby compilers must not inherit an iOS target. ~keep
 ["swift:build"]
 description = "Build Swift native libraries for the declared minimum Apple OS versions"
-env = { MACOSX_DEPLOYMENT_TARGET = "13.0", IPHONEOS_DEPLOYMENT_TARGET = "16.0" }
+env = { MACOSX_DEPLOYMENT_TARGET = "26.0", IPHONEOS_DEPLOYMENT_TARGET = "16.0" }
 run = "cargo build --locked --release -p liter-llm-swift -p liter-llm-ffi"
