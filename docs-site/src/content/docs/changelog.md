@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Swift: the package minimum is macOS 26 again, the org-wide floor. 2.5.0 declared macOS 14 in the root and in-tree `Package.swift`; the generated e2e and test_apps packages already declare macOS 26 (#470).
 - Minimum supported versions raised: Node.js 22, PHP 8.3, Elixir 1.17, Go 1.27, Android API 24, Dart 3.13, Zig 0.17, macOS 14.
 - Python 3.11 is now the minimum supported version; Python 3.10 reached end of life.
 
