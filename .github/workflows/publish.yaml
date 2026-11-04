@@ -2424,108 +2424,17 @@ jobs:
           dry-run: ${{ needs.prepare.outputs.dry_run }}
           update-existing: "true"
 
-  swift-artifactbundle:
-    name: Build Swift Artifact Bundle
-    needs: [prepare]
-    if: >-
-      ${{ !inputs.plugins-only && ((needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.prepare.outputs.release_swift == 'true') }}
-    runs-on: macos-26
-    timeout-minutes: 180
-    env:
-      MACOSX_DEPLOYMENT_TARGET: "13.0"
-      IPHONEOS_DEPLOYMENT_TARGET: "16.0"
-    outputs:
-      checksum: ${{ steps.checksum.outputs.checksum }}
-      reused: ${{ steps.check-existing.outputs.reused }}
-    steps:
-      - uses: actions/create-github-app-token@v3
-        id: app-token
-        with:
-          app-id: ${{ secrets.BOT_APP_ID }}
-          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-          owner: xberg-io
-
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-
-      - name: Check if artifact already exists on release
-        id: check-existing
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-        run: |
-          set -euo pipefail
-          ARTIFACT_NAME="LiterLlm-rs.artifactbundle.zip"
-          # Try to download the artifact from the GitHub release.
-          if gh release view "v${VERSION}" >/dev/null 2>&1; then
-            if gh release download "v${VERSION}" -p "${ARTIFACT_NAME}" -D /tmp 2>/dev/null; then
-              # Artifact exists; compute its checksum.
-              CHECKSUM=$(swift package compute-checksum "/tmp/${ARTIFACT_NAME}")
-              echo "reused=true" >> "$GITHUB_OUTPUT"
-              echo "checksum=${CHECKSUM}" >> "$GITHUB_OUTPUT"
-              echo "Reusing existing artifact bundle with checksum: ${CHECKSUM}"
-              exit 0
-            fi
-          fi
-          # Release doesn't exist or artifact not found; proceed to build.
-          echo "reused=false" >> "$GITHUB_OUTPUT"
-          exit 0
-
-      # ~keep rust is a mise lock gap (rustup script install); rust-toolchain.toml pins it.
-      - uses: xberg-io/actions/setup-rust@v1
-        if: ${{ steps.check-existing.outputs.reused != 'true' }}
-        with:
-          cache-key-prefix: publish-swift-artifactbundle
-          use-sccache: false
-
-      - uses: xberg-io/actions/build-swift-artifactbundle@v1
-        if: ${{ steps.check-existing.outputs.reused != 'true' }}
-        id: build
-        with:
-          crate-name: liter-llm-swift
-          artifact-name: LiterLlm-rs
-          header-path: target/release/build/liter-llm-swift-*/out
-          output-dir: dist/swift-artifactbundle
-          build-profile: release
-
-      - name: Record checksum from build or reused
-        id: checksum
-        run: |
-          if [[ "${{ steps.check-existing.outputs.reused }}" == "true" ]]; then
-            # Checksum already set by check-existing step
-            CHECKSUM="${{ steps.check-existing.outputs.checksum }}"
-          else
-            # Compute from newly built artifact
-            CHECKSUM=$(cat "${{ steps.build.outputs.bundle-zip }}.sha256" 2>/dev/null || swift package compute-checksum "${{ steps.build.outputs.bundle-zip }}")
-          fi
-          echo "checksum=${CHECKSUM}" >> "$GITHUB_OUTPUT"
-          echo "Artifact bundle checksum: ${CHECKSUM}"
-
-      - uses: actions/upload-artifact@v7
-        if: ${{ steps.check-existing.outputs.reused != 'true' }}
-        with:
-          name: swift-artifactbundle
-          path: dist/swift-artifactbundle
-          retention-days: 14
-
-      - name: Save checksum as artifact
-        run: |
-          mkdir -p dist/swift-checksums
-          echo "${{ steps.checksum.outputs.checksum }}" > dist/swift-checksums/LiterLlm-rs.artifactbundle.zip.checksum
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: swift-checksum
-          path: dist/swift-checksums/
-          retention-days: 14
-
+  # ~keep SwiftPM resolves `from:`/`exact:` versions to the core tag, so that tag's root Package.swift
+  # must already pin the bundle checksum. prepare-swift-release.yaml builds the bundle once, pins its
+  # checksum on main and stages the exact ZIP and receipt on the draft release that creates the tag.
+  # This job never rebuilds (the ZIP is not reproducible) and never creates or moves a tag: the
+  # action verifies the tagged manifest against the release asset and the receipt, creates the
+  # legacy `release/swift/<version>` branch at the tagged commit when absent and fails otherwise.
   upload-swift-release:
-    name: Upload Swift Artifact Bundle to GitHub Release
-    needs: [prepare, validate-versions, swift-artifactbundle]
+    name: Publish Swift release
+    needs: [prepare, validate-versions]
     if: >-
-      ${{ !inputs.plugins-only && ((needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.validate-versions.result == 'success' && needs.swift-artifactbundle.result == 'success') }}
+      ${{ !inputs.plugins-only && (needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_swift == 'true' && needs.validate-versions.result == 'success') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@v3
@@ -2537,157 +2446,35 @@ jobs:
 
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          ref: ${{ needs.prepare.outputs.tag }}
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
           persist-credentials: true
 
-      - uses: actions/download-artifact@v8
-        with:
-          pattern: swift-*
-          path: dist/swift
-          merge-multiple: true
-
-      - name: Skip asset upload if bundle was reused
-        if: ${{ needs.swift-artifactbundle.outputs.reused == 'true' }}
+      - name: Download the preparation receipt
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
         run: |
-          echo "Bundle was reused from existing release asset; skipping upload"
+          gh release download "${TAG}" --repo "${{ github.repository }}" \
+            --pattern LiterLlm-rs.artifactbundle.release.json --dir dist/swift-artifactbundle
 
-      - uses: xberg-io/actions/upload-release-assets@v1
-        if: ${{ needs.swift-artifactbundle.outputs.reused != 'true' }}
+      - uses: xberg-io/actions/publish-swift-release@v1
+        id: publish
         with:
           tag: ${{ needs.prepare.outputs.tag }}
-          working-directory: dist/swift
+          bundle-zip: ""
+          receipt: dist/swift-artifactbundle/LiterLlm-rs.artifactbundle.release.json
           dry-run: ${{ needs.prepare.outputs.dry_run }}
-          assets: |
-            **/*.zip
-            **/*.checksum
           token: ${{ steps.app-token.outputs.token }}
-
-      - name: Create swift-release tag with substituted checksum
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        env:
-          VERSION: ${{ needs.prepare.outputs.version }}
-          CHECKSUM: ${{ needs.swift-artifactbundle.outputs.checksum }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          set -euo pipefail
-
-          SWIFT_TAG="swift-${VERSION}"
-
-          # Idempotent guard: if the swift tag already exists on origin, skip.
-          if git ls-remote --tags origin "refs/tags/${SWIFT_TAG}" 2>/dev/null | grep -q "${SWIFT_TAG}"; then
-            echo "Swift tag ${SWIFT_TAG} already exists on origin; skipping."
-            exit 0
-          fi
-
-          # ~keep Count the field's matches BEFORE substituting and fail on zero. The old
-          # check ran afterwards and asserted the placeholder was absent, which is satisfied
-          # both by a successful substitution and by the token being renamed or dropped by the
-          # generator -- precisely the case the check exists to catch. Both shapes are matched
-          # because alef 0.80.0 rewrites `checksum:` whether it holds the placeholder or a
-          # 64-hex literal left behind by an earlier release; matching only the placeholder
-          # makes the substitution destroy its own trigger the first time a literal reaches
-          # main, and every release afterwards silently no-ops. That is not hypothetical --
-          # it is what alef bd5ddc3de was fixing.
-          checksum_field='(checksum:[[:space:]]*")(__ALEF_SWIFT_CHECKSUM__|[0-9a-f]{64})(")'
-          matches="$(grep -cE "${checksum_field}" Package.swift || true)"
-          if [ "${matches:-0}" -eq 0 ]; then
-            echo "::error::Package.swift has no checksum: field holding __ALEF_SWIFT_CHECKSUM__" \
-              "or a 64-hex literal; the manifest's shape has drifted and the artifact bundle" \
-              "checksum cannot be pinned" >&2
-            exit 1
-          fi
-          sed -i.bak -E "s/${checksum_field}/\1${CHECKSUM}\3/g" Package.swift
-          rm -f Package.swift.bak
-          echo "Pinned ${CHECKSUM} into ${matches} checksum field(s)"
-
-          # Configure git
-          git config user.name "xberg-dev-publisher[bot]"
-          git config user.email "291994444+xberg-dev-publisher[bot]@users.noreply.github.com"
-
-          # Commit the patched Package.swift to a temporary release branch. Now that the
-          # substitution is idempotent it can legitimately be a no-op -- alef may already have
-          # baked this exact checksum in -- and `git commit` fails on an empty index. ~keep
-          if git diff --quiet -- Package.swift; then
-            echo "Package.swift already carries ${CHECKSUM}; tagging the checkout as-is."
-          else
-            git add Package.swift
-            git commit -m "chore(swift): pin checksum for ${SWIFT_TAG}"
-          fi
-
-          # Create a new tag in the swift namespace (NOT --force, NOT modifying main tag)
-          git tag "${SWIFT_TAG}"
-
-          # Push the release branch (not to main, to avoid modifying main)
-          git push origin "HEAD:refs/heads/release/swift/${VERSION}"
-
-          # Push the swift tag
-          git push origin "refs/tags/${SWIFT_TAG}"
-
-          echo "Created ${SWIFT_TAG} tag on release/swift/${VERSION} branch with real checksum"
-        shell: bash
-
-      - name: Generate substituted Package.swift artifact
-        shell: bash
-        env:
-          VERSION: ${{ needs.prepare.outputs.version }}
-          CHECKSUM: ${{ needs.swift-artifactbundle.outputs.checksum }}
-        run: |
-          set -euo pipefail
-          cp Package.swift /tmp/Package.swift
-
-          # ~keep There is no `__ALEF_SWIFT_VERSION__` left to substitute: alef bakes the
-          # concrete release URL into `.binaryTarget` at generation time. The sed that used to
-          # run here was therefore a permanent no-op, and nothing noticed, because a
-          # substitution that changes nothing is indistinguishable from one with nothing to do.
-          # Assert what the artifact actually carries instead. Swift pins in this repo do go
-          # stale -- test_apps/swift_e2e/Package.swift still pins release/swift/1.16.0 at
-          # 1.19.1 -- and a manifest pairing an old bundle URL with this release's checksum
-          # fails verification for every consumer. A dry run's version carries a
-          # `-dryrun-<sha>` suffix no manifest will ever hold, so strip it, as the plugin
-          # assertion in validate-versions does.
-          expected_url="releases/download/v${VERSION%%-dryrun-*}/"
-          if [ "$(grep -cF "${expected_url}" /tmp/Package.swift || true)" -eq 0 ]; then
-            echo "::error::Package.swift does not reference ${expected_url}; its binaryTarget" \
-              "URL has drifted from the release being published" >&2
-            exit 1
-          fi
-
-          # Same both-shape field and same count-before-substituting rule as the tag step
-          # above. By this point the tag step may already have pinned the literal in the
-          # working tree, so a placeholder-only match would spuriously report zero. ~keep
-          checksum_field='(checksum:[[:space:]]*")(__ALEF_SWIFT_CHECKSUM__|[0-9a-f]{64})(")'
-          matches="$(grep -cE "${checksum_field}" /tmp/Package.swift || true)"
-          if [ "${matches:-0}" -eq 0 ]; then
-            echo "::error::Package.swift has no checksum: field holding __ALEF_SWIFT_CHECKSUM__" \
-              "or a 64-hex literal; refusing to publish a manifest with an unpinned checksum" >&2
-            exit 1
-          fi
-          sed -i.bak -E "s/${checksum_field}/\1${CHECKSUM}\3/g" /tmp/Package.swift
-          rm -f /tmp/Package.swift.bak
-
-          echo "Substituted Package.swift (${matches} checksum field(s)):"
-          head -30 /tmp/Package.swift
-
-      - name: Upload substituted Package.swift to GitHub Release
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-        run: |
-          gh release upload "v${VERSION}" /tmp/Package.swift \
-            --clobber \
-            --repo "${{ github.repository }}"
 
       - name: Update release notes with Swift install instructions
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           VERSION: ${{ needs.prepare.outputs.version }}
+          CHECKSUM: ${{ steps.publish.outputs.checksum }}
         run: |
-          CHECKSUM=${{ needs.swift-artifactbundle.outputs.checksum }}
           ASSET_URL="https://github.com/xberg-io/liter-llm/releases/download/v${VERSION}/LiterLlm-rs.artifactbundle.zip"
 
           # `gh release edit --notes-file` replaces the whole body, so the notes start from the
@@ -2700,7 +2487,17 @@ jobs:
 
           The Swift binding is distributed as a pre-built artifact bundle. No Rust toolchain required.
 
-          **Recommended — use \`.binaryTarget\` directly in your \`Package.swift\`:**
+          **Recommended — depend on the package by version:**
+
+          \`\`\`swift
+          .package(url: "https://github.com/xberg-io/liter-llm", from: "${VERSION}")
+          \`\`\`
+
+          The \`v${VERSION}\` tag's \`Package.swift\` pins the artifact bundle checksum. The
+          \`release/swift/${VERSION}\` branch points at the same commit for manifests that use
+          \`.package(url: "https://github.com/xberg-io/liter-llm", branch: "release/swift/${VERSION}")\`.
+
+          **Alternative — use \`.binaryTarget\` directly in your \`Package.swift\`:**
 
           \`\`\`swift
           .binaryTarget(
@@ -2709,14 +2506,6 @@ jobs:
               checksum: "${CHECKSUM}"
           )
           \`\`\`
-
-          **Alternative — pin via tag-specific Swift package release:**
-
-          \`\`\`swift
-          .package(url: "https://github.com/xberg-io/liter-llm", from: "swift-${VERSION}")
-          \`\`\`
-
-          > The main repository's \`Package.swift\` uses placeholder values. Swift consumers pin to a tag-specific release in the \`swift-\` namespace (e.g. \`from: "swift-${VERSION}"\`), which includes the real artifact bundle checksum. Other languages continue to pin to \`from: "${VERSION}"\`.
 
           **Artifact bundle**: [LiterLlm-rs.artifactbundle.zip](${ASSET_URL})
           **Checksum**: \`${CHECKSUM}\`

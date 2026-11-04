@@ -1,0 +1,144 @@
+name: Prepare Swift Release
+
+# Run on main after the version-bump commit lands and before the release tag exists. SwiftPM
+# resolves `from:`/`exact:` versions to the core `vX.Y.Z` tag, so the tagged root Package.swift must
+# already pin the artifact bundle checksum. This builds the bundle once, pins its checksum with
+# alef's version sync, pushes that commit to main and creates a draft `vX.Y.Z` release targeting it
+# with the exact ZIP and its receipt attached. Publishing the draft creates the tag on the pinned
+# commit and starts publish.yaml, whose Swift job only verifies and completes this state. The ZIP is
+# not reproducible, so a rebuild cannot stand in for the staged one: rerun this workflow instead,
+# after deleting the draft. ~keep
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and pin the checksum without pushing the commit or creating the draft release"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-swift-release:
+    name: Pin the Swift checksum before the tag
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "13.0"
+      IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+    steps:
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          owner: xberg-io
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: true
+
+      - name: Resolve the release version
+        id: version
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          VERSION="$(sed -n '/^\[workspace\.package\]/,/^\[/s/^version = "\(.*\)"$/\1/p' Cargo.toml)"
+          if [ -z "${VERSION}" ]; then
+            echo "::error::Cannot read [workspace.package] version from Cargo.toml" >&2
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}" >/dev/null; then
+            echo "::error::Tag v${VERSION} already exists; a release tag is immutable, bump the version first" >&2
+            exit 1
+          fi
+          if gh release view "v${VERSION}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "::error::A release for v${VERSION} already exists; delete the draft to prepare it again" >&2
+            exit 1
+          fi
+          echo "version=${VERSION}" >>"$GITHUB_OUTPUT"
+
+      # ~keep rust is a mise lock gap (rustup script install); rust-toolchain.toml pins it.
+      - uses: xberg-io/actions/setup-rust@v1
+        with:
+          cache-key-prefix: publish-swift-artifactbundle
+          use-sccache: false
+
+      - uses: xberg-io/actions/build-swift-artifactbundle@v1
+        id: build
+        with:
+          crate-name: liter-llm-swift
+          artifact-name: LiterLlm-rs
+          header-path: target/release/build/liter-llm-swift-*/out
+          output-dir: dist/swift-artifactbundle
+          build-profile: release
+          receipt-version: ${{ steps.version.outputs.version }}
+
+      - name: Install alef
+        uses: xberg-io/actions/install-alef@v1
+
+      # alef pins the checksum only on a clean tree whose HEAD is the receipt's source, with exactly
+      # the ZIP and its receipt in dist/swift-artifactbundle/. The regeneration can touch other files
+      # on this host; only the root manifest is committed. ~keep
+      - name: Pin the checksum into Package.swift
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUNDLE_ZIP: ${{ steps.build.outputs.bundle-zip }}
+        run: |
+          set -euo pipefail
+          alef sync-versions --regen
+          checksum="$(shasum -a 256 "${BUNDLE_ZIP}" | cut -d' ' -f1)"
+          if grep -q "__ALEF_" Package.swift; then
+            echo "::error::Package.swift still holds an __ALEF_*__ placeholder after version sync" >&2
+            exit 1
+          fi
+          pinned="$(grep -oE 'checksum:[[:space:]]*"[0-9a-f]{64}"' Package.swift | grep -oE '[0-9a-f]{64}' || true)"
+          if [ "${pinned}" != "${checksum}" ]; then
+            echo "::error::Package.swift pins '${pinned}', not the bundle's ${checksum}" >&2
+            exit 1
+          fi
+          if ! grep -qF "releases/download/v${VERSION}/LiterLlm-rs.artifactbundle.zip" Package.swift; then
+            echo "::error::Package.swift does not point at the v${VERSION} release asset" >&2
+            exit 1
+          fi
+          echo "${checksum}" >"${BUNDLE_ZIP}.checksum"
+          git config user.name "xberg-dev-publisher[bot]"
+          git config user.email "291994444+xberg-dev-publisher[bot]@users.noreply.github.com"
+          git add Package.swift
+          git commit -m "chore(swift): pin the artifact bundle checksum for v${VERSION} [skip ci]"
+          git status --short
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: swift-artifactbundle
+          path: dist/swift-artifactbundle
+          retention-days: 90
+
+      - name: Push the pinned commit to main
+        if: ${{ !inputs.dry_run }}
+        run: git push origin "HEAD:refs/heads/main"
+
+      - name: Stage the bundle on a draft release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          PINNED="$(git rev-parse HEAD)"
+          gh release create "v${VERSION}" --repo "${{ github.repository }}" --draft --target "${PINNED}" \
+            --title "v${VERSION}" --notes "Release notes are written when the release is published."
+          gh release upload "v${VERSION}" --repo "${{ github.repository }}" \
+            dist/swift-artifactbundle/LiterLlm-rs.artifactbundle.zip \
+            dist/swift-artifactbundle/LiterLlm-rs.artifactbundle.zip.checksum \
+            dist/swift-artifactbundle/LiterLlm-rs.artifactbundle.release.json
+          echo "Draft v${VERSION} targets ${PINNED}; publish it to create the tag and start publish.yaml."

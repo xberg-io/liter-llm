@@ -74,6 +74,7 @@ run = ["python3 scripts/ci/check_consumer_versions.py", """\
   scripts/ci/test_release_artifact_versions.py \
   scripts/ci/test_swift_task_environment.py \
   scripts/ci/test_swift_macos_minimum.py \
+  scripts/ci/test_swift_release_path.py \
   scripts/ci/test_homebrew_consumer_version.py \
   scripts/ci/test_node_public_outputs.py \
   scripts/ci/test_go_smoke_test_filter.py \

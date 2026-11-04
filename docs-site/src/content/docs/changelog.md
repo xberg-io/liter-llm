@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Minimum supported versions raised: Node.js 22, PHP 8.3, Elixir 1.17, Go 1.27, Android API 24, Dart 3.13, Zig 0.17, macOS 14.
 - Python 3.11 is now the minimum supported version; Python 3.10 reached end of life.
 
+### Fixed
+
+- Swift: the core `vX.Y.Z` tag's `Package.swift` now pins the artifact bundle checksum, so `from:` and `exact:` consumers resolve a working manifest. The new Prepare Swift Release workflow builds the bundle once, pins its checksum on main and stages the exact ZIP on the draft release before the tag exists; publishing verifies that state and creates `release/swift/<version>` at the tagged commit. The `swift-<version>` tags are no longer created (#460).
+
 ## [2.4.4] - 2026-10-31
 
 ### Fixed
