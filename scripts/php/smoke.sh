@@ -12,10 +12,10 @@ php_bin="${PHP:-php}"
 ext="${LITER_LLM_PHP_EXT:-}"
 if [[ -z "$ext" ]]; then
   for candidate in \
-  "$root/target/release/libliter_llm_php.so" \
-  "$root/target/release/libliter_llm_php.dylib" \
-  "$root/crates/liter-llm-php/target/release/libliter_llm_php.so" \
-  "$root/crates/liter-llm-php/target/release/libliter_llm_php.dylib"; do
+    "$root/target/release/libliter_llm_php.so" \
+    "$root/target/release/libliter_llm_php.dylib" \
+    "$root/crates/liter-llm-php/target/release/libliter_llm_php.so" \
+    "$root/crates/liter-llm-php/target/release/libliter_llm_php.dylib"; do
     if [[ -f "$candidate" ]]; then
       ext="$candidate"
       break
