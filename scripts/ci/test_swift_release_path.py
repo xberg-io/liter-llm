@@ -1,9 +1,10 @@
 """The Swift release path: the checksum is pinned before the tag, and publishing never moves a tag.
 
 SwiftPM resolves `from:` and `exact:` versions to the core `vX.Y.Z` tag, so that tag's root `Package.swift` must
-already carry the artifact bundle's checksum. The prepare workflow builds the bundle once, pins its checksum on main
-and stages the exact ZIP on a draft release whose target is that commit; publishing the draft creates the tag. The
-publish workflow only verifies and completes that state through `xberg-io/actions/publish-swift-release`.
+already carry the artifact bundle's checksum. Prepare Swift release calls the shared xberg-io/actions workflow, which
+builds the bundle once, pins its checksum, pushes that commit with the tag and stages the exact ZIP and receipt on a
+draft release. The publish workflow only verifies and completes that state through
+`xberg-io/actions/publish-swift-release`.
 """
 
 import re
@@ -23,10 +24,6 @@ def workflow(name: str) -> dict:
 
 def publish_jobs() -> dict:
     return workflow("publish.yaml")["jobs"]
-
-
-def prepare_job() -> dict:
-    return workflow("prepare-swift-release.yaml")["jobs"]["prepare-swift-release"]
 
 
 def scripts(job: dict) -> str:
@@ -114,42 +111,33 @@ def test_jobs_gated_on_the_swift_job_still_reference_it() -> None:
         assert set(needs(job)) <= set(jobs), name
 
 
-def test_prepare_pins_the_checksum_from_one_build_before_the_tag() -> None:
+def test_prepare_calls_the_shared_workflow_with_this_repository_bundle() -> None:
     document = workflow("prepare-swift-release.yaml")
-    assert set(document[True]) == {"workflow_dispatch"}
-    job = prepare_job()
-    assert job["runs-on"] == "macos-26"
-    (build,) = uses(job, "xberg-io/actions/build-swift-artifactbundle")
-    assert build["with"]["artifact-name"] == "LiterLlm-rs"
-    assert build["with"]["output-dir"] == "dist/swift-artifactbundle"
-    assert build["with"]["receipt-version"] == "${{ steps.version.outputs.version }}"
-    assert "dry-run" not in build["with"]
-    text = scripts(job)
-    lines = commands(text)
-    assert "alef sync-versions --regen" in lines
-    assert "git add Package.swift" in lines
-    assert not [line for line in lines if line.startswith("git add") and line != "git add Package.swift"]
-    assert 'git push origin "HEAD:refs/heads/main"' in lines
-    create = next(line for line in lines if line.startswith("gh release create"))
-    assert "--draft" in create
-    assert '--target "${PINNED}"' in create
-    for asset in (BUNDLE, "LiterLlm-rs.artifactbundle.release.json", f"{BUNDLE}.checksum"):
-        assert asset in text
-    assert text.index("alef sync-versions --regen") < text.index("git push") < text.index("gh release create")
-
-
-def test_prepare_refuses_an_existing_tag_and_a_mismatched_pin() -> None:
-    text = scripts(prepare_job())
-    assert 'git ls-remote --exit-code --tags origin "refs/tags/v${VERSION}"' in text
-    assert "shasum -a 256" in text
-    assert "__ALEF_" in text
-
-
-def test_dry_run_pushes_and_releases_nothing() -> None:
-    job = prepare_job()
-    writers = [
-        step for step in job["steps"] if re.search(r"\bgit push\b|gh release (create|upload)", step.get("run", ""))
-    ]
-    assert writers
-    for step in writers:
-        assert step["if"] == "${{ !inputs.dry_run }}", step.get("name")
+    assert document["name"] == "Prepare Swift release"
+    assert document[True] == {
+        "workflow_dispatch": {
+            "inputs": {
+                "dry-run": {
+                    "description": "Build, pin and verify, and report the ref plan, without pushing, tagging or releasing",
+                    "type": "boolean",
+                    "default": False,
+                }
+            }
+        }
+    }
+    assert document["concurrency"] == {"group": "prepare-swift-release", "cancel-in-progress": False}
+    assert document["permissions"] == {"contents": "read"}
+    assert list(document["jobs"]) == ["swift"]
+    assert document["jobs"]["swift"] == {
+        "uses": "xberg-io/actions/.github/workflows/reusable-swift-release-prepare.yml@v1",
+        "secrets": {
+            "app-id": "${{ secrets.BOT_APP_ID }}",
+            "app-private-key": "${{ secrets.BOT_APP_PRIVATE_KEY }}",
+        },
+        "with": {
+            "dry-run": "${{ inputs.dry-run }}",
+            "crate-name": "liter-llm-swift",
+            "artifact-name": BUNDLE.removesuffix(".artifactbundle.zip"),
+            "header-path": "target/release/build/liter-llm-swift-*/out",
+        },
+    }

@@ -2424,8 +2424,9 @@ jobs:
           update-existing: "true"
 
   # ~keep SwiftPM resolves `from:`/`exact:` versions to the core tag, so that tag's root Package.swift
-  # must already pin the bundle checksum. prepare-swift-release.yaml builds the bundle once, pins its
-  # checksum on main and stages the exact ZIP and receipt on the draft release that creates the tag.
+  # must already pin the bundle checksum. prepare-swift-release.yaml (the shared xberg-io/actions
+  # workflow) builds the bundle once, pushes the pin commit with the tag and attaches the exact ZIP and
+  # receipt to the draft release.
   # This job never rebuilds (the ZIP is not reproducible) and never creates or moves a tag: the
   # action verifies the tagged manifest against the release asset and the receipt, creates the
   # legacy `release/swift/<version>` branch at the tagged commit when absent and fails otherwise.
