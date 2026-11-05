@@ -56,11 +56,13 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   GH_REPO: ${{ github.repository }}
-  # ~keep Every macOS binary this workflow ships targets the macOS minimum of the root
-  # Package.swift. Rust and the cc-built C objects inside each library (ring, etc.) both read
-  # it, so their minos agree and consumers get no "built for newer macOS" link warnings (#248).
-  # Ignored on non-Apple legs; scripts/ci/test_macos_deployment_target.py holds it to Package.swift.
-  MACOSX_DEPLOYMENT_TARGET: "15.0"
+  # ~keep Every macOS binary this workflow ships targets the lowest macOS the code and the
+  # toolchain need: 10.13 on x86_64. clang and rustc raise an arm64 target to 11.0, the first
+  # macOS on Apple Silicon. Rust and the cc-built C objects inside each library (ring, etc.)
+  # both read it, so their minos agree and consumers get no "built for newer macOS" link
+  # warnings (#248). Ignored on non-Apple legs; scripts/ci/test_macos_deployment_target.py
+  # holds the other release files to this value.
+  MACOSX_DEPLOYMENT_TARGET: "10.13"
 
 jobs:
   prepare:

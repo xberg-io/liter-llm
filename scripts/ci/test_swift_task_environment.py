@@ -7,9 +7,16 @@ import tomllib
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-APPLE_TARGETS = {"IPHONEOS_DEPLOYMENT_TARGET": "16.0", "MACOSX_DEPLOYMENT_TARGET": "15.0"}
+# The macOS value is the deployment target of every Rust binary, from publish.yaml (test_macos_deployment_target.py).
+APPLE_TARGETS = {
+    "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
+    "MACOSX_DEPLOYMENT_TARGET": yaml.safe_load((ROOT / ".github/workflows/publish.yaml").read_text())["env"][
+        "MACOSX_DEPLOYMENT_TARGET"
+    ],
+}
 
 
 def task_tables() -> dict[str, dict]:

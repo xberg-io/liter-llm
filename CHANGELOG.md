@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- macOS 15 is supported again. Every macOS binary the release ships (FFI libraries, language extensions, CLI, Swift bundle and Python wheels) and the Swift package require macOS 15, the oldest macOS that Apple still supports, instead of macOS 26. The macOS Python wheels are tagged `macosx_15_0`, and `Package.swift` uses `swift-tools-version: 6.0` (#470).
+- Older macOS releases are supported again. 2.6.0 required macOS 26, but nothing in liter-llm needs macOS 26. The FFI libraries, language extensions, CLI and Python wheels now target macOS 10.13 on x86_64 and macOS 11.0 on arm64, and the wheels are tagged `macosx_10_13_x86_64` and `macosx_11_0_arm64`. The Swift package requires macOS 13 and uses `swift-tools-version: 6.0` (#470).
 
 ## [2.6.0] - 2026-11-05
 

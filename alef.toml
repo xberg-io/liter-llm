@@ -592,8 +592,10 @@ libc = "=0.2.189"
 
 [crates.swift]
 package_name = "LiterLlm"
-# The oldest macOS that Apple still supports (alef ADR 0021).
-min_macos_version = "15.0"
+# ~keep 13.0 because alef 0.124.2 emits Swift's Duration for retryAfter, which needs macOS 13.
+# xberg-io/alef#893 maps Duration to TimeInterval and lowers the floor to 10.15; move to 10.15
+# with the alef release that carries it.
+min_macos_version = "13.0"
 exclude_functions = ["all_providers"]
 
 [crates.swift.client_constructor_body]

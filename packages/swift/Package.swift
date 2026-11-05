@@ -31,7 +31,7 @@ func resolvedStaticLib(_ name: String) -> String {
 let package = Package(
   name: "LiterLlm",
   platforms: [
-    .macOS(.v15),
+    .macOS(.v13),
     .iOS(.v16),
   ],
   products: [
