@@ -25,7 +25,7 @@ jq = "1.8.2"
 actionlint = "1.7.12"
 bats = "1.14.0"
 lychee = "0.24.2"
-"github:rust-cross/cargo-zigbuild" = "0.24.0"
+"github:rust-cross/cargo-zigbuild" = "0.24.1"
 
 [task_config]
 includes = [
