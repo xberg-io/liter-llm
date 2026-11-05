@@ -592,6 +592,8 @@ libc = "=0.2.189"
 
 [crates.swift]
 package_name = "LiterLlm"
+# The oldest macOS that Apple still supports (alef ADR 0021).
+min_macos_version = "15.0"
 exclude_functions = ["all_providers"]
 
 [crates.swift.client_constructor_body]

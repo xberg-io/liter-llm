@@ -41,11 +41,11 @@ def test_release_builds_an_intel_macos_wheel_on_the_arm64_runner() -> None:
     assert intel["runner"] == "macos-26"
     assert intel["cibw_archs_macos"] == "x86_64"
     assert intel["wheel_macho_arch"] == "x86_64"
-    assert intel["wheel_platform"] == "macosx_26_0_x86_64"
+    assert intel["wheel_platform"] == "macosx_15_0_x86_64"
     assert "rustup target add x86_64-apple-darwin" in intel["before_build_macos"]
     build = next(step for step in wheel_job()["steps"] if "build-python-wheels" in step.get("uses", ""))
     assert "macosx_x86_64" not in build["with"]["cibw-skip"]
-    assert "MACOSX_DEPLOYMENT_TARGET=26.0" in build["with"]["cibw-environment-macos"]
+    assert "MACOSX_DEPLOYMENT_TARGET=15.0" in build["with"]["cibw-environment-macos"]
 
 
 def test_release_and_pull_request_check_build_wheels_with_the_same_workflow() -> None:
@@ -58,8 +58,8 @@ def test_release_and_pull_request_check_build_wheels_with_the_same_workflow() ->
 RELEASE_WHEEL_LEGS = {
     "linux-x86_64": ("ubuntu-latest", "auto", "manylinux.*_x86_64", None),
     "linux-aarch64": ("ubuntu-24.04-arm", "auto", "manylinux.*_aarch64", None),
-    "macos-arm64": ("macos-26", "arm64", "macosx_26_0_arm64", "arm64"),
-    "macos-x86_64": ("macos-26", "x86_64", "macosx_26_0_x86_64", "x86_64"),
+    "macos-arm64": ("macos-26", "arm64", "macosx_15_0_arm64", "arm64"),
+    "macos-x86_64": ("macos-26", "x86_64", "macosx_15_0_x86_64", "x86_64"),
     "windows-x86_64": ("windows-latest", "auto", "win_amd64", None),
 }
 
@@ -101,8 +101,8 @@ def test_pull_request_wheel_check_runs_only_in_this_repository() -> None:
 CONCRETE_TAGS = {
     "linux-x86_64": "manylinux_2_28_x86_64",
     "linux-aarch64": "manylinux_2_28_aarch64",
-    "macos-arm64": "macosx_26_0_arm64",
-    "macos-x86_64": "macosx_26_0_x86_64",
+    "macos-arm64": "macosx_15_0_arm64",
+    "macos-x86_64": "macosx_15_0_x86_64",
     "windows-x86_64": "win_amd64",
 }
 
@@ -474,7 +474,7 @@ WHEEL_BUILD_INPUTS = {
     "cibw-build": "cp311-*",
     "cibw-skip": "*-musllinux* *-win32 *-manylinux_i686",
     "cibw-environment": 'MATURIN_BUILD_ARGS="--compatibility linux" CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=cc',
-    "cibw-environment-macos": 'MATURIN_BUILD_ARGS="" CARGO_BUILD_LOCKED=true MACOSX_DEPLOYMENT_TARGET=26.0',
+    "cibw-environment-macos": 'MATURIN_BUILD_ARGS="" CARGO_BUILD_LOCKED=true MACOSX_DEPLOYMENT_TARGET=15.0',
     "upload-artifact": "false",
 }
 CHECK_RUN = 'python scripts/ci/check_python_wheel.py wheelhouse "$WHEEL_PLATFORM" "$WHEEL_MACHO_ARCH"'
