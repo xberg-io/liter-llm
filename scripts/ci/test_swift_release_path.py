@@ -240,6 +240,7 @@ def test_prepare_calls_the_shared_workflow_with_this_repository_bundle() -> None
             "dry-run": "${{ inputs.dry-run }}",
             "crate-name": "liter-llm-swift",
             "artifact-name": BUNDLE.removesuffix(".artifactbundle.zip"),
+            "binary-target-name": "RustBridgeBinary",
             "header-path": "target/release/build/liter-llm-swift-*/out",
         },
     }

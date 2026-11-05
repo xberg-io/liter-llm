@@ -29,4 +29,5 @@ jobs:
       dry-run: ${{ inputs.dry-run }}
       crate-name: liter-llm-swift
       artifact-name: LiterLlm-rs
+      binary-target-name: RustBridgeBinary
       header-path: target/release/build/liter-llm-swift-*/out
