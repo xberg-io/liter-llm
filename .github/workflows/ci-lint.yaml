@@ -57,13 +57,6 @@ jobs:
       # to skip poly's workspace phase entirely, so those five linters ran only in the
       # git hooks — CI never saw them. ~keep
       setup-go: true
-      # Pinned above the reusable workflow's `v2.12.2` default: that build vendors
-      # staticcheck (honnef.co/go/tools) v0.7.0, whose IR builder panics with
-      # `unexpected expr: *ast.KeyValueExpr` while analysing the Go 1.27 linux stdlib
-      # (`internal/poll`), which aborts poly's whole golangci-lint project check.
-      # golangci-lint v2.13.0 moved to honnef v0.8.0, which parses it. Drop this pin
-      # once the reusable workflow's default clears v2.13.0. ~keep
-      golangci-lint-version: v2.13.1
       setup-ruby: true
       setup-dart: true
       setup-elixir: true
