@@ -4,7 +4,7 @@
 version = 1
 ai_rulez_version = '5.10.0'
 scope = 'all'
-tree = 'sha256:de36b7bc7fa3c571b3d15f1e7942659a6fa2757d7ae95dc09f4675b21a1109b6'
+tree = 'sha256:df35d017512ab0a9e00713f3c07875365082bd00ef808faab5b6f6d4095834b8'
 
 [[include]]
 name = 'xberg-bindings'
@@ -207,43 +207,43 @@ digest = 'sha256:5cb87728d1449fadda6d8557501fcc0823509c60a37058ce4d2dda123296f67
 name = 'liter-llm'
 source = 'skills/liter-llm'
 commit = ''
-digest = 'sha256:de869dbf570a42859e144e41641131c8546ff598932388831ed8ab89482b8706'
+digest = 'sha256:18739a4664d158487f61a9d8e51f7d0d9e931dc8121298a2c04910a2e4e3f9fc'
 
 [[served]]
 name = 'liter-llm-calling-llms'
 source = 'skills/liter-llm-calling-llms'
 commit = ''
-digest = 'sha256:471c285f80f09691e01ff56cd2721c084452ea0a145265bdbec1ae8bdd97a20b'
+digest = 'sha256:bd6790554e0b11d13eaf262e31338bada3f278d304252c8ebd08da972201773b'
 
 [[served]]
 name = 'liter-llm-embeddings-and-search'
 source = 'skills/liter-llm-embeddings-and-search'
 commit = ''
-digest = 'sha256:bf52035d68723e2ae66f73c267666972cb594ce47df84ea6df445fb79544f06c'
+digest = 'sha256:390ebbb5ae9d12ac2b0832f937e862ed40c8dac336b42b2401bf4d59bbe2db1c'
 
 [[served]]
 name = 'liter-llm-running-the-proxy'
 source = 'skills/liter-llm-running-the-proxy'
 commit = ''
-digest = 'sha256:b74e49ea4119ad32f31f64ca8b517a04495645a36fccf23ffb0c72cf49d4a4e2'
+digest = 'sha256:106092a5745c66a8916ece3fa67a659b3b75caa8892295ac33c2581b38541b35'
 
 [[served]]
 name = 'liter-llm-streaming-responses'
 source = 'skills/liter-llm-streaming-responses'
 commit = ''
-digest = 'sha256:979c2b366353457e875f8d5cc57e25db005b242229010b971f773acf6c6f2f2e'
+digest = 'sha256:72572e84a07cdd9e43c0022e079f010b5f4126c33cf19a7c5473524c96565394'
 
 [[served]]
 name = 'liter-llm-tool-calling'
 source = 'skills/liter-llm-tool-calling'
 commit = ''
-digest = 'sha256:97075b76d5d10e4a29c97abed11ab83b650aa16f60b88e89d89e615eab8034cc'
+digest = 'sha256:6850677ded93c5ada9243e0b4004f3b3099213400f0de4d7d2510789cf6851c0'
 
 [[served]]
 name = 'liter-llm-using-the-mcp-server'
 source = 'skills/liter-llm-using-the-mcp-server'
 commit = ''
-digest = 'sha256:990a213bbcd5c8b4fb2f5ee8084d02b846cc96c2e00707738bfe928292d61863'
+digest = 'sha256:16d96b9eb315426fbe7915993e6ebb97bee2be9028d8ce975fdf8a90c30d0684'
 
 [[served]]
 name = 'mcp'
@@ -279,169 +279,169 @@ digest = 'sha256:2700d984ba10baa2e16ed19b48cc8fd5f7351776f2ce03f6712394d3912f91c
 name = 'plugin.hermes.package.src.liter_llm_hermes_plugin.skills.liter-llm'
 source = 'plugin/.hermes/package/src/liter_llm_hermes_plugin/skills/liter-llm'
 commit = ''
-digest = 'sha256:9e76b3aa5fe823a7a2ae93966875a6861fda8e3dff1e3a14274a6dc1bf869197'
+digest = 'sha256:1ffcec8ad86c6b65f7bf9edb1358920432db4da0da2a111b4d452a692673110e'
 
 [[served]]
 name = 'plugin.hermes.package.src.liter_llm_hermes_plugin.skills.liter-llm-calling-llms'
 source = 'plugin/.hermes/package/src/liter_llm_hermes_plugin/skills/liter-llm-calling-llms'
 commit = ''
-digest = 'sha256:faffc26e3d59425d2b0c1644d50580ce267c98f9fdda897464249ddda5e0cce0'
+digest = 'sha256:f26285fc1c57df9317b8e854901b0c6091c797ce1c2b4128a320d3dd26023047'
 
 [[served]]
 name = 'plugin.hermes.package.src.liter_llm_hermes_plugin.skills.liter-llm-embeddings-and-search'
 source = 'plugin/.hermes/package/src/liter_llm_hermes_plugin/skills/liter-llm-embeddings-and-search'
 commit = ''
-digest = 'sha256:ffd8f31d1fbf256f0bda29836ff2c8fdc590bde76c3b86d76f67f21a9fba7c3d'
+digest = 'sha256:bbf22b417c0bd6159c109724bf70efbf93758324e5877f1be1a06e461e125346'
 
 [[served]]
 name = 'plugin.hermes.package.src.liter_llm_hermes_plugin.skills.liter-llm-running-the-proxy'
 source = 'plugin/.hermes/package/src/liter_llm_hermes_plugin/skills/liter-llm-running-the-proxy'
 commit = ''
-digest = 'sha256:e6b7084503ddafd59c644521c38d78026fc5612133eb46cd4ebc3c0a0c18b407'
+digest = 'sha256:ab5e39b40d7d265771093401a535a78633c6ce38a385fb5531097c0586abe28b'
 
 [[served]]
 name = 'plugin.hermes.package.src.liter_llm_hermes_plugin.skills.liter-llm-streaming-responses'
 source = 'plugin/.hermes/package/src/liter_llm_hermes_plugin/skills/liter-llm-streaming-responses'
 commit = ''
-digest = 'sha256:16831b0aad69f5bb12fda199f83f26060a1f1c7c6968646e09c09b6084f270e5'
+digest = 'sha256:0665073d5c15caa17a868acca0f3d48c7cd7fe83fcac2f7f03e4244002a24189'
 
 [[served]]
 name = 'plugin.hermes.package.src.liter_llm_hermes_plugin.skills.liter-llm-tool-calling'
 source = 'plugin/.hermes/package/src/liter_llm_hermes_plugin/skills/liter-llm-tool-calling'
 commit = ''
-digest = 'sha256:b14210faaa5cb6fa5d23b2b2f40e881b8d06e302f656ce2084d13fdc1d51aa9a'
+digest = 'sha256:80fbf849b442d4a5fe85da40475575ac5bab27c7be7ec3d043a136e9f957ef1e'
 
 [[served]]
 name = 'plugin.hermes.package.src.liter_llm_hermes_plugin.skills.liter-llm-using-the-mcp-server'
 source = 'plugin/.hermes/package/src/liter_llm_hermes_plugin/skills/liter-llm-using-the-mcp-server'
 commit = ''
-digest = 'sha256:4b239412eefe2156624f7702037ec5e417fa31789edd95cef1b07bbe50381414'
+digest = 'sha256:6a517fbeb64df522d44ca365ce48e45396bcbffb0f224532208c9eaabe09a8bc'
 
 [[served]]
 name = 'plugin.hermes.plugins.liter-llm.skills.liter-llm'
 source = 'plugin/.hermes/plugins/liter-llm/skills/liter-llm'
 commit = ''
-digest = 'sha256:355ae117b6d5f2f0953cc95cb18b85bbd855f2d6e727ca8fbc895266326c117d'
+digest = 'sha256:756a3f52d397d1f1e9d88dd6677617d8afad7dcbe535ce0f229480f54319fde4'
 
 [[served]]
 name = 'plugin.hermes.plugins.liter-llm.skills.liter-llm-calling-llms'
 source = 'plugin/.hermes/plugins/liter-llm/skills/liter-llm-calling-llms'
 commit = ''
-digest = 'sha256:6934064d099f93201cfcd299280979d8f375235f8f410b7e5f62606526db94dc'
+digest = 'sha256:4cf7fcca8dee88e5f8eeed519c06d0e441c10efbb3916c02a45d773820633c74'
 
 [[served]]
 name = 'plugin.hermes.plugins.liter-llm.skills.liter-llm-embeddings-and-search'
 source = 'plugin/.hermes/plugins/liter-llm/skills/liter-llm-embeddings-and-search'
 commit = ''
-digest = 'sha256:affb5dbf6a31be53c2f5e7a105c67d43b6f7f0c552c590559a7601108a3dcdc9'
+digest = 'sha256:d7e8c0d13d7743faadc4aa46ef3be9f3668c8e73cf521e2c4b0b87111384b434'
 
 [[served]]
 name = 'plugin.hermes.plugins.liter-llm.skills.liter-llm-running-the-proxy'
 source = 'plugin/.hermes/plugins/liter-llm/skills/liter-llm-running-the-proxy'
 commit = ''
-digest = 'sha256:fd3b3790b3e837f0ac2f5396beead7a9132cafae398014047a0bdc812ac66806'
+digest = 'sha256:d2c2fd9100440a9bd9a6401f0679b2bba8961fbbac9a21097b21319b8c82e33b'
 
 [[served]]
 name = 'plugin.hermes.plugins.liter-llm.skills.liter-llm-streaming-responses'
 source = 'plugin/.hermes/plugins/liter-llm/skills/liter-llm-streaming-responses'
 commit = ''
-digest = 'sha256:e95482f5a407a28cbdef2fa29df25cc3f9906d908543d7877dc45c6ef4726e82'
+digest = 'sha256:f614e36e2c4d37d5f146fcc095eb987b441b0e470be531012cc9c9a1e6fb677a'
 
 [[served]]
 name = 'plugin.hermes.plugins.liter-llm.skills.liter-llm-tool-calling'
 source = 'plugin/.hermes/plugins/liter-llm/skills/liter-llm-tool-calling'
 commit = ''
-digest = 'sha256:ad908bf900fbd495b5cfd9dfa89e74cce5b8df8c85c495c81a4b978199dbbbaa'
+digest = 'sha256:c4ff4413361a9c49d09cee92d3196f0adcd5b06de274a3eb4116664de74c6f29'
 
 [[served]]
 name = 'plugin.hermes.plugins.liter-llm.skills.liter-llm-using-the-mcp-server'
 source = 'plugin/.hermes/plugins/liter-llm/skills/liter-llm-using-the-mcp-server'
 commit = ''
-digest = 'sha256:ce6395f861070f2ce4d7c0fa0073cb8f98538aca5f502e67f9c5af535d881060'
+digest = 'sha256:8e08d0ae1b190f53a8f87a72a9a2a1451fbcafeb68d00881b55f06b82ce30267'
 
 [[served]]
 name = 'plugin.opencode.skills.liter-llm'
 source = 'plugin/.opencode/skills/liter-llm'
 commit = ''
-digest = 'sha256:e34c26816c597a9bb1d3c12ae8d663b5cc9d0ba1b75156fedabed21d911ef184'
+digest = 'sha256:fe99e1ad0a4ae2b310bc196ae2e4e50423a73abf0cb989a1cdbc62a3e8bb59ab'
 
 [[served]]
 name = 'plugin.opencode.skills.liter-llm-calling-llms'
 source = 'plugin/.opencode/skills/liter-llm-calling-llms'
 commit = ''
-digest = 'sha256:762c67061356b55d5262b6a611f570b6be6bcc6b77530e30b13f6364008af641'
+digest = 'sha256:ce78dbf7d4770be66b54bb86fc06d8e5e6a66eead752abe9aa85d1d9c67c7d57'
 
 [[served]]
 name = 'plugin.opencode.skills.liter-llm-embeddings-and-search'
 source = 'plugin/.opencode/skills/liter-llm-embeddings-and-search'
 commit = ''
-digest = 'sha256:5f6b52a8f4f614585b69e42ee43ede07d5e980af8e5c605fa736b919ea460495'
+digest = 'sha256:ad095644df95880a329d12f4168a8d845b5d1e8ba4bcb2a9da3e8199a1812882'
 
 [[served]]
 name = 'plugin.opencode.skills.liter-llm-running-the-proxy'
 source = 'plugin/.opencode/skills/liter-llm-running-the-proxy'
 commit = ''
-digest = 'sha256:db846243ea6d64590c22e22406c3c9a922c2a5ae27ea9ecbd0467d4b97de2c56'
+digest = 'sha256:d2369f5b11d51ac6bdd27423889a85cbbe7ee7444b97acb410972fbf0a132d2f'
 
 [[served]]
 name = 'plugin.opencode.skills.liter-llm-streaming-responses'
 source = 'plugin/.opencode/skills/liter-llm-streaming-responses'
 commit = ''
-digest = 'sha256:0f426667e63d51c98dca7266fd0b28ec5c80116a71e49b8c808042357cfc104b'
+digest = 'sha256:eb95d12cd72f5cea46b0bd583c561f74f6781de595e6cbfefa47f6e2650994eb'
 
 [[served]]
 name = 'plugin.opencode.skills.liter-llm-tool-calling'
 source = 'plugin/.opencode/skills/liter-llm-tool-calling'
 commit = ''
-digest = 'sha256:56bf96e31836ba2191c0f7e4ea5a0ec752ba49285a77e3c2431ed02a1bec5bcf'
+digest = 'sha256:47cbf1318cd9fe7b920d70cbc864c24173dae891d9b9141a2428042276395785'
 
 [[served]]
 name = 'plugin.opencode.skills.liter-llm-using-the-mcp-server'
 source = 'plugin/.opencode/skills/liter-llm-using-the-mcp-server'
 commit = ''
-digest = 'sha256:ddb8aba97a892a6e9c99c77d45e8dc899b8158958635a9bbcbecb42192584579'
+digest = 'sha256:64cb7b8498bc3a20b48747f1607b9aac539ff0315b78ec7a33e2713bf497afdf'
 
 [[served]]
 name = 'plugin.skills.liter-llm'
 source = 'plugin/skills/liter-llm'
 commit = ''
-digest = 'sha256:2f3ef1046a56ea62aa8e5c6604a18c46a75cab5e212013ee46b51bd6acb24efa'
+digest = 'sha256:9ff61f10425dd9bf9d80d1ce1fca8e837e6e9c0bd06d2929cf811cf23887c9b5'
 
 [[served]]
 name = 'plugin.skills.liter-llm-calling-llms'
 source = 'plugin/skills/liter-llm-calling-llms'
 commit = ''
-digest = 'sha256:eed4c4e0990426003030206ffbcf2034b4b487273780c48cc1aa24a58b843983'
+digest = 'sha256:2217af8c0aefc760d305481c1b6179998fba8b5a976b19630e27fa52cdfb6159'
 
 [[served]]
 name = 'plugin.skills.liter-llm-embeddings-and-search'
 source = 'plugin/skills/liter-llm-embeddings-and-search'
 commit = ''
-digest = 'sha256:64292587db937810c2aec9d665c960de02b2ed34e453e939854d95fe3e2ceb81'
+digest = 'sha256:43965774fc7d1e2b61f59917ea333896db9eda227f3f834b145a5ffdfac873e2'
 
 [[served]]
 name = 'plugin.skills.liter-llm-running-the-proxy'
 source = 'plugin/skills/liter-llm-running-the-proxy'
 commit = ''
-digest = 'sha256:44dc398c96b3a3c946ae6c328123063882de04e020bbd1347d2df51d638855a1'
+digest = 'sha256:bee839b44cfd8f52a68fcbaba5d9fc337260d46644ae099b45b5ecda771e16f6'
 
 [[served]]
 name = 'plugin.skills.liter-llm-streaming-responses'
 source = 'plugin/skills/liter-llm-streaming-responses'
 commit = ''
-digest = 'sha256:acc30d3c3c466fb455efe6d471a6495fa28751b01f442352d4a689f615e07003'
+digest = 'sha256:6e7afb698dedd46fcd5a546c7fe33abb0da2b8826ed6e1207313014a28b1f866'
 
 [[served]]
 name = 'plugin.skills.liter-llm-tool-calling'
 source = 'plugin/skills/liter-llm-tool-calling'
 commit = ''
-digest = 'sha256:831db420ffa4532d508b65ce741058f752623b92417591883cba0d286486582a'
+digest = 'sha256:a9b540a89a3f0544999678bca70cf20f1e28a01b734233a9afa72ce7f90ffbd3'
 
 [[served]]
 name = 'plugin.skills.liter-llm-using-the-mcp-server'
 source = 'plugin/skills/liter-llm-using-the-mcp-server'
 commit = ''
-digest = 'sha256:66e35f5e380921d4e1a2cedaa080c96e66ec149841cd9fbba426434faeaf5059'
+digest = 'sha256:1290056ca426ac2832b89f026e334b73e6163ed6a12b71052b5e1af34fe069c4'
 
 [[served]]
 name = 'poly-lint-format'

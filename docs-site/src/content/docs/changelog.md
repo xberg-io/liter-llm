@@ -10,17 +10,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-11-05
+
 ### Changed
 
+- **Breaking for macOS 25 and earlier:** every macOS binary the release ships (FFI libraries, language extensions, CLI, Swift bundle and Python wheels) and the Swift package now require macOS 26, instead of macOS 11 or 13 for the binaries and macOS 14 for the 2.5.0 `Package.swift`. The macOS Python wheels are tagged `macosx_26_0` (#470).
 - Regenerate the bindings with Alef 0.124.2. The published Python package now declares `requires-python = ">=3.11"` and builds `abi3-py311` wheels, matching the Python 3.11 minimum. Python option enums subclass `StrEnum`.
-- Swift: the package minimum is macOS 26 again, the org-wide floor. 2.5.0 declared macOS 14 in the root and in-tree `Package.swift`; the generated e2e and test_apps packages already declare macOS 26 (#470).
-- Every macOS binary the release ships (FFI libraries, language extensions, CLI, Swift bundle and Python wheels) now targets macOS 26, the `Package.swift` minimum, instead of macOS 11 or 13. The macOS Python wheels are tagged `macosx_26_0`.
+
+### Fixed
+
+- Swift: the core `vX.Y.Z` tag's `Package.swift` now pins the artifact bundle checksum, so `from:` and `exact:` consumers resolve a working manifest. A release is now two steps: dispatch Prepare Swift release on main, which calls the shared xberg-io/actions workflow to build the bundle once, push the checksum pin with the tag and attach the exact ZIP and receipt to a draft release; then dispatch Publish Release on the tag, which verifies that state, never rebuilds the bundle and creates `release/swift/<version>` at the tagged commit ([procedure](https://github.com/xberg-io/actions/blob/v1/prepare-swift-release/README.md)). Publish Release verifies the tag and the attached Swift bundle before any registry publishes, rechecks them before it publishes the draft, and rejects `republish` and `force_republish` outside dry runs. The `swift-<version>` tags are no longer created (#460).
+
+## [2.5.0] - 2026-11-03
+
+### Added
+
+- `blocked_networks`: a per-client list of CIDR networks the client never connects to. A host name is refused when any address it resolves to is in a listed network, and an IP-literal URL is refused before the request is sent. Set it on `ClientConfigBuilder`, `ClientBuilder`, `ClientOptions` (every binding) or the config file. A refused request fails with `OutboundForbidden`. `wasm32` refuses a list that is not empty with a `BadRequest` error.
+
+### Changed
+
 - Minimum supported versions raised: Node.js 22, PHP 8.3, Elixir 1.17, Go 1.27, Android API 24, Dart 3.13, Zig 0.17, macOS 14.
 - Python 3.11 is now the minimum supported version; Python 3.10 reached end of life.
 
 ### Fixed
 
-- Swift: the core `vX.Y.Z` tag's `Package.swift` now pins the artifact bundle checksum, so `from:` and `exact:` consumers resolve a working manifest. A release is now two steps: dispatch Prepare Swift release on main, which calls the shared xberg-io/actions workflow to build the bundle once, push the checksum pin with the tag and attach the exact ZIP and receipt to a draft release; then dispatch Publish Release on the tag, which verifies that state, never rebuilds the bundle and creates `release/swift/<version>` at the tagged commit ([procedure](https://github.com/xberg-io/actions/blob/v1/prepare-swift-release/README.md)). Publish Release verifies the tag and the attached Swift bundle before any registry publishes, rechecks them before it publishes the draft, and rejects `republish` and `force_republish` outside dry runs. The `swift-<version>` tags are no longer created (#460).
+- Refresh served skill lock digests after regenerating coding-agent plugin artifacts.
+- Keep macOS extension linker flags out of iOS checks and XCFramework builds.
+- Keep CI Python imports sorted and use the builtin exception group in the Hermes bridge.
+- Regenerate Rust E2E suites with compatible Alef 0.115.15 and per-call client trait imports, preserving stream checks without unused bindings under strict warnings.
+- Refresh generated error-family interfaces and required collection JSON serializers while preserving the existing Dart bindings.
+- Align the generated Python package README with the Python 3.11 minimum requirement.
+- Mistral: preserve parallel tool-call control and presence/frequency penalties, including false and zero values (#458).
+- Outbound policy: refuse IPv6 forms that carry a blocked IPv4 address, such as IPv4-mapped, IPv4-compatible, SIIT, NAT64, 6to4 and Teredo addresses, and every ISATAP address (#462).
 
 ## [2.4.4] - 2026-10-31
 
