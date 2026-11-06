@@ -5441,11 +5441,14 @@ class ThinkingBlock {
   /// Position of the block among the content blocks of the provider's turn.
   final PlatformInt64? index;
 
-  /// Bytes of the turn's text `content` that come before the block. With
+  /// UTF-8 bytes of the turn's text `content` that come before the block. With
   /// `tool_call_offset`, it puts the block back between the right text and tool calls.
+  /// Replies without streaming set both, and so does the Rust
+  /// `ThinkingBlockAccumulator`; stream fragments do not. Blocks without
+  /// both offsets, or with offsets that do not fit the text, are put back in `index` order.
   final PlatformInt64? textOffset;
 
-  /// Number of the turn's `tool_calls` that come before the block.
+  /// Number of the turn's `tool_calls` that come before the block (see `text_offset`).
   final PlatformInt64? toolCallOffset;
 
   const ThinkingBlock({

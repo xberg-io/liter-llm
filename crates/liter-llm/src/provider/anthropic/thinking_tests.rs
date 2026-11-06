@@ -298,3 +298,144 @@ fn stream_text_has_no_thinking_blocks() {
         None
     );
 }
+
+#[test]
+fn mixed_and_duplicate_indexes_keep_their_order() {
+    let sent = transformed_request(json!({
+        "role": "assistant",
+        "content": "x",
+        "thinking_blocks": [
+            {"type": "thinking", "thinking": "A", "signature": "sig-a"},
+            {"type": "thinking", "thinking": "B", "signature": "sig-b", "index": 0},
+            {"type": "thinking", "thinking": "C", "signature": "sig-c", "index": 2},
+            {"type": "thinking", "thinking": "D", "signature": "sig-d", "index": 2}
+        ]
+    }));
+    let order: Vec<&str> = sent["content"]
+        .as_array()
+        .expect("array")
+        .iter()
+        .map(|block| {
+            block
+                .get("thinking")
+                .or_else(|| block.get("text"))
+                .and_then(Value::as_str)
+                .expect("text")
+        })
+        .collect();
+    assert_eq!(order, ["A", "B", "C", "D", "x"]);
+}
+
+#[test]
+fn multi_byte_text_before_a_thinking_block_is_split_at_the_right_byte() {
+    let turn = json!([
+        {"type": "text", "text": "Café ☕ ok."},
+        {"type": "thinking", "thinking": "Then.", "signature": "sig-1"},
+        {"type": "text", "text": "Ünïcode 🎉."},
+        {"type": "tool_use", "id": "toolu_01", "name": "get_weather", "input": {"city": "Paris"}}
+    ]);
+    assert_eq!(replayed(turn.clone()), json!({"role": "assistant", "content": turn}));
+}
+
+fn offset_block(text_offset: u64, tool_call_offset: u64) -> Value {
+    json!({
+        "role": "assistant",
+        "content": "Café.",
+        "thinking_blocks": [{"type": "thinking", "thinking": "T", "signature": "sig", "index": 1,
+                             "text_offset": text_offset, "tool_call_offset": tool_call_offset}],
+        "tool_calls": [{"id": "toolu_01", "type": "function", "function": {"name": "get_weather", "arguments": "{}"}}]
+    })
+}
+
+fn block_types(assistant: &Value) -> Vec<String> {
+    assistant["content"]
+        .as_array()
+        .expect("array")
+        .iter()
+        .map(|block| block["type"].as_str().expect("type").to_owned())
+        .collect()
+}
+
+#[test]
+fn offsets_that_do_not_fit_the_text_fall_back_to_index_order() {
+    // 99 is past the end of the text and 4 is inside the two-byte "é".
+    for text_offset in [99, 4] {
+        let sent = transformed_request(offset_block(text_offset, 0));
+        assert_eq!(block_types(&sent), ["text", "thinking", "tool_use"], "{text_offset}");
+        assert_eq!(sent["content"][0]["text"], "Café.");
+    }
+}
+
+#[test]
+fn a_tool_call_offset_past_the_tool_calls_puts_the_block_after_them() {
+    let sent = transformed_request(offset_block(6, 5));
+    assert_eq!(block_types(&sent), ["text", "tool_use", "thinking"]);
+}
+
+fn accumulated(events: &[&str]) -> Vec<ThinkingBlock> {
+    let mut accumulator = ThinkingBlockAccumulator::new();
+    for event in events {
+        if let Some(chunk) = provider().parse_stream_event(event).expect("parse_stream_event") {
+            accumulator.push(&chunk);
+        }
+    }
+    accumulator.finish()
+}
+
+#[test]
+fn accumulator_merges_interleaved_deltas_of_two_blocks() {
+    let blocks = accumulated(&[
+        r#"{"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":"","signature":""}}"#,
+        r#"{"type":"content_block_start","index":1,"content_block":{"type":"thinking","thinking":"","signature":""}}"#,
+        r#"{"type":"content_block_delta","index":1,"delta":{"type":"thinking_delta","thinking":"b1"}}"#,
+        r#"{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"a1"}}"#,
+        r#"{"type":"content_block_delta","index":1,"delta":{"type":"thinking_delta","thinking":"b2"}}"#,
+        r#"{"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sa"}}"#,
+        r#"{"type":"content_block_delta","index":1,"delta":{"type":"signature_delta","signature":"sb"}}"#,
+    ]);
+    let merged: Vec<(Option<u32>, Option<&str>, Option<&str>)> = blocks
+        .iter()
+        .map(|b| (b.index, b.thinking.as_deref(), b.signature.as_deref()))
+        .collect();
+    assert_eq!(
+        merged,
+        [(Some(0), Some("a1"), Some("sa")), (Some(1), Some("b1b2"), Some("sb"))]
+    );
+}
+
+#[test]
+fn accumulator_infers_the_type_when_the_start_is_late_or_missing() {
+    let blocks = accumulated(&[
+        r#"{"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig"}}"#,
+        r#"{"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":"","signature":""}}"#,
+        r#"{"type":"content_block_delta","index":1,"delta":{"type":"thinking_delta","thinking":"no start"}}"#,
+        r#"{"type":"content_block_delta","index":1,"delta":{"type":"signature_delta","signature":"sig-1"}}"#,
+    ]);
+    let types: Vec<Option<&str>> = blocks.iter().map(|b| b.block_type.as_deref()).collect();
+    assert_eq!(types, [Some("thinking"), Some("thinking")]);
+    assert_eq!(blocks[0].signature.as_deref(), Some("sig"));
+
+    let mut assistant = json!({"role": "assistant", "content": "ok"});
+    assistant["thinking_blocks"] = serde_json::to_value(&blocks).expect("serialize");
+    let mut body = request_body(assistant);
+    provider()
+        .transform_request(&mut body)
+        .expect("accumulated blocks must be a valid request");
+}
+
+#[test]
+fn accumulator_drops_a_block_with_nothing_in_it() {
+    let mut accumulator = ThinkingBlockAccumulator::new();
+    let mut chunk = provider()
+        .parse_stream_event(
+            r#"{"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"s"}}"#,
+        )
+        .expect("parse")
+        .expect("chunk");
+    chunk.choices[0].delta.thinking_blocks = Some(vec![ThinkingBlock {
+        index: Some(7),
+        ..Default::default()
+    }]);
+    accumulator.push(&chunk);
+    assert!(accumulator.finish().is_empty());
+}

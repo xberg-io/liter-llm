@@ -44,10 +44,25 @@ impl ThinkingBlockAccumulator {
             .count();
     }
 
-    /// The thinking blocks of the turn, in stream order.
+    /// The thinking blocks of the turn, in stream order. A block whose opening fragment
+    /// never arrived gets its type from what it holds; a block with nothing in it is dropped.
     #[must_use]
     pub fn finish(self) -> Vec<ThinkingBlock> {
         self.blocks
+            .into_iter()
+            .filter_map(|mut block| {
+                if block.block_type.is_none() {
+                    block.block_type = if block.data.is_some() {
+                        Some("redacted_thinking".to_owned())
+                    } else if block.thinking.is_some() || block.signature.is_some() {
+                        Some("thinking".to_owned())
+                    } else {
+                        return None;
+                    };
+                }
+                Some(block)
+            })
+            .collect()
     }
 
     fn merge(&mut self, fragment: &ThinkingBlock) {

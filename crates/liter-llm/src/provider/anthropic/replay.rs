@@ -8,7 +8,9 @@ use crate::error::{LiterLlmError, Result};
 /// A thinking block to send back, with where the reply had it.
 pub(super) struct ReplayedThinking {
     block: Value,
-    index: Option<usize>,
+    /// Where the block goes among the turn's blocks: its `index`, or for a block without
+    /// one, its position among the thinking blocks.
+    order: usize,
     text_offset: Option<usize>,
     tool_call_offset: Option<usize>,
 }
@@ -66,19 +68,14 @@ pub(super) fn replayed_thinking_blocks(thinking_blocks: Option<&Value>) -> Resul
         };
         replayed.push(ReplayedThinking {
             block,
-            index: offset("index"),
+            order: offset("index").unwrap_or(position),
             text_offset: offset("text_offset"),
             tool_call_offset: offset("tool_call_offset"),
         });
     }
-    // ~keep A block without an index keeps its place among the others.
-    let mut keyed: Vec<(usize, ReplayedThinking)> = replayed
-        .into_iter()
-        .enumerate()
-        .map(|(position, block)| (block.index.unwrap_or(position), block))
-        .collect();
-    keyed.sort_by_key(|(key, _)| *key);
-    Ok(keyed.into_iter().map(|(_, block)| block).collect())
+    // ~keep Stable, so blocks with the same order keep the order they were given in.
+    replayed.sort_by_key(|block| block.order);
+    Ok(replayed)
 }
 
 /// The turn rebuilt from its text, tool calls and thinking blocks, each thinking block
@@ -119,11 +116,13 @@ fn push_text_block(blocks: &mut Vec<Value>, text: &str) {
     }
 }
 
-/// Put each thinking block back at its `index` (or, without one, at its position among
-/// the thinking blocks), in index order.
+/// Put each thinking block back at its `order`, after any block inserted before it, so
+/// blocks that share an order keep theirs.
 pub(super) fn insert_by_index(blocks: &mut Vec<Value>, thinking: Vec<ReplayedThinking>) {
-    for (position, replayed) in thinking.into_iter().enumerate() {
-        let at = replayed.index.unwrap_or(position).min(blocks.len());
+    let mut next = 0usize;
+    for replayed in thinking {
+        let at = replayed.order.max(next).min(blocks.len());
         blocks.insert(at, replayed.block);
+        next = at + 1;
     }
 }
