@@ -10,9 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-11-06
+
 ### Changed
 
-- macOS 15 is the minimum for every macOS artifact (was 26): the FFI libraries, language extensions, CLI, Swift bundle, Python wheels (now tagged `macosx_15_0`) and the Swift package (`.macOS(.v15)`). The floor is the oldest macOS release Apple still supports (#470).
+- macOS 15 is the minimum for every macOS artifact (2.6.0 required macOS 26): the FFI libraries, language extensions, CLI, Swift bundle, Python wheels (now tagged `macosx_15_0`) and the Swift package (`.macOS(.v15)`). The floor is the oldest macOS release Apple still supports (#470).
 
 ## [2.6.0] - 2026-11-05
 
