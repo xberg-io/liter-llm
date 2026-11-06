@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 48561138;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1393177636;
 
 // Section: executor
 
@@ -4788,6 +4788,34 @@ fn wire__crate__create_system_message_from_json_impl(
         },
     )
 }
+fn wire__crate__create_thinking_block_from_json_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "create_thinking_block_from_json",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_json = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::create_thinking_block_from_json(api_json)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__create_tool_call_from_json_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -5553,6 +5581,7 @@ const _: fn() = || {
         let _: Option<String> = AssistantMessage.refusal;
         let _: Option<crate::FunctionCall> = AssistantMessage.function_call;
         let _: Option<String> = AssistantMessage.reasoning_content;
+        let _: Option<Vec<crate::ThinkingBlock>> = AssistantMessage.thinking_blocks;
     }
     match None::<crate::AssistantPart>.unwrap() {
         crate::AssistantPart::Text { text } => {
@@ -6435,6 +6464,7 @@ const _: fn() = || {
         let _: Option<crate::StreamFunctionCall> = StreamDelta.function_call;
         let _: Option<String> = StreamDelta.refusal;
         let _: Option<String> = StreamDelta.reasoning_content;
+        let _: Option<Vec<crate::ThinkingBlock>> = StreamDelta.thinking_blocks;
     }
     {
         let StreamFunctionCall = None::<crate::StreamFunctionCall>.unwrap();
@@ -6456,6 +6486,14 @@ const _: fn() = || {
         let SystemMessage = None::<crate::SystemMessage>.unwrap();
         let _: crate::UserContent = SystemMessage.content;
         let _: Option<String> = SystemMessage.name;
+    }
+    {
+        let ThinkingBlock = None::<crate::ThinkingBlock>.unwrap();
+        let _: Option<String> = ThinkingBlock.block_type;
+        let _: Option<String> = ThinkingBlock.thinking;
+        let _: Option<String> = ThinkingBlock.signature;
+        let _: Option<String> = ThinkingBlock.data;
+        let _: Option<i64> = ThinkingBlock.index;
     }
     {
         let ToolCall = None::<crate::ToolCall>.unwrap();
@@ -6685,6 +6723,7 @@ impl SseDecode for crate::AssistantMessage {
         let mut var_refusal = <Option<String>>::sse_decode(deserializer);
         let mut var_functionCall = <Option<crate::FunctionCall>>::sse_decode(deserializer);
         let mut var_reasoningContent = <Option<String>>::sse_decode(deserializer);
+        let mut var_thinkingBlocks = <Option<Vec<crate::ThinkingBlock>>>::sse_decode(deserializer);
         return crate::AssistantMessage {
             content: var_content,
             name: var_name,
@@ -6692,6 +6731,7 @@ impl SseDecode for crate::AssistantMessage {
             refusal: var_refusal,
             function_call: var_functionCall,
             reasoning_content: var_reasoningContent,
+            thinking_blocks: var_thinkingBlocks,
         };
     }
 }
@@ -8242,6 +8282,18 @@ impl SseDecode for Vec<crate::StreamToolCall> {
     }
 }
 
+impl SseDecode for Vec<crate::ThinkingBlock> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::ThinkingBlock>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::ToolCall> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -9375,6 +9427,17 @@ impl SseDecode for Option<Vec<crate::StreamToolCall>> {
     }
 }
 
+impl SseDecode for Option<Vec<crate::ThinkingBlock>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<crate::ThinkingBlock>>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<Vec<crate::ToolCall>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -9801,6 +9864,7 @@ impl SseDecode for crate::StreamDelta {
         let mut var_functionCall = <Option<crate::StreamFunctionCall>>::sse_decode(deserializer);
         let mut var_refusal = <Option<String>>::sse_decode(deserializer);
         let mut var_reasoningContent = <Option<String>>::sse_decode(deserializer);
+        let mut var_thinkingBlocks = <Option<Vec<crate::ThinkingBlock>>>::sse_decode(deserializer);
         return crate::StreamDelta {
             role: var_role,
             content: var_content,
@@ -9808,6 +9872,7 @@ impl SseDecode for crate::StreamDelta {
             function_call: var_functionCall,
             refusal: var_refusal,
             reasoning_content: var_reasoningContent,
+            thinking_blocks: var_thinkingBlocks,
         };
     }
 }
@@ -9871,6 +9936,24 @@ impl SseDecode for crate::SystemMessage {
         return crate::SystemMessage {
             content: var_content,
             name: var_name,
+        };
+    }
+}
+
+impl SseDecode for crate::ThinkingBlock {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_blockType = <Option<String>>::sse_decode(deserializer);
+        let mut var_thinking = <Option<String>>::sse_decode(deserializer);
+        let mut var_signature = <Option<String>>::sse_decode(deserializer);
+        let mut var_data = <Option<String>>::sse_decode(deserializer);
+        let mut var_index = <Option<i64>>::sse_decode(deserializer);
+        return crate::ThinkingBlock {
+            block_type: var_blockType,
+            thinking: var_thinking,
+            signature: var_signature,
+            data: var_data,
+            index: var_index,
         };
     }
 }
@@ -10244,38 +10327,39 @@ fn pde_ffi_dispatcher_primary_impl(
         150 => wire__crate__create_stream_options_from_json_impl(port, ptr, rust_vec_len, data_len),
         151 => wire__crate__create_stream_tool_call_from_json_impl(port, ptr, rust_vec_len, data_len),
         152 => wire__crate__create_system_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        153 => wire__crate__create_tool_call_from_json_impl(port, ptr, rust_vec_len, data_len),
-        154 => wire__crate__create_tool_choice_from_json_impl(port, ptr, rust_vec_len, data_len),
-        155 => wire__crate__create_tool_choice_mode_from_json_impl(port, ptr, rust_vec_len, data_len),
-        156 => wire__crate__create_tool_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        157 => wire__crate__create_tool_type_from_json_impl(port, ptr, rust_vec_len, data_len),
-        158 => wire__crate__create_transcription_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        159 => wire__crate__create_transcription_segment_from_json_impl(port, ptr, rust_vec_len, data_len),
-        160 => wire__crate__create_usage_from_json_impl(port, ptr, rust_vec_len, data_len),
-        161 => wire__crate__create_user_content_from_json_impl(port, ptr, rust_vec_len, data_len),
-        162 => wire__crate__create_user_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        153 => wire__crate__create_thinking_block_from_json_impl(port, ptr, rust_vec_len, data_len),
+        154 => wire__crate__create_tool_call_from_json_impl(port, ptr, rust_vec_len, data_len),
+        155 => wire__crate__create_tool_choice_from_json_impl(port, ptr, rust_vec_len, data_len),
+        156 => wire__crate__create_tool_choice_mode_from_json_impl(port, ptr, rust_vec_len, data_len),
+        157 => wire__crate__create_tool_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        158 => wire__crate__create_tool_type_from_json_impl(port, ptr, rust_vec_len, data_len),
+        159 => wire__crate__create_transcription_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        160 => wire__crate__create_transcription_segment_from_json_impl(port, ptr, rust_vec_len, data_len),
+        161 => wire__crate__create_usage_from_json_impl(port, ptr, rust_vec_len, data_len),
+        162 => wire__crate__create_user_content_from_json_impl(port, ptr, rust_vec_len, data_len),
+        163 => wire__crate__create_user_message_from_json_impl(port, ptr, rust_vec_len, data_len),
         #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-        163 => wire__crate__create_wait_for_batch_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        164 => wire__crate__decode_data_url_impl(port, ptr, rust_vec_len, data_len),
-        165 => wire__crate__encode_data_url_impl(port, ptr, rust_vec_len, data_len),
+        164 => wire__crate__create_wait_for_batch_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        165 => wire__crate__decode_data_url_impl(port, ptr, rust_vec_len, data_len),
+        166 => wire__crate__encode_data_url_impl(port, ptr, rust_vec_len, data_len),
         #[cfg(any(
             all(any(feature = "native-http", feature = "opendal-cache"), not(target_os = "windows")),
             all(any(feature = "native-http", feature = "opendal-cache"), target_os = "windows")
         ))]
-        166 => wire__crate__ensure_crypto_provider_impl(port, ptr, rust_vec_len, data_len),
-        167 => wire__crate__exact_model_info_impl(port, ptr, rust_vec_len, data_len),
-        168 => wire__crate__install_catalog_overlay_from_str_impl(port, ptr, rust_vec_len, data_len),
-        169 => wire__crate__list_catalog_models_impl(port, ptr, rust_vec_len, data_len),
-        170 => wire__crate__liter_llm_error_error_type_impl(port, ptr, rust_vec_len, data_len),
-        171 => wire__crate__liter_llm_error_get_retry_after_impl(port, ptr, rust_vec_len, data_len),
-        172 => wire__crate__liter_llm_error_is_transient_impl(port, ptr, rust_vec_len, data_len),
-        173 => wire__crate__liter_llm_error_status_code_impl(port, ptr, rust_vec_len, data_len),
-        174 => wire__crate__model_info_impl(port, ptr, rust_vec_len, data_len),
+        167 => wire__crate__ensure_crypto_provider_impl(port, ptr, rust_vec_len, data_len),
+        168 => wire__crate__exact_model_info_impl(port, ptr, rust_vec_len, data_len),
+        169 => wire__crate__install_catalog_overlay_from_str_impl(port, ptr, rust_vec_len, data_len),
+        170 => wire__crate__list_catalog_models_impl(port, ptr, rust_vec_len, data_len),
+        171 => wire__crate__liter_llm_error_error_type_impl(port, ptr, rust_vec_len, data_len),
+        172 => wire__crate__liter_llm_error_get_retry_after_impl(port, ptr, rust_vec_len, data_len),
+        173 => wire__crate__liter_llm_error_is_transient_impl(port, ptr, rust_vec_len, data_len),
+        174 => wire__crate__liter_llm_error_status_code_impl(port, ptr, rust_vec_len, data_len),
+        175 => wire__crate__model_info_impl(port, ptr, rust_vec_len, data_len),
         #[cfg(feature = "tower")]
-        175 => wire__crate__record_cost_usd_impl(port, ptr, rust_vec_len, data_len),
-        176 => wire__crate__refresh_catalog_impl(port, ptr, rust_vec_len, data_len),
-        177 => wire__crate__register_custom_provider_impl(port, ptr, rust_vec_len, data_len),
-        178 => wire__crate__unregister_custom_provider_impl(port, ptr, rust_vec_len, data_len),
+        176 => wire__crate__record_cost_usd_impl(port, ptr, rust_vec_len, data_len),
+        177 => wire__crate__refresh_catalog_impl(port, ptr, rust_vec_len, data_len),
+        178 => wire__crate__register_custom_provider_impl(port, ptr, rust_vec_len, data_len),
+        179 => wire__crate__unregister_custom_provider_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -10421,6 +10505,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::AssistantMessage> {
             self.0.refusal.into_into_dart().into_dart(),
             self.0.function_call.into_into_dart().into_dart(),
             self.0.reasoning_content.into_into_dart().into_dart(),
+            self.0.thinking_blocks.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -12619,6 +12704,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::StreamDelta> {
             self.0.function_call.into_into_dart().into_dart(),
             self.0.refusal.into_into_dart().into_dart(),
             self.0.reasoning_content.into_into_dart().into_dart(),
+            self.0.thinking_blocks.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -12705,6 +12791,25 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::SystemMessage> {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::SystemMessage> {}
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::SystemMessage>> for crate::SystemMessage {
     fn into_into_dart(self) -> FrbWrapper<crate::SystemMessage> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::ThinkingBlock> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.block_type.into_into_dart().into_dart(),
+            self.0.thinking.into_into_dart().into_dart(),
+            self.0.signature.into_into_dart().into_dart(),
+            self.0.data.into_into_dart().into_dart(),
+            self.0.index.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::ThinkingBlock> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::ThinkingBlock>> for crate::ThinkingBlock {
+    fn into_into_dart(self) -> FrbWrapper<crate::ThinkingBlock> {
         self.into()
     }
 }
@@ -13049,6 +13154,7 @@ impl SseEncode for crate::AssistantMessage {
         <Option<String>>::sse_encode(self.refusal, serializer);
         <Option<crate::FunctionCall>>::sse_encode(self.function_call, serializer);
         <Option<String>>::sse_encode(self.reasoning_content, serializer);
+        <Option<Vec<crate::ThinkingBlock>>>::sse_encode(self.thinking_blocks, serializer);
     }
 }
 
@@ -14235,6 +14341,16 @@ impl SseEncode for Vec<crate::StreamToolCall> {
     }
 }
 
+impl SseEncode for Vec<crate::ThinkingBlock> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::ThinkingBlock>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::ToolCall> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -15135,6 +15251,16 @@ impl SseEncode for Option<Vec<crate::StreamToolCall>> {
     }
 }
 
+impl SseEncode for Option<Vec<crate::ThinkingBlock>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<crate::ThinkingBlock>>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<Vec<crate::ToolCall>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -15458,6 +15584,7 @@ impl SseEncode for crate::StreamDelta {
         <Option<crate::StreamFunctionCall>>::sse_encode(self.function_call, serializer);
         <Option<String>>::sse_encode(self.refusal, serializer);
         <Option<String>>::sse_encode(self.reasoning_content, serializer);
+        <Option<Vec<crate::ThinkingBlock>>>::sse_encode(self.thinking_blocks, serializer);
     }
 }
 
@@ -15508,6 +15635,17 @@ impl SseEncode for crate::SystemMessage {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::UserContent>::sse_encode(self.content, serializer);
         <Option<String>>::sse_encode(self.name, serializer);
+    }
+}
+
+impl SseEncode for crate::ThinkingBlock {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.block_type, serializer);
+        <Option<String>>::sse_encode(self.thinking, serializer);
+        <Option<String>>::sse_encode(self.signature, serializer);
+        <Option<String>>::sse_encode(self.data, serializer);
+        <Option<i64>>::sse_encode(self.index, serializer);
     }
 }
 

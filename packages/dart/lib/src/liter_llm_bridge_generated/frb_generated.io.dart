@@ -591,6 +591,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<StreamToolCall> dco_decode_list_stream_tool_call(dynamic raw);
 
   @protected
+  List<ThinkingBlock> dco_decode_list_thinking_block(dynamic raw);
+
+  @protected
   List<ToolCall> dco_decode_list_tool_call(dynamic raw);
 
   @protected
@@ -820,6 +823,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<StreamToolCall>? dco_decode_opt_list_stream_tool_call(dynamic raw);
 
   @protected
+  List<ThinkingBlock>? dco_decode_opt_list_thinking_block(dynamic raw);
+
+  @protected
   List<ToolCall>? dco_decode_opt_list_tool_call(dynamic raw);
 
   @protected
@@ -922,6 +928,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SystemMessage dco_decode_system_message(dynamic raw);
+
+  @protected
+  ThinkingBlock dco_decode_thinking_block(dynamic raw);
 
   @protected
   ToolCall dco_decode_tool_call(dynamic raw);
@@ -1695,6 +1704,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<ThinkingBlock> sse_decode_list_thinking_block(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<ToolCall> sse_decode_list_tool_call(SseDeserializer deserializer);
 
   @protected
@@ -1992,6 +2006,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<ThinkingBlock>? sse_decode_opt_list_thinking_block(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<ToolCall>? sse_decode_opt_list_tool_call(SseDeserializer deserializer);
 
   @protected
@@ -2108,6 +2127,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SystemMessage sse_decode_system_message(SseDeserializer deserializer);
+
+  @protected
+  ThinkingBlock sse_decode_thinking_block(SseDeserializer deserializer);
 
   @protected
   ToolCall sse_decode_tool_call(SseDeserializer deserializer);
@@ -3094,6 +3116,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_thinking_block(
+    List<ThinkingBlock> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_tool_call(List<ToolCall> self, SseSerializer serializer);
 
   @protected
@@ -3463,6 +3491,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_list_thinking_block(
+    List<ThinkingBlock>? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_list_tool_call(
     List<ToolCall>? self,
     SseSerializer serializer,
@@ -3629,6 +3663,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_system_message(SystemMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_thinking_block(ThinkingBlock self, SseSerializer serializer);
 
   @protected
   void sse_encode_tool_call(ToolCall self, SseSerializer serializer);

@@ -63,6 +63,7 @@ mod tests {
                     function_call: None,
                     refusal: None,
                     reasoning_content: None,
+                    thinking_blocks: None,
                 },
                 finish_reason: None,
             }],

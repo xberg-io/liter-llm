@@ -45,6 +45,7 @@ fn ok_response(tag: &str) -> LlmResponse {
                 refusal: None,
                 function_call: None,
                 reasoning_content: None,
+                thinking_blocks: None,
             },
             finish_reason: Some(FinishReason::Stop),
             logprobs: None,

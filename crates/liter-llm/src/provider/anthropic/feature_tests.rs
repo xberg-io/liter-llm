@@ -433,15 +433,15 @@ fn parse_stream_event_thinking_delta_routes_to_reasoning_content() {
 }
 
 #[test]
-fn parse_stream_event_signature_delta_returns_none() {
+fn parse_stream_event_signature_delta_carries_no_visible_text() {
     let event = r#"{"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"abc123"}}"#;
-    let result = provider()
+    let chunk = provider()
         .parse_stream_event(event)
-        .expect("parse_stream_event should not fail");
-    assert!(
-        result.is_none(),
-        "signature_delta carries no visible text and should be ignored"
-    );
+        .expect("parse_stream_event should not fail")
+        .expect("signature_delta should produce a block fragment");
+    let delta = &chunk.choices[0].delta;
+    assert_eq!(delta.content, None, "the signature must not leak into `content`");
+    assert_eq!(delta.reasoning_content, None, "the signature is not reasoning text");
 }
 
 #[test]
@@ -449,13 +449,12 @@ fn parse_stream_event_full_thinking_block_sequence_routes_text_to_reasoning_cont
     let provider = provider();
 
     let start = r#"{"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":""}}"#;
-    let start_result = provider
+    let start_chunk = provider
         .parse_stream_event(start)
-        .expect("parse_stream_event should not fail");
-    assert!(
-        start_result.is_none(),
-        "thinking content_block_start should emit no chunk"
-    );
+        .expect("parse_stream_event should not fail")
+        .expect("thinking content_block_start should emit a block fragment");
+    assert_eq!(start_chunk.choices[0].delta.reasoning_content, None);
+    assert_eq!(start_chunk.choices[0].delta.content, None);
 
     let delta_one =
         r#"{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"Let me "}}"#;
@@ -476,12 +475,11 @@ fn parse_stream_event_full_thinking_block_sequence_routes_text_to_reasoning_cont
     assert_eq!(chunk_two.choices[0].delta.content, None);
 
     let signature = r#"{"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"sig"}}"#;
-    assert!(
-        provider
-            .parse_stream_event(signature)
-            .expect("parse_stream_event should not fail")
-            .is_none()
-    );
+    let signature_chunk = provider
+        .parse_stream_event(signature)
+        .expect("parse_stream_event should not fail")
+        .expect("signature_delta should produce a block fragment");
+    assert_eq!(signature_chunk.choices[0].delta.reasoning_content, None);
 
     let stop = r#"{"type":"content_block_stop","index":0}"#;
     assert!(

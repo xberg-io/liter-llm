@@ -685,6 +685,14 @@ typedef struct LITERLLMStreamToolCall LITERLLMStreamToolCall;
  */
 typedef struct LITERLLMSystemMessage LITERLLMSystemMessage;
 /**
+ * A reasoning block a provider requires back unchanged: an Anthropic `thinking` block
+ * with its `signature`, or a `redacted_thinking` block with its encrypted `data`.
+ *
+ * In a stream, each `thinking_blocks` entry is a fragment:
+ * merge the fragments of one `index` in order, appending `thinking` and `signature`.
+ */
+typedef struct LITERLLMThinkingBlock LITERLLMThinkingBlock;
+/**
  * A tool call the model wants to execute.
  */
 typedef struct LITERLLMToolCall LITERLLMToolCall;
@@ -1006,6 +1014,15 @@ LITERLLMAlefHandle literllm_assistant_message_function_call(LITERLLMAlefHandle h
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_assistant_message_reasoning_content(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `thinking_blocks` field from a `AssistantMessage`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_assistant_message_thinking_blocks(LITERLLMAlefHandle handle);
 
 /**
  * Return the assistant's textual response, concatenating all `Text` parts
@@ -2973,6 +2990,17 @@ int32_t literllm_client_options_has_max_response_bytes(LITERLLMAlefHandle handle
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_client_options_model_hint(LITERLLMAlefHandle handle);
+#endif
+
+#if (defined(LITERLLM_FEATURE_NATIVE_HTTP) || defined(LITERLLM_FEATURE_WASM_HTTP))
+/**
+ * Get the `blocked_networks` field from a `ClientOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_client_options_blocked_networks(LITERLLMAlefHandle handle);
 #endif
 
 /**
@@ -8281,6 +8309,15 @@ char *literllm_stream_delta_refusal(LITERLLMAlefHandle handle);
 char *literllm_stream_delta_reasoning_content(LITERLLMAlefHandle handle);
 
 /**
+ * Get the `thinking_blocks` field from a `StreamDelta`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_stream_delta_thinking_blocks(LITERLLMAlefHandle handle);
+
+/**
  * Create a `StreamFunctionCall` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -8461,6 +8498,85 @@ LITERLLMAlefHandle literllm_system_message_content(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_system_message_name(LITERLLMAlefHandle handle);
+
+/**
+ * Create a `ThinkingBlock` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_thinking_block_free`.
+ */
+LITERLLMAlefHandle literllm_thinking_block_from_json(const char *json);
+
+/**
+ * Serialize a `ThinkingBlock` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_thinking_block_to_json(LITERLLMAlefHandle handle);
+
+/**
+ * Free a `ThinkingBlock` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void literllm_thinking_block_free(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `block_type` field from a `ThinkingBlock`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_thinking_block_block_type(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `thinking` field from a `ThinkingBlock`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_thinking_block_thinking(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `signature` field from a `ThinkingBlock`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_thinking_block_signature(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `data` field from a `ThinkingBlock`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `literllm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_thinking_block_data(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `index` field from a `ThinkingBlock`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint32_t literllm_thinking_block_index(LITERLLMAlefHandle handle);
+
+/**
+ * Report whether the `index` field on a `ThinkingBlock` is `Some`.
+ *
+ * `literllm_thinking_block_index` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `literllm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_thinking_block_has_index(LITERLLMAlefHandle handle);
 
 /**
  * Create a `ToolCall` from a JSON string. Returns null on failure.
@@ -10168,7 +10284,8 @@ LITERLLMAlefHandle literllm_create_client_from_json(const char *json);
 /**
  * Create a client from binding-friendly options.
  * \note Returns `LiterLlmError.BadRequest` for a zero or platform-overflowing
- * `max_response_bytes`, a zero `connect_timeout_secs`, plus the errors documented by `create_client`.
+ * `max_response_bytes`, a zero `connect_timeout_secs`, a `blocked_networks` entry that is not a CIDR
+ * network, plus the errors documented by `create_client`.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */

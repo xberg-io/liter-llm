@@ -218,8 +218,10 @@ impl Provider for AnthropicProvider {
     /// - `message_start`: emits a role-only delta chunk.
     /// - `content_block_start`: emits empty delta (tool_use: emits tool_call header chunk).
     ///   The tool call `index` is the Anthropic block number. The client renumbers it while it
-    ///   reads the stream, so the first tool call of a stream has `index` 0.
-    /// - `content_block_delta`: emits text, thinking, or tool input JSON delta.
+    ///   reads the stream, so the first tool call of a stream has `index` 0. A `thinking` or
+    ///   `redacted_thinking` block emits its opening `thinking_blocks` fragment.
+    /// - `content_block_delta`: emits text, thinking, or tool input JSON delta. Thinking text
+    ///   and `signature_delta` also emit `thinking_blocks` fragments keyed by block index.
     /// - `message_delta`: emits final chunk with finish_reason and usage.
     /// - `message_stop`: signals end of stream, returns `Ok(None)`.
     /// - `content_block_stop`, `ping`: skipped (returns `Ok(None)` — no content to emit).
@@ -233,6 +235,27 @@ impl Provider for AnthropicProvider {
     fn parse_stream_event(&self, event_data: &str) -> Result<Option<ChatCompletionChunk>> {
         stream::parse_stream_event(event_data)
     }
+}
+
+/// Whether `block` is a `thinking` or `redacted_thinking` content block.
+fn is_thinking_block(block: &Value) -> bool {
+    matches!(
+        block.get("type").and_then(Value::as_str),
+        Some("thinking" | "redacted_thinking")
+    )
+}
+
+/// A `ThinkingBlock` JSON object for an Anthropic content block (or block fragment) at
+/// `index`: its thinking fields, without anything else the block may carry.
+fn thinking_block_fragment(block: &Value, index: usize) -> Value {
+    let mut fragment = serde_json::Map::new();
+    for field in ["type", "thinking", "signature", "data"] {
+        if let Some(value) = block.get(field) {
+            fragment.insert(field.to_owned(), value.clone());
+        }
+    }
+    fragment.insert("index".to_owned(), Value::from(index));
+    Value::Object(fragment)
 }
 
 /// Sanitize a tool_call_id so it only contains characters allowed by Anthropic: `[a-zA-Z0-9_-]`.
@@ -311,3 +334,5 @@ mod feature_tests;
 mod stream_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod thinking_tests;

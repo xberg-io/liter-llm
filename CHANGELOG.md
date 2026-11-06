@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Anthropic: `reasoning_effort` on Claude Opus 4.6+, Sonnet 4.6+, Haiku 5.5, Fable and Mythos now sends adaptive thinking with `output_config.effort` (`minimal` becomes `low`), instead of a `thinking.budget_tokens` that Claude Opus 5.5, Sonnet 5.5 and Haiku 5.5 reject. Older models keep the token budget. `none` on Claude Sonnet 5.5 sends `thinking: {type: "between_tools"}`, its documented way to turn thinking off (#473).
+- Anthropic: thinking blocks survive a tool loop. A reply keeps each `thinking` block, with its `signature`, and each `redacted_thinking` block in the new `AssistantMessage.thinking_blocks` (`ThinkingBlock`, with the block's position in the turn), and sending the message back returns them to Anthropic unchanged at that position, as Anthropic requires alongside tool results. Streams carry them as `StreamDelta.thinking_blocks` fragments keyed by block index, including the signature that was dropped before. Other providers never receive the field (#474).
 
 ## [2.6.1] - 2026-11-06
 

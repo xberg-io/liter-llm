@@ -3,11 +3,13 @@
 use serde::Deserialize as _;
 use serde::de::IntoDeserializer as _;
 use serde::de::value::StrDeserializer;
-use serde_json::Value;
+use serde_json::{Value, json};
 
 use super::map_stop_reason;
 use crate::error::{LiterLlmError, Result};
-use crate::types::{ChatCompletionChunk, FinishReason, StreamChoice, StreamDelta, StreamFunctionCall, StreamToolCall};
+use crate::types::{
+    ChatCompletionChunk, FinishReason, StreamChoice, StreamDelta, StreamFunctionCall, StreamToolCall, ThinkingBlock,
+};
 
 /// Parse an Anthropic SSE event into an OpenAI-compatible `ChatCompletionChunk`.
 ///
@@ -93,6 +95,7 @@ fn message_start_chunk(event: &Value) -> ChatCompletionChunk {
                 function_call: None,
                 refusal: None,
                 reasoning_content: None,
+                thinking_blocks: None,
             },
             finish_reason: None,
         }],
@@ -118,6 +121,11 @@ fn content_block_start_chunk(event: &Value) -> Option<ChatCompletionChunk> {
         return Some(make_empty_chunk_with_tool_start(anthropic_index, tool_id, tool_name));
     }
 
+    if super::is_thinking_block(block) {
+        let fragment = super::thinking_block_fragment(block, anthropic_index as usize);
+        return Some(make_block_fragment_chunk(None, fragment));
+    }
+
     None
 }
 
@@ -136,12 +144,15 @@ fn content_block_delta_chunk(event: &Value) -> Option<ChatCompletionChunk> {
             // ~keep Route extended-thinking text into `reasoning_content`, mirroring
             // ~keep the OpenAI-compatible `reasoning_content` extension (DeepSeek R1, Qwen).
             let thinking = delta.get("thinking").and_then(|t| t.as_str()).unwrap_or("");
-            Some(make_reasoning_chunk("", "", thinking))
+            let fragment = json!({"index": index, "thinking": thinking});
+            Some(make_block_fragment_chunk(Some(thinking), fragment))
         }
         "signature_delta" => {
-            // ~keep The thinking-block signature is an opaque verification token, not
-            // ~keep visible text; it is never surfaced in `content` or `reasoning_content`.
-            None
+            // ~keep The signature is an opaque verification token, not visible text: it is
+            // ~keep never surfaced in `content` or `reasoning_content`, only in the block fragment.
+            let signature = delta.get("signature").and_then(|t| t.as_str()).unwrap_or("");
+            let fragment = json!({"index": index, "signature": signature});
+            Some(make_block_fragment_chunk(None, fragment))
         }
         "input_json_delta" => {
             let partial_json = delta.get("partial_json").and_then(|v| v.as_str()).unwrap_or("");
@@ -186,6 +197,7 @@ fn message_delta_chunk(event: &Value) -> ChatCompletionChunk {
                 function_call: None,
                 refusal: None,
                 reasoning_content: None,
+                thinking_blocks: None,
             },
             finish_reason: finish,
         }],
@@ -211,6 +223,7 @@ fn make_text_chunk(id: &str, model: &str, text: &str) -> ChatCompletionChunk {
                 function_call: None,
                 refusal: None,
                 reasoning_content: None,
+                thinking_blocks: None,
             },
             finish_reason: None,
         }],
@@ -236,6 +249,7 @@ fn make_reasoning_chunk(id: &str, model: &str, text: &str) -> ChatCompletionChun
                 function_call: None,
                 refusal: None,
                 reasoning_content: Some(text.to_owned()),
+                thinking_blocks: None,
             },
             finish_reason: None,
         }],
@@ -243,6 +257,19 @@ fn make_reasoning_chunk(id: &str, model: &str, text: &str) -> ChatCompletionChun
         system_fingerprint: None,
         service_tier: None,
     }
+}
+
+/// Build a `ChatCompletionChunk` carrying one thinking block fragment and, for a
+/// thinking delta, its text as `reasoning_content`.
+fn make_block_fragment_chunk(reasoning: Option<&str>, fragment: Value) -> ChatCompletionChunk {
+    let mut chunk = make_reasoning_chunk("", "", reasoning.unwrap_or_default());
+    // ~keep The fragment is built from string fields and an index, so it always deserializes.
+    let block: ThinkingBlock = serde_json::from_value(fragment).unwrap_or_default();
+    for choice in &mut chunk.choices {
+        choice.delta.reasoning_content = reasoning.map(str::to_owned);
+        choice.delta.thinking_blocks = Some(vec![block.clone()]);
+    }
+    chunk
 }
 
 /// Build a `ChatCompletionChunk` that starts a tool call (id + name, no arguments yet).
@@ -269,6 +296,7 @@ fn make_empty_chunk_with_tool_start(tool_index: u32, tool_id: String, tool_name:
                 function_call: None,
                 refusal: None,
                 reasoning_content: None,
+                thinking_blocks: None,
             },
             finish_reason: None,
         }],
@@ -302,6 +330,7 @@ fn make_tool_arguments_delta(tool_index: u32, partial_json: &str) -> ChatComplet
                 function_call: None,
                 refusal: None,
                 reasoning_content: None,
+                thinking_blocks: None,
             },
             finish_reason: None,
         }],

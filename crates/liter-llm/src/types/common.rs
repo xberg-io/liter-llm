@@ -304,6 +304,14 @@ pub struct AssistantMessage {
     /// `reasoning_content`, or Anthropic extended thinking).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reasoning_content: Option<String>,
+    /// Reasoning blocks the provider requires back unchanged on the next turn: Anthropic
+    /// `thinking` blocks with their `signature`, and `redacted_thinking` blocks.
+    ///
+    /// Leave them on the message when you send the turn back: Anthropic requires thinking
+    /// blocks to be returned unchanged, for example alongside tool results. Each block goes
+    /// back at its `index` in the turn. Other providers never receive them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub thinking_blocks: Option<Vec<ThinkingBlock>>,
 }
 
 impl AssistantMessage {
@@ -476,6 +484,7 @@ impl Message {
             refusal: None,
             function_call: None,
             reasoning_content: None,
+            thinking_blocks: None,
         })
     }
 
@@ -1113,6 +1122,31 @@ pub struct FunctionDefinition {
     /// If true, enforce strict JSON schema validation for arguments.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub strict: Option<bool>,
+}
+
+/// A reasoning block a provider requires back unchanged: an Anthropic `thinking` block
+/// with its `signature`, or a `redacted_thinking` block with its encrypted `data`.
+///
+/// In a stream, each [`crate::types::StreamDelta::thinking_blocks`] entry is a fragment:
+/// merge the fragments of one `index` in order, appending `thinking` and `signature`.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ThinkingBlock {
+    /// Block type: `thinking` or `redacted_thinking`. A stream sends it in the first
+    /// fragment of a block only.
+    #[serde(rename = "type", default, skip_serializing_if = "Option::is_none")]
+    pub block_type: Option<String>,
+    /// The reasoning text (a summary, or empty, on models that do not return it).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub thinking: Option<String>,
+    /// Opaque token that verifies the block; required when the block is sent back.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub signature: Option<String>,
+    /// Encrypted reasoning of a `redacted_thinking` block.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data: Option<String>,
+    /// Position of the block among the content blocks of the provider's turn.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<u32>,
 }
 
 /// A tool call the model wants to execute.

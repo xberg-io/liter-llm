@@ -40,7 +40,20 @@ pub(super) fn transform_response(body: &mut Value) -> Result<()> {
 
     let usage = usage_token_counts(body);
 
-    let message = assistant_message(text_content.as_deref(), tool_calls, reasoning_content);
+    let mut message = assistant_message(text_content.as_deref(), tool_calls, reasoning_content);
+
+    // ~keep Anthropic requires thinking blocks back unchanged, signature included, at their
+    // ~keep position in the turn; `reasoning_content` above cannot carry either.
+    let thinking_blocks: Vec<Value> = content_blocks
+        .iter()
+        .flatten()
+        .enumerate()
+        .filter(|(_, block)| super::is_thinking_block(block))
+        .map(|(index, block)| super::thinking_block_fragment(block, index))
+        .collect();
+    if !thinking_blocks.is_empty() {
+        message["thinking_blocks"] = Value::Array(thinking_blocks);
+    }
 
     *body = json!({
         "id": id,

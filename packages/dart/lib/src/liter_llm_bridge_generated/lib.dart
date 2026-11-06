@@ -11,7 +11,7 @@ part 'lib.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `item`, `try_convert_assistant_content_from_core`, `try_convert_assistant_part_from_core`, `try_convert_auth_header_format_from_core`, `try_convert_auth_type_from_core`, `try_convert_batch_status_from_core`, `try_convert_cache_backend_from_core`, `try_convert_content_part_from_core`, `try_convert_embedding_content_part_from_core`, `try_convert_embedding_format_from_core`, `try_convert_embedding_input_from_core`, `try_convert_enforcement_from_core`, `try_convert_file_purpose_from_core`, `try_convert_finish_reason_from_core`, `try_convert_image_detail_from_core`, `try_convert_message_from_core`, `try_convert_modality_from_core`, `try_convert_moderation_input_from_core`, `try_convert_ocr_document_from_core`, `try_convert_reasoning_effort_from_core`, `try_convert_refresh_outcome_from_core`, `try_convert_rerank_document_from_core`, `try_convert_response_format_from_core`, `try_convert_stop_sequence_from_core`, `try_convert_stream_format_from_core`, `try_convert_tool_choice_from_core`, `try_convert_tool_choice_mode_from_core`, `try_convert_tool_type_from_core`, `try_convert_user_content_from_core`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `IntentPrototype`, `SingleflightResult`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `try_from`, `try_from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `try_from`, `try_from`
 
 /// Create a client from binding-friendly options.
 ///
@@ -430,6 +430,9 @@ Future<ChatCompletionTool> createChatCompletionToolFromJson({
 Future<FunctionDefinition> createFunctionDefinitionFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateFunctionDefinitionFromJson(json: json);
+
+Future<ThinkingBlock> createThinkingBlockFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateThinkingBlockFromJson(json: json);
 
 Future<ToolCall> createToolCallFromJson({required String json}) =>
     RustLib.instance.api.crateCreateToolCallFromJson(json: json);
@@ -943,6 +946,14 @@ class AssistantMessage {
   /// `reasoning_content`, or Anthropic extended thinking).
   final String? reasoningContent;
 
+  /// Reasoning blocks the provider requires back unchanged on the next turn: Anthropic
+  /// `thinking` blocks with their `signature`, and `redacted_thinking` blocks.
+  ///
+  /// Leave them on the message when you send the turn back: Anthropic requires thinking
+  /// blocks to be returned unchanged, for example alongside tool results. Each block goes
+  /// back at its `index` in the turn. Other providers never receive them.
+  final List<ThinkingBlock>? thinkingBlocks;
+
   const AssistantMessage({
     this.content,
     this.name,
@@ -950,6 +961,7 @@ class AssistantMessage {
     this.refusal,
     this.functionCall,
     this.reasoningContent,
+    this.thinkingBlocks,
   });
 
   @override
@@ -959,7 +971,8 @@ class AssistantMessage {
       toolCalls.hashCode ^
       refusal.hashCode ^
       functionCall.hashCode ^
-      reasoningContent.hashCode;
+      reasoningContent.hashCode ^
+      thinkingBlocks.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -971,7 +984,8 @@ class AssistantMessage {
           toolCalls == other.toolCalls &&
           refusal == other.refusal &&
           functionCall == other.functionCall &&
-          reasoningContent == other.reasoningContent;
+          reasoningContent == other.reasoningContent &&
+          thinkingBlocks == other.thinkingBlocks;
 }
 
 @freezed
@@ -5243,6 +5257,12 @@ class StreamDelta {
   /// Partial reasoning/thinking tokens (OpenAI-compatible extension used by DeepSeek R1, Qwen, etc.).
   final String? reasoningContent;
 
+  /// Fragments of reasoning blocks the provider requires back unchanged (Anthropic
+  /// `thinking` and `redacted_thinking`). Merge them by `index` as
+  /// `ThinkingBlock` describes, and set the merged blocks as
+  /// `thinking_blocks` of the turn.
+  final List<ThinkingBlock>? thinkingBlocks;
+
   const StreamDelta({
     this.role,
     this.content,
@@ -5250,6 +5270,7 @@ class StreamDelta {
     this.functionCall,
     this.refusal,
     this.reasoningContent,
+    this.thinkingBlocks,
   });
 
   @override
@@ -5259,7 +5280,8 @@ class StreamDelta {
       toolCalls.hashCode ^
       functionCall.hashCode ^
       refusal.hashCode ^
-      reasoningContent.hashCode;
+      reasoningContent.hashCode ^
+      thinkingBlocks.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -5271,7 +5293,8 @@ class StreamDelta {
           toolCalls == other.toolCalls &&
           functionCall == other.functionCall &&
           refusal == other.refusal &&
-          reasoningContent == other.reasoningContent;
+          reasoningContent == other.reasoningContent &&
+          thinkingBlocks == other.thinkingBlocks;
 }
 
 /// The streaming wire format a provider uses for its response stream.
@@ -5391,6 +5414,56 @@ class SystemMessage {
           runtimeType == other.runtimeType &&
           content == other.content &&
           name == other.name;
+}
+
+/// A reasoning block a provider requires back unchanged: an Anthropic `thinking` block
+/// with its `signature`, or a `redacted_thinking` block with its encrypted `data`.
+///
+/// In a stream, each `thinking_blocks` entry is a fragment:
+/// merge the fragments of one `index` in order, appending `thinking` and `signature`.
+class ThinkingBlock {
+  /// Block type: `thinking` or `redacted_thinking`. A stream sends it in the first
+  /// fragment of a block only.
+  final String? blockType;
+
+  /// The reasoning text (a summary, or empty, on models that do not return it).
+  final String? thinking;
+
+  /// Opaque token that verifies the block; required when the block is sent back.
+  final String? signature;
+
+  /// Encrypted reasoning of a `redacted_thinking` block.
+  final String? data;
+
+  /// Position of the block among the content blocks of the provider's turn.
+  final PlatformInt64? index;
+
+  const ThinkingBlock({
+    this.blockType,
+    this.thinking,
+    this.signature,
+    this.data,
+    this.index,
+  });
+
+  @override
+  int get hashCode =>
+      blockType.hashCode ^
+      thinking.hashCode ^
+      signature.hashCode ^
+      data.hashCode ^
+      index.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ThinkingBlock &&
+          runtimeType == other.runtimeType &&
+          blockType == other.blockType &&
+          thinking == other.thinking &&
+          signature == other.signature &&
+          data == other.data &&
+          index == other.index;
 }
 
 /// A tool call the model wants to execute.

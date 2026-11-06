@@ -404,6 +404,23 @@ impl Stream for RequireTerminalChunk {
     }
 }
 
+/// Remove `thinking_blocks` from every message of a chat body bound for a provider other
+/// than Anthropic: the field holds Anthropic thinking blocks for replay to Anthropic only,
+/// and strict OpenAI-compatible servers reject unknown message keys (#292).
+fn strip_thinking_blocks_unless_anthropic(prov: &dyn Provider, body: &mut serde_json::Value) {
+    if prov.name() == "anthropic" {
+        return;
+    }
+    let Some(messages) = body.get_mut("messages").and_then(serde_json::Value::as_array_mut) else {
+        return;
+    };
+    for message in messages {
+        if let Some(fields) = message.as_object_mut() {
+            fields.remove("thinking_blocks");
+        }
+    }
+}
+
 /// Shallow-merge a top-level `"extra_body"` key into `body`, OpenAI-Python-SDK
 /// style: `{**body, **extra_body}` — extra_body keys override identically
 /// named top-level keys.
@@ -1340,6 +1357,7 @@ impl DefaultClient {
                 obj.insert("max_completion_tokens".into(), max_tokens);
             }
         }
+        strip_thinking_blocks_unless_anthropic(prov.as_ref(), &mut body);
         if endpoint == provider::Endpoint::Embedding {
             prov.transform_embedding_request(&mut body)?;
         } else {
@@ -4243,6 +4261,70 @@ mod build_provider_tests {
             reasoning_effort: Some(crate::types::ReasoningEffort::None),
             ..Default::default()
         }
+    }
+
+    fn thinking_turn_request(model: &str) -> ChatCompletionRequest {
+        let blocks = vec![crate::types::ThinkingBlock {
+            block_type: Some("thinking".into()),
+            thinking: Some("Hmm".into()),
+            signature: Some("sig".into()),
+            data: None,
+            index: Some(0),
+        }];
+        ChatCompletionRequest {
+            model: model.into(),
+            messages: vec![
+                crate::types::Message::User(crate::types::UserMessage {
+                    content: crate::types::UserContent::Text("Hi".into()),
+                    name: None,
+                }),
+                crate::types::Message::Assistant(crate::types::AssistantMessage {
+                    content: Some(crate::types::AssistantContent::Text("Hello".into())),
+                    thinking_blocks: Some(blocks),
+                    ..Default::default()
+                }),
+                crate::types::Message::User(crate::types::UserMessage {
+                    content: crate::types::UserContent::Text("Again".into()),
+                    name: None,
+                }),
+            ],
+            ..Default::default()
+        }
+    }
+
+    fn prepared_chat_body(model: &str) -> serde_json::Value {
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
+            .expect("client construction should succeed");
+        let req = thinking_turn_request(model);
+        client
+            .prepare_request(
+                &req,
+                |p| p.chat_completions_path(),
+                &req.model,
+                provider::Endpoint::Chat,
+                Some(false),
+            )
+            .expect("prepare_request should not fail")
+            .body_json
+    }
+
+    #[test]
+    fn thinking_blocks_never_reach_a_provider_other_than_anthropic() {
+        let body = prepared_chat_body("gpt-4o-mini");
+        assert_eq!(body["messages"][1]["content"], "Hello");
+        assert!(body["messages"][1].get("thinking_blocks").is_none(), "body was: {body}");
+    }
+
+    #[test]
+    fn thinking_blocks_reach_anthropic_at_their_index() {
+        let body = prepared_chat_body("claude-haiku-5-5");
+        assert_eq!(
+            body["messages"][1]["content"],
+            serde_json::json!([
+                {"type": "thinking", "thinking": "Hmm", "signature": "sig"},
+                {"type": "text", "text": "Hello"}
+            ])
+        );
     }
 
     #[test]

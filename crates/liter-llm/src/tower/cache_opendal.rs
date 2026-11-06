@@ -319,6 +319,7 @@ mod tests {
                     refusal: None,
                     function_call: None,
                     reasoning_content: None,
+                    thinking_blocks: None,
                 },
                 finish_reason: Some(FinishReason::Stop),
                 logprobs: None,

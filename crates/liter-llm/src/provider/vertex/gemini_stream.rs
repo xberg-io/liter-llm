@@ -90,6 +90,7 @@ pub(crate) fn parse_gemini_stream_event(event_data: &str) -> Result<Option<ChatC
                 function_call: None,
                 refusal: None,
                 reasoning_content,
+                thinking_blocks: None,
             },
             finish_reason,
         }],

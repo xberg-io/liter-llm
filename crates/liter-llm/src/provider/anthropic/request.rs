@@ -595,8 +595,8 @@ fn convert_user_message(msg: &Value) -> Value {
 }
 
 /// An `assistant` message: text (a string or a list of text parts) and tool calls
-/// become `text` / `tool_use` blocks.
-/// A turn with neither gets an empty `content`; [`has_content`] drops it.
+/// become `text` / `tool_use` blocks, and `thinking_blocks` go back at their `index`.
+/// A turn with none of these gets an empty `content`; [`has_content`] drops it.
 fn convert_assistant_message(msg: &Value) -> Value {
     let mut blocks: Vec<Value> = Vec::new();
 
@@ -645,7 +645,27 @@ fn convert_assistant_message(msg: &Value) -> Value {
         }
     }
 
+    insert_thinking_blocks(&mut blocks, msg.get("thinking_blocks"));
+
     json!({"role": "assistant", "content": blocks})
+}
+
+/// Put each thinking block back at its `index` in the turn (or, without one, ahead of
+/// the text and tool calls), without the `index` key Anthropic does not accept.
+fn insert_thinking_blocks(blocks: &mut Vec<Value>, thinking_blocks: Option<&Value>) {
+    let Some(thinking_blocks) = thinking_blocks.and_then(Value::as_array) else {
+        return;
+    };
+    for (inserted, thinking_block) in thinking_blocks.iter().enumerate() {
+        let mut block = thinking_block.clone();
+        let index = block
+            .as_object_mut()
+            .and_then(|fields| fields.remove("index"))
+            .and_then(|index| index.as_u64())
+            .and_then(|index| usize::try_from(index).ok())
+            .unwrap_or(inserted);
+        blocks.insert(index.min(blocks.len()), block);
+    }
 }
 
 /// A `tool` message: a `user` turn carrying one `tool_result` block.

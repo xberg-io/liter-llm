@@ -1059,6 +1059,9 @@ public func streamOptionsFromJson<GenericIntoRustString: IntoRustString>(_ json:
 public func streamToolCallFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> StreamToolCall {
     try { let val = __swift_bridge__$stream_tool_call_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return StreamToolCall(ptr: val.ok_or_err!) } else { throw AlefBridgeError(ptr: val.ok_or_err!) } }()
 }
+public func thinkingBlockFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ThinkingBlock {
+    try { let val = __swift_bridge__$thinking_block_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ThinkingBlock(ptr: val.ok_or_err!) } else { throw AlefBridgeError(ptr: val.ok_or_err!) } }()
+}
 public func toolCallFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ToolCall {
     try { let val = __swift_bridge__$tool_call_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ToolCall(ptr: val.ok_or_err!) } else { throw AlefBridgeError(ptr: val.ok_or_err!) } }()
 }
@@ -1443,6 +1446,9 @@ public func __alef_phantom_vec_stream_tool_call() -> RustVec<StreamToolCall> {
 public func __alef_phantom_vec_system_message() -> RustVec<SystemMessage> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_system_message())
 }
+public func __alef_phantom_vec_thinking_block() -> RustVec<ThinkingBlock> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_thinking_block())
+}
 public func __alef_phantom_vec_tool_call() -> RustVec<ToolCall> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_tool_call())
 }
@@ -1728,6 +1734,10 @@ extension AssistantMessageRef {
 
     public func reasoningContent() -> Optional<RustString> {
         { let val = __swift_bridge__$AssistantMessage$reasoning_content(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func thinkingBlocks() -> RustString {
+        RustString(ptr: __swift_bridge__$AssistantMessage$thinking_blocks(ptr))
     }
 }
 extension AssistantMessage: Vectorizable {
@@ -10194,6 +10204,10 @@ extension StreamDeltaRef {
     public func reasoningContent() -> Optional<RustString> {
         { let val = __swift_bridge__$StreamDelta$reasoning_content(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
+
+    public func thinkingBlocks() -> RustString {
+        RustString(ptr: __swift_bridge__$StreamDelta$thinking_blocks(ptr))
+    }
 }
 extension StreamDelta: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
@@ -10601,6 +10615,107 @@ extension SystemMessage: Vectorizable {
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
         __swift_bridge__$Vec_SystemMessage$len(vecPtr)
+    }
+}
+
+
+public class ThinkingBlock: ThinkingBlockRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$ThinkingBlock$_free(ptr)
+        }
+    }
+}
+extension ThinkingBlock {
+    public convenience init<GenericIntoRustString: IntoRustString>(_ block_type: Optional<GenericIntoRustString>, _ thinking: Optional<GenericIntoRustString>, _ signature: Optional<GenericIntoRustString>, _ data: Optional<GenericIntoRustString>, _ index: Optional<UInt32>) {
+        self.init(ptr: __swift_bridge__$ThinkingBlock$new({ if let rustString = optionalStringIntoRustString(block_type) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(thinking) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(signature) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(data) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), index.intoFfiRepr()))
+    }
+}
+public class ThinkingBlockRefMut: ThinkingBlockRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class ThinkingBlockRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension ThinkingBlockRef {
+    public func blockType() -> Optional<RustString> {
+        { let val = __swift_bridge__$ThinkingBlock$block_type(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func thinking() -> Optional<RustString> {
+        { let val = __swift_bridge__$ThinkingBlock$thinking(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func signature() -> Optional<RustString> {
+        { let val = __swift_bridge__$ThinkingBlock$signature(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func data() -> Optional<RustString> {
+        { let val = __swift_bridge__$ThinkingBlock$data(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func index() -> Optional<UInt32> {
+        __swift_bridge__$ThinkingBlock$index(ptr).intoSwiftRepr()
+    }
+}
+extension ThinkingBlock: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_ThinkingBlock$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_ThinkingBlock$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ThinkingBlock) {
+        __swift_bridge__$Vec_ThinkingBlock$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_ThinkingBlock$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (ThinkingBlock(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ThinkingBlockRef> {
+        let pointer = __swift_bridge__$Vec_ThinkingBlock$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ThinkingBlockRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ThinkingBlockRefMut> {
+        let pointer = __swift_bridge__$Vec_ThinkingBlock$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ThinkingBlockRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ThinkingBlockRef> {
+        UnsafePointer<ThinkingBlockRef>(OpaquePointer(__swift_bridge__$Vec_ThinkingBlock$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_ThinkingBlock$len(vecPtr)
     }
 }
 

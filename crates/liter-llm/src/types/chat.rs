@@ -3,7 +3,8 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 use super::common::{
-    AssistantMessage, ChatCompletionTool, Message, ResponseFormat, StopSequence, ToolChoice, ToolType, Usage,
+    AssistantMessage, ChatCompletionTool, Message, ResponseFormat, StopSequence, ThinkingBlock, ToolChoice, ToolType,
+    Usage,
 };
 use crate::cost;
 
@@ -404,6 +405,12 @@ pub struct StreamDelta {
     /// Partial reasoning/thinking tokens (OpenAI-compatible extension used by DeepSeek R1, Qwen, etc.).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reasoning_content: Option<String>,
+    /// Fragments of reasoning blocks the provider requires back unchanged (Anthropic
+    /// `thinking` and `redacted_thinking`). Merge them by `index` as
+    /// [`crate::types::ThinkingBlock`] describes, and set the merged blocks as
+    /// [`crate::types::AssistantMessage::thinking_blocks`] of the turn.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub thinking_blocks: Option<Vec<ThinkingBlock>>,
 }
 
 /// A streaming tool call being built incrementally.
