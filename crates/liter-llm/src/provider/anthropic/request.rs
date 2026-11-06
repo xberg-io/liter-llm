@@ -201,7 +201,7 @@ fn apply_reasoning_effort(body: &mut Value, caller_set_max_tokens: bool) {
                 .and_then(|v| v.as_str().map(String::from))
         });
 
-    let Some(effort) = reasoning_effort else {
+    let Some(effort) = reasoning_effort.map(|effort| effort.to_ascii_lowercase()) else {
         return;
     };
     let model = body.get("model").and_then(Value::as_str).and_then(ClaudeModel::parse);
@@ -224,14 +224,12 @@ fn apply_reasoning_effort(body: &mut Value, caller_set_max_tokens: bool) {
         body["thinking"] = json!({"type": "adaptive"});
         set_output_config(body, "effort", json!(level));
         if !caller_set_max_tokens {
-            // ~keep Anthropic's guidance: at least 64K at `xhigh`/`max` so output does not
-            // truncate mid-thought, and a generous 16K otherwise.
-            let floor: u64 = if matches!(level, "xhigh" | "max") {
-                64_000
-            } else {
-                16_000
-            };
-            raise_max_tokens(body, floor);
+            let output_limit = body
+                .get("model")
+                .and_then(Value::as_str)
+                .and_then(crate::cost::model_info)
+                .and_then(|info| info.max_output_tokens);
+            raise_max_tokens(body, adaptive_max_tokens_floor(level, output_limit));
         }
         return;
     }
@@ -252,6 +250,19 @@ fn apply_reasoning_effort(body: &mut Value, caller_set_max_tokens: bool) {
         "budget_tokens": budget_tokens
     });
     raise_max_tokens(body, budget_tokens + 1);
+}
+
+/// The `max_tokens` adaptive thinking at `level` needs when the caller set none, capped
+/// at the model's output limit when the catalog knows it.
+pub(super) fn adaptive_max_tokens_floor(level: &str, output_limit: Option<u64>) -> u64 {
+    // ~keep Anthropic's guidance: at least 64K at `xhigh`/`max` so output does not
+    // truncate mid-thought, and a generous 16K otherwise.
+    let floor = if matches!(level, "xhigh" | "max") {
+        64_000
+    } else {
+        16_000
+    };
+    output_limit.map_or(floor, |limit| floor.min(limit))
 }
 
 /// Raise `max_tokens` to at least `floor`.
@@ -287,7 +298,8 @@ impl<'a> ClaudeModel<'a> {
         let family = parts.next().filter(|f| f.chars().all(|c| c.is_ascii_alphabetic()))?;
         // ~keep Versions may carry a suffix (`4-6@20260101`, `4-6[1m]`, `5-5:0`), and a date
         // (8 digits) or a tag such as `latest` in the minor position is not a minor version.
-        let major = parts.next().and_then(|p| leading_number(p, usize::MAX)).unwrap_or(0);
+        // ~keep A major of more than two digits is a date (`claude-sonnet-20250514`).
+        let major = parts.next().and_then(|p| leading_number(p, 2))?;
         let minor = parts.next().and_then(|p| leading_number(p, 2)).unwrap_or(0);
         Some(Self {
             family,

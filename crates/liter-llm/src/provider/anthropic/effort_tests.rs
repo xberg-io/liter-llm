@@ -117,3 +117,40 @@ fn adaptive_and_between_tools_thinking_send_no_thinking_beta_header() {
         );
     }
 }
+
+#[test]
+fn parse_rejects_a_date_in_the_major_position() {
+    assert!(ClaudeModel::parse("claude-sonnet-20250514").is_none());
+    assert_eq!(
+        transformed("claude-sonnet-20250514", "high", None)["thinking"],
+        json!({"type": "enabled", "budget_tokens": 16384})
+    );
+}
+
+#[test]
+fn effort_levels_are_case_insensitive() {
+    assert_eq!(
+        transformed("claude-opus-5-5", "High", Some(100))["output_config"]["effort"],
+        "high"
+    );
+    assert_eq!(
+        transformed("claude-opus-4-6", "XHIGH", Some(100))["output_config"]["effort"],
+        "max"
+    );
+    assert_eq!(
+        transformed("claude-haiku-4-5", "Max", None)["thinking"]["budget_tokens"],
+        32768
+    );
+    assert_eq!(
+        transformed("claude-sonnet-5-5", "None", None)["thinking"],
+        json!({"type": "between_tools"})
+    );
+}
+
+#[test]
+fn the_adaptive_max_tokens_floor_never_exceeds_the_model_output_limit() {
+    assert_eq!(super::request::adaptive_max_tokens_floor("max", Some(32_000)), 32_000);
+    assert_eq!(super::request::adaptive_max_tokens_floor("max", Some(128_000)), 64_000);
+    assert_eq!(super::request::adaptive_max_tokens_floor("high", None), 16_000);
+    assert_eq!(super::request::adaptive_max_tokens_floor("xhigh", None), 64_000);
+}
