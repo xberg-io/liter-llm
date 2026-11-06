@@ -652,6 +652,111 @@ fn transform_request_reasoning_effort_none_from_extra_body_disables_thinking() {
     assert_eq!(body["thinking"]["type"], "disabled");
 }
 
+fn transform_with_effort(model: &str, effort: &str) -> serde_json::Value {
+    let mut body = json!({
+        "model": model,
+        "messages": [{"role": "user", "content": "Think"}],
+        "max_tokens": 100,
+        "reasoning_effort": effort
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    body
+}
+
+#[test]
+fn transform_request_reasoning_effort_on_adaptive_models_sets_output_config_effort() {
+    for model in [
+        "claude-opus-5-5",
+        "claude-sonnet-5-5",
+        "claude-haiku-5-5",
+        "claude-opus-5",
+        "claude-sonnet-5",
+        "claude-opus-4-8",
+        "claude-opus-4-7",
+        "claude-opus-4-6",
+        "claude-sonnet-4-6",
+        "claude-fable-5-1",
+        "claude-mythos-5-1",
+    ] {
+        let body = transform_with_effort(model, "medium");
+        assert_eq!(body["thinking"], json!({"type": "adaptive"}), "{model}");
+        assert_eq!(body["output_config"]["effort"], "medium", "{model}");
+        assert_eq!(
+            body["max_tokens"], 100,
+            "{model}: no budget, so max_tokens is not raised"
+        );
+        assert!(body.get("reasoning_effort").is_none(), "{model}");
+    }
+}
+
+#[test]
+fn transform_request_reasoning_effort_levels_map_to_anthropic_effort_levels() {
+    for (effort, expected) in [
+        ("minimal", "low"),
+        ("low", "low"),
+        ("medium", "medium"),
+        ("high", "high"),
+        ("xhigh", "xhigh"),
+        ("max", "max"),
+    ] {
+        let body = transform_with_effort("claude-haiku-5-5", effort);
+        assert_eq!(body["output_config"]["effort"], expected, "{effort}");
+    }
+}
+
+#[test]
+fn transform_request_reasoning_effort_keeps_budget_tokens_for_older_models() {
+    for model in [
+        "claude-haiku-4-5",
+        "claude-haiku-4-5-20251001",
+        "claude-sonnet-4-5",
+        "claude-opus-4-1-20250805",
+        "claude-3-7-sonnet-20250219",
+        "my-proxy-alias",
+    ] {
+        let body = transform_with_effort(model, "high");
+        assert_eq!(
+            body["thinking"],
+            json!({"type": "enabled", "budget_tokens": 16384}),
+            "{model}"
+        );
+        assert!(body.get("output_config").is_none(), "{model}");
+    }
+}
+
+#[test]
+fn transform_request_reasoning_effort_none_on_sonnet_5_5_thinks_between_tools_only() {
+    let body = transform_with_effort("claude-sonnet-5-5", "none");
+    assert_eq!(body["thinking"], json!({"type": "between_tools"}));
+    assert!(body.get("output_config").is_none());
+}
+
+#[test]
+fn transform_request_reasoning_effort_and_native_structured_output_share_output_config() {
+    let schema = json!({
+        "type": "object",
+        "properties": {"name": {"type": "string"}},
+        "required": ["name"],
+        "additionalProperties": false
+    });
+    let mut body = json!({
+        "model": "claude-opus-5",
+        "messages": [{"role": "user", "content": "Give me structured output"}],
+        "reasoning_effort": "high",
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {"name": "person", "strict": true, "schema": schema}
+        }
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert_eq!(body["output_config"]["effort"], "high");
+    assert_eq!(body["output_config"]["format"]["schema"], schema);
+}
+
 #[test]
 fn dynamic_headers_thinking_beta() {
     let body = json!({

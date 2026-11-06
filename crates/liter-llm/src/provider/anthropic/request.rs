@@ -179,8 +179,12 @@ fn convert_tools(body: &mut Value) {
     }
 }
 
-/// Map `reasoning_effort` (top-level or `extra_body`) to an extended-thinking
-/// budget, raising `max_tokens` above the budget when needed.
+/// Map `reasoning_effort` (top-level or `extra_body`) to Anthropic's thinking controls.
+///
+/// Models that think adaptively (Claude Opus 4.6+, Sonnet 4.6+, Haiku 5+, Fable,
+/// Mythos) get `thinking: {"type": "adaptive"}` plus `output_config.effort`; most of
+/// them reject `budget_tokens`. Older models, and model names this crate cannot parse,
+/// keep an extended-thinking budget, raising `max_tokens` above the budget when needed.
 fn apply_reasoning_effort(body: &mut Value) {
     let reasoning_effort = body
         .as_object_mut()
@@ -191,32 +195,99 @@ fn apply_reasoning_effort(body: &mut Value) {
                 .and_then(|v| v.as_str().map(String::from))
         });
 
-    if let Some(effort) = reasoning_effort {
-        // ~keep "none" sends an explicit disabled block: newer Claude models think by default
-        // when `thinking` is absent, so dropping the field would not turn thinking off.
-        if effort == "none" {
-            body["thinking"] = json!({"type": "disabled"});
-            return;
-        }
-        // ~keep 1024 is Anthropic's documented minimum thinking budget_tokens, so
-        // "minimal" and "low" both floor there — the duplicate value is intentional.
-        let budget_tokens: u64 = match effort.as_str() {
-            "minimal" => 1024,
-            "low" => 1024,
-            "medium" => 4096,
-            "high" => 16384,
-            "max" => 32768,
-            _ => 4096,
-        };
-        body["thinking"] = json!({
-            "type": "enabled",
-            "budget_tokens": budget_tokens
-        });
+    let Some(effort) = reasoning_effort else {
+        return;
+    };
+    let model = body.get("model").and_then(Value::as_str).and_then(ClaudeModel::parse);
 
-        let min_max_tokens = budget_tokens + 1;
-        let current_max = body.get("max_tokens").and_then(|v| v.as_u64()).unwrap_or(0);
-        if current_max < min_max_tokens {
-            body["max_tokens"] = json!(min_max_tokens);
+    if effort == "none" {
+        // ~keep Claude Sonnet 5.5 rejects `disabled`; `between_tools` is its documented way to
+        // turn thinking off. Elsewhere an explicit disabled block is needed because newer models
+        // think by default when `thinking` is absent; models that cannot turn thinking off
+        // (Opus 5.5, Fable) answer it with their own error, as `ReasoningEffort::None` documents.
+        body["thinking"] = if model.is_some_and(|m| m.family == "sonnet" && m.version == (5, 5)) {
+            json!({"type": "between_tools"})
+        } else {
+            json!({"type": "disabled"})
+        };
+        return;
+    }
+
+    if model.is_some_and(ClaudeModel::thinks_adaptively) {
+        // ~keep Anthropic has no "minimal" level; "low" is its lowest. Unknown strings pass
+        // through so a newer level (for example "xhigh") sent via `extra_body` still works.
+        let level = if effort == "minimal" { "low" } else { effort.as_str() };
+        body["thinking"] = json!({"type": "adaptive"});
+        set_output_config(body, "effort", json!(level));
+        return;
+    }
+
+    // ~keep 1024 is Anthropic's documented minimum thinking budget_tokens, so
+    // "minimal" and "low" both floor there — the duplicate value is intentional.
+    let budget_tokens: u64 = match effort.as_str() {
+        "minimal" => 1024,
+        "low" => 1024,
+        "medium" => 4096,
+        "high" => 16384,
+        "max" => 32768,
+        _ => 4096,
+    };
+    body["thinking"] = json!({
+        "type": "enabled",
+        "budget_tokens": budget_tokens
+    });
+
+    let min_max_tokens = budget_tokens + 1;
+    let current_max = body.get("max_tokens").and_then(|v| v.as_u64()).unwrap_or(0);
+    if current_max < min_max_tokens {
+        body["max_tokens"] = json!(min_max_tokens);
+    }
+}
+
+/// Set one field of `output_config`, which both effort and structured output use.
+fn set_output_config(body: &mut Value, key: &str, value: Value) {
+    if !body.get("output_config").is_some_and(Value::is_object) {
+        body["output_config"] = json!({});
+    }
+    body["output_config"][key] = value;
+}
+
+/// Family and version of a Claude model id such as `claude-opus-5-5` or
+/// `claude-haiku-4-5-20251001`.
+#[derive(Clone, Copy)]
+struct ClaudeModel<'a> {
+    family: &'a str,
+    version: (u32, u32),
+}
+
+impl<'a> ClaudeModel<'a> {
+    /// Parse the `claude-<family>-<major>[-<minor>][-<date>]` naming. The older
+    /// `claude-3-7-sonnet-…` naming predates adaptive thinking and is not parsed.
+    fn parse(model: &'a str) -> Option<Self> {
+        let start = model.find("claude-")? + "claude-".len();
+        let mut parts = model[start..].split('-');
+        let family = parts.next().filter(|f| f.chars().all(|c| c.is_ascii_alphabetic()))?;
+        let major = parts.next().and_then(|p| p.parse().ok()).unwrap_or(0);
+        // ~keep a date suffix (8 digits) is not a minor version.
+        let minor = parts
+            .next()
+            .filter(|p| p.len() <= 2)
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(0);
+        Some(Self {
+            family,
+            version: (major, minor),
+        })
+    }
+
+    /// Whether the model takes adaptive thinking with `output_config.effort`.
+    /// Opus 4.6 and Sonnet 4.6 still accept `budget_tokens`, but Anthropic
+    /// deprecated it there in favour of adaptive thinking.
+    fn thinks_adaptively(self) -> bool {
+        match self.family {
+            "fable" | "mythos" => true,
+            "opus" | "sonnet" | "haiku" => self.version >= (4, 6),
+            _ => false,
         }
     }
 }
@@ -238,12 +309,14 @@ fn apply_response_format(body: &mut Value) {
     {
         let mut schema = schema;
         close_object_schemas(&mut schema);
-        body["output_config"] = json!({
-            "format": {
+        set_output_config(
+            body,
+            "format",
+            json!({
                 "type": "json_schema",
                 "schema": schema
-            }
-        });
+            }),
+        );
         return;
     }
     if rf_type == "json_schema" && response_format.pointer("/json_schema/strict").and_then(Value::as_bool) == Some(true)
