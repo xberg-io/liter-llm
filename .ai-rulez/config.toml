@@ -87,6 +87,11 @@ tools = ["find_skill", "load_skill"]
 [lock]
 include_outputs = false
 
+[exposure]
+mcp_server_tokens = 1150
+start_budget = 7350
+codex_start_budget = 8100
+
 [lint]
 # ~keep Alef publishes the canonical liter-llm MCP reference as the mcp skill.
 allow_overrides = ["claude:mcp", "python-conventions"]
