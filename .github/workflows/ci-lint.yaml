@@ -30,8 +30,22 @@ jobs:
       - uses: actions/checkout@v7
       - uses: xberg-io/actions/check-toolchain@v1
 
+  poly-version:
+    name: Resolve poly version
+    if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.pin.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Read the poly pin from mise.toml
+        id: pin
+        run: echo "version=$(python3 scripts/ci/poly_version.py mise.toml)" >> "$GITHUB_OUTPUT"
+        shell: bash
+
   validate:
     name: Validate
+    needs: poly-version
     if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
     uses: xberg-io/actions/.github/workflows/reusable-validate.yml@v1
     with:
@@ -41,10 +55,11 @@ jobs:
       # as B26, not yet fixed). Flipping this to `true` before B26 lands would
       # make every push/PR red for a reason contributors cannot fix locally.
       # Re-enable once B26 is resolved upstream. ~keep
-      # The poly pin is deliberate: a new poly release must not turn main red with
-      # no commit. To raise it, change this value and the poly pin in mise.toml
-      # (no "v" there), run `poly fmt`, and commit the reformat in the same PR. ~keep
-      poly-version: "v0.32.5"
+      # The shared workflow cannot read mise.toml, so its poly pin is passed in: a
+      # new poly release must not turn main red with no commit, and CI must lint
+      # with the poly a local `mise run lint` uses. To raise it, change the pin in
+      # mise.toml, run `poly fmt`, and commit the reformat in the same PR. ~keep
+      poly-version: ${{ needs.poly-version.outputs.version }}
       setup-rust: true
       setup-python: true
       # poly's checkstyle project check runs `mvn checkstyle:check` on packages/java,

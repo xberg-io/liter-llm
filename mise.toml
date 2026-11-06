@@ -84,7 +84,8 @@ run = ["python3 scripts/ci/check_consumer_versions.py", """\
   scripts/ci/test_python_wheel_release_path.py \
   scripts/ci/test_schema_copies.py \
   scripts/ci/test_changelog_entry.py \
-  scripts/ci/test_ai_rulez_version.py"""]
+  scripts/ci/test_ai_rulez_version.py \
+  scripts/ci/test_poly_version.py"""]
 
 [tasks."ci:release-version-forms"]
 description = "Resolve canonical package version forms for release validation"
