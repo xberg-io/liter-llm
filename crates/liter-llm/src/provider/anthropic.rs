@@ -117,14 +117,16 @@ impl Provider for AnthropicProvider {
     /// Compute request-dependent beta headers based on the request body.
     ///
     /// Inspects the body for features that require Anthropic beta headers:
-    /// - `thinking` field present -> `anthropic-beta: thinking-2025-04-14`
+    /// - `thinking.type` is `enabled` -> `anthropic-beta: thinking-2025-04-14`
     /// - Hosted tools (computer_use, web_search, code_execution) -> appropriate betas
     ///
     /// Multiple betas are combined with comma separator.
     fn dynamic_headers(&self, body: &serde_json::Value) -> Vec<(String, String)> {
         let mut betas: Vec<&str> = Vec::new();
 
-        if body.get("thinking").is_some() {
+        // ~keep Adaptive and `between_tools` thinking are generally available; only the
+        // ~keep extended-thinking budget (`enabled`) keeps the beta header it was sent with.
+        if body.pointer("/thinking/type").and_then(Value::as_str) == Some("enabled") {
             betas.push(BETA_THINKING);
         }
 
@@ -328,6 +330,8 @@ fn map_stop_reason(stop_reason: &str) -> &'static str {
     }
 }
 
+#[cfg(test)]
+mod effort_tests;
 #[cfg(test)]
 mod feature_tests;
 #[cfg(test)]

@@ -42,11 +42,12 @@ pub(super) fn transform_request(body: &mut Value) -> Result<()> {
 
     body["messages"] = json!(merged_messages);
 
+    let caller_set_max_tokens = body.get("max_tokens").is_some() || body.get("max_completion_tokens").is_some();
     apply_max_tokens(body);
     apply_stop_sequences(body);
     apply_tool_choice(body);
     convert_tools(body);
-    apply_reasoning_effort(body);
+    apply_reasoning_effort(body, caller_set_max_tokens);
     apply_response_format(body);
     warn_on_dropped_params(body);
     strip_unsupported_params(body);
@@ -185,7 +186,9 @@ fn convert_tools(body: &mut Value) {
 /// Mythos) get `thinking: {"type": "adaptive"}` plus `output_config.effort`; most of
 /// them reject `budget_tokens`. Older models, and model names this crate cannot parse,
 /// keep an extended-thinking budget, raising `max_tokens` above the budget when needed.
-fn apply_reasoning_effort(body: &mut Value) {
+/// Adaptive thinking spends `max_tokens` on thinking and answer together, so a default
+/// `max_tokens` (one the caller did not set) is raised to leave room for both.
+fn apply_reasoning_effort(body: &mut Value, caller_set_max_tokens: bool) {
     let reasoning_effort = body
         .as_object_mut()
         .and_then(|o| o.remove("reasoning_effort"))
@@ -213,12 +216,20 @@ fn apply_reasoning_effort(body: &mut Value) {
         return;
     }
 
-    if model.is_some_and(ClaudeModel::thinks_adaptively) {
-        // ~keep Anthropic has no "minimal" level; "low" is its lowest. Unknown strings pass
-        // through so a newer level (for example "xhigh") sent via `extra_body` still works.
-        let level = if effort == "minimal" { "low" } else { effort.as_str() };
+    if let Some(model) = model.filter(|m| m.thinks_adaptively()) {
+        let level = model.effort_level(&effort);
         body["thinking"] = json!({"type": "adaptive"});
         set_output_config(body, "effort", json!(level));
+        if !caller_set_max_tokens {
+            // ~keep Anthropic's guidance: at least 64K at `xhigh`/`max` so output does not
+            // truncate mid-thought, and a generous 16K otherwise.
+            let floor: u64 = if matches!(level, "xhigh" | "max") {
+                64_000
+            } else {
+                16_000
+            };
+            raise_max_tokens(body, floor);
+        }
         return;
     }
 
@@ -229,6 +240,7 @@ fn apply_reasoning_effort(body: &mut Value) {
         "low" => 1024,
         "medium" => 4096,
         "high" => 16384,
+        "xhigh" => 24576,
         "max" => 32768,
         _ => 4096,
     };
@@ -236,11 +248,14 @@ fn apply_reasoning_effort(body: &mut Value) {
         "type": "enabled",
         "budget_tokens": budget_tokens
     });
+    raise_max_tokens(body, budget_tokens + 1);
+}
 
-    let min_max_tokens = budget_tokens + 1;
+/// Raise `max_tokens` to at least `floor`.
+fn raise_max_tokens(body: &mut Value, floor: u64) {
     let current_max = body.get("max_tokens").and_then(|v| v.as_u64()).unwrap_or(0);
-    if current_max < min_max_tokens {
-        body["max_tokens"] = json!(min_max_tokens);
+    if current_max < floor {
+        body["max_tokens"] = json!(floor);
     }
 }
 
@@ -255,25 +270,22 @@ fn set_output_config(body: &mut Value, key: &str, value: Value) {
 /// Family and version of a Claude model id such as `claude-opus-5-5` or
 /// `claude-haiku-4-5-20251001`.
 #[derive(Clone, Copy)]
-struct ClaudeModel<'a> {
-    family: &'a str,
-    version: (u32, u32),
+pub(super) struct ClaudeModel<'a> {
+    pub(super) family: &'a str,
+    pub(super) version: (u32, u32),
 }
 
 impl<'a> ClaudeModel<'a> {
     /// Parse the `claude-<family>-<major>[-<minor>][-<date>]` naming. The older
     /// `claude-3-7-sonnet-…` naming predates adaptive thinking and is not parsed.
-    fn parse(model: &'a str) -> Option<Self> {
+    pub(super) fn parse(model: &'a str) -> Option<Self> {
         let start = model.find("claude-")? + "claude-".len();
         let mut parts = model[start..].split('-');
         let family = parts.next().filter(|f| f.chars().all(|c| c.is_ascii_alphabetic()))?;
-        let major = parts.next().and_then(|p| p.parse().ok()).unwrap_or(0);
-        // ~keep a date suffix (8 digits) is not a minor version.
-        let minor = parts
-            .next()
-            .filter(|p| p.len() <= 2)
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(0);
+        // ~keep Versions may carry a suffix (`4-6@20260101`, `4-6[1m]`, `5-5:0`), and a date
+        // (8 digits) or a tag such as `latest` in the minor position is not a minor version.
+        let major = parts.next().and_then(|p| leading_number(p, usize::MAX)).unwrap_or(0);
+        let minor = parts.next().and_then(|p| leading_number(p, 2)).unwrap_or(0);
         Some(Self {
             family,
             version: (major, minor),
@@ -283,13 +295,38 @@ impl<'a> ClaudeModel<'a> {
     /// Whether the model takes adaptive thinking with `output_config.effort`.
     /// Opus 4.6 and Sonnet 4.6 still accept `budget_tokens`, but Anthropic
     /// deprecated it there in favour of adaptive thinking.
+    /// An unknown family counts as adaptive from Claude 5 on, where every model rejects
+    /// `budget_tokens`.
     fn thinks_adaptively(self) -> bool {
         match self.family {
             "fable" | "mythos" => true,
             "opus" | "sonnet" | "haiku" => self.version >= (4, 6),
-            _ => false,
+            _ => self.version >= (5, 0),
         }
     }
+
+    /// The `output_config.effort` level this model accepts for a `reasoning_effort` value.
+    /// Anthropic has no `minimal` (its lowest is `low`); Opus 4.6 and Sonnet 4.6 have no
+    /// `xhigh`, so it rounds up to `max` there; an unknown value falls back to `medium`.
+    fn effort_level(self, effort: &str) -> &'static str {
+        match effort {
+            "minimal" | "low" => "low",
+            "high" => "high",
+            "xhigh" if self.version < (4, 7) && !matches!(self.family, "fable" | "mythos") => "max",
+            "xhigh" => "xhigh",
+            "max" => "max",
+            _ => "medium",
+        }
+    }
+}
+
+/// The number `part` starts with, when it starts with 1 to `max_digits` digits.
+fn leading_number(part: &str, max_digits: usize) -> Option<u32> {
+    let digits = part.len() - part.trim_start_matches(|c: char| c.is_ascii_digit()).len();
+    if digits == 0 || digits > max_digits {
+        return None;
+    }
+    part[..digits].parse().ok()
 }
 
 /// Translate supported JSON schemas natively and emulate other formats with a system instruction.
