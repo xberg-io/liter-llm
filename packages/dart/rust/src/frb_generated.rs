@@ -6494,6 +6494,8 @@ const _: fn() = || {
         let _: Option<String> = ThinkingBlock.signature;
         let _: Option<String> = ThinkingBlock.data;
         let _: Option<i64> = ThinkingBlock.index;
+        let _: Option<i64> = ThinkingBlock.text_offset;
+        let _: Option<i64> = ThinkingBlock.tool_call_offset;
     }
     {
         let ToolCall = None::<crate::ToolCall>.unwrap();
@@ -9948,12 +9950,16 @@ impl SseDecode for crate::ThinkingBlock {
         let mut var_signature = <Option<String>>::sse_decode(deserializer);
         let mut var_data = <Option<String>>::sse_decode(deserializer);
         let mut var_index = <Option<i64>>::sse_decode(deserializer);
+        let mut var_textOffset = <Option<i64>>::sse_decode(deserializer);
+        let mut var_toolCallOffset = <Option<i64>>::sse_decode(deserializer);
         return crate::ThinkingBlock {
             block_type: var_blockType,
             thinking: var_thinking,
             signature: var_signature,
             data: var_data,
             index: var_index,
+            text_offset: var_textOffset,
+            tool_call_offset: var_toolCallOffset,
         };
     }
 }
@@ -12803,6 +12809,8 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::ThinkingBlock> {
             self.0.signature.into_into_dart().into_dart(),
             self.0.data.into_into_dart().into_dart(),
             self.0.index.into_into_dart().into_dart(),
+            self.0.text_offset.into_into_dart().into_dart(),
+            self.0.tool_call_offset.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -15646,6 +15654,8 @@ impl SseEncode for crate::ThinkingBlock {
         <Option<String>>::sse_encode(self.signature, serializer);
         <Option<String>>::sse_encode(self.data, serializer);
         <Option<i64>>::sse_encode(self.index, serializer);
+        <Option<i64>>::sse_encode(self.text_offset, serializer);
+        <Option<i64>>::sse_encode(self.tool_call_offset, serializer);
     }
 }
 

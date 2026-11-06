@@ -689,7 +689,9 @@ typedef struct LITERLLMSystemMessage LITERLLMSystemMessage;
  * with its `signature`, or a `redacted_thinking` block with its encrypted `data`.
  *
  * In a stream, each `thinking_blocks` entry is a fragment:
- * merge the fragments of one `index` in order, appending `thinking` and `signature`.
+ * the first carries `type` (and all of a `redacted_thinking` block), later ones carry
+ * `thinking` text to append and, once, the `signature`. In Rust,
+ * `ThinkingBlockAccumulator` merges them.
  */
 typedef struct LITERLLMThinkingBlock LITERLLMThinkingBlock;
 /**
@@ -8577,6 +8579,46 @@ uint32_t literllm_thinking_block_index(LITERLLMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 int32_t literllm_thinking_block_has_index(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `text_offset` field from a `ThinkingBlock`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint32_t literllm_thinking_block_text_offset(LITERLLMAlefHandle handle);
+
+/**
+ * Report whether the `text_offset` field on a `ThinkingBlock` is `Some`.
+ *
+ * `literllm_thinking_block_text_offset` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `literllm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_thinking_block_has_text_offset(LITERLLMAlefHandle handle);
+
+/**
+ * Get the `tool_call_offset` field from a `ThinkingBlock`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint32_t literllm_thinking_block_tool_call_offset(LITERLLMAlefHandle handle);
+
+/**
+ * Report whether the `tool_call_offset` field on a `ThinkingBlock` is `Some`.
+ *
+ * `literllm_thinking_block_tool_call_offset` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `literllm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_thinking_block_has_tool_call_offset(LITERLLMAlefHandle handle);
 
 /**
  * Create a `ToolCall` from a JSON string. Returns null on failure.

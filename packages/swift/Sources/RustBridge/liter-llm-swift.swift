@@ -10633,8 +10633,8 @@ public class ThinkingBlock: ThinkingBlockRefMut {
     }
 }
 extension ThinkingBlock {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ block_type: Optional<GenericIntoRustString>, _ thinking: Optional<GenericIntoRustString>, _ signature: Optional<GenericIntoRustString>, _ data: Optional<GenericIntoRustString>, _ index: Optional<UInt32>) {
-        self.init(ptr: __swift_bridge__$ThinkingBlock$new({ if let rustString = optionalStringIntoRustString(block_type) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(thinking) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(signature) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(data) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), index.intoFfiRepr()))
+    public convenience init<GenericIntoRustString: IntoRustString>(_ block_type: Optional<GenericIntoRustString>, _ thinking: Optional<GenericIntoRustString>, _ signature: Optional<GenericIntoRustString>, _ data: Optional<GenericIntoRustString>, _ index: Optional<UInt32>, _ text_offset: Optional<UInt32>, _ tool_call_offset: Optional<UInt32>) {
+        self.init(ptr: __swift_bridge__$ThinkingBlock$new({ if let rustString = optionalStringIntoRustString(block_type) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(thinking) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(signature) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(data) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), index.intoFfiRepr(), text_offset.intoFfiRepr(), tool_call_offset.intoFfiRepr()))
     }
 }
 public class ThinkingBlockRefMut: ThinkingBlockRef {
@@ -10668,6 +10668,14 @@ extension ThinkingBlockRef {
 
     public func index() -> Optional<UInt32> {
         __swift_bridge__$ThinkingBlock$index(ptr).intoSwiftRepr()
+    }
+
+    public func textOffset() -> Optional<UInt32> {
+        __swift_bridge__$ThinkingBlock$text_offset(ptr).intoSwiftRepr()
+    }
+
+    public func toolCallOffset() -> Optional<UInt32> {
+        __swift_bridge__$ThinkingBlock$tool_call_offset(ptr).intoSwiftRepr()
     }
 }
 extension ThinkingBlock: Vectorizable {

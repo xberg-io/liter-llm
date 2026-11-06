@@ -232,6 +232,10 @@ impl Provider for BaseUrlOverride {
         self.inner.stream_tool_call_indexes_restart()
     }
 
+    fn accepts_thinking_blocks(&self) -> bool {
+        self.inner.accepts_thinking_blocks()
+    }
+
     fn signing_headers(&self, method: &str, url: &str, body: &[u8]) -> Result<Vec<(String, String)>> {
         self.inner.signing_headers(method, url, body)
     }
@@ -508,6 +512,10 @@ mod tests {
             true
         }
 
+        fn accepts_thinking_blocks(&self) -> bool {
+            true
+        }
+
         fn signing_headers(&self, _method: &str, _url: &str, _body: &[u8]) -> Result<Vec<(String, String)>> {
             Ok(vec![("x-every-signed".to_owned(), "static".to_owned())])
         }
@@ -551,6 +559,7 @@ mod tests {
         stream_has_final_event: bool,
         reports_invalid_key_as_400: bool,
         stream_tool_call_indexes_restart: bool,
+        accepts_thinking_blocks: bool,
         supports_streaming: bool,
     }
 
@@ -689,6 +698,7 @@ mod tests {
             stream_has_final_event: provider.stream_has_final_event(),
             reports_invalid_key_as_400: provider.reports_invalid_key_as_400(),
             stream_tool_call_indexes_restart: provider.stream_tool_call_indexes_restart(),
+            accepts_thinking_blocks: provider.accepts_thinking_blocks(),
             supports_streaming: provider.supports_streaming(),
             name,
         }

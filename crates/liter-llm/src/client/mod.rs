@@ -404,11 +404,10 @@ impl Stream for RequireTerminalChunk {
     }
 }
 
-/// Remove `thinking_blocks` from every message of a chat body bound for a provider other
-/// than Anthropic: the field holds Anthropic thinking blocks for replay to Anthropic only,
-/// and strict OpenAI-compatible servers reject unknown message keys (#292).
-fn strip_thinking_blocks_unless_anthropic(prov: &dyn Provider, body: &mut serde_json::Value) {
-    if prov.name() == "anthropic" {
+/// Remove `thinking_blocks` from every message of a chat body bound for a provider whose
+/// transform does not consume them ([`Provider::accepts_thinking_blocks`]).
+fn strip_unaccepted_thinking_blocks(prov: &dyn Provider, body: &mut serde_json::Value) {
+    if prov.accepts_thinking_blocks() {
         return;
     }
     let Some(messages) = body.get_mut("messages").and_then(serde_json::Value::as_array_mut) else {
@@ -1357,7 +1356,7 @@ impl DefaultClient {
                 obj.insert("max_completion_tokens".into(), max_tokens);
             }
         }
-        strip_thinking_blocks_unless_anthropic(prov.as_ref(), &mut body);
+        strip_unaccepted_thinking_blocks(prov.as_ref(), &mut body);
         if endpoint == provider::Endpoint::Embedding {
             prov.transform_embedding_request(&mut body)?;
         } else {
@@ -1372,6 +1371,8 @@ impl DefaultClient {
         // whose format does carry it (OpenAI-compatible, Anthropic, Cohere) keep it.
         let provider_wire_carries_stream = body.get("stream").is_some();
         merge_extra_body(&mut body);
+        // ~keep `extra_body` can carry `messages` of its own, merged after the transform.
+        strip_unaccepted_thinking_blocks(prov.as_ref(), &mut body);
         // ~keep extra_body must never override `stream`: the transport path
         // (post_json_raw vs post_stream) is chosen by the calling method, not the
         // body, so a mismatched wire flag would desync request from response parsing.
@@ -4268,8 +4269,8 @@ mod build_provider_tests {
             block_type: Some("thinking".into()),
             thinking: Some("Hmm".into()),
             signature: Some("sig".into()),
-            data: None,
             index: Some(0),
+            ..Default::default()
         }];
         ChatCompletionRequest {
             model: model.into(),
@@ -4293,12 +4294,16 @@ mod build_provider_tests {
     }
 
     fn prepared_chat_body(model: &str) -> serde_json::Value {
+        prepare_chat_body(&thinking_turn_request(model))
+    }
+
+    fn prepare_chat_body(req: &ChatCompletionRequest) -> serde_json::Value {
+        let model = req.model.as_str();
         let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some(model))
             .expect("client construction should succeed");
-        let req = thinking_turn_request(model);
         client
             .prepare_request(
-                &req,
+                req,
                 |p| p.chat_completions_path(),
                 &req.model,
                 provider::Endpoint::Chat,
@@ -4310,7 +4315,25 @@ mod build_provider_tests {
 
     #[test]
     fn thinking_blocks_never_reach_a_provider_other_than_anthropic() {
-        let body = prepared_chat_body("gpt-4o-mini");
+        for model in [
+            "gpt-4o-mini",
+            "mistral/mistral-large-latest",
+            "groq/llama-3.3-70b-versatile",
+        ] {
+            let body = prepared_chat_body(model);
+            assert_eq!(body["messages"][1]["content"], "Hello", "{model}");
+            assert!(body["messages"][1].get("thinking_blocks").is_none(), "{model}: {body}");
+        }
+    }
+
+    #[test]
+    fn thinking_blocks_in_extra_body_messages_never_reach_a_provider_other_than_anthropic() {
+        let mut req = thinking_turn_request("gpt-4o-mini");
+        req.extra_body = Some(serde_json::json!({"messages": [
+            {"role": "user", "content": "Hi"},
+            {"role": "assistant", "content": "Hello", "thinking_blocks": [{"type": "thinking", "signature": "sig"}]}
+        ]}));
+        let body = prepare_chat_body(&req);
         assert_eq!(body["messages"][1]["content"], "Hello");
         assert!(body["messages"][1].get("thinking_blocks").is_none(), "body was: {body}");
     }

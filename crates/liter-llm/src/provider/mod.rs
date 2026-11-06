@@ -811,6 +811,15 @@ pub(crate) trait Provider: Send + Sync {
         false
     }
 
+    /// Whether the provider's chat transform consumes `thinking_blocks` on assistant messages.
+    ///
+    /// Default: `false`. The client then removes the field from every message, since it holds
+    /// another provider's reasoning blocks and strict OpenAI-compatible servers reject unknown
+    /// message keys (#292). Anthropic overrides this and sends the blocks back.
+    fn accepts_thinking_blocks(&self) -> bool {
+        false
+    }
+
     /// Build the full URL for a streaming request.
     ///
     /// Default: delegates to [`Provider::build_url`].  Providers whose

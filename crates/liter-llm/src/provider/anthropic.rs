@@ -6,6 +6,7 @@ use crate::error::Result;
 use crate::provider::Provider;
 use crate::types::ChatCompletionChunk;
 
+mod replay;
 mod request;
 mod response;
 mod stream;
@@ -167,6 +168,10 @@ impl Provider for AnthropicProvider {
         model.starts_with("claude-") || model.starts_with("anthropic/")
     }
 
+    fn accepts_thinking_blocks(&self) -> bool {
+        true
+    }
+
     fn strip_model_prefix<'m>(&self, model: &'m str) -> &'m str {
         model.strip_prefix("anthropic/").unwrap_or(model)
     }
@@ -247,17 +252,18 @@ fn is_thinking_block(block: &Value) -> bool {
     )
 }
 
-/// A `ThinkingBlock` JSON object for an Anthropic content block (or block fragment) at
-/// `index`: its thinking fields, without anything else the block may carry.
-fn thinking_block_fragment(block: &Value, index: usize) -> Value {
-    let mut fragment = serde_json::Map::new();
-    for field in ["type", "thinking", "signature", "data"] {
-        if let Some(value) = block.get(field) {
-            fragment.insert(field.to_owned(), value.clone());
-        }
+/// The [`ThinkingBlock`](crate::types::ThinkingBlock) fields of an Anthropic content block
+/// (or stream fragment of one) at `index`.
+fn thinking_block(block: &Value, index: Option<u32>) -> crate::types::ThinkingBlock {
+    let field = |name: &str| block.get(name).and_then(Value::as_str).map(str::to_owned);
+    crate::types::ThinkingBlock {
+        block_type: field("type"),
+        thinking: field("thinking"),
+        signature: field("signature"),
+        data: field("data"),
+        index,
+        ..Default::default()
     }
-    fragment.insert("index".to_owned(), Value::from(index));
-    Value::Object(fragment)
 }
 
 /// Sanitize a tool_call_id so it only contains characters allowed by Anthropic: `[a-zA-Z0-9_-]`.

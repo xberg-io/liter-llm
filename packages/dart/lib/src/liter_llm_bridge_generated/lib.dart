@@ -5259,7 +5259,8 @@ class StreamDelta {
 
   /// Fragments of reasoning blocks the provider requires back unchanged (Anthropic
   /// `thinking` and `redacted_thinking`). Merge them by `index` as
-  /// `ThinkingBlock` describes, and set the merged blocks as
+  /// `ThinkingBlock` describes (in Rust, with
+  /// `ThinkingBlockAccumulator`), and set the merged blocks as
   /// `thinking_blocks` of the turn.
   final List<ThinkingBlock>? thinkingBlocks;
 
@@ -5420,7 +5421,9 @@ class SystemMessage {
 /// with its `signature`, or a `redacted_thinking` block with its encrypted `data`.
 ///
 /// In a stream, each `thinking_blocks` entry is a fragment:
-/// merge the fragments of one `index` in order, appending `thinking` and `signature`.
+/// the first carries `type` (and all of a `redacted_thinking` block), later ones carry
+/// `thinking` text to append and, once, the `signature`. In Rust,
+/// `ThinkingBlockAccumulator` merges them.
 class ThinkingBlock {
   /// Block type: `thinking` or `redacted_thinking`. A stream sends it in the first
   /// fragment of a block only.
@@ -5438,12 +5441,21 @@ class ThinkingBlock {
   /// Position of the block among the content blocks of the provider's turn.
   final PlatformInt64? index;
 
+  /// Bytes of the turn's text `content` that come before the block. With
+  /// `tool_call_offset`, it puts the block back between the right text and tool calls.
+  final PlatformInt64? textOffset;
+
+  /// Number of the turn's `tool_calls` that come before the block.
+  final PlatformInt64? toolCallOffset;
+
   const ThinkingBlock({
     this.blockType,
     this.thinking,
     this.signature,
     this.data,
     this.index,
+    this.textOffset,
+    this.toolCallOffset,
   });
 
   @override
@@ -5452,7 +5464,9 @@ class ThinkingBlock {
       thinking.hashCode ^
       signature.hashCode ^
       data.hashCode ^
-      index.hashCode;
+      index.hashCode ^
+      textOffset.hashCode ^
+      toolCallOffset.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -5463,7 +5477,9 @@ class ThinkingBlock {
           thinking == other.thinking &&
           signature == other.signature &&
           data == other.data &&
-          index == other.index;
+          index == other.index &&
+          textOffset == other.textOffset &&
+          toolCallOffset == other.toolCallOffset;
 }
 
 /// A tool call the model wants to execute.

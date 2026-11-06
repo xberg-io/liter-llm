@@ -26,6 +26,7 @@ pub mod rerank;
 pub mod responses;
 #[allow(missing_docs)]
 pub mod search;
+pub mod thinking;
 
 pub use audio::*;
 pub use batch::*;
@@ -41,3 +42,4 @@ pub use raw::*;
 pub use rerank::*;
 pub use responses::*;
 pub use search::*;
+pub use thinking::*;

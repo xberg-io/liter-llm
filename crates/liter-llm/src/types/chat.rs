@@ -407,7 +407,8 @@ pub struct StreamDelta {
     pub reasoning_content: Option<String>,
     /// Fragments of reasoning blocks the provider requires back unchanged (Anthropic
     /// `thinking` and `redacted_thinking`). Merge them by `index` as
-    /// [`crate::types::ThinkingBlock`] describes, and set the merged blocks as
+    /// [`crate::types::ThinkingBlock`] describes (in Rust, with
+    /// [`crate::types::ThinkingBlockAccumulator`]), and set the merged blocks as
     /// [`crate::types::AssistantMessage::thinking_blocks`] of the turn.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub thinking_blocks: Option<Vec<ThinkingBlock>>,

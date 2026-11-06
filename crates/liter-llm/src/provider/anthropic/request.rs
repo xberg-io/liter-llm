@@ -2,6 +2,7 @@
 
 use serde_json::{Value, json};
 
+use super::replay::{insert_by_index, positioned_blocks, replayed_thinking_blocks};
 use super::{DEFAULT_MAX_TOKENS, is_hosted_tool_type, sanitize_tool_call_id};
 use crate::error::{LiterLlmError, Result};
 
@@ -29,6 +30,8 @@ pub(super) fn transform_request(body: &mut Value) -> Result<()> {
     let converted_messages: Vec<Value> = non_system_messages
         .into_iter()
         .map(convert_message_to_anthropic)
+        .collect::<Result<Vec<_>>>()?
+        .into_iter()
         .filter(has_content)
         .collect();
 
@@ -590,7 +593,7 @@ fn content_as_blocks(content: Option<&Value>) -> Vec<Value> {
 }
 
 /// Anthropic rejects a text block that is empty or only whitespace.
-fn is_blank(text: &str) -> bool {
+pub(super) fn is_blank(text: &str) -> bool {
     text.trim().is_empty()
 }
 
@@ -605,16 +608,16 @@ fn has_content(msg: &Value) -> bool {
 }
 
 /// Convert an OpenAI-format message JSON value to Anthropic Messages API format.
-fn convert_message_to_anthropic(msg: Value) -> Value {
+fn convert_message_to_anthropic(msg: Value) -> Result<Value> {
     let role = msg.get("role").and_then(|r| r.as_str()).unwrap_or("");
 
-    match role {
+    Ok(match role {
         "user" => convert_user_message(&msg),
-        "assistant" => convert_assistant_message(&msg),
+        "assistant" => convert_assistant_message(&msg)?,
         "tool" => convert_tool_message(&msg),
         "function" => convert_function_message(&msg),
         _ => msg,
-    }
+    })
 }
 
 /// A `user` message: content parts become blocks, and a message-level
@@ -632,11 +635,30 @@ fn convert_user_message(msg: &Value) -> Value {
 }
 
 /// An `assistant` message: text (a string or a list of text parts) and tool calls
-/// become `text` / `tool_use` blocks, and `thinking_blocks` go back at their `index`.
+/// become `text` / `tool_use` blocks, and `thinking_blocks` go back where the reply had them.
 /// A turn with none of these gets an empty `content`; [`has_content`] drops it.
-fn convert_assistant_message(msg: &Value) -> Value {
-    let mut blocks: Vec<Value> = Vec::new();
+fn convert_assistant_message(msg: &Value) -> Result<Value> {
+    let thinking = replayed_thinking_blocks(msg.get("thinking_blocks"))?;
+    let tool_uses = tool_use_blocks(msg);
 
+    let positioned = match msg.get("content") {
+        Some(Value::String(text)) => positioned_blocks(text, msg.get("cache_control"), &tool_uses, &thinking),
+        None | Some(Value::Null) => positioned_blocks("", None, &tool_uses, &thinking),
+        Some(_) => None,
+    };
+    let blocks = positioned.unwrap_or_else(|| {
+        let mut blocks = text_blocks(msg);
+        blocks.extend(tool_uses);
+        insert_by_index(&mut blocks, thinking);
+        blocks
+    });
+
+    Ok(json!({"role": "assistant", "content": blocks}))
+}
+
+/// The `text` blocks of an assistant message's content.
+fn text_blocks(msg: &Value) -> Vec<Value> {
+    let mut blocks: Vec<Value> = Vec::new();
     match msg.get("content") {
         Some(Value::String(text)) if !is_blank(text) => {
             let mut block = json!({"type": "text", "text": text});
@@ -663,9 +685,17 @@ fn convert_assistant_message(msg: &Value) -> Value {
         }
         _ => {}
     }
+    blocks
+}
 
-    if let Some(tool_calls) = msg.get("tool_calls").and_then(|tc| tc.as_array()) {
-        for tc in tool_calls {
+/// The `tool_use` blocks of an assistant message's `tool_calls`.
+fn tool_use_blocks(msg: &Value) -> Vec<Value> {
+    let Some(tool_calls) = msg.get("tool_calls").and_then(|tc| tc.as_array()) else {
+        return Vec::new();
+    };
+    tool_calls
+        .iter()
+        .map(|tc| {
             let id = tc.get("id").and_then(|v| v.as_str()).unwrap_or("");
             let name = tc.pointer("/function/name").and_then(|v| v.as_str()).unwrap_or("");
             let arguments_str = tc
@@ -673,36 +703,14 @@ fn convert_assistant_message(msg: &Value) -> Value {
                 .and_then(|v| v.as_str())
                 .unwrap_or("{}");
             let input: Value = serde_json::from_str(arguments_str).unwrap_or_else(|_| json!({}));
-            blocks.push(json!({
+            json!({
                 "type": "tool_use",
                 "id": id,
                 "name": name,
                 "input": input
-            }));
-        }
-    }
-
-    insert_thinking_blocks(&mut blocks, msg.get("thinking_blocks"));
-
-    json!({"role": "assistant", "content": blocks})
-}
-
-/// Put each thinking block back at its `index` in the turn (or, without one, ahead of
-/// the text and tool calls), without the `index` key Anthropic does not accept.
-fn insert_thinking_blocks(blocks: &mut Vec<Value>, thinking_blocks: Option<&Value>) {
-    let Some(thinking_blocks) = thinking_blocks.and_then(Value::as_array) else {
-        return;
-    };
-    for (inserted, thinking_block) in thinking_blocks.iter().enumerate() {
-        let mut block = thinking_block.clone();
-        let index = block
-            .as_object_mut()
-            .and_then(|fields| fields.remove("index"))
-            .and_then(|index| index.as_u64())
-            .and_then(|index| usize::try_from(index).ok())
-            .unwrap_or(inserted);
-        blocks.insert(index.min(blocks.len()), block);
-    }
+            })
+        })
+        .collect()
 }
 
 /// A `tool` message: a `user` turn carrying one `tool_result` block.

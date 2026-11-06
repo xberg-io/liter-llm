@@ -1128,7 +1128,9 @@ pub struct FunctionDefinition {
 /// with its `signature`, or a `redacted_thinking` block with its encrypted `data`.
 ///
 /// In a stream, each [`crate::types::StreamDelta::thinking_blocks`] entry is a fragment:
-/// merge the fragments of one `index` in order, appending `thinking` and `signature`.
+/// the first carries `type` (and all of a `redacted_thinking` block), later ones carry
+/// `thinking` text to append and, once, the `signature`. In Rust,
+/// [`crate::types::ThinkingBlockAccumulator`] merges them.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ThinkingBlock {
     /// Block type: `thinking` or `redacted_thinking`. A stream sends it in the first
@@ -1147,6 +1149,13 @@ pub struct ThinkingBlock {
     /// Position of the block among the content blocks of the provider's turn.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub index: Option<u32>,
+    /// Bytes of the turn's text `content` that come before the block. With
+    /// `tool_call_offset`, it puts the block back between the right text and tool calls.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub text_offset: Option<u32>,
+    /// Number of the turn's `tool_calls` that come before the block.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool_call_offset: Option<u32>,
 }
 
 /// A tool call the model wants to execute.

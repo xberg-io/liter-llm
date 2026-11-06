@@ -9787,14 +9787,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ThinkingBlock dco_decode_thinking_block(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return ThinkingBlock(
       blockType: dco_decode_opt_String(arr[0]),
       thinking: dco_decode_opt_String(arr[1]),
       signature: dco_decode_opt_String(arr[2]),
       data: dco_decode_opt_String(arr[3]),
       index: dco_decode_opt_box_autoadd_i_64(arr[4]),
+      textOffset: dco_decode_opt_box_autoadd_i_64(arr[5]),
+      toolCallOffset: dco_decode_opt_box_autoadd_i_64(arr[6]),
     );
   }
 
@@ -13731,12 +13733,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_signature = sse_decode_opt_String(deserializer);
     var var_data = sse_decode_opt_String(deserializer);
     var var_index = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_textOffset = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_toolCallOffset = sse_decode_opt_box_autoadd_i_64(deserializer);
     return ThinkingBlock(
       blockType: var_blockType,
       thinking: var_thinking,
       signature: var_signature,
       data: var_data,
       index: var_index,
+      textOffset: var_textOffset,
+      toolCallOffset: var_toolCallOffset,
     );
   }
 
@@ -17249,6 +17255,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.signature, serializer);
     sse_encode_opt_String(self.data, serializer);
     sse_encode_opt_box_autoadd_i_64(self.index, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.textOffset, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.toolCallOffset, serializer);
   }
 
   @protected
