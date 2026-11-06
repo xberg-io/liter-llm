@@ -40,7 +40,10 @@ jobs:
       - uses: actions/checkout@v7
       - name: Read the poly pin from mise.toml
         id: pin
-        run: echo "version=$(python3 scripts/ci/poly_version.py mise.toml)" >> "$GITHUB_OUTPUT"
+        run: |
+          version=$(python3 scripts/ci/poly_version.py mise.toml)
+          [ -n "$version" ] || { echo "::error::no poly version resolved from mise.toml"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
         shell: bash
 
   validate:
