@@ -192,6 +192,14 @@ fn apply_reasoning_effort(body: &mut Value) {
         });
 
     if let Some(effort) = reasoning_effort {
+        if body
+            .get("model")
+            .and_then(Value::as_str)
+            .is_some_and(uses_adaptive_thinking)
+        {
+            apply_adaptive_effort(body, &effort);
+            return;
+        }
         // ~keep "none" sends an explicit disabled block: newer Claude models think by default
         // when `thinking` is absent, so dropping the field would not turn thinking off.
         if effort == "none" {
@@ -221,6 +229,43 @@ fn apply_reasoning_effort(body: &mut Value) {
     }
 }
 
+/// Models that only think adaptively: they reject `thinking.budget_tokens` with a 400
+/// (and some also reject `{"type": "disabled"}`). Thinking depth is set with
+/// `output_config.effort` instead.
+fn uses_adaptive_thinking(model: &str) -> bool {
+    let model = model.rsplit('/').next().unwrap_or(model);
+    [
+        "claude-opus-5",
+        "claude-sonnet-5",
+        "claude-haiku-5",
+        "claude-fable-",
+        "claude-opus-4-7",
+        "claude-opus-4-8",
+    ]
+    .iter()
+    .any(|prefix| model.starts_with(prefix))
+}
+
+/// Map `reasoning_effort` to `thinking: {"type": "adaptive"}` plus `output_config.effort`.
+/// `max_tokens` is left alone since there is no thinking budget to fit under it, and
+/// "none" omits `thinking` (a disabled block is rejected by some of these models).
+fn apply_adaptive_effort(body: &mut Value, effort: &str) {
+    let level = match effort {
+        "none" | "minimal" | "low" => "low",
+        "high" => "high",
+        "xhigh" => "xhigh",
+        "max" => "max",
+        _ => "medium",
+    };
+    if effort != "none" {
+        body["thinking"] = json!({"type": "adaptive"});
+    }
+    if !body.get("output_config").is_some_and(Value::is_object) {
+        body["output_config"] = json!({});
+    }
+    body["output_config"]["effort"] = json!(level);
+}
+
 /// Translate supported JSON schemas natively and emulate other formats with a system instruction.
 fn apply_response_format(body: &mut Value) {
     let Some(response_format) = body.as_object_mut().and_then(|o| o.remove("response_format")) else {
@@ -238,11 +283,12 @@ fn apply_response_format(body: &mut Value) {
     {
         let mut schema = schema;
         close_object_schemas(&mut schema);
-        body["output_config"] = json!({
-            "format": {
-                "type": "json_schema",
-                "schema": schema
-            }
+        if !body.get("output_config").is_some_and(Value::is_object) {
+            body["output_config"] = json!({});
+        }
+        body["output_config"]["format"] = json!({
+            "type": "json_schema",
+            "schema": schema
         });
         return;
     }

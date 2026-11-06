@@ -617,6 +617,79 @@ fn transform_request_reasoning_effort_from_extra_body() {
 }
 
 #[test]
+fn transform_request_reasoning_effort_adaptive_model_uses_output_config_effort() {
+    let mut body = json!({
+        "model": "claude-sonnet-5-5",
+        "messages": [{"role": "user", "content": "Think"}],
+        "max_tokens": 2000,
+        "reasoning_effort": "medium"
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert_eq!(body["thinking"]["type"], "adaptive");
+    assert!(
+        body["thinking"].get("budget_tokens").is_none(),
+        "adaptive-only models reject budget_tokens"
+    );
+    assert_eq!(body["output_config"]["effort"], "medium");
+    assert_eq!(body["max_tokens"], 2000, "max_tokens must not be raised");
+}
+
+#[test]
+fn transform_request_reasoning_effort_none_on_adaptive_model_omits_thinking() {
+    let mut body = json!({
+        "model": "claude-opus-5-5",
+        "messages": [{"role": "user", "content": "No thinking"}],
+        "reasoning_effort": "none"
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert!(
+        body.get("thinking").is_none(),
+        "a disabled thinking block is rejected by these models"
+    );
+    assert_eq!(body["output_config"]["effort"], "low");
+}
+
+#[test]
+fn transform_request_reasoning_effort_levels_map_on_adaptive_model() {
+    for (input, expected) in [
+        ("minimal", "low"),
+        ("low", "low"),
+        ("high", "high"),
+        ("xhigh", "xhigh"),
+        ("max", "max"),
+    ] {
+        let mut body = json!({
+            "model": "anthropic/claude-haiku-5-5",
+            "messages": [{"role": "user", "content": "Think"}],
+            "reasoning_effort": input
+        });
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
+        assert_eq!(body["output_config"]["effort"], expected, "effort {input}");
+    }
+}
+
+#[test]
+fn transform_request_reasoning_effort_older_model_keeps_budget_tokens() {
+    let mut body = json!({
+        "model": "claude-sonnet-4-5",
+        "messages": [{"role": "user", "content": "Think deeply"}],
+        "reasoning_effort": "high"
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert_eq!(body["thinking"]["type"], "enabled");
+    assert_eq!(body["thinking"]["budget_tokens"], 16384);
+    assert!(body.get("output_config").is_none());
+}
+
+#[test]
 fn transform_request_reasoning_effort_none_disables_thinking() {
     let mut body = json!({
         "model": "claude-sonnet-4-20250514",
@@ -869,6 +942,30 @@ fn transform_request_json_schema_response_format() {
     let instruction = system[0]["text"].as_str().expect("text should be a string");
     assert!(instruction.contains("person"));
     assert!(instruction.contains("schema"));
+}
+
+#[test]
+fn transform_request_effort_and_native_structured_output_share_output_config() {
+    let schema = json!({
+        "type": "object",
+        "properties": {"name": {"type": "string"}},
+        "required": ["name"],
+        "additionalProperties": false
+    });
+    let mut body = json!({
+        "model": "claude-opus-5",
+        "messages": [{"role": "user", "content": "Give me structured output"}],
+        "reasoning_effort": "high",
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {"name": "person", "strict": true, "schema": schema}
+        }
+    });
+    provider()
+        .transform_request(&mut body)
+        .expect("transform_request should not fail");
+    assert_eq!(body["output_config"]["effort"], "high");
+    assert_eq!(body["output_config"]["format"]["type"], "json_schema");
 }
 
 #[test]
