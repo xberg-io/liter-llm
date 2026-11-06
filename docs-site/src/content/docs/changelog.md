@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-11-06
+
 ### Fixed
 
 - Anthropic: `reasoning_effort` on Claude Opus 4.6+, Sonnet 4.6+, Haiku 5.5, Fable and Mythos now sends adaptive thinking with `output_config.effort` (`minimal` becomes `low`, and `xhigh` becomes `max` on Opus and Sonnet 4.6), instead of a `thinking.budget_tokens` that Claude Opus 5.5, Sonnet 5.5 and Haiku 5.5 reject. When the request sets no `max_tokens`, it is raised to at least 16,000 (64,000 at `xhigh` and `max`), since adaptive thinking spends it on thinking and answer together. Older models keep the token budget, with `xhigh` between `high` and `max`, and only they still send the `thinking-2025-04-14` beta header. `none` on Claude Sonnet 5.5 sends `thinking: {type: "between_tools"}`, its documented way to turn thinking off (#473).

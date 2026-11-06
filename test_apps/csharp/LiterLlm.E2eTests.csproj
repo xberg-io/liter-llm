@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="XbergIo.LiterLlm" Version="2.6.1" />
+    <PackageReference Include="XbergIo.LiterLlm" Version="2.7.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -4,7 +4,7 @@ go 1.27
 
 require (
 	github.com/stretchr/testify v1.12.1
-	github.com/xberg-io/liter-llm/packages/go/v2 v2.6.1
+	github.com/xberg-io/liter-llm/packages/go/v2 v2.7.0
 )
 
 require go.yaml.in/yaml/v3 v3.0.5 // indirect

@@ -6,7 +6,7 @@ name: liter-llm-running-the-proxy
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 Content-Hash: blake3:b0a0178eae0e6882ae032983d8927142b6db16add6ab9cab391538db2f202eb4
-Source-Hash: blake3:3ad49ddd3b9b4838a208512f44c30dee949d54d8b0222cd74a8ccabf79a19925
+Source-Hash: blake3:725e6663621cbc5ffbaf9dbb2141fe5f9b95aee234fe9f7ece2d2b6e63dc5a66
 Schema-Version: v1
 -->
 

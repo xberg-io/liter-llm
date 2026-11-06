@@ -92,7 +92,7 @@ wheels = [
 
 [[package]]
 name = "liter-llm-workspace"
-version = "2.6.1"
+version = "2.7.0"
 source = { editable = "." }
 
 [package.dev-dependencies]
