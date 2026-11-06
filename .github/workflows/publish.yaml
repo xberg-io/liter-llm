@@ -60,7 +60,7 @@ env:
   # Package.swift. Rust and the cc-built C objects inside each library (ring, etc.) both read
   # it, so their minos agree and consumers get no "built for newer macOS" link warnings (#248).
   # Ignored on non-Apple legs; scripts/ci/test_macos_deployment_target.py holds it to Package.swift.
-  MACOSX_DEPLOYMENT_TARGET: "26.0"
+  MACOSX_DEPLOYMENT_TARGET: "15.0"
 
 jobs:
   prepare:
