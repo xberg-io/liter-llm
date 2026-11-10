@@ -206,21 +206,23 @@ fn apply_reasoning_effort(body: &mut Value, caller_set_max_tokens: bool) {
     };
     let model = body.get("model").and_then(Value::as_str).and_then(ClaudeModel::parse);
 
-    if effort == "none" {
-        // ~keep Claude Sonnet 5.5 rejects `disabled`; `between_tools` is its documented way to
-        // turn thinking off. Elsewhere an explicit disabled block is needed because newer models
-        // think by default when `thinking` is absent; models that cannot turn thinking off
-        // (Opus 5.5, Fable) answer it with their own error, as `ReasoningEffort::None` documents.
-        body["thinking"] = if model.is_some_and(|m| m.family == "sonnet" && m.version == (5, 5)) {
-            json!({"type": "between_tools"})
-        } else {
-            json!({"type": "disabled"})
-        };
-        return;
-    }
+    let effort = match effort.as_str() {
+        // Opus 5.5 and Fable always think, so use their lowest supported effort.
+        "none" if model.is_some_and(ClaudeModel::requires_thinking) => "low",
+        "none" => {
+            // ~keep Claude Sonnet 5.5 rejects `disabled`; `between_tools` turns off up-front thinking.
+            body["thinking"] = if model.is_some_and(|m| m.family == "sonnet" && m.version == (5, 5)) {
+                json!({"type": "between_tools"})
+            } else {
+                json!({"type": "disabled"})
+            };
+            return;
+        }
+        effort => effort,
+    };
 
     if let Some(model) = model.filter(|m| m.thinks_adaptively()) {
-        let level = model.effort_level(&effort);
+        let level = model.effort_level(effort);
         body["thinking"] = json!({"type": "adaptive"});
         set_output_config(body, "effort", json!(level));
         if !caller_set_max_tokens {
@@ -236,7 +238,7 @@ fn apply_reasoning_effort(body: &mut Value, caller_set_max_tokens: bool) {
 
     // ~keep 1024 is Anthropic's documented minimum thinking budget_tokens, so
     // "minimal" and "low" both floor there — the duplicate value is intentional.
-    let budget_tokens: u64 = match effort.as_str() {
+    let budget_tokens: u64 = match effort {
         "minimal" => 1024,
         "low" => 1024,
         "medium" => 4096,
@@ -305,6 +307,11 @@ impl<'a> ClaudeModel<'a> {
             family,
             version: (major, minor),
         })
+    }
+
+    /// Whether this model requires adaptive thinking even when the caller requests `none`.
+    fn requires_thinking(self) -> bool {
+        self.family == "fable" || (self.family == "opus" && self.version == (5, 5))
     }
 
     /// Whether the model takes adaptive thinking with `output_config.effort`.

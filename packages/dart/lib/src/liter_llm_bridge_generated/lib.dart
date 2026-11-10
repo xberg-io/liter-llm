@@ -4730,7 +4730,7 @@ enum ReasoningEffort {
   minimal,
   max,
 
-  /// Turn reasoning off. Providers that cannot turn reasoning off return their own error.
+  /// Request that reasoning be turned off. Anthropic Opus 5.5 and Fable use low adaptive thinking.
   none,
 }
 
