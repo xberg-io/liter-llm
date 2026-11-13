@@ -64,6 +64,7 @@ jobs:
       # mise.toml, run `poly fmt`, and commit the reformat in the same PR. ~keep
       poly-version: ${{ needs.poly-version.outputs.version }}
       setup-rust: true
+      setup-php: true
       setup-python: true
       # poly's checkstyle project check runs `mvn checkstyle:check` on packages/java,
       # whose checkstyle 13.9.0 + maven.compiler.release=25 need a JDK 21+ (runner
