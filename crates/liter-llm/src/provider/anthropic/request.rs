@@ -54,8 +54,23 @@ pub(super) fn transform_request(body: &mut Value) -> Result<()> {
     apply_response_format(body);
     warn_on_dropped_params(body);
     strip_unsupported_params(body);
+    prepare_extra_body(body);
 
     Ok(())
+}
+
+fn prepare_extra_body(body: &mut Value) {
+    let generated_output_config = body.get("output_config").and_then(Value::as_object).cloned();
+    let Some(extra) = body.get_mut("extra_body").and_then(Value::as_object_mut) else {
+        return;
+    };
+    extra.remove("reasoning_effort");
+    if let Some(mut config) = generated_output_config
+        && let Some(native) = extra.get_mut("output_config").and_then(Value::as_object_mut)
+    {
+        config.append(native);
+        *native = config;
+    }
 }
 
 /// Take the `messages` array out of `body`, rejecting a missing or empty one.
@@ -207,15 +222,9 @@ fn apply_reasoning_effort(body: &mut Value, caller_set_max_tokens: bool) {
     let model = body.get("model").and_then(Value::as_str).and_then(ClaudeModel::parse);
 
     if effort == "none" {
-        // ~keep Claude Sonnet 5.5 rejects `disabled`; `between_tools` is its documented way to
-        // turn thinking off. Elsewhere an explicit disabled block is needed because newer models
-        // think by default when `thinking` is absent; models that cannot turn thinking off
-        // (Opus 5.5, Fable) answer it with their own error, as `ReasoningEffort::None` documents.
-        body["thinking"] = if model.is_some_and(|m| m.family == "sonnet" && m.version == (5, 5)) {
-            json!({"type": "between_tools"})
-        } else {
-            json!({"type": "disabled"})
-        };
+        if let Some(thinking) = disabled_thinking(model) {
+            body["thinking"] = thinking;
+        }
         return;
     }
 
@@ -273,6 +282,14 @@ fn raise_max_tokens(body: &mut Value, floor: u64) {
     }
 }
 
+pub(in crate::provider) fn disabled_thinking(model: Option<ClaudeModel<'_>>) -> Option<Value> {
+    match model.map(|model| (model.family, model.version)) {
+        Some(("fable", _) | ("opus", (5, 5))) => None,
+        Some(("sonnet", (5, 5))) => Some(json!({"type": "between_tools"})),
+        _ => Some(json!({"type": "disabled"})),
+    }
+}
+
 /// Set one field of `output_config`, which both effort and structured output use.
 fn set_output_config(body: &mut Value, key: &str, value: Value) {
     if !body.get("output_config").is_some_and(Value::is_object) {
@@ -284,7 +301,7 @@ fn set_output_config(body: &mut Value, key: &str, value: Value) {
 /// Family and version of a Claude model id such as `claude-opus-5-5` or
 /// `claude-haiku-4-5-20251001`.
 #[derive(Clone, Copy)]
-pub(super) struct ClaudeModel<'a> {
+pub(in crate::provider) struct ClaudeModel<'a> {
     pub(super) family: &'a str,
     pub(super) version: (u32, u32),
 }
@@ -292,7 +309,7 @@ pub(super) struct ClaudeModel<'a> {
 impl<'a> ClaudeModel<'a> {
     /// Parse the `claude-<family>-<major>[-<minor>][-<date>]` naming. The older
     /// `claude-3-7-sonnet-…` naming predates adaptive thinking and is not parsed.
-    pub(super) fn parse(model: &'a str) -> Option<Self> {
+    pub(in crate::provider) fn parse(model: &'a str) -> Option<Self> {
         let start = model.find("claude-")? + "claude-".len();
         let mut parts = model[start..].split('-');
         let family = parts.next().filter(|f| f.chars().all(|c| c.is_ascii_alphabetic()))?;
@@ -312,7 +329,7 @@ impl<'a> ClaudeModel<'a> {
     /// deprecated it there in favour of adaptive thinking.
     /// An unknown family counts as adaptive from Claude 5 on, where every model rejects
     /// `budget_tokens`.
-    fn thinks_adaptively(self) -> bool {
+    pub(in crate::provider) fn thinks_adaptively(self) -> bool {
         match self.family {
             "fable" | "mythos" => true,
             "opus" | "sonnet" | "haiku" => self.version >= (4, 6),
@@ -323,7 +340,7 @@ impl<'a> ClaudeModel<'a> {
     /// The `output_config.effort` level this model accepts for a `reasoning_effort` value.
     /// Anthropic has no `minimal` (its lowest is `low`); Opus 4.6 and Sonnet 4.6 have no
     /// `xhigh`, so it rounds up to `max` there; an unknown value falls back to `medium`.
-    fn effort_level(self, effort: &str) -> &'static str {
+    pub(in crate::provider) fn effort_level(self, effort: &str) -> &'static str {
         match effort {
             "minimal" | "low" => "low",
             "high" => "high",
@@ -522,7 +539,6 @@ fn strip_unsupported_params(body: &mut Value) {
             "service_tier",
             "user",
             "reasoning_effort",
-            "extra_body",
             "logprobs",
             "top_logprobs",
             "store",

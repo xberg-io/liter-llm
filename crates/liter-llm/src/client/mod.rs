@@ -3887,38 +3887,47 @@ mod build_provider_tests {
     }
 
     #[test]
-    fn anthropic_provider_leaves_no_extra_body_key_in_final_body() {
-        let client = DefaultClient::new(
-            ClientConfigBuilder::new("test-key").build(),
-            Some("claude-3-5-sonnet-20241022"),
-        )
-        .expect("client construction should succeed");
+    fn anthropic_provider_forwards_native_extra_body_fields() {
+        let client = DefaultClient::new(ClientConfigBuilder::new("test-key").build(), Some("claude-opus-4-7"))
+            .expect("client construction should succeed");
         let req = ChatCompletionRequest {
-            model: "claude-3-5-sonnet-20241022".into(),
+            model: "claude-opus-4-7".into(),
             messages: vec![crate::types::Message::User(crate::types::UserMessage {
                 content: crate::types::UserContent::Text("Hi".into()),
                 name: None,
             })],
             max_tokens: Some(100),
-            extra_body: Some(serde_json::json!({"reasoning_effort": "high"})),
+            extra_body: Some(serde_json::json!({
+                "reasoning_effort": "high",
+                "cache_control": {"type": "ephemeral"},
+                "output_config": {"sentinel": true},
+                "native_sentinel": 17,
+            })),
             ..Default::default()
         };
 
-        let prepared = client
-            .prepare_request(
-                &req,
-                |p| p.chat_completions_path(),
-                &req.model,
-                provider::Endpoint::Chat,
-                Some(false),
-            )
-            .expect("prepare_request should not fail");
-
-        assert!(
-            prepared.body_json.get("extra_body").is_none(),
-            "anthropic's own transform_request already strips extra_body"
-        );
-        assert_eq!(prepared.body_json["thinking"]["budget_tokens"], 16384);
+        for stream in [false, true] {
+            let prepared = client
+                .prepare_request(
+                    &req,
+                    |p| p.chat_completions_path(),
+                    &req.model,
+                    provider::Endpoint::Chat,
+                    Some(stream),
+                )
+                .expect("prepare_request should not fail");
+            let body = prepared.body_json;
+            assert!(body.get("extra_body").is_none());
+            assert!(body.get("reasoning_effort").is_none());
+            assert_eq!(body["thinking"]["type"], "adaptive");
+            assert_eq!(
+                body["output_config"],
+                serde_json::json!({"effort": "high", "sentinel": true})
+            );
+            assert_eq!(body["cache_control"]["type"], "ephemeral");
+            assert_eq!(body["native_sentinel"], 17);
+            assert_eq!(body["stream"], stream);
+        }
     }
 
     fn base_response_request() -> CreateResponseRequest {

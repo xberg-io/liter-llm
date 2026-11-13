@@ -4,6 +4,8 @@ use serde_json::{Value, json};
 
 use super::{convert_content_to_bedrock_blocks, reasoning_effort_to_budget_tokens};
 use crate::error::Result;
+use crate::provider::anthropic::replay::{insert_by_index, positioned_blocks, replayed_thinking_blocks};
+use crate::provider::anthropic::request::{ClaudeModel, disabled_thinking};
 
 /// Convert an OpenAI-style chat request to Bedrock Converse API format.
 ///
@@ -29,7 +31,7 @@ pub(super) fn transform_converse_request(body: &mut Value) -> Result<()> {
         })
         .unwrap_or_default();
 
-    let (mut system_parts, converse_messages) = convert_messages(&messages);
+    let (mut system_parts, converse_messages) = convert_messages(&messages)?;
     let inference_config = inference_config(body);
     let tool_config = tool_config(body);
     let additional_model_fields = additional_model_fields(body);
@@ -66,7 +68,7 @@ pub(super) fn transform_converse_request(body: &mut Value) -> Result<()> {
 
 /// Split OpenAI messages into Converse `system` blocks and `messages`,
 /// converting each role's content; unknown roles are dropped.
-fn convert_messages(messages: &[Value]) -> (Vec<Value>, Vec<Value>) {
+fn convert_messages(messages: &[Value]) -> Result<(Vec<Value>, Vec<Value>)> {
     let mut system_parts = vec![];
     let mut converse_messages = vec![];
 
@@ -80,13 +82,13 @@ fn convert_messages(messages: &[Value]) -> (Vec<Value>, Vec<Value>) {
                 let parts = convert_content_to_bedrock_blocks(content);
                 converse_messages.push(json!({"role": "user", "content": parts}));
             }
-            "assistant" => converse_messages.push(assistant_message(msg, content)),
+            "assistant" => converse_messages.push(assistant_message(msg, content)?),
             "tool" => converse_messages.push(tool_result_message(msg, content)),
             _ => {}
         }
     }
 
-    (system_parts, converse_messages)
+    Ok((system_parts, converse_messages))
 }
 
 /// Text blocks from a system/developer message: a plain string, or the `text`
@@ -107,28 +109,47 @@ fn system_text_parts(content: Option<&Value>) -> Vec<Value> {
 
 /// An assistant turn: non-empty text plus one `toolUse` block per tool call,
 /// or a single empty text block when there is neither.
-fn assistant_message(msg: &Value, content: Option<&Value>) -> Value {
-    let mut parts = vec![];
-    if let Some(text) = content.and_then(|c| c.as_str())
-        && !text.is_empty()
-    {
-        parts.push(json!({"text": text}));
-    }
-    if let Some(tool_calls) = msg.get("tool_calls").and_then(|t| t.as_array()) {
-        for tc in tool_calls {
-            parts.push(json!({
-                "toolUse": {
-                    "toolUseId": tc.get("id"),
-                    "name": tc.pointer("/function/name"),
-                    "input": tool_call_input(tc)
-                }
-            }));
+fn assistant_message(msg: &Value, content: Option<&Value>) -> Result<Value> {
+    let text = content.and_then(Value::as_str).unwrap_or_default();
+    let tools: Vec<_> = msg
+        .get("tool_calls")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .map(|tc| {
+            json!({"toolUse": {
+                "toolUseId": tc.get("id"),
+                "name": tc.pointer("/function/name"),
+                "input": tool_call_input(tc)
+            }})
+        })
+        .collect();
+    let thinking = replayed_thinking_blocks(msg.get("thinking_blocks"))?;
+    let mut parts = positioned_blocks(text, None, &tools, &thinking).unwrap_or_else(|| {
+        let mut parts = Vec::new();
+        if !text.is_empty() {
+            parts.push(json!({"text": text}));
+        }
+        parts.extend(tools);
+        insert_by_index(&mut parts, thinking);
+        parts
+    });
+    for part in &mut parts {
+        match part.get("type").and_then(Value::as_str) {
+            Some("text") => *part = json!({"text": part["text"]}),
+            Some("thinking") => {
+                *part = json!({"reasoningContent": {"reasoningText": {
+                    "text": part["thinking"], "signature": part["signature"]
+                }}})
+            }
+            Some("redacted_thinking") => *part = json!({"reasoningContent": {"redactedContent": part["data"]}}),
+            _ => {}
         }
     }
     if parts.is_empty() {
         parts.push(json!({"text": ""}));
     }
-    json!({"role": "assistant", "content": parts})
+    Ok(json!({"role": "assistant", "content": parts}))
 }
 
 /// Parse a tool call's JSON `arguments` string into the `toolUse.input` object,
@@ -219,22 +240,23 @@ fn tool_config(body: &Value) -> Option<Value> {
 
 /// `additionalModelRequestFields` enabling extended thinking for `reasoning_effort`.
 fn additional_model_fields(body: &Value) -> Option<Value> {
-    let mut additional_model_fields: Option<serde_json::Value> = None;
-    if let Some(effort) = body.get("reasoning_effort").and_then(|e| e.as_str()) {
-        // ~keep "none" sends an explicit disabled block: newer Claude models think by default
-        // when `thinking` is absent, so dropping the field would not turn thinking off.
-        if effort == "none" {
-            return Some(json!({"thinking": {"type": "disabled"}}));
-        }
-        let budget_tokens = reasoning_effort_to_budget_tokens(effort);
-        additional_model_fields = Some(json!({
-            "thinking": {
-                "type": "enabled",
-                "budget_tokens": budget_tokens
-            }
+    let effort = body.get("reasoning_effort")?.as_str()?.to_ascii_lowercase();
+    let model = body.get("model").and_then(Value::as_str).and_then(ClaudeModel::parse);
+    if effort == "none" {
+        return disabled_thinking(model).map(|thinking| json!({"thinking": thinking}));
+    }
+    if let Some(model) = model.filter(|model| model.thinks_adaptively()) {
+        return Some(json!({
+            "thinking": {"type": "adaptive"},
+            "output_config": {"effort": model.effort_level(&effort)},
         }));
     }
-    additional_model_fields
+    Some(json!({
+        "thinking": {
+            "type": "enabled",
+            "budget_tokens": reasoning_effort_to_budget_tokens(&effort),
+        },
+    }))
 }
 
 /// Emulate `response_format` with a JSON instruction appended to `system`.

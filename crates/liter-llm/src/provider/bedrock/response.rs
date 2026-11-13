@@ -53,6 +53,11 @@ pub(super) fn transform_converse_response(body: &mut Value) -> Result<()> {
         message["tool_calls"] = json!(tool_calls);
     }
 
+    let thinking = thinking_blocks(&content_blocks);
+    if !thinking.is_empty() {
+        message["thinking_blocks"] = json!(thinking);
+    }
+
     *body = json!({
         "id": response_id,
         "object": "chat.completion",
@@ -91,4 +96,30 @@ fn tool_calls_from_blocks(content_blocks: &[Value]) -> Vec<Value> {
             })
         })
         .collect()
+}
+
+fn thinking_blocks(blocks: &[Value]) -> Vec<Value> {
+    let mut text_offset = 0;
+    let mut tool_call_offset = 0;
+    let mut thinking = Vec::new();
+    for (index, block) in blocks.iter().enumerate() {
+        if let Some(text) = block.get("text").and_then(Value::as_str) {
+            text_offset += text.len();
+        }
+        if block.get("toolUse").is_some() {
+            tool_call_offset += 1;
+        }
+        let mut result = if let Some(reasoning) = block.pointer("/reasoningContent/reasoningText") {
+            json!({"type": "thinking", "thinking": reasoning["text"], "signature": reasoning["signature"]})
+        } else if let Some(data) = block.pointer("/reasoningContent/redactedContent") {
+            json!({"type": "redacted_thinking", "data": data})
+        } else {
+            continue;
+        };
+        result["index"] = json!(index);
+        result["text_offset"] = json!(text_offset);
+        result["tool_call_offset"] = json!(tool_call_offset);
+        thinking.push(result);
+    }
+    thinking
 }

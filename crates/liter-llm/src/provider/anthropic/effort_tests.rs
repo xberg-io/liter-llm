@@ -154,3 +154,11 @@ fn the_adaptive_max_tokens_floor_never_exceeds_the_model_output_limit() {
     assert_eq!(super::request::adaptive_max_tokens_floor("high", None), 16_000);
     assert_eq!(super::request::adaptive_max_tokens_floor("xhigh", None), 64_000);
 }
+
+#[test]
+fn none_omits_the_thinking_override_on_opus_55_and_fable() {
+    for model in ["claude-opus-5-5", "claude-fable-5"] {
+        let body = transformed(model, "none", None);
+        assert!(body.get("thinking").is_none(), "{model}: {body}");
+    }
+}

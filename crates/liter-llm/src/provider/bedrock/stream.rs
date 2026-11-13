@@ -4,14 +4,14 @@ use serde_json::{Value, json};
 
 use super::converse_finish_reason;
 use crate::error::{LiterLlmError, Result};
-use crate::types::ChatCompletionChunk;
+use crate::types::{ChatCompletionChunk, ThinkingBlock};
 
 /// Parse a Bedrock ConverseStream EventStream event into a `ChatCompletionChunk`.
 ///
 /// Bedrock ConverseStream events:
 /// - `messageStart` → role delta
 /// - `contentBlockStart` → tool_use start (with toolUseId and name)
-/// - `contentBlockDelta` → text delta or tool_use input delta
+/// - `contentBlockDelta` → text, tool arguments, or reasoning fragments
 /// - `contentBlockStop` → (ignored)
 /// - `messageStop` → finish_reason
 /// - `metadata` → usage (emitted as a final chunk with empty delta)
@@ -118,7 +118,7 @@ fn content_block_start_chunk(v: &Value) -> Result<Option<ChatCompletionChunk>> {
     }
 }
 
-/// `contentBlockDelta`: a text delta or a tool-argument delta; unknown shapes
+/// `contentBlockDelta`: a text, tool-argument, or reasoning delta; unknown shapes
 /// are logged and skipped.
 fn content_block_delta_chunk(v: &Value) -> Result<Option<ChatCompletionChunk>> {
     let index = v.get("contentBlockIndex").and_then(|i| i.as_u64()).unwrap_or(0);
@@ -158,12 +158,45 @@ fn content_block_delta_chunk(v: &Value) -> Result<Option<ChatCompletionChunk>> {
         .map(Some);
     }
 
+    if let Some(reasoning) = v.pointer("/delta/reasoningContent") {
+        return reasoning_delta_chunk(reasoning, index);
+    }
+
     tracing::warn!(
         content_block_index = index,
         "Bedrock contentBlockDelta with unrecognized delta shape; skipping"
     );
 
     Ok(None)
+}
+
+fn reasoning_delta_chunk(reasoning: &Value, index: u64) -> Result<Option<ChatCompletionChunk>> {
+    let field = |name| reasoning.get(name).and_then(Value::as_str).map(str::to_owned);
+    let fragment = ThinkingBlock {
+        index: u32::try_from(index).ok(),
+        thinking: field("text"),
+        signature: field("signature"),
+        data: field("redactedContent"),
+        ..Default::default()
+    };
+    if fragment.thinking.is_none() && fragment.signature.is_none() && fragment.data.is_none() {
+        return Ok(None);
+    }
+    chunk_from_json(json!({
+        "id": "bedrock-stream",
+        "object": "chat.completion.chunk",
+        "created": 0,
+        "model": "",
+        "choices": [{
+            "index": 0,
+            "delta": {
+                "reasoning_content": fragment.thinking,
+                "thinking_blocks": [fragment],
+            },
+            "finish_reason": null
+        }]
+    }))
+    .map(Some)
 }
 
 /// `messageStop`: an empty delta carrying the mapped `finish_reason`.
@@ -208,4 +241,28 @@ fn metadata_chunk(v: &Value) -> Result<Option<ChatCompletionChunk>> {
         }
     }))
     .map(Some)
+}
+
+#[cfg(test)]
+#[test]
+fn converse_stream_accumulates_reasoning_and_signatures() {
+    let mut accumulator = crate::types::ThinkingBlockAccumulator::new();
+    for payload in [
+        json!({"contentBlockIndex": 0, "delta": {"text": "Before"}}),
+        json!({"contentBlockIndex": 1, "delta": {"reasoningContent": {"text": "Think"}}}),
+        json!({"contentBlockIndex": 1, "delta": {"reasoningContent": {"signature": "sig"}}}),
+        json!({"contentBlockIndex": 2, "delta": {"reasoningContent": {"redactedContent": "YQ=="}}}),
+    ] {
+        let chunk = parse_bedrock_stream_event("contentBlockDelta", &payload.to_string())
+            .unwrap()
+            .expect("recognized delta");
+        accumulator.push(&chunk);
+    }
+    assert_eq!(
+        serde_json::to_value(accumulator.finish()).unwrap(),
+        json!([
+            {"type": "thinking", "thinking": "Think", "signature": "sig", "index": 1, "text_offset": 6, "tool_call_offset": 0},
+            {"type": "redacted_thinking", "data": "YQ==", "index": 2, "text_offset": 6, "tool_call_offset": 0}
+        ])
+    );
 }

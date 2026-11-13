@@ -6,7 +6,7 @@ use super::request::is_blank;
 use crate::error::{LiterLlmError, Result};
 
 /// A thinking block to send back, with where the reply had it.
-pub(super) struct ReplayedThinking {
+pub(in crate::provider) struct ReplayedThinking {
     block: Value,
     /// Where the block goes among the turn's blocks: its `index`, or for a block without
     /// one, its position among the thinking blocks.
@@ -18,7 +18,7 @@ pub(super) struct ReplayedThinking {
 /// Validate `thinking_blocks` and build the Anthropic block of each, in `index` order.
 /// Anthropic rejects a thinking block without its signature, so a malformed block fails
 /// here with the field named instead of as a provider 400.
-pub(super) fn replayed_thinking_blocks(thinking_blocks: Option<&Value>) -> Result<Vec<ReplayedThinking>> {
+pub(in crate::provider) fn replayed_thinking_blocks(thinking_blocks: Option<&Value>) -> Result<Vec<ReplayedThinking>> {
     let bad_request = |message: String| LiterLlmError::BadRequest {
         message: format!("assistant message {message}"),
         status: 400,
@@ -81,7 +81,7 @@ pub(super) fn replayed_thinking_blocks(thinking_blocks: Option<&Value>) -> Resul
 /// The turn rebuilt from its text, tool calls and thinking blocks, each thinking block
 /// between the text and tool calls that came before and after it in the reply. `None`
 /// when a block has no offsets or they do not fit the text (it was edited).
-pub(super) fn positioned_blocks(
+pub(in crate::provider) fn positioned_blocks(
     text: &str,
     cache_control: Option<&Value>,
     tool_uses: &[Value],
@@ -118,7 +118,7 @@ fn push_text_block(blocks: &mut Vec<Value>, text: &str) {
 
 /// Put each thinking block back at its `order`, after any block inserted before it, so
 /// blocks that share an order keep theirs.
-pub(super) fn insert_by_index(blocks: &mut Vec<Value>, thinking: Vec<ReplayedThinking>) {
+pub(in crate::provider) fn insert_by_index(blocks: &mut Vec<Value>, thinking: Vec<ReplayedThinking>) {
     let mut next = 0usize;
     for replayed in thinking {
         let at = replayed.order.max(next).min(blocks.len());

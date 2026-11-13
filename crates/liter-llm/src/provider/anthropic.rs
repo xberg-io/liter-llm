@@ -6,8 +6,8 @@ use crate::error::Result;
 use crate::provider::Provider;
 use crate::types::ChatCompletionChunk;
 
-mod replay;
-mod request;
+pub(super) mod replay;
+pub(super) mod request;
 mod response;
 mod stream;
 

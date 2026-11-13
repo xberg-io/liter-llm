@@ -548,6 +548,10 @@ impl Provider for BedrockProvider {
     /// [`transform_bedrock_embed_request`] instead: Bedrock has no Converse-style
     /// unified embeddings API, so this dispatch mirrors the same
     /// `input`/`messages` discriminator used by [`super::vertex`].
+    fn accepts_thinking_blocks(&self) -> bool {
+        true
+    }
+
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
         // ~keep Re-checked on every request (not just at client construction): credentials
         // can become unavailable between construction and send. `signing_headers` now also

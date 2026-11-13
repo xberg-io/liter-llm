@@ -674,3 +674,46 @@ fn transform_response_chat_path_unaffected_by_embedding_branch() {
     assert_eq!(body["object"], "chat.completion");
     assert!(body.get("data").is_none());
 }
+
+#[test]
+#[serial]
+fn converse_uses_adaptive_thinking_for_modern_claude_models() {
+    for model in [
+        "us.anthropic.claude-opus-4-7-v1:0",
+        "global.anthropic.claude-sonnet-5-5-v1:0",
+    ] {
+        let mut body = json!({
+            "model": model,
+            "messages": [{"role": "user", "content": "Think"}],
+            "reasoning_effort": "low"
+        });
+        provider().transform_request(&mut body).unwrap();
+        assert_eq!(
+            body["additionalModelRequestFields"],
+            json!({"thinking": {"type": "adaptive"}, "output_config": {"effort": "low"}}),
+            "{model}"
+        );
+    }
+}
+
+#[test]
+#[serial]
+fn converse_replays_signed_and_redacted_reasoning_in_order() {
+    let blocks = json!([
+        {"text": "Before"},
+        {"reasoningContent": {"reasoningText": {"text": "Think", "signature": "sig"}}},
+        {"toolUse": {"toolUseId": "tool-1", "name": "lookup", "input": {}}},
+        {"reasoningContent": {"redactedContent": "YQ=="}}
+    ]);
+    let mut response = json!({"output": {"message": {"content": blocks}}, "stopReason": "tool_use"});
+    let provider = provider();
+    provider.transform_response(&mut response).unwrap();
+    let assistant = response.pointer("/choices/0/message").unwrap();
+    let mut request = json!({"messages": [
+        {"role": "user", "content": "Look it up"},
+        assistant,
+        {"role": "tool", "tool_call_id": "tool-1", "content": "found"}
+    ]});
+    provider.transform_request(&mut request).unwrap();
+    assert_eq!(request["messages"][1]["content"], blocks);
+}

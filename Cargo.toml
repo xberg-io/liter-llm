@@ -78,7 +78,7 @@ hex = "0.4"
 http = "1"
 httpdate = "1"
 ipnet = "2.12"
-jsonschema = "0.60"
+jsonschema = "0.61"
 jsonwebtoken = { version = "11", default-features = false, features = ["use_pem"] }
 
 magnus = "0.9"
@@ -106,7 +106,7 @@ rb-sys = "0.9"
 regex = "1"
 # ~keep Async / HTTP: TLS-agnostic base only; each crate adds TLS features target-conditionally.
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "multipart", "form"] }
-rmcp = { version = "3.8", features = [
+rmcp = { version = "3.10", features = [
     "server",
     "macros",
     "transport-io",
@@ -141,7 +141,7 @@ tokio-tungstenite = { version = "0.30", default-features = false, features = [
     "rustls-tls-native-roots",
 ] }
 tokio-util = { version = "0.7", features = ["rt"] }
-toml = "1.1"
+toml = "1.2"
 tower = { version = "0.5", features = [
     "retry",
     "limit",
