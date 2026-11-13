@@ -1,5 +1,5 @@
 {
-  "version": "2.7.0",
+  "version": "2.7.1",
   "private": true,
   "workspaces": [
     "crates/liter-llm-node",
@@ -7,7 +7,7 @@
     "e2e/node",
     "e2e/wasm"
   ],
-  "packageManager": "pnpm@12.16.1",
+  "packageManager": "pnpm@12.18.0",
   "pi": {
     "prompts": [
       "./plugin/.pi/prompts/liter-llm-chat.md",

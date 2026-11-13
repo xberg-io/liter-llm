@@ -6,7 +6,7 @@ name: liter-llm-using-the-mcp-server
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 Content-Hash: blake3:6925dd58f9790a1cc57f093167cf3b430886393ff3792d28003f15269b5546a2
-Source-Hash: blake3:725e6663621cbc5ffbaf9dbb2141fe5f9b95aee234fe9f7ece2d2b6e63dc5a66
+Source-Hash: blake3:5cf7da08639f3cd0e9bdba8885263d112aa48add74b30d732da1f72fd7badd56
 Schema-Version: v1
 -->
 

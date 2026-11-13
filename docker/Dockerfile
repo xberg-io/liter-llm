@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM rust:1.99.1-trixie AS builder
+FROM rust:1.100.0-trixie AS builder
 
 ARG TARGETARCH
 

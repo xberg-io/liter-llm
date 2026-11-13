@@ -10,7 +10,7 @@
     }
   ],
   "name": "@xberg-io/liter-llm-linux-arm64-gnu",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -23,5 +23,5 @@
   "libc": ["glibc"],
   "engines": { "node": ">= 22" },
   "publishConfig": { "access": "public" },
-  "packageManager": "pnpm@12.16.1"
+  "packageManager": "pnpm@12.18.0"
 }

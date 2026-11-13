@@ -211,7 +211,6 @@ owned_paths = [
   "packages/swift/README.md",
   "packages/zig/README.md",
   "test_apps/c/Makefile",
-  "test_apps/csharp/XbergIo.LiterLlm.E2eTests.csproj",
   "test_apps/homebrew/Brewfile",
   "test_apps/homebrew/homebrew.bats",
   "test_apps/homebrew/lib/xberg-bats/load.bash",

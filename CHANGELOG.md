@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.1] - 2026-11-13
+
+### Fixed
+
+- Bedrock uses adaptive thinking on supported Claude models and preserves thinking signatures across tool calls (#481).
+- Anthropic omits the disabled thinking block for Claude Opus 5.5 and Fable (#482).
+- Anthropic forwards request overrides, maps reasoning effort to the model's thinking format, and reports cache usage (#491).
+
+### Changed
+
+- Updated Rust dependencies and moved the toolchain to Rust 1.100.
+
 ## [2.7.0] - 2026-11-06
 
 ### Fixed

@@ -2,19 +2,19 @@
   "source": "plugin/skills",
   "skill_count": 7,
   "files": {
-    "liter-llm/SKILL.md": "4b28200ffda3a757a427072e1264c6fdafac64b1674383cdd3a12746be63e930",
-    "liter-llm/index.md": "f118f116a8c3b39aa6bec997734870ba17908dd53f8061800ec5b241a2cc7aee",
-    "liter-llm-calling-llms/SKILL.md": "7b5d5c1d259fcef4b372a60ffbd7624976284f6834d100c2f379f6d6a7124fdc",
-    "liter-llm-calling-llms/index.md": "dd145ea8812c890d92d93cccf0c49668c3e07f3dd6ab9c1412f5c88ca73b62fc",
-    "liter-llm-embeddings-and-search/SKILL.md": "f9c06bcf80cf3155e5669ea2c99d95b89577feaf0a7b28e477b8693ec965b936",
-    "liter-llm-embeddings-and-search/index.md": "e516adbfd745959db004e939df5c74edf68510cf35f90389ccf696601e64cbde",
-    "liter-llm-running-the-proxy/SKILL.md": "e6871ef99e91bb2e87ee3c04839c83058e8141258e17582ee5e8f55b8edc992d",
-    "liter-llm-running-the-proxy/index.md": "ca09aa5a36118909c45afa1024d9f7f904f77684b34a0f7773438371dab42621",
-    "liter-llm-streaming-responses/SKILL.md": "a85a42c67294f595e7199a8bf17f1cc6b70a5c7a54056dc4cc8aa97c8cf00009",
-    "liter-llm-streaming-responses/index.md": "1db0b9ff03180cc480abd3ad577641b25ef50e4465ce229b0368201871aa391a",
-    "liter-llm-tool-calling/SKILL.md": "5dbf022091b39e5a85e782f5b3a7adc30ae164d2724ea57e22178893726908ad",
-    "liter-llm-tool-calling/index.md": "b2ee32d3b9f887799da2f5db9afe0e9a9ff11299116974a3e150733a4815e1f6",
-    "liter-llm-using-the-mcp-server/SKILL.md": "80ce33973a2c6048241cbda6b0eedf4adfd5f5b0cf8d81d9dd509a455a8d33fb",
-    "liter-llm-using-the-mcp-server/index.md": "518b9fa7a60380b5d70296ca12c5e6e03fafbcd9cf47be621b43018517deb349"
+    "liter-llm/SKILL.md": "d14ba371d265fa4fe602ce2c6f5149789ca042349564e9d9ad31f25c52340c61",
+    "liter-llm/index.md": "6ea745f353f35d2fec5fc6bca96c288f9ff5d1ec78e2a662292d665e43322bf5",
+    "liter-llm-calling-llms/SKILL.md": "b2539b1dca389235cadf40b6befbcfe55e7d1d4b23c14103564e2cd94dc69a25",
+    "liter-llm-calling-llms/index.md": "85c7185eb1e7ef37ebf465bad91fd99906cf42c4efbb5a6b277850ce6fad742d",
+    "liter-llm-embeddings-and-search/SKILL.md": "a66d6bd1200839fff9aeedf2d144f05e2758888ea07687131fc74f6f81e75d56",
+    "liter-llm-embeddings-and-search/index.md": "62d2fd677f8d1e7a2e525c48c35cd3f8c2b395872abdfdc54c2006d4819e4741",
+    "liter-llm-running-the-proxy/SKILL.md": "cb036d8e6ec91339e7c1297d1a9b1f7ffece5fb31e47957d8398cafc7c2c61fe",
+    "liter-llm-running-the-proxy/index.md": "5ea4c6443728f8495414d14c8951dd60d667be55df200d2211b612e5b5a256f4",
+    "liter-llm-streaming-responses/SKILL.md": "a6fd151c42a707c9fb8d508ab1c3774e6a8fba4de5ad885b9198036dfe600371",
+    "liter-llm-streaming-responses/index.md": "2026a4c356a823e91e4a739d5a7a466a30f59e90a43f4abdbada613f1d421d0d",
+    "liter-llm-tool-calling/SKILL.md": "ca0dee97931c6c993c2798654c067b713541eaa7b5db1402a6a041bf4a0b19d3",
+    "liter-llm-tool-calling/index.md": "b6378f3db5d0bdcb32af59670f07b214ffdf4fdc344431c24a367d397d67f645",
+    "liter-llm-using-the-mcp-server/SKILL.md": "cc72f4b3c763685256c1582446032fc7027bb8739ebd7be7bd707f5e1498d7df",
+    "liter-llm-using-the-mcp-server/index.md": "43a9b44274dee13eb649e1e3ede3135a75377753292caa8f0da61ee40d6525f7"
   }
 }
