@@ -4380,6 +4380,7 @@ mod build_provider_tests {
         assert!(prepared.body_json.get("reasoning_effort").is_none());
     }
 
+    #[cfg(feature = "bedrock")]
     #[test]
     #[serial_test::serial]
     fn bedrock_client_request_with_reasoning_effort_none_disables_thinking() {
@@ -4951,6 +4952,7 @@ mod build_provider_tests {
         }
     }
 
+    #[cfg(feature = "bedrock")]
     fn bedrock_embed_client(model: &str) -> DefaultClient {
         let config = ClientConfigBuilder::new("test-key")
             .bedrock_credentials("test-access-key", "test-secret-key", None)
@@ -4958,6 +4960,7 @@ mod build_provider_tests {
         DefaultClient::new(config, Some(model)).expect("client construction should succeed")
     }
 
+    #[cfg(feature = "bedrock")]
     #[test]
     #[serial_test::serial]
     fn bedrock_cohere_embed_keeps_search_document_when_the_caller_sets_no_input_type() {
@@ -4979,6 +4982,7 @@ mod build_provider_tests {
         assert_eq!(prepared.body_json["texts"], serde_json::json!(["what is rust?"]));
     }
 
+    #[cfg(feature = "bedrock")]
     #[test]
     #[serial_test::serial]
     fn bedrock_cohere_embed_takes_input_type_and_other_fields_from_extra_body() {
@@ -5006,6 +5010,7 @@ mod build_provider_tests {
         assert_eq!(sent, prepared.body_json, "the signed bytes carry the merged body");
     }
 
+    #[cfg(feature = "bedrock")]
     #[test]
     #[serial_test::serial]
     fn bedrock_titan_embed_takes_extra_body_fields() {
