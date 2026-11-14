@@ -50,12 +50,10 @@ license = "MIT"
 repository = "https://github.com/xberg-io/liter-llm"
 homepage = "https://xberg.io"
 authors = ["Na'aman Hirschfeld <naaman@xberg.io>", "Tobias Perlstein <tobias@xberg.io>"]
-description = "Universal LLM API client — 174 providers, streaming, tool calling. Rust-powered with polyglot bindings."
 keywords = ["llm", "openai", "api-client", "ai", "xberg"]
 
 [workspace.dependencies]
 ahash = "0.8"
-anyhow = "1"
 arc-swap = "1"
 async-trait = "0.1"
 
@@ -63,7 +61,6 @@ aws-config = { version = "1", default-features = false, features = ["rustls"] }
 aws-sdk-secretsmanager = { version = "1", default-features = false, features = ["default-https-client", "rt-tokio"] }
 
 axum = { version = "0.8", features = ["macros", "ws"] }
-axum-extra = { version = "0.12", features = ["typed-header"] }
 base64 = "0.23"
 bytes = "1"
 chrono = { version = "0.4", default-features = false, features = ["std"] }
@@ -81,12 +78,8 @@ ipnet = "2.12"
 jsonschema = "0.61"
 jsonwebtoken = { version = "11", default-features = false, features = ["use_pem"] }
 
-magnus = "0.9"
 memchr = "2"
 mimalloc = { version = "0.1", default-features = false }
-napi = { version = "3", features = ["napi4", "serde-json", "async"] }
-napi-build = "2"
-napi-derive = "3"
 notify = { version = "8", features = ["macos_kqueue"] }
 opendal = { version = "0.59.5", default-features = false, features = [
     "services-memory",
@@ -99,10 +92,6 @@ opentelemetry = { version = "0.33", features = ["metrics"] }
 opentelemetry-otlp = { version = "0.33", features = ["grpc-tonic", "trace", "metrics"] }
 opentelemetry_sdk = { version = "0.33", features = ["rt-tokio"] }
 pin-project-lite = "0.2"
-pyo3 = { version = "0.30", features = ["abi3-py311", "multiple-pymethods"] }
-pyo3-async-runtimes = { version = "0.30", features = ["tokio-runtime"] }
-rayon = "1"
-rb-sys = "0.9"
 regex = "1"
 # ~keep Async / HTTP: TLS-agnostic base only; each crate adds TLS features target-conditionally.
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "multipart", "form"] }
@@ -115,7 +104,6 @@ rmcp = { version = "3.10", features = [
     "transport-streamable-http-server",
 ] }
 rust_decimal = { version = "1", features = ["serde"] }
-rustler = "0.39"
 rustls = { version = "0.23", default-features = false, features = ["ring", "logging", "std", "tls12"] }
 
 schemars = "1"
@@ -164,18 +152,14 @@ tower-http = { version = "0.7", features = [
     "catch-panic",
     "limit",
 ] }
-tower-layer = "0.3"
-tower-service = "0.3"
 tracing = "0.1"
 tracing-opentelemetry = "0.34"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 url = "2.5"
 utoipa = { version = "6.0", features = ["axum_extras"] }
 vaultrs = { version = "0.8", default-features = false, features = ["rustls"] }
-walkdir = "2.5"
 wasm-bindgen = "0.2"
 wasm-bindgen-test = "0.3"
-which = "8"
 
 [profile.release]
 lto = "thin"
