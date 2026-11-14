@@ -52,6 +52,7 @@ jobs:
     if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
     uses: xberg-io/actions/.github/workflows/reusable-validate.yml@v1
     with:
+      runner: ubuntu-24.04
       # `check-fixture-snippets` is deliberately NOT enabled here: turning it on
       # installs alef and runs `alef snippets check --strict --cache off`, which
       # currently fails with an unactionable upstream IO error (tracked upstream
