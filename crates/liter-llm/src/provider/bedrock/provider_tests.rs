@@ -231,6 +231,25 @@ fn transform_request_reasoning_effort_none_disables_thinking() {
 
 #[test]
 #[serial]
+fn transform_request_reasoning_effort_none_uses_low_adaptive_thinking() {
+    let p = provider();
+    for model in ["claude-opus-5-5", "claude-fable-5-1"] {
+        let mut body = json!({
+            "model": model,
+            "messages": [{"role": "user", "content": "Hello."}],
+            "reasoning_effort": "none"
+        });
+        p.transform_request(&mut body).expect("transform request");
+        assert_eq!(
+            body["additionalModelRequestFields"],
+            json!({"thinking": {"type": "adaptive"}, "output_config": {"effort": "low"}}),
+            "{model}"
+        );
+    }
+}
+
+#[test]
+#[serial]
 fn transform_request_no_reasoning_effort_omits_amf() {
     let p = provider();
     let mut body = json!({

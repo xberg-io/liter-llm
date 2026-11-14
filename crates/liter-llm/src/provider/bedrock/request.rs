@@ -242,19 +242,24 @@ fn tool_config(body: &Value) -> Option<Value> {
 fn additional_model_fields(body: &Value) -> Option<Value> {
     let effort = body.get("reasoning_effort")?.as_str()?.to_ascii_lowercase();
     let model = body.get("model").and_then(Value::as_str).and_then(ClaudeModel::parse);
-    if effort == "none" {
-        return disabled_thinking(model).map(|thinking| json!({"thinking": thinking}));
-    }
+    let effort = if effort == "none" {
+        if let Some(thinking) = disabled_thinking(model) {
+            return Some(json!({"thinking": thinking}));
+        }
+        "low"
+    } else {
+        effort.as_str()
+    };
     if let Some(model) = model.filter(|model| model.thinks_adaptively()) {
         return Some(json!({
             "thinking": {"type": "adaptive"},
-            "output_config": {"effort": model.effort_level(&effort)},
+            "output_config": {"effort": model.effort_level(effort)},
         }));
     }
     Some(json!({
         "thinking": {
             "type": "enabled",
-            "budget_tokens": reasoning_effort_to_budget_tokens(&effort),
+            "budget_tokens": reasoning_effort_to_budget_tokens(effort),
         },
     }))
 }

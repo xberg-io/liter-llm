@@ -732,6 +732,24 @@ fn transform_request_reasoning_effort_none_on_sonnet_5_5_thinks_between_tools_on
 }
 
 #[test]
+fn transform_request_reasoning_effort_none_uses_low_adaptive_thinking_when_required() {
+    for model in ["claude-opus-5-5", "claude-fable-5", "claude-fable-5-1"] {
+        let body = transform_with_effort(model, "none");
+        assert_eq!(body["thinking"], json!({"type": "adaptive"}), "{model}");
+        assert_eq!(body["output_config"]["effort"], "low", "{model}");
+        assert_eq!(body["max_tokens"], 100, "{model}");
+        assert!(body.get("reasoning_effort").is_none(), "{model}");
+    }
+}
+
+#[test]
+fn transform_request_reasoning_effort_none_still_disables_thinking_on_opus_5() {
+    let body = transform_with_effort("claude-opus-5", "none");
+    assert_eq!(body["thinking"], json!({"type": "disabled"}));
+    assert!(body.get("output_config").is_none());
+}
+
+#[test]
 fn transform_request_reasoning_effort_and_native_structured_output_share_output_config() {
     let schema = json!({
         "type": "object",

@@ -221,15 +221,18 @@ fn apply_reasoning_effort(body: &mut Value, caller_set_max_tokens: bool) {
     };
     let model = body.get("model").and_then(Value::as_str).and_then(ClaudeModel::parse);
 
-    if effort == "none" {
+    let effort = if effort == "none" {
         if let Some(thinking) = disabled_thinking(model) {
             body["thinking"] = thinking;
+            return;
         }
-        return;
-    }
+        "low"
+    } else {
+        effort.as_str()
+    };
 
     if let Some(model) = model.filter(|m| m.thinks_adaptively()) {
-        let level = model.effort_level(&effort);
+        let level = model.effort_level(effort);
         body["thinking"] = json!({"type": "adaptive"});
         set_output_config(body, "effort", json!(level));
         if !caller_set_max_tokens {
@@ -245,7 +248,7 @@ fn apply_reasoning_effort(body: &mut Value, caller_set_max_tokens: bool) {
 
     // ~keep 1024 is Anthropic's documented minimum thinking budget_tokens, so
     // "minimal" and "low" both floor there — the duplicate value is intentional.
-    let budget_tokens: u64 = match effort.as_str() {
+    let budget_tokens: u64 = match effort {
         "minimal" => 1024,
         "low" => 1024,
         "medium" => 4096,
