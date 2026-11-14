@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.129.4"
+alef_version = "0.129.5"
 languages = [
   "python",
   "node",
@@ -539,6 +539,7 @@ futures-util = "0.3"
 futures = "0.3"
 
 [crates.wasm]
+omit_getrandom_02 = true
 features = ["wasm-http"]
 exclude_types = [
   "BudgetConfig",

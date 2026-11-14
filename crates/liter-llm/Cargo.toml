@@ -35,7 +35,7 @@ keywords = ["llm", "openai", "api-client", "ai", "xberg"]
 categories = ["api-bindings", "web-programming::http-client"]
 
 [package.metadata.cargo-machete]
-ignored = ["dashmap", "tower-http"]
+ignored = ["dashmap"]
 
 [features]
 
@@ -60,7 +60,7 @@ wasm-http = ["dep:reqwest", "dep:memchr", "dep:gloo-timers", "dep:ipnet"]
 
 otel = ["dep:tracing-opentelemetry", "dep:opentelemetry"]
 
-tower = ["dep:tower", "dep:tower-http", "dep:futures-util", "dep:rand"]
+tower = ["dep:tower", "dep:futures-util", "dep:rand"]
 
 opendal-cache = ["dep:opendal", "dep:opendal-http-transport-reqwest", "dep:rustls", "tower"]
 
@@ -124,6 +124,7 @@ rustls = { workspace = true, optional = true }
 getrandom = { version = "0.4", features = ["wasm_js"] }
 # ~keep ahash still depends on getrandom 0.3, which needs its own `wasm_js` feature under that cfg.
 getrandom_03 = { package = "getrandom", version = "0.3", features = ["wasm_js"] }
+gloo-timers = { version = "0.4", features = ["futures"], optional = true }
 
 # ~keep Windows uses SChannel via native-tls to avoid aws-lc-sys MSVC build failures.
 # ~keep rustls is intentionally not pulled in on Windows.
@@ -147,7 +148,6 @@ etcd-client = { workspace = true, optional = true }
 futures-core = { workspace = true }
 futures-util = { workspace = true, optional = true }
 gcp_auth = { workspace = true, optional = true }
-gloo-timers = { version = "0.4", features = ["futures"], optional = true }
 hex.workspace = true
 http.workspace = true
 httpdate.workspace = true
@@ -175,7 +175,6 @@ tokio = { workspace = true, features = ["time", "rt", "macros"], optional = true
 tokio-util = { workspace = true, optional = true }
 toml = { workspace = true }
 tower = { workspace = true, optional = true }
-tower-http = { workspace = true, optional = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true, optional = true }
 url = { workspace = true }

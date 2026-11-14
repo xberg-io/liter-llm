@@ -3009,7 +3009,6 @@ dependencies = [
  "tokio-util",
  "toml 1.2.1+spec-1.1.0",
  "tower",
- "tower-http 0.7.1",
  "tracing",
  "tracing-core",
  "tracing-opentelemetry",
@@ -3210,7 +3209,6 @@ version = "2.7.1"
 dependencies = [
  "futures",
  "futures-util",
- "getrandom 0.2.17",
  "getrandom 0.3.4",
  "getrandom 0.4.3",
  "js-sys",
