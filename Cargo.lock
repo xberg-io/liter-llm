@@ -3191,7 +3191,6 @@ dependencies = [
 name = "liter-llm-swift"
 version = "2.7.1"
 dependencies = [
- "async-trait",
  "futures-util",
  "libc",
  "liter-llm",

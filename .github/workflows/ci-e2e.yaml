@@ -430,17 +430,9 @@ jobs:
           ffi-crate-dir: crates/liter-llm-ffi
           ffi-lib-name: liter_llm_ffi
 
-      - name: Build FFI crate (swift)
+      - name: Build native libraries for Swift E2E
         if: matrix.lang == 'swift'
-        shell: bash
-        run: cargo build -p liter-llm-ffi --release
-
-      - name: Build Swift package (macos / liter-llm-swift)
-        if: matrix.lang == 'swift'
-        uses: xberg-io/actions/build-swift-package@v1
-        with:
-          crate-name: liter-llm-swift
-          build-profile: release
+        run: mise run swift:build
 
       - name: Setup library paths for FFI bindings
         if: |
