@@ -17,9 +17,9 @@
 //!
 //! All built-in strategies use [`ahash::RandomState`] with four fixed
 //! compile-time seeds.  Identical inputs produce identical `u64` keys
-//! **across processes and Rust versions** — the hash is stable as long as
-//! the seed constants are not changed.  This makes it safe to persist or
-//! distribute cache keys.
+//! **across processes using the same build**. Hash stability is not guaranteed
+//! across ahash versions, platforms, or compiler configurations; persistent
+//! caches may need invalidation when these change.
 //!
 //! The canonical body string is also returned alongside the key so that
 //! callers can guard against the (astronomically rare) 64-bit hash collision
@@ -41,13 +41,12 @@ const CACHE_KEY_SEED_3: u64 = 0x7465_6779_5f76_3100;
 
 /// The process-global deterministic random state.  Constructed once from
 /// compile-time-fixed seeds so the same input always yields the same hash,
-/// regardless of process restart or Rust version.
+/// across process restarts with the same build.
 fn cache_random_state() -> &'static RandomState {
     use std::sync::OnceLock;
     static STATE: OnceLock<RandomState> = OnceLock::new();
-    STATE.get_or_init(|| {
-        RandomState::generate_with(CACHE_KEY_SEED_0, CACHE_KEY_SEED_1, CACHE_KEY_SEED_2, CACHE_KEY_SEED_3)
-    })
+    STATE
+        .get_or_init(|| RandomState::with_seeds(CACHE_KEY_SEED_0, CACHE_KEY_SEED_1, CACHE_KEY_SEED_2, CACHE_KEY_SEED_3))
 }
 
 /// Construct a deterministic hasher using the fixed-seed [`RandomState`].
@@ -195,6 +194,55 @@ mod tests {
             tenant_id,
             system_prompt,
         }
+    }
+
+    // Run only in a fresh process so the process-global state is initialized anew.
+    #[test]
+    #[ignore]
+    #[expect(
+        clippy::print_stdout,
+        reason = "the parent test reads the keys from this process's stdout"
+    )]
+    fn cache_keys_child_process() {
+        let i = input(
+            "gpt-4",
+            r#"[{"role":"user","content":"hi"}]"#,
+            "{}",
+            Some("acme"),
+            Some("help"),
+        );
+        for strategy in [
+            &ExactHashStrategy as &dyn CacheKeyStrategy,
+            &SystemPromptAwareStrategy,
+            &TenantScopedStrategy,
+        ] {
+            println!("CACHE_KEY={}", strategy.key_for(&i).0);
+        }
+    }
+
+    #[test]
+    fn cache_keys_are_stable_across_processes() {
+        let keys = || {
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "cache_key::tests::cache_keys_child_process",
+                    "--ignored",
+                    "--nocapture",
+                ])
+                .output()
+                .unwrap();
+            assert!(output.status.success(), "child process failed: {output:?}");
+            let stdout = String::from_utf8(output.stdout).unwrap();
+            let keys: Vec<String> = stdout
+                .lines()
+                .filter(|line| line.starts_with("CACHE_KEY="))
+                .map(str::to_owned)
+                .collect();
+            assert_eq!(keys.len(), 3, "all strategies must be exercised: {stdout}");
+            keys
+        };
+        assert_eq!(keys(), keys(), "cache keys must survive process restarts");
     }
 
     #[test]
