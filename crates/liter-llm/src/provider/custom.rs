@@ -51,8 +51,8 @@ pub enum AuthHeaderFormat {
 ///
 /// # Errors
 ///
-/// Returns an error if the config is invalid (empty name, empty base_url, or
-/// no model prefixes).
+/// Returns an error if the config is invalid (empty name, empty base_url, no
+/// model prefixes, or an invalid API-key header name).
 #[tracing::instrument(level = "info", skip(config), fields(name = %config.name, base_url = %config.base_url))]
 pub fn register_custom_provider(config: CustomProviderConfig) -> Result<()> {
     validate_config(&config)?;
@@ -171,6 +171,14 @@ fn validate_config(config: &CustomProviderConfig) -> Result<()> {
                 status: 400,
             });
         }
+    }
+    if let AuthHeaderFormat::ApiKey(header_name) = &config.auth_header
+        && http::header::HeaderName::from_bytes(header_name.as_bytes()).is_err()
+    {
+        return Err(LiterLlmError::BadRequest {
+            message: "custom provider API-key header name must be a valid HTTP header name".into(),
+            status: 400,
+        });
     }
     Ok(())
 }
@@ -407,6 +415,105 @@ mod tests {
             "https://new.example.com/v1",
             "should use the updated config"
         );
+    }
+
+    const INVALID_AUTH_HEADER_NAMES: [&str; 10] = [
+        "",
+        " ",
+        "X Api Key",
+        "X:Api-Key",
+        " X-Api-Key",
+        "X-Api-Key ",
+        "X\tApi-Key",
+        "X-Api-Key\r\nOther",
+        "X-Ünicode",
+        "X-\0",
+    ];
+
+    #[test]
+    #[serial(outbound_policy)]
+    fn validation_rejects_invalid_auth_header_names_before_registration() {
+        let _guard = setup();
+
+        for header_name in INVALID_AUTH_HEADER_NAMES {
+            let error = register_custom_provider(CustomProviderConfig {
+                name: "header-validation".into(),
+                base_url: "https://header-validation.example/v1".into(),
+                auth_header: AuthHeaderFormat::ApiKey(header_name.into()),
+                model_prefixes: vec!["header-validation/".into()],
+            })
+            .expect_err("invalid authentication header names must fail at registration");
+
+            assert!(matches!(error, LiterLlmError::BadRequest { status: 400, .. }));
+            assert!(
+                detect_custom_provider("header-validation/model").is_none(),
+                "invalid header {header_name:?} must not add a provider"
+            );
+            assert!(
+                registry().is_empty(),
+                "invalid configuration must not mutate the registry"
+            );
+        }
+    }
+
+    #[test]
+    #[serial(outbound_policy)]
+    fn invalid_auth_header_replacement_preserves_existing_provider() {
+        let _guard = setup();
+        register_custom_provider(CustomProviderConfig {
+            name: "header-preserved".into(),
+            base_url: "https://old-header.example/v1".into(),
+            auth_header: AuthHeaderFormat::ApiKey("X-Api-Key".into()),
+            model_prefixes: vec!["header-preserved/".into()],
+        })
+        .expect("original provider should register");
+
+        for header_name in INVALID_AUTH_HEADER_NAMES {
+            let error = register_custom_provider(CustomProviderConfig {
+                name: "header-preserved".into(),
+                base_url: "https://replacement-header.example/v1".into(),
+                auth_header: AuthHeaderFormat::ApiKey(header_name.into()),
+                model_prefixes: vec!["header-replacement/".into()],
+            })
+            .expect_err("an invalid authentication header must not replace a valid provider");
+
+            assert!(matches!(error, LiterLlmError::BadRequest { status: 400, .. }));
+            let provider = detect_custom_provider("header-preserved/model")
+                .expect("original model prefix must still route to the provider");
+            assert_eq!(provider.name(), "header-preserved");
+            assert_eq!(provider.base_url(), "https://old-header.example/v1");
+            let (name, value) = provider
+                .auth_header("fixture-value")
+                .expect("original auth must remain");
+            assert_eq!(name.as_ref(), "X-Api-Key");
+            assert_eq!(value.as_ref(), "fixture-value");
+            assert!(
+                detect_custom_provider("header-replacement/model").is_none(),
+                "rejected replacement must not change model routing"
+            );
+            assert_eq!(registry().len(), 1);
+        }
+    }
+
+    #[test]
+    #[serial(outbound_policy)]
+    fn validation_preserves_valid_auth_header_names() {
+        let _guard = setup();
+
+        for header_name in ["X-Api-Key", "aUtHoRiZaTiOn", "x!#$%&'*+-.^_`|~0123456789"] {
+            register_custom_provider(CustomProviderConfig {
+                name: "valid-header".into(),
+                base_url: "https://valid-header.example/v1".into(),
+                auth_header: AuthHeaderFormat::ApiKey(header_name.into()),
+                model_prefixes: vec!["valid-header/".into()],
+            })
+            .expect("valid HTTP token header names must still register");
+
+            let provider = detect_custom_provider("valid-header/model").expect("provider must route");
+            let (name, value) = provider.auth_header("fixture-value").expect("custom auth must remain");
+            assert_eq!(name.as_ref(), header_name, "validation must not rewrite the name");
+            assert_eq!(value.as_ref(), "fixture-value");
+        }
     }
 
     #[test]
