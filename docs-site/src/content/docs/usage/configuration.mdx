@@ -562,6 +562,8 @@ Returning `Err` from `on_request` short-circuits the service chain, so hooks can
 
 Custom providers are registered in a process-wide global registry. Once registered, any request whose model name matches one of the provider's `model_prefixes` is routed there.
 
+Registration validates custom API-key header names, such as `X-Api-Key`, before updating the registry. An invalid header name returns a bad-request error and leaves any existing provider with the same name unchanged. Bearer and no-auth modes are unaffected.
+
 <Tabs syncKey="lang">
 <TabItem label="Rust">
 
