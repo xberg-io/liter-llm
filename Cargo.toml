@@ -76,7 +76,7 @@ http = "1"
 httpdate = "1"
 ipnet = "2.12"
 jsonschema = "0.61"
-jsonwebtoken = { version = "11", default-features = false, features = ["use_pem"] }
+jsonwebtoken = { version = "12", default-features = false, features = ["use_pem"] }
 
 memchr = "2"
 mimalloc = { version = "0.1", default-features = false }
@@ -95,7 +95,7 @@ pin-project-lite = "0.2"
 regex = "1"
 # ~keep Async / HTTP: TLS-agnostic base only; each crate adds TLS features target-conditionally.
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "multipart", "form"] }
-rmcp = { version = "3.10", features = [
+rmcp = { version = "3.11", features = [
     "server",
     "macros",
     "transport-io",
