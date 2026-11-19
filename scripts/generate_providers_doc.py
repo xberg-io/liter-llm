@@ -132,6 +132,43 @@ def custom_provider_section() -> list[str]:
     ]
 
 
+def a2agent_section() -> list[str]:
+    """Build the verified A2Agent custom-provider configuration."""
+    return [
+        "### A2Agent: verified custom-provider configuration",
+        "",
+        "[A2Agent](https://a2agent.me/) can be configured through the existing runtime custom-provider registry with the OpenAI-compatible API base URL `https://api.a2agent.me/v1` and a user-supplied API key.",
+        "",
+        "A contributor verified the Rust SDK at [commit `013b71d`](https://github.com/xberg-io/liter-llm/pull/498/commits/013b71d82a0550c2b25e0772ab35ca508d9e24d0) on **2026-11-17** using **`deepseek-v4-flash`**: model listing, ordinary and streaming Chat Completions text, a tool call with a tool-result continuation, and authentication-error classification for an invalid key (HTTP 401). Other models and protocols, including Responses and Anthropic Messages, were not tested; this records compatibility testing, not endorsement.",
+        "",
+        'The text and tool requests used `extra_body` set to `{"thinking":{"type":"disabled"}}`.',
+        "",
+        "Register the tested model using existing settings, reading the key from your environment:",
+        "",
+        "```rust",
+        "use liter_llm::{",
+        "    AuthHeaderFormat, ClientConfigBuilder, CustomProviderConfig, DefaultClient,",
+        "    register_custom_provider,",
+        "};",
+        "",
+        "register_custom_provider(CustomProviderConfig {",
+        '    name: "a2agent".into(),',
+        '    base_url: "https://api.a2agent.me/v1".into(),',
+        "    auth_header: AuthHeaderFormat::Bearer,",
+        '    model_prefixes: vec!["deepseek-v4-flash".into()],',
+        "})?;",
+        "",
+        'let config = ClientConfigBuilder::new(std::env::var("A2AGENT_API_KEY")?)',
+        "    .load_env(false)",
+        "    .build();",
+        'let client = DefaultClient::new(config, Some("deepseek-v4-flash"))?;',
+        "```",
+        "",
+        "Use `deepseek-v4-flash` as the request model. Registration is process-wide; see [custom providers](/usage/configuration/#custom-providers) for routing and unregistering.",
+        "",
+    ]
+
+
 def provider_registry_section() -> list[str]:
     """Build the registry source link."""
     return [
@@ -154,6 +191,7 @@ def generate_markdown(providers: list[dict[str, Any]]) -> str:
         *providers_table(sorted_providers),
         *usage_section(),
         *custom_provider_section(),
+        *a2agent_section(),
         *provider_registry_section(),
     ]
 
