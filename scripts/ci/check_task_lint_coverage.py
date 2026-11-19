@@ -34,7 +34,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 
-# ~keep `poly fmt --check` exits 1 for "these files would reformat", which is a
+# ~keep `poly fmt` (a dry run) exits 1 for "these files would reformat", which is a
 # real report this check deliberately ignores — it reads skip reasons, not
 # formatting verdicts. Anything above that (2 = unreadable path argument, and
 # every crash/abort path) means poly did NOT survey the scan set, so any report
@@ -72,7 +72,7 @@ def poly_report(paths: list[Path]) -> list[dict]:
     if poly is None:
         raise SystemExit("poly is not on PATH; run `mise install` first")
 
-    argv = [poly, "fmt", "--check", "--no-cache", "--format", "json", *[str(p) for p in paths]]
+    argv = [poly, "fmt", "--no-cache", "--format", "json", *[str(p) for p in paths]]
     result = subprocess.run(argv, capture_output=True, text=True, check=False)
 
     if result.returncode not in POLY_SURVEYED_EXIT_CODES:
