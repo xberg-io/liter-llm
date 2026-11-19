@@ -60,7 +60,7 @@ wasm-http = ["dep:reqwest", "dep:memchr", "dep:gloo-timers", "dep:ipnet"]
 
 otel = ["dep:tracing-opentelemetry", "dep:opentelemetry"]
 
-tower = ["dep:tower", "dep:futures-util", "dep:rand"]
+tower = ["dep:tower", "dep:futures-util", "dep:rand", "dep:ahash"]
 
 opendal-cache = ["dep:opendal", "dep:opendal-http-transport-reqwest", "dep:rustls", "tower"]
 
@@ -133,7 +133,7 @@ opendal-http-transport-reqwest = { workspace = true, optional = true, features =
 reqwest = { workspace = true, optional = true, features = ["native-tls"] }
 
 [dependencies]
-ahash = { workspace = true }
+ahash = { workspace = true, optional = true }
 arc-swap = { workspace = true }
 async-trait = { workspace = true }
 aws-credential-types = { version = "1", optional = true }
