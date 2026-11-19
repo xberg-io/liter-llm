@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.129.6"
+alef_version = "0.130.4"
 languages = [
   "python",
   "node",
@@ -591,8 +591,8 @@ module_name = "liter_llm"
 package_name = "liter_llm"
 
 [crates.dart.extra_dependencies]
-# ~keep libc 0.2.190 hides Apple dyld symbols used by FRB's backtrace dependency on iOS.
-libc = "=0.2.189"
+# ~keep libc 0.2.190 hid the Apple _dyld_* symbols FRB's backtrace dependency needs on iOS; 0.2.191 restored them.
+libc = "0.2.191"
 
 [crates.swift]
 package_name = "LiterLlm"
@@ -2395,7 +2395,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-version = "2.7.2"
+version = "2.7.3"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "xberg-io/homebrew-tap"

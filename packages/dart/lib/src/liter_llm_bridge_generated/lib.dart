@@ -93,8 +93,8 @@ Future<DecodedDataUrl?> decodeDataUrl({required String url}) =>
 ///
 /// **Errors:**
 ///
-/// Returns an error if the config is invalid (empty name, empty base_url, or
-/// no model prefixes).
+/// Returns an error if the config is invalid (empty name, empty base_url, no
+/// model prefixes, or an invalid API-key header name).
 Future<void> registerCustomProvider({required CustomProviderConfig config}) =>
     RustLib.instance.api.crateRegisterCustomProvider(config: config);
 

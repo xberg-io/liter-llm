@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.3] - 2026-11-18
+
+### Fixed
+
+- Persistent cache keys are stable across process restarts; `ahash::RandomState::generate_with` mixed per-process randomness into the fixed seeds, so entries written by earlier versions are not reused (#497).
+- Registering a custom provider rejects an invalid API-key header name with `BadRequest` and leaves an existing provider of the same name unchanged (#498).
+- `ahash` is only a dependency of the `tower` feature, so the crate packages with warnings denied; this blocked the 2.7.1 and 2.7.2 crates.io releases.
+
+### Changed
+
+- Regenerate the bindings with Alef 0.130.4.
+- Updated dependencies, including `jsonwebtoken` 12, `rmcp` 3.11 and `ext-php-rs` 0.16.5; the Dart crate now requires libc 0.2.191, which restores the Apple `_dyld_*` symbols on iOS.
+
 ## [2.7.1] - 2026-11-13
 
 ### Fixed
