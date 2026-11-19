@@ -6,7 +6,7 @@ name: liter-llm-streaming-responses
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 Content-Hash: blake3:6de558b3f33f35e9e7ef76dc64d4ebd199a8a831dc28e306698f18fc16933b4e
-Source-Hash: blake3:c3080c0d2d68738c12075a6543fc845096f765f8b96546df499b336d1c6a9d17
+Source-Hash: blake3:7e83d7b11ed4cb3925b802b9dae7eb1c2b54530377fe028b1c4d7027a9765194
 Schema-Version: v1
 -->
 
