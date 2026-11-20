@@ -52,7 +52,15 @@ run = "mise tasks ls"
 
 [tasks.setup]
 description = "Install all dependencies and dev tools"
-run = ["mise install", { task = "rust:install" }, "alef setup", { task = "governance:hooks:install" }]
+# ~keep The node and wasm installs depend on `file:crates/liter-llm-wasm/pkg/nodejs`, which only
+# wasm:build:node creates; without it pnpm reports the error, exits 0, and alef waits out its timeout.
+run = [
+  "mise install",
+  { task = "rust:install" },
+  { task = "wasm:build:node" },
+  "alef setup",
+  { task = "governance:hooks:install" },
+]
 
 [tasks.build]
 description = "Build core Rust library"
