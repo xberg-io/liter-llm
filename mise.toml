@@ -55,11 +55,13 @@ run = "mise tasks ls"
 [tasks.setup]
 description = "Install all dependencies and dev tools"
 # ~keep The node and wasm installs depend on `file:crates/liter-llm-wasm/pkg/nodejs`, which only
-# wasm:build:node creates; without it pnpm reports the error, exits 0, and alef waits out its timeout.
+# wasm:build:node creates; without it alef's pnpm installs fail and each language waits out its
+# timeout, so the guard step fails setup first. alef 0.82+ no longer accepts per-language setup overrides.
 run = [
   "mise install",
   { task = "rust:install" },
   { task = "wasm:build:node" },
+  "test -f crates/liter-llm-wasm/pkg/nodejs/package.json || { echo 'wasm:build:node produced no pkg/nodejs' >&2; exit 1; }",
   "alef setup",
   { task = "governance:hooks:install" },
 ]
