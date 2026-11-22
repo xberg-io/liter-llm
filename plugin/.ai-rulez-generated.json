@@ -1,6 +1,6 @@
 {
   "schema_version": "v1",
-  "source_hash": "blake3:7e83d7b11ed4cb3925b802b9dae7eb1c2b54530377fe028b1c4d7027a9765194",
+  "source_hash": "blake3:cd1d576861f1784835b3c12e412f8f80d61c63e0534dc63abac412a83d16240c",
   "outputs": {
     ".claude-plugin/plugin.json": {
       "content_hash": "blake3:e4a15dc1b0d283b2d113584831c2a2b03499649cd737828852d26f6f325342ce",
@@ -63,7 +63,7 @@
       "mode": "0644"
     },
     ".cursor-plugin/skills/liter-llm-using-the-mcp-server/SKILL.md": {
-      "content_hash": "blake3:6925dd58f9790a1cc57f093167cf3b430886393ff3792d28003f15269b5546a2",
+      "content_hash": "blake3:f69c955a319e6f0b2bf405064e40213166066bb2eb2696e49e0bbef3ce8821e9",
       "mode": "0644"
     },
     ".cursor-plugin/skills/liter-llm-using-the-mcp-server/index.md": {
@@ -71,7 +71,7 @@
       "mode": "0644"
     },
     ".cursor-plugin/skills/liter-llm/SKILL.md": {
-      "content_hash": "blake3:3e0dcb446dcc37cd4709da048b254902f8d7f825b553308c5d25074419895562",
+      "content_hash": "blake3:406470d4e1c308bf0eddd5972ab0ea635100ac2b74ee7372d7bdb35c559b1302",
       "mode": "0644"
     },
     ".cursor-plugin/skills/liter-llm/index.md": {
@@ -147,7 +147,7 @@
       "mode": "0644"
     },
     ".hermes/package/src/liter_llm_hermes_plugin/skills/liter-llm-using-the-mcp-server/SKILL.md": {
-      "content_hash": "blake3:6925dd58f9790a1cc57f093167cf3b430886393ff3792d28003f15269b5546a2",
+      "content_hash": "blake3:f69c955a319e6f0b2bf405064e40213166066bb2eb2696e49e0bbef3ce8821e9",
       "mode": "0644"
     },
     ".hermes/package/src/liter_llm_hermes_plugin/skills/liter-llm-using-the-mcp-server/index.md": {
@@ -155,7 +155,7 @@
       "mode": "0644"
     },
     ".hermes/package/src/liter_llm_hermes_plugin/skills/liter-llm/SKILL.md": {
-      "content_hash": "blake3:3e0dcb446dcc37cd4709da048b254902f8d7f825b553308c5d25074419895562",
+      "content_hash": "blake3:406470d4e1c308bf0eddd5972ab0ea635100ac2b74ee7372d7bdb35c559b1302",
       "mode": "0644"
     },
     ".hermes/package/src/liter_llm_hermes_plugin/skills/liter-llm/index.md": {
@@ -223,7 +223,7 @@
       "mode": "0644"
     },
     ".hermes/plugins/liter-llm/skills/liter-llm-using-the-mcp-server/SKILL.md": {
-      "content_hash": "blake3:6925dd58f9790a1cc57f093167cf3b430886393ff3792d28003f15269b5546a2",
+      "content_hash": "blake3:f69c955a319e6f0b2bf405064e40213166066bb2eb2696e49e0bbef3ce8821e9",
       "mode": "0644"
     },
     ".hermes/plugins/liter-llm/skills/liter-llm-using-the-mcp-server/index.md": {
@@ -231,7 +231,7 @@
       "mode": "0644"
     },
     ".hermes/plugins/liter-llm/skills/liter-llm/SKILL.md": {
-      "content_hash": "blake3:3e0dcb446dcc37cd4709da048b254902f8d7f825b553308c5d25074419895562",
+      "content_hash": "blake3:406470d4e1c308bf0eddd5972ab0ea635100ac2b74ee7372d7bdb35c559b1302",
       "mode": "0644"
     },
     ".hermes/plugins/liter-llm/skills/liter-llm/index.md": {
@@ -303,7 +303,7 @@
       "mode": "0644"
     },
     ".opencode/skills/liter-llm-using-the-mcp-server/SKILL.md": {
-      "content_hash": "blake3:6925dd58f9790a1cc57f093167cf3b430886393ff3792d28003f15269b5546a2",
+      "content_hash": "blake3:f69c955a319e6f0b2bf405064e40213166066bb2eb2696e49e0bbef3ce8821e9",
       "mode": "0644"
     },
     ".opencode/skills/liter-llm-using-the-mcp-server/index.md": {
@@ -311,7 +311,7 @@
       "mode": "0644"
     },
     ".opencode/skills/liter-llm/SKILL.md": {
-      "content_hash": "blake3:3e0dcb446dcc37cd4709da048b254902f8d7f825b553308c5d25074419895562",
+      "content_hash": "blake3:406470d4e1c308bf0eddd5972ab0ea635100ac2b74ee7372d7bdb35c559b1302",
       "mode": "0644"
     },
     ".opencode/skills/liter-llm/index.md": {
@@ -367,7 +367,7 @@
       "mode": "0644"
     },
     ".pi/skills/liter-llm-using-the-mcp-server/SKILL.md": {
-      "content_hash": "blake3:6925dd58f9790a1cc57f093167cf3b430886393ff3792d28003f15269b5546a2",
+      "content_hash": "blake3:f69c955a319e6f0b2bf405064e40213166066bb2eb2696e49e0bbef3ce8821e9",
       "mode": "0644"
     },
     ".pi/skills/liter-llm-using-the-mcp-server/index.md": {
@@ -375,7 +375,7 @@
       "mode": "0644"
     },
     ".pi/skills/liter-llm/SKILL.md": {
-      "content_hash": "blake3:3e0dcb446dcc37cd4709da048b254902f8d7f825b553308c5d25074419895562",
+      "content_hash": "blake3:406470d4e1c308bf0eddd5972ab0ea635100ac2b74ee7372d7bdb35c559b1302",
       "mode": "0644"
     },
     ".pi/skills/liter-llm/index.md": {
@@ -427,7 +427,7 @@
       "mode": "0644"
     },
     "scripts/mcp-launch.sh": {
-      "content_hash": "blake3:21c42851c546c0dcf5a7ff27afe4adf25dc2d669e4739db1a35ade4320bafbb3",
+      "content_hash": "blake3:8712ddafa69812def17de9b48477720284c96b9ef3725f3a0d886a8606557929",
       "mode": "0755"
     },
     "skills/liter-llm-calling-llms/SKILL.md": {
@@ -471,7 +471,7 @@
       "mode": "0644"
     },
     "skills/liter-llm-using-the-mcp-server/SKILL.md": {
-      "content_hash": "blake3:6925dd58f9790a1cc57f093167cf3b430886393ff3792d28003f15269b5546a2",
+      "content_hash": "blake3:f69c955a319e6f0b2bf405064e40213166066bb2eb2696e49e0bbef3ce8821e9",
       "mode": "0644"
     },
     "skills/liter-llm-using-the-mcp-server/index.md": {
@@ -479,7 +479,7 @@
       "mode": "0644"
     },
     "skills/liter-llm/SKILL.md": {
-      "content_hash": "blake3:3e0dcb446dcc37cd4709da048b254902f8d7f825b553308c5d25074419895562",
+      "content_hash": "blake3:406470d4e1c308bf0eddd5972ab0ea635100ac2b74ee7372d7bdb35c559b1302",
       "mode": "0644"
     },
     "skills/liter-llm/index.md": {

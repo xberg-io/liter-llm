@@ -5,8 +5,8 @@ name: liter-llm-using-the-mcp-server
 
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:6925dd58f9790a1cc57f093167cf3b430886393ff3792d28003f15269b5546a2
-Source-Hash: blake3:7e83d7b11ed4cb3925b802b9dae7eb1c2b54530377fe028b1c4d7027a9765194
+Content-Hash: blake3:f69c955a319e6f0b2bf405064e40213166066bb2eb2696e49e0bbef3ce8821e9
+Source-Hash: blake3:cd1d576861f1784835b3c12e412f8f80d61c63e0534dc63abac412a83d16240c
 Schema-Version: v1
 -->
 
@@ -27,10 +27,10 @@ the runtime supports MCP.
 
 The plugin auto-registers the server. Its command is the bundled launcher
 `scripts/mcp-launch.sh`, which execs `liter-llm mcp --transport stdio`. On first
-run the launcher resolves a `liter-llm` binary: it reuses one on `PATH`, then
-tries `npx`/`uvx`, then Homebrew, then downloads a prebuilt
-from the tool's latest GitHub release. Override with
-`LITER_LLM_LAUNCHER=auto|npx|uvx|brew|download`.
+run the launcher resolves a `liter-llm` binary: it reuses one cached in the plugin's
+`bin/` or on `PATH`, provided it is at least the release this plugin ships with, then
+tries Homebrew, then downloads that exact release from GitHub and checks it against
+the release checksums. Override with `LITER_LLM_LAUNCHER=auto|brew|download`.
 
 To run it manually:
 
