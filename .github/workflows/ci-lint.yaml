@@ -105,3 +105,17 @@ jobs:
       - name: Run release regression tests
         run: mise run test:release-regressions
         shell: bash
+
+  cli-proxy-npm:
+    name: CLI proxy npm tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install-args: node
+      - name: Run CLI proxy tests
+        run: mise run test:cli-proxy
+        shell: bash

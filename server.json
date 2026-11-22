@@ -1,0 +1,35 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.xberg-io/liter-llm",
+  "title": "liter-llm",
+  "description": "Universal LLM API client MCP server: chat, embeddings and tools across 170+ providers.",
+  "version": "2.7.3",
+  "websiteUrl": "https://docs.liter-llm.xberg.io",
+  "repository": {
+    "url": "https://github.com/xberg-io/liter-llm",
+    "source": "github",
+    "id": "1191384809"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@xberg-io/liter-llm-cli",
+      "version": "2.7.3",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        },
+        {
+          "type": "named",
+          "name": "--transport",
+          "value": "stdio"
+        }
+      ]
+    }
+  ]
+}
