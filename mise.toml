@@ -76,12 +76,13 @@ run = [{ task = "rust:test" }]
 
 [tasks."test:release-regressions"]
 description = "Run lightweight release guard regression tests"
-run = ["python3 scripts/ci/check_consumer_versions.py", """\
+run = ["python3 scripts/ci/check_consumer_versions.py", "python3 scripts/ci/check_cli_proxy_versions.py", """\
   uv run --locked --only-group dev --python 3.14 python -m pytest -q \
   scripts/ci/test_task_lint_coverage.py \
   scripts/ci/test_kotlin_consumer_version.py \
   scripts/ci/test_dart_consumer_version.py \
   scripts/ci/test_consumer_versions.py \
+  scripts/ci/test_cli_proxy_versions.py \
   scripts/ci/test_go_release_assets.py \
   scripts/ci/test_release_artifact_versions.py \
   scripts/ci/test_swift_task_environment.py \

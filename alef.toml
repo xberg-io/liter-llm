@@ -172,6 +172,8 @@ extra_paths = [
   "crates/liter-llm-node/package.json",
   "crates/liter-llm-node/npm/*/package.json",
   "packages/node/package.json",
+  "cli-proxy/pypi/pyproject.toml",
+  "cli-proxy/npm/package.json",
 ]
 
 [workspace.citation]
