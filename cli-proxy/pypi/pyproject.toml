@@ -34,4 +34,5 @@ urls.Repository = "https://github.com/xberg-io/liter-llm.git"
 scripts.liter-llm = "liter_llm_cli.cli:main"
 
 [tool.hatch]
+build.hooks.custom.path = "hatch_build.py"
 build.targets.wheel.packages = ["liter_llm_cli"]

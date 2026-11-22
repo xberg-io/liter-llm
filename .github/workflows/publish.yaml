@@ -299,6 +299,15 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: python3 scripts/sync_plugin_version.py --expect "${VERSION%%-dryrun-*}"
 
+      # ~keep The CLI proxy packages ship in lockstep and server.json is immutable once the MCP
+      # Registry accepts it, so a drifted proxy or registry entry must fail before any publish.
+      # Same dry-run suffix handling as the plugin step above.
+      - name: Validate CLI proxy and MCP registry versions match the release
+        shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: python3 scripts/ci/check_cli_proxy_versions.py --expect "${VERSION%%-dryrun-*}"
+
   check-registries:
     if: ${{ !inputs.plugins-only }}
     name: Check registries
@@ -3475,11 +3484,159 @@ jobs:
           project-name: liter-llm
           token: ${{ steps.app-token.outputs.token }}
 
+  # --- CLI proxy packages and MCP Registry entry (lockstep with the product) ---
+  # cli-proxy/npm and cli-proxy/pypi carry the product version (alef sync-versions) and download
+  # exactly their own release's CLI archive, so every publish job below waits for
+  # `promote-release`: a draft release is invisible to the public download URL, and an npm or PyPI
+  # version cannot be replaced once it points at a 404. Additive like the plugin jobs: none of them
+  # is in release-finalize `needs`, so a proxy hiccup never holds the core release as draft. The
+  # gate is `!cancelled()` plus explicit results, not `always()`, so a `targets=` subset that skips
+  # unrelated jobs does not skip these (they key on `release_homebrew`, the CLI binary target). ~keep
+
+  cli-proxy-wheels:
+    name: Build CLI proxy wheel (${{ matrix.target }})
+    needs: [prepare, validate-versions, build-cli-binaries]
+    # Runs on dry runs too: the smoke test is the only place the packaged wheel is executed, and the
+    # job ends at upload-artifact with no token or secret. ~keep
+    if: >-
+      ${{ !inputs.plugins-only && (!cancelled() && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.prepare.outputs.release_homebrew == 'true' && needs.validate-versions.result == 'success' && needs.build-cli-binaries.result == 'success') }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { label: linux-x86_64, runner: ubuntu-latest, target: x86_64-unknown-linux-gnu }
+          - { label: linux-aarch64, runner: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu }
+          - { label: macos-aarch64, runner: macos-26, target: aarch64-apple-darwin }
+          - { label: windows-x86_64, runner: windows-latest, target: x86_64-pc-windows-msvc }
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - uses: xberg-io/actions/setup-mise@v1
+        with:
+          install-args: python
+
+      - name: Download CLI binary archive
+        uses: actions/download-artifact@v8
+        with:
+          name: cli-binary-${{ matrix.label }}
+          path: dist-cli-binaries
+
+      # hatch_build.py looks the archive up by target, not by release version, so a dry run
+      # (whose archives carry a `-dryrun-<sha>` suffix) builds the same wheel as a release.
+      - name: Stage the archive for the wheel build
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          archives=(dist-cli-binaries/liter-llm-*-"${TARGET}".tar.gz dist-cli-binaries/liter-llm-*-"${TARGET}".zip)
+          if [ "${#archives[@]}" -ne 1 ]; then
+            echo "::error::expected exactly one CLI archive for ${TARGET}, found ${#archives[@]}"
+            ls -la dist-cli-binaries
+            exit 1
+          fi
+          case "${archives[0]}" in
+            *.zip) cp "${archives[0]}" "liter-llm-cli-${TARGET}.zip" ;;
+            *) cp "${archives[0]}" "liter-llm-cli-${TARGET}.tar.gz" ;;
+          esac
+
+      - name: Build wheel with the bundled binary
+        shell: bash
+        working-directory: cli-proxy/pypi
+        env:
+          LITER_LLM_CLI_TARGET: ${{ matrix.target }}
+        run: |
+          python -m pip install hatchling build
+          python -m build --wheel
+
+      - name: Smoke-test the wheel
+        shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          wheels=(cli-proxy/pypi/dist/*.whl)
+          if [ "${#wheels[@]}" -ne 1 ]; then
+            echo "::error::expected exactly one wheel in cli-proxy/pypi/dist, found ${#wheels[@]}"
+            exit 1
+          fi
+          python scripts/ci/smoke_cli_proxy_wheel.py "${wheels[0]}" "${VERSION%%-dryrun-*}"
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v7
+        with:
+          name: cli-proxy-wheel-${{ matrix.target }}
+          path: cli-proxy/pypi/dist/*.whl
+          retention-days: 14
+
+  publish-cli-proxy-pypi:
+    name: Publish CLI proxy to PyPI (wheels + sdist)
+    needs: [prepare, validate-versions, cli-proxy-wheels, promote-release]
+    if: >-
+      ${{ !inputs.plugins-only && (!cancelled() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.prepare.outputs.release_homebrew == 'true' && needs.validate-versions.result == 'success' && needs.cli-proxy-wheels.result == 'success' && needs.promote-release.outputs.promoted == 'true') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: pypi
+      url: https://pypi.org/p/liter-llm-cli
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Re-check PyPI before publishing
+        id: recheck
+        uses: xberg-io/actions/check-registry@v1
+        with:
+          registry: pypi
+          package: liter-llm-cli
+          version: ${{ needs.prepare.outputs.pypi_version }}
+
+      - uses: actions/checkout@v7
+        if: ${{ steps.recheck.outputs.exists != 'true' }}
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - uses: xberg-io/actions/setup-mise@v1
+        if: ${{ steps.recheck.outputs.exists != 'true' }}
+        with:
+          install-args: python
+
+      - name: Download CLI proxy wheels
+        if: ${{ steps.recheck.outputs.exists != 'true' }}
+        uses: actions/download-artifact@v8
+        with:
+          pattern: cli-proxy-wheel-*
+          path: dist
+          merge-multiple: true
+
+      # The sdist is the fallback for platforms without a wheel: it downloads the pinned,
+      # checksum-verified release archive at run time.
+      - name: Build CLI proxy sdist
+        if: ${{ steps.recheck.outputs.exists != 'true' }}
+        shell: bash
+        working-directory: cli-proxy/pypi
+        run: |
+          python -m pip install hatchling build
+          python -m build --sdist --outdir ../../dist
+
+      - name: Publish to PyPI
+        if: ${{ steps.recheck.outputs.exists != 'true' }}
+        uses: xberg-io/actions/publish-pypi@v1
+        with:
+          packages-dir: dist/
+          expected-version: ${{ needs.prepare.outputs.pypi_version }}
+
   cli-proxy:
     name: Publish CLI proxy package (npm)
-    needs: [prepare, validate-versions, upload-cli-binaries]
+    needs: [prepare, validate-versions, upload-cli-binaries, promote-release]
     if: >-
-      ${{ !inputs.plugins-only && (always() && needs.prepare.outputs.dry_run != 'true' && needs.prepare.outputs.release_homebrew == 'true' && needs.validate-versions.result == 'success' && needs.upload-cli-binaries.result == 'success') }}
+      ${{ !inputs.plugins-only && (!cancelled() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.prepare.outputs.release_homebrew == 'true' && needs.validate-versions.result == 'success' && needs.upload-cli-binaries.result == 'success' && needs.promote-release.outputs.promoted == 'true') }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -3492,11 +3649,6 @@ jobs:
         uses: xberg-io/actions/setup-mise@v1
         with:
           tools: node
-      - name: Stamp release version into cli-proxy package.json
-        shell: bash
-        run: |
-          cd cli-proxy/npm
-          npm version "${{ needs.prepare.outputs.version }}" --no-git-tag-version --allow-same-version
       - name: Re-check npm before publish
         id: recheck
         uses: xberg-io/actions/check-registry@v1
