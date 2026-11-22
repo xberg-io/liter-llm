@@ -9,10 +9,22 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const REPO = "xberg-io/liter-llm";
 const BIN_NAME = "liter-llm";
 const PKG_NAME = "liter-llm-cli";
-const VERSION_ENV = "LITER_LLM_CLI_VERSION";
 const USER_AGENT = "liter-llm-cli-npm-proxy";
 
-function targetTriple() {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const BIN_DIR = path.join(__dirname, "bin");
+
+// ~keep The package is published in lockstep with the product, so its own version names the one
+// release asset it may install. Never resolve "latest": a newer binary than the wrapper was tested with.
+export function packageVersion() {
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf8"));
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(manifest.version)) {
+    throw new Error(`package.json version '${manifest.version}' is not a release version`);
+  }
+  return manifest.version;
+}
+
+export function targetTriple() {
   const type = os.type();
   const arch = os.arch();
 
@@ -73,11 +85,6 @@ function httpGetBuffer(url, { headers = {} } = {}, maxRedirects = 5) {
   });
 }
 
-async function httpGetJson(url) {
-  const buf = await httpGetBuffer(url, { headers: { Accept: "application/vnd.github+json" } });
-  return JSON.parse(buf.toString("utf8"));
-}
-
 export class CliUnavailableError extends Error {
   constructor(message) {
     super(message);
@@ -85,84 +92,18 @@ export class CliUnavailableError extends Error {
   }
 }
 
-const NON_CLI_PATTERNS = [
-  "-ffi",
-  "_ffi",
-  "ffi-",
-  "nif",
-  ".so",
-  ".dylib",
-  ".dll",
-  "artifactbundle",
-  ".bottle.",
-  "bottle",
-  "node",
-  "wheel",
-  ".whl",
-  "napi",
-];
-
-export function isNonCliArtifact(name) {
-  const n = (name || "").toLowerCase();
-  return NON_CLI_PATTERNS.some((pat) => n.includes(pat));
+export function archiveName(version, triple) {
+  const extension = triple.endsWith("-windows-msvc") ? "zip" : "tar.gz";
+  return `${BIN_NAME}-${version}-${triple}.${extension}`;
 }
 
-export function assetScore(name) {
-  const n = (name || "").toLowerCase();
-  let score = 0;
-  if (n.includes("cli")) score += 2;
-  if (n.includes(BIN_NAME.toLowerCase())) score += 1;
-  return score;
+export function releaseUrls(version, triple) {
+  const base = `https://github.com/${REPO}/releases/download/v${encodeURIComponent(version)}`;
+  const archive = archiveName(version, triple);
+  return { archive, archiveUrl: `${base}/${archive}`, checksumsUrl: `${base}/SHA256SUMS-${version}.txt` };
 }
 
-export function selectArchiveName(names, triple) {
-  const survivors = (names || []).filter((name) => {
-    const n = (name || "").toLowerCase();
-    if (!n.includes(triple)) return false;
-    if (!(n.endsWith(".tar.gz") || n.endsWith(".zip"))) return false;
-    return !isNonCliArtifact(n);
-  });
-  if (survivors.length === 0) return null;
-  survivors.sort((a, b) => assetScore(b) - assetScore(a));
-  return survivors[0];
-}
-
-async function resolveRelease() {
-  const triple = targetTriple();
-  const pinned = process.env[VERSION_ENV];
-  const apiUrl = pinned
-    ? `https://api.github.com/repos/${REPO}/releases/tags/${encodeURIComponent(pinned)}`
-    : `https://api.github.com/repos/${REPO}/releases/latest`;
-
-  let release;
-  try {
-    release = await httpGetJson(apiUrl);
-  } catch (err) {
-    if (pinned && /HTTP 404/u.test(err.message)) {
-      throw new Error(`release tag '${pinned}' not found`, { cause: err });
-    }
-    throw err;
-  }
-  const assets = Array.isArray(release.assets) ? release.assets : [];
-  const tag = release.tag_name || pinned || "latest";
-
-  const chosenName = selectArchiveName(
-    assets.map((a) => a.name),
-    triple,
-  );
-  if (!chosenName) {
-    throw new CliUnavailableError(`no standalone CLI asset for target triple "${triple}" in ${REPO} release ${tag}`);
-  }
-  const archive = assets.find((a) => a.name === chosenName);
-  const checksums = assets.find((a) => (a.name || "").toUpperCase().includes("SHA256SUMS"));
-
-  return { tag, triple, archive, checksums };
-}
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const BIN_DIR = path.join(__dirname, "bin");
-
-function expectedDigest(text, assetName) {
+export function expectedDigest(text, assetName) {
   for (const raw of text.split(/\r?\n/u)) {
     const line = raw.trim();
     if (!line) continue;
@@ -174,26 +115,26 @@ function expectedDigest(text, assetName) {
   return null;
 }
 
-async function verifyOrWarn(archiveBuf, archiveName, checksums) {
-  if (!checksums) {
-    process.stderr.write(
-      `WARNING: no SHA256SUMS asset found for ${archiveName}; ` +
-        `installing over HTTPS without checksum verification.\n`,
-    );
-    return;
-  }
-  const sumsText = (await httpGetBuffer(checksums.browser_download_url)).toString("utf8");
-  const expected = expectedDigest(sumsText, archiveName);
+export function verifyChecksum(archiveBuf, name, sumsText) {
+  const expected = expectedDigest(sumsText, name);
   if (!expected) {
-    throw new Error(
-      `no checksum entry for ${archiveName} in ${checksums.name} — refusing to install unverified binary`,
-    );
+    throw new Error(`no checksum entry for ${name} in SHA256SUMS — refusing to install unverified binary`);
   }
   const actual = crypto.createHash("sha256").update(archiveBuf).digest("hex").toLowerCase();
   if (actual !== expected) {
-    throw new Error(`checksum mismatch for ${archiveName} (expected ${expected}, got ${actual})`);
+    throw new Error(`checksum mismatch for ${name} (expected ${expected}, got ${actual})`);
   }
-  process.stderr.write(`Checksum verified for ${archiveName}.\n`);
+}
+
+async function download(url, what) {
+  try {
+    return await httpGetBuffer(url);
+  } catch (err) {
+    if (/HTTP 404/u.test(err.message)) {
+      throw new CliUnavailableError(`${what} not found at ${url}`);
+    }
+    throw err;
+  }
 }
 
 function isUnsafeEntry(name) {
@@ -302,8 +243,8 @@ function findDir(dir, name) {
   return null;
 }
 
-function safeExtract(archivePath, archiveName, dest) {
-  const isZip = archiveName.toLowerCase().endsWith(".zip");
+function safeExtract(archivePath, assetName, dest) {
+  const isZip = assetName.toLowerCase().endsWith(".zip");
   const entries = isZip ? listZipEntries(archivePath) : listTarEntries(archivePath);
   for (const entry of entries) {
     if (isUnsafeEntry(entry)) {
@@ -322,7 +263,7 @@ function safeExtract(archivePath, archiveName, dest) {
     const binName = binaryName();
     const extractedBin = findBinary(tmpDir, binName);
     if (!extractedBin) {
-      throw new CliUnavailableError(`archive ${archiveName} did not contain expected CLI binary ${binName}`);
+      throw new CliUnavailableError(`archive ${assetName} did not contain expected CLI binary ${binName}`);
     }
     const finalBin = path.join(dest, binName);
     fs.copyFileSync(extractedBin, finalBin);
@@ -351,17 +292,21 @@ export async function main() {
 
   fs.mkdirSync(BIN_DIR, { recursive: true });
 
-  const { tag, archive, checksums } = await resolveRelease();
-  process.stderr.write(`Downloading ${BIN_NAME} ${tag} asset ${archive.name}...\n`);
+  const version = packageVersion();
+  const triple = targetTriple();
+  const { archive, archiveUrl, checksumsUrl } = releaseUrls(version, triple);
+  process.stderr.write(`Downloading ${BIN_NAME} ${version} asset ${archive}...\n`);
 
-  const archiveBuf = await httpGetBuffer(archive.browser_download_url);
-  await verifyOrWarn(archiveBuf, archive.name, checksums);
+  const archiveBuf = await download(archiveUrl, `${BIN_NAME} ${version} archive for ${triple}`);
+  const sumsText = (await download(checksumsUrl, `checksums for ${BIN_NAME} ${version}`)).toString("utf8");
+  verifyChecksum(archiveBuf, archive, sumsText);
+  process.stderr.write(`Checksum verified for ${archive}.\n`);
 
   const stageDir = fs.mkdtempSync(path.join(os.tmpdir(), `${PKG_NAME}-dl-`));
   try {
-    const archivePath = path.join(stageDir, path.basename(archive.name));
+    const archivePath = path.join(stageDir, path.basename(archive));
     fs.writeFileSync(archivePath, archiveBuf);
-    safeExtract(archivePath, archive.name, BIN_DIR);
+    safeExtract(archivePath, archive, BIN_DIR);
   } finally {
     fs.rmSync(stageDir, { recursive: true, force: true });
   }

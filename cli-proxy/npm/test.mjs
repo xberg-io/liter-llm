@@ -1,53 +1,57 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
+import fs from "node:fs";
 import { test } from "node:test";
 
-import { isNonCliArtifact, selectArchiveName } from "./install.js";
+import { archiveName, expectedDigest, packageVersion, releaseUrls, verifyChecksum } from "./install.js";
 
-const TRIPLE = "aarch64-apple-darwin";
+const manifest = JSON.parse(fs.readFileSync(new URL("./package.json", import.meta.url), "utf8"));
 
-test("isNonCliArtifact rejects bindings/native-lib/bottle artifacts", () => {
-  const rejected = [
-    "html-to-markdown-rs-ffi-v3.6.18-aarch64-apple-darwin.tar.gz",
-    "liter_llm_ffi-v1.7.5-aarch64-apple-darwin.tar.gz",
-    "libliter_llm_nif-v1.7.5-nif-2.17-aarch64-apple-darwin.so.tar.gz",
-    "libtree_sitter_language_pack_nif-v1.9.1-nif-2.16-aarch64-apple-darwin.so.tar.gz",
-    "xberg-0.1.0.bottle.tar.gz",
-    "foo.dylib.tar.gz",
-    "foo.dll.zip",
-    "Foo.artifactbundle.zip",
-    "xberg-node-darwin-arm64.tar.gz",
-    "xberg-1.0-cp312-napi.whl",
-  ];
-  for (const name of rejected) {
-    assert.equal(isNonCliArtifact(name), true, `should reject ${name}`);
-  }
+test("packageVersion is the version in package.json", () => {
+  assert.equal(packageVersion(), manifest.version);
 });
 
-test("isNonCliArtifact accepts standalone CLI archives", () => {
-  for (const name of [
-    "xberg-cli-aarch64-apple-darwin.tar.gz",
-    "cli-aarch64-apple-darwin.tar.gz",
-    "liter-llm-1.7.5-aarch64-apple-darwin.tar.gz",
-  ]) {
-    assert.equal(isNonCliArtifact(name), false, `should accept ${name}`);
-  }
+test("archiveName follows the release asset naming for every shipped triple", () => {
+  assert.equal(archiveName("2.7.3", "aarch64-apple-darwin"), "liter-llm-2.7.3-aarch64-apple-darwin.tar.gz");
+  assert.equal(archiveName("2.7.3", "x86_64-unknown-linux-gnu"), "liter-llm-2.7.3-x86_64-unknown-linux-gnu.tar.gz");
+  assert.equal(archiveName("2.7.3", "x86_64-pc-windows-msvc"), "liter-llm-2.7.3-x86_64-pc-windows-msvc.zip");
 });
 
-test("selectArchiveName picks the cli archive over an ffi archive", () => {
-  const names = [
-    "html-to-markdown-rs-ffi-v3.6.18-aarch64-apple-darwin.tar.gz",
-    "cli-aarch64-apple-darwin.tar.gz",
-    "cli-x86_64-apple-darwin.tar.gz",
-  ];
-  assert.equal(selectArchiveName(names, TRIPLE), "cli-aarch64-apple-darwin.tar.gz");
+test("releaseUrls pin the exact tag, never latest", () => {
+  const { archive, archiveUrl, checksumsUrl } = releaseUrls("2.7.3", "aarch64-apple-darwin");
+  assert.equal(archive, "liter-llm-2.7.3-aarch64-apple-darwin.tar.gz");
+  assert.equal(
+    archiveUrl,
+    "https://github.com/xberg-io/liter-llm/releases/download/v2.7.3/liter-llm-2.7.3-aarch64-apple-darwin.tar.gz",
+  );
+  assert.equal(checksumsUrl, "https://github.com/xberg-io/liter-llm/releases/download/v2.7.3/SHA256SUMS-2.7.3.txt");
+  assert.ok(!archiveUrl.includes("latest") && !checksumsUrl.includes("latest"));
 });
 
-test("selectArchiveName prefers a bin-name/cli archive among survivors", () => {
-  const names = ["xberg-1.0.0-aarch64-apple-darwin.tar.gz", "xberg-cli-aarch64-apple-darwin.tar.gz"];
-  assert.equal(selectArchiveName(names, TRIPLE), "xberg-cli-aarch64-apple-darwin.tar.gz");
+test("releaseUrls keep a prerelease version in tag, archive and checksum names", () => {
+  const { archiveUrl, checksumsUrl } = releaseUrls("2.8.0-rc.1", "x86_64-unknown-linux-gnu");
+  assert.ok(archiveUrl.includes("/download/v2.8.0-rc.1/liter-llm-2.8.0-rc.1-x86_64-unknown-linux-gnu.tar.gz"));
+  assert.ok(checksumsUrl.endsWith("/v2.8.0-rc.1/SHA256SUMS-2.8.0-rc.1.txt"));
 });
 
-test("selectArchiveName returns null when only non-CLI artifacts exist", () => {
-  const names = ["crawlberg-ffi-v0.3.0-aarch64-apple-darwin.tar.gz", "libfoo-nif-2.17-aarch64-apple-darwin.so.tar.gz"];
-  assert.equal(selectArchiveName(names, TRIPLE), null);
+const payload = Buffer.from("liter-llm archive bytes");
+const digest = crypto.createHash("sha256").update(payload).digest("hex");
+const NAME = "liter-llm-2.7.3-x86_64-unknown-linux-gnu.tar.gz";
+
+test("expectedDigest matches the asset name exactly and tolerates binary-mode markers", () => {
+  const sums = `${"a".repeat(64)}  other-${NAME}\n${digest} *${NAME}\n`;
+  assert.equal(expectedDigest(sums, NAME), digest);
+  assert.equal(expectedDigest(sums, "missing.tar.gz"), null);
+});
+
+test("verifyChecksum accepts a matching digest", () => {
+  assert.doesNotThrow(() => verifyChecksum(payload, NAME, `${digest}  ${NAME}\n`));
+});
+
+test("verifyChecksum rejects a tampered archive", () => {
+  assert.throws(() => verifyChecksum(Buffer.from("tampered"), NAME, `${digest}  ${NAME}\n`), /checksum mismatch/u);
+});
+
+test("verifyChecksum refuses an archive with no checksum entry", () => {
+  assert.throws(() => verifyChecksum(payload, NAME, `${digest}  another.tar.gz\n`), /no checksum entry/u);
 });

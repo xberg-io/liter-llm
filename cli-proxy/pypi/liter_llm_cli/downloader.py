@@ -1,15 +1,15 @@
 """Resolve, download, verify, and run the native liter-llm binary.
 
-Self-healing asset discovery: query the GitHub releases API and pick the asset
-whose name contains the platform target triple, instead of hardcoding one exact
-asset name. This keeps working as release asset naming standardizes over time.
-All diagnostics go to stderr.
+The package is published in lockstep with the product, so its own version names
+the one release it may install: a binary bundled in the wheel is used first,
+otherwise exactly ``liter-llm-<version>-<triple>`` is downloaded from the
+``v<version>`` release and verified against ``SHA256SUMS-<version>.txt``. It
+never resolves "latest". All diagnostics go to stderr.
 """
 
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import platform
 import shutil
@@ -19,15 +19,15 @@ import tarfile
 import tempfile
 import zipfile
 from pathlib import Path, PurePosixPath
-from typing import Any
 from urllib.error import URLError
 from urllib.parse import quote, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
+from . import __version__
+
 REPO = "xberg-io/liter-llm"
 BIN_NAME = "liter-llm"
 PKG_NAME = "liter-llm-cli"
-VERSION_ENV = "LITER_LLM_CLI_VERSION"
 _USER_AGENT = "liter-llm-cli-python-proxy"
 
 
@@ -70,13 +70,10 @@ class _HttpsOnlyRedirectHandler(HTTPRedirectHandler):
 _opener = build_opener(_HttpsOnlyRedirectHandler())
 
 
-def _http_get(url: str, accept: str | None = None) -> bytes:
+def _http_get(url: str) -> bytes:
     if urlsplit(url).scheme.lower() != "https":
         raise RuntimeError(f"refusing non-https URL: {url}")
-    headers = {"User-Agent": _USER_AGENT}
-    if accept:
-        headers["Accept"] = accept
-    request = Request(url, headers=headers)
+    request = Request(url, headers={"User-Agent": _USER_AGENT})
     try:
         with _opener.open(request, timeout=60) as response:
             if response.status != 200:
@@ -86,42 +83,17 @@ def _http_get(url: str, accept: str | None = None) -> bytes:
         raise RuntimeError(f"failed to fetch {url}: {exc}") from exc
 
 
-def _asset_score(name: str) -> int:
-    lowered = name.lower()
-    score = 0
-    if BIN_NAME.lower() in lowered:
-        score += 2
-    if "cli" in lowered:
-        score += 1
-    return score
+def archive_name(version: str, triple: str) -> str:
+    """Return the release archive name for ``version`` and ``triple``."""
+    extension = "zip" if triple.endswith("-windows-msvc") else "tar.gz"
+    return f"{BIN_NAME}-{version}-{triple}.{extension}"
 
 
-def _resolve_release() -> tuple[str, dict[str, Any], dict[str, Any] | None]:
-    """Return (tag, archive_asset, checksums_asset_or_none) for this platform."""
-    triple = _target_triple()
-    pinned = os.getenv(VERSION_ENV)
-    if pinned:
-        api_url = f"https://api.github.com/repos/{REPO}/releases/tags/{quote(pinned, safe='')}"
-    else:
-        api_url = f"https://api.github.com/repos/{REPO}/releases/latest"
-
-    release = json.loads(_http_get(api_url, accept="application/vnd.github+json"))
-    assets = release.get("assets") or []
-    tag = release.get("tag_name") or pinned or "latest"
-
-    archives = [
-        a
-        for a in assets
-        if triple in (a.get("name") or "").lower()
-        and ((a.get("name") or "").lower().endswith(".tar.gz") or (a.get("name") or "").lower().endswith(".zip"))
-    ]
-    if not archives:
-        raise RuntimeError(f'no release asset matching target triple "{triple}" in {REPO} release {tag}')
-    archives.sort(key=lambda a: _asset_score(a.get("name") or ""), reverse=True)
-    archive = archives[0]
-
-    checksums = next((a for a in assets if "SHA256SUMS" in (a.get("name") or "").upper()), None)
-    return tag, archive, checksums
+def release_urls(version: str, triple: str) -> tuple[str, str, str]:
+    """Return (archive name, archive URL, checksums URL) pinned to ``v<version>``."""
+    base = f"https://github.com/{REPO}/releases/download/v{quote(version, safe='')}"
+    archive = archive_name(version, triple)
+    return archive, f"{base}/{archive}", f"{base}/SHA256SUMS-{version}.txt"
 
 
 def _expected_digest(text: str, asset_name: str) -> str | None:
@@ -138,24 +110,14 @@ def _expected_digest(text: str, asset_name: str) -> str | None:
     return None
 
 
-def _verify_or_warn(archive_path: Path, asset_name: str, checksums: dict[str, Any] | None) -> None:
-    if not checksums:
-        print(
-            f"WARNING: no SHA256SUMS asset found for {asset_name}; "
-            "installing over HTTPS without checksum verification.",
-            file=sys.stderr,
-        )
-        return
-    sums_text = _http_get(checksums["browser_download_url"]).decode("utf-8")
+def verify_checksum(data: bytes, asset_name: str, sums_text: str) -> None:
+    """Raise unless ``data`` matches the digest listed for ``asset_name``."""
     expected = _expected_digest(sums_text, asset_name)
     if not expected:
-        raise RuntimeError(
-            f"no checksum entry for {asset_name} in {checksums['name']} — refusing to install unverified binary"
-        )
-    digest = hashlib.sha256(archive_path.read_bytes()).hexdigest().lower()
+        raise RuntimeError(f"no checksum entry for {asset_name} in SHA256SUMS — refusing to install unverified binary")
+    digest = hashlib.sha256(data).hexdigest().lower()
     if digest != expected:
         raise RuntimeError(f"checksum mismatch for {asset_name} (expected {expected}, got {digest})")
-    print(f"Checksum verified for {asset_name}.", file=sys.stderr)
 
 
 def _is_within(base: Path, target: Path) -> bool:
@@ -218,36 +180,50 @@ def _find_binary(root: Path, name: str) -> Path | None:
     return None
 
 
-def _cache_dir(tag: str) -> Path:
-    cache = Path.home() / ".cache" / PKG_NAME / tag
+def _cache_dir(version: str) -> Path:
+    cache = Path.home() / ".cache" / PKG_NAME / version
     cache.mkdir(parents=True, exist_ok=True, mode=0o700)
     return cache
 
 
+def bundled_binary() -> Path | None:
+    """Return the binary shipped inside a platform wheel, if there is one."""
+    candidate = Path(__file__).resolve().parent / "bin" / _target_triple() / _binary_name()
+    return candidate if candidate.is_file() else None
+
+
 def ensure_binary() -> str:
-    """Ensure the native binary exists locally, downloading if necessary."""
+    """Ensure the native binary for this package's version exists, downloading if necessary."""
     override = os.getenv("LITER_LLM_BINARY")
     if override:
         return override
 
-    tag, archive, checksums = _resolve_release()
-    cache = _cache_dir(tag)
+    bundled = bundled_binary()
+    if bundled is not None:
+        return str(bundled)
+
+    version = __version__
+    triple = _target_triple()
+    cache = _cache_dir(version)
     binary_path = cache / _binary_name()
     if binary_path.exists() and os.access(binary_path, os.X_OK):
         return str(binary_path)
 
-    print(f"Downloading {BIN_NAME} {tag} asset {archive['name']}...", file=sys.stderr)
+    archive, archive_url, checksums_url = release_urls(version, triple)
+    print(f"Downloading {BIN_NAME} {version} asset {archive}...", file=sys.stderr)
+    data = _http_get(archive_url)
+    verify_checksum(data, archive, _http_get(checksums_url).decode("utf-8"))
+    print(f"Checksum verified for {archive}.", file=sys.stderr)
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
-        archive_path = tmp / Path(archive["name"]).name
-        archive_path.write_bytes(_http_get(archive["browser_download_url"]))
-        _verify_or_warn(archive_path, archive["name"], checksums)
+        archive_path = tmp / archive
+        archive_path.write_bytes(data)
         extract_dir = tmp / "extract"
         extract_dir.mkdir()
-        _safe_extract(archive_path, archive["name"], extract_dir)
+        _safe_extract(archive_path, archive, extract_dir)
         found = _find_binary(extract_dir, _binary_name())
         if not found:
-            raise RuntimeError(f"binary {_binary_name()} not found after extracting {archive['name']}")
+            raise RuntimeError(f"binary {_binary_name()} not found after extracting {archive}")
         shutil.move(str(found), str(binary_path))
 
     if platform.system().lower() != "windows":
