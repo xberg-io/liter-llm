@@ -61,9 +61,6 @@ building software; the proxy when centralizing access for multiple consumers.
 # Homebrew (macOS / Linux)
 brew install xberg-io/tap/liter-llm
 
-# or run it without a persistent install (the CLI proxy package self-installs the binary)
-pnpm dlx @xberg-io/liter-llm-cli@2.2.3 --help
-
 # or download a prebuilt binary from the latest GitHub release:
 #   https://github.com/xberg-io/liter-llm/releases/latest
 
