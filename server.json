@@ -3,7 +3,7 @@
   "name": "io.github.xberg-io/liter-llm",
   "title": "liter-llm",
   "description": "Universal LLM API client MCP server: chat, embeddings and tools across 170+ providers.",
-  "version": "2.7.3",
+  "version": "2.7.4",
   "websiteUrl": "https://docs.liter-llm.xberg.io",
   "repository": {
     "url": "https://github.com/xberg-io/liter-llm",
@@ -15,7 +15,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@xberg-io/liter-llm-cli",
-      "version": "2.7.3",
+      "version": "2.7.4",
       "transport": {
         "type": "stdio"
       },

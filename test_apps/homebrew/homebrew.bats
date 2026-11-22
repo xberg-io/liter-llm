@@ -4,7 +4,7 @@
 # To regenerate: alef e2e generate
 # To verify freshness: alef verify
 
-export VERSION='2.7.3'
+export VERSION='2.7.4'
 export TAP='xberg-io/homebrew-tap'
 export CLI_FORMULA='liter-llm'
 

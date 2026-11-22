@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.4] - 2026-11-22
+
+### Added
+
+- Publish the `liter-llm` CLI as npm (`@xberg-io/liter-llm-cli`) and PyPI (`liter-llm-cli`) packages with each release, and list the MCP server in the MCP Registry.
+
+### Changed
+
+- Update Cargo dependencies.
+- Pin the plugin MCP launcher to the release it ships with.
+
 ## [2.7.3] - 2026-11-18
 
 ### Fixed

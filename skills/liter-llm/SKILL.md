@@ -10,8 +10,8 @@ name: liter-llm
 
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:3e0dcb446dcc37cd4709da048b254902f8d7f825b553308c5d25074419895562
-Source-Hash: blake3:7e83d7b11ed4cb3925b802b9dae7eb1c2b54530377fe028b1c4d7027a9765194
+Content-Hash: blake3:406470d4e1c308bf0eddd5972ab0ea635100ac2b74ee7372d7bdb35c559b1302
+Source-Hash: blake3:61f1405fc649c4497ebb49c986c0c2029d52bbf6134ae84ab789c0c05edf5583
 Schema-Version: v1
 -->
 
@@ -61,9 +61,6 @@ building software; the proxy when centralizing access for multiple consumers.
 ```bash
 # Homebrew (macOS / Linux)
 brew install xberg-io/tap/liter-llm
-
-# or run it without a persistent install (the CLI proxy package self-installs the binary)
-pnpm dlx @xberg-io/liter-llm-cli@2.2.3 --help
 
 # or download a prebuilt binary from the latest GitHub release:
 #   https://github.com/xberg-io/liter-llm/releases/latest

@@ -5,7 +5,7 @@ REPO="xberg-io/liter-llm"
 # ~keep Rewritten by scripts/sync_plugin_version.py on every release. The plugin only accepts a
 # ~keep binary at or above this version, and downloads exactly this release, so a plugin update
 # ~keep cannot keep running an older liter-llm that happens to be installed.
-PINNED_VERSION="2.7.3"
+PINNED_VERSION="2.7.4"
 
 log() { printf 'liter-llm-launch: %s\n' "$*" >&2; }
 die() {

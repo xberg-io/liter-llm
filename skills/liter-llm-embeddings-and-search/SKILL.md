@@ -6,7 +6,7 @@ name: liter-llm-embeddings-and-search
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 Content-Hash: blake3:b5eb4ea6ac25a0cf5bda7f68424924e9760e43055ad34b314f5030588a6c3fc8
-Source-Hash: blake3:7e83d7b11ed4cb3925b802b9dae7eb1c2b54530377fe028b1c4d7027a9765194
+Source-Hash: blake3:61f1405fc649c4497ebb49c986c0c2029d52bbf6134ae84ab789c0c05edf5583
 Schema-Version: v1
 -->
 

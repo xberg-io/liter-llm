@@ -44,7 +44,7 @@ dbg_macro = "deny"
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)'] }
 
 [workspace.package]
-version = "2.7.3"
+version = "2.7.4"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/xberg-io/liter-llm"
@@ -75,12 +75,12 @@ hex = "0.4"
 http = "1"
 httpdate = "1"
 ipnet = "2.12"
-jsonschema = "0.61"
+jsonschema = "0.63"
 jsonwebtoken = { version = "12", default-features = false, features = ["use_pem"] }
 
 memchr = "2"
 mimalloc = { version = "0.1", default-features = false }
-notify = { version = "8", features = ["macos_kqueue"] }
+notify = { version = "9", features = ["macos_kqueue"] }
 opendal = { version = "0.59.5", default-features = false, features = [
     "services-memory",
     "services-redis",

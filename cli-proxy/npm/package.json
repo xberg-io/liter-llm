@@ -1,6 +1,6 @@
 {
   "name": "@xberg-io/liter-llm-cli",
-  "version": "2.7.3",
+  "version": "2.7.4",
   "mcpName": "io.github.xberg-io/liter-llm",
   "description": "CLI proxy for liter-llm — downloads and runs the native liter-llm binary from GitHub releases.",
   "license": "MIT",
