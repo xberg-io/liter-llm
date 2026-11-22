@@ -4,7 +4,9 @@
 ``alef sync-versions`` rewrites ``cli-proxy/npm/package.json`` and ``cli-proxy/pypi/pyproject.toml``
 (``[workspace.sync].extra_paths``) but knows nothing about the proxy's embedded ``__version__``
 or ``server.json``, and its own validator does not read extra paths, so nothing else would fail on
-drift. This script owns those two files and verifies all five.
+drift. This script owns those two files and verifies all five. The proxy's ``__version__``, the npm
+manifest and server.json carry the semver release version (it names the GitHub release tag); only
+pyproject carries the PEP 440 respelling.
 
 Usage:
     python3 scripts/ci/check_cli_proxy_versions.py                # verify against Cargo.toml
@@ -28,7 +30,18 @@ SERVER_JSON = ROOT / "server.json"
 NPM_PACKAGE = "@xberg-io/liter-llm-cli"
 SERVER_NAME = "io.github.xberg-io/liter-llm"
 INIT_VERSION_RE = re.compile(r'(?m)^(__version__ = ")([^"]*)(")')
+PYPI_MANIFEST_KEY = "cli-proxy/pypi/pyproject.toml version"
 SYNC_HINT = "run `mise run version:sync`"
+
+
+def pypi_spelling(version: str) -> str:
+    """Respell a semver prerelease the way alef writes it into pyproject (1.9.0-rc.2 -> 1.9.0rc2).
+
+    Mirrors release_artifact_versions.py, which hands the same form to the PyPI publish guard.
+    """
+    pypi = re.sub(r"-alpha\.?([0-9]+)$", r"a\1", version)
+    pypi = re.sub(r"-beta\.?([0-9]+)$", r"b\1", pypi)
+    return re.sub(r"-([A-Za-z]+)\.?([0-9]+)$", r"\1\2", pypi)
 
 
 def core_version(root: Path = ROOT) -> str:
@@ -46,7 +59,7 @@ def read_versions(root: Path = ROOT) -> dict[str, str]:
     packages = [p for p in server.get("packages", []) if p.get("identifier") == NPM_PACKAGE]
     return {
         "cli-proxy/npm/package.json version": str(npm.get("version")),
-        "cli-proxy/pypi/pyproject.toml version": str(pypi["project"]["version"]),
+        PYPI_MANIFEST_KEY: str(pypi["project"]["version"]),
         "cli-proxy/pypi/liter_llm_cli/__init__.py __version__": init.group(2) if init else "<missing>",
         "server.json version": str(server.get("version")),
         "server.json packages[npm].version": str(packages[0].get("version")) if len(packages) == 1 else "<missing>",
@@ -91,7 +104,11 @@ def sync(version: str, root: Path = ROOT) -> None:
 
 def drift(expected: str, root: Path = ROOT) -> list[str]:
     """Return one line per version that is not ``expected`` or per broken identity link."""
-    lines = [f"  {where} -> {found}" for where, found in read_versions(root).items() if found != expected]
+    lines = [
+        f"  {where} -> {found}"
+        for where, found in read_versions(root).items()
+        if found != (pypi_spelling(expected) if where == PYPI_MANIFEST_KEY else expected)
+    ]
     return lines + [f"  {problem}" for problem in read_identity(root)]
 
 

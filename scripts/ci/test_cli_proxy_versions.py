@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 
 import pytest
-from check_cli_proxy_versions import NPM_PACKAGE, SERVER_NAME, core_version, drift, read_versions, sync
+from check_cli_proxy_versions import NPM_PACKAGE, SERVER_NAME, core_version, drift, pypi_spelling, read_versions, sync
 
 ROOT = Path(__file__).resolve().parents[2]
 FILES = (
@@ -77,3 +77,25 @@ def test_registry_entry_names_the_published_npm_package() -> None:
     server = json.loads((ROOT / "server.json").read_text())
     assert server["name"] == SERVER_NAME
     assert [(p["registryType"], p["identifier"]) for p in server["packages"]] == [("npm", NPM_PACKAGE)]
+
+
+def test_prerelease_uses_the_pep_440_spelling_in_pyproject_only(tree: Path) -> None:
+    """alef writes 2.8.0rc1 into pyproject; the release tag and npm/registry keep 2.8.0-rc.1."""
+    sync("2.8.0-rc.1", tree)
+    npm = tree / "cli-proxy/npm/package.json"
+    manifest = json.loads(npm.read_text())
+    manifest["version"] = "2.8.0-rc.1"
+    npm.write_text(json.dumps(manifest))
+    pyproject = tree / "cli-proxy/pypi/pyproject.toml"
+    pyproject.write_text(pyproject.read_text().replace(f'version = "{core_version(tree)}"', 'version = "2.8.0rc1"'))
+    assert drift("2.8.0-rc.1", tree) == []
+    pyproject.write_text(pyproject.read_text().replace("2.8.0rc1", "2.8.0-rc.1"))
+    assert len(drift("2.8.0-rc.1", tree)) == 1
+
+
+@pytest.mark.parametrize(
+    ("version", "expected"),
+    [("2.8.0", "2.8.0"), ("2.8.0-rc.1", "2.8.0rc1"), ("2.8.0-alpha.2", "2.8.0a2"), ("2.8.0-beta.3", "2.8.0b3")],
+)
+def test_pypi_spelling(version: str, expected: str) -> None:
+    assert pypi_spelling(version) == expected
