@@ -854,7 +854,7 @@ jobs:
       matrix:
         php: ["8.3", "8.4", "8.5"]
         platform:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             label: linux-x86_64
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-24.04-arm
