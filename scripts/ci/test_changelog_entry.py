@@ -46,7 +46,7 @@ def test_version_does_not_match_a_longer_version() -> None:
 
 
 def test_missing_version_is_an_error() -> None:
-    with pytest.raises(ValueError, match="no entry for version 9.9.9"):
+    with pytest.raises(ValueError, match=r"no entry for version 9\.9\.9"):
         changelog_entry(CHANGELOG, "9.9.9")
 
 

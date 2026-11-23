@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# ~keep fetch, fetch_stdout and sha256 are defined per available tool and called below.
+# shellcheck disable=SC2329
 
 REPO="xberg-io/liter-llm"
 # ~keep Rewritten by scripts/sync_plugin_version.py on every release. The plugin only accepts a
@@ -76,6 +78,7 @@ if want brew && have brew; then
   fi
 fi
 
+# shellcheck disable=SC2329 # selected at runtime by the branch below ~keep
 if have curl; then
   fetch() { curl -fsSL --retry 3 -o "$2" "$1"; }
   fetch_stdout() { curl -fsSL --retry 3 "$1"; }

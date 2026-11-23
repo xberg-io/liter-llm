@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update Cargo dependencies.
 - Pin the plugin MCP launcher to the release it ships with.
+- Regenerate the bindings with Alef 0.132.5: generated Node, WASM, Python, PHP, Java and Elixir output is lint-clean.
 
 ## [2.7.3] - 2026-11-18
 

@@ -95,8 +95,120 @@ values = [
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "fmt.markdown.rumdl.disable"
+key_path = "engines.mago.lint.ignore"
+values = ["strict-assertions", "use-specific-assertions", "no-redundant-variable", "sensitive-parameter"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "engines.mago.lint.select"
+values = ["correctness", "security"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "engines.ruff.lint.ignore"
+values = [
+  "ANN401",
+  "ASYNC109",
+  "ASYNC110",
+  "D100",
+  "D104",
+  "D107",
+  "D205",
+  "E501",
+  "ISC001",
+  "PGH003",
+  "PLR2004",
+  "PLW0603",
+  "S104",
+  "S110",
+  "S603",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "engines.ruff.lint.select"
+values = [
+  "F",
+  "E",
+  "W",
+  "I",
+  "N",
+  "D",
+  "UP",
+  "ANN",
+  "ASYNC",
+  "S",
+  "B",
+  "A",
+  "C4",
+  "DTZ",
+  "T10",
+  "T20",
+  "ISC",
+  "ICN",
+  "PIE",
+  "PT",
+  "Q",
+  "RSE",
+  "RET",
+  "SIM",
+  "TID",
+  "TC",
+  "ARG",
+  "PTH",
+  "PGH",
+  "PL",
+  "PERF",
+  "FURB",
+  "RUF",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "engines.rumdl.lang.markdown.format.disable"
 values = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076", "MD025"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "engines.rumdl.lang.markdown.lint.disable"
+values = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "engines.uncomment.preserve_patterns"
+values = [
+  "~keep",
+  "SAFETY",
+  "HACK",
+  "WORKAROUND",
+  "NOTE",
+  "Copyright",
+  "Licensed",
+  "License",
+  "SPDX",
+  "Apache",
+  "MIT",
+  "WITHOUT WARRANTIES",
+  "limitations under the License",
+  "copyright",
+  "licensed",
+  "license",
+  "apache",
+  "you may not use this file except in compliance",
+  "You may obtain a copy of the License",
+  "you may obtain a copy of the license",
+  "http://www.apache.org/licenses/LICENSE-2.0",
+  "http://www.apache.org/licenses/license-2.0",
+  "Unless required by applicable law",
+  "unless required by applicable law",
+  "distributed under the License",
+  "distributed under the license",
+  "AS IS",
+  "as is",
+  "without warranties",
+  "specific language governing permissions",
+  "limitations under the license",
+]
 
 [[entries]]
 relative_path = "poly.toml"
@@ -364,119 +476,7 @@ values = ["pre-commit"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "lint.markdown.rumdl.disable"
-values = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
-
-[[entries]]
-relative_path = "poly.toml"
-key_path = "lint.php.mago.ignore"
-values = ["strict-assertions", "use-specific-assertions", "no-redundant-variable", "sensitive-parameter"]
-
-[[entries]]
-relative_path = "poly.toml"
-key_path = "lint.php.mago.select"
-values = ["correctness", "security"]
-
-[[entries]]
-relative_path = "poly.toml"
-key_path = "lint.python.ruff.ignore"
-values = [
-  "ANN401",
-  "ASYNC109",
-  "ASYNC110",
-  "D100",
-  "D104",
-  "D107",
-  "D205",
-  "E501",
-  "ISC001",
-  "PGH003",
-  "PLR2004",
-  "PLW0603",
-  "S104",
-  "S110",
-  "S603",
-]
-
-[[entries]]
-relative_path = "poly.toml"
-key_path = "lint.python.ruff.select"
-values = [
-  "F",
-  "E",
-  "W",
-  "I",
-  "N",
-  "D",
-  "UP",
-  "ANN",
-  "ASYNC",
-  "S",
-  "B",
-  "A",
-  "C4",
-  "DTZ",
-  "T10",
-  "T20",
-  "ISC",
-  "ICN",
-  "PIE",
-  "PT",
-  "Q",
-  "RSE",
-  "RET",
-  "SIM",
-  "TID",
-  "TC",
-  "ARG",
-  "PTH",
-  "PGH",
-  "PL",
-  "PERF",
-  "FURB",
-  "RUF",
-]
-
-[[entries]]
-relative_path = "poly.toml"
-key_path = "lint.uncomment.preserve_patterns"
-values = [
-  "~keep",
-  "SAFETY",
-  "HACK",
-  "WORKAROUND",
-  "NOTE",
-  "Copyright",
-  "Licensed",
-  "License",
-  "SPDX",
-  "Apache",
-  "MIT",
-  "WITHOUT WARRANTIES",
-  "limitations under the License",
-  "copyright",
-  "licensed",
-  "license",
-  "apache",
-  "you may not use this file except in compliance",
-  "You may obtain a copy of the License",
-  "you may obtain a copy of the license",
-  "http://www.apache.org/licenses/LICENSE-2.0",
-  "http://www.apache.org/licenses/license-2.0",
-  "Unless required by applicable law",
-  "unless required by applicable law",
-  "distributed under the License",
-  "distributed under the license",
-  "AS IS",
-  "as is",
-  "without warranties",
-  "specific language governing permissions",
-  "limitations under the license",
-]
-
-[[entries]]
-relative_path = "poly.toml"
-key_path = "per-file-ignores.**"
+key_path = "per_file_ignores.**"
 values = [
   "CPY001",
   "UnorderedKey",
@@ -513,97 +513,97 @@ values = [
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*.pyi"
+key_path = "per_file_ignores.**/*.pyi"
 values = ["A002", "F401", "I001", "PYI033", "TC006", "UP035"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*.spec.js"
+key_path = "per_file_ignores.**/*.spec.js"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*.spec.ts"
+key_path = "per_file_ignores.**/*.spec.ts"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*.test.js"
+key_path = "per_file_ignores.**/*.test.js"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*.test.mjs"
+key_path = "per_file_ignores.**/*.test.mjs"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*.test.ts"
+key_path = "per_file_ignores.**/*.test.ts"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*Test.java"
+key_path = "per_file_ignores.**/*Test.java"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*Tests.cs"
+key_path = "per_file_ignores.**/*Tests.cs"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*_spec.rb"
+key_path = "per_file_ignores.**/*_spec.rb"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*_test.dart"
+key_path = "per_file_ignores.**/*_test.dart"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*_test.go"
+key_path = "per_file_ignores.**/*_test.go"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*_test.py"
+key_path = "per_file_ignores.**/*_test.py"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*_test.rs"
+key_path = "per_file_ignores.**/*_test.rs"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/*_tests.rs"
+key_path = "per_file_ignores.**/*_tests.rs"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/__init__.py"
+key_path = "per_file_ignores.**/__init__.py"
 values = ["I001"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/api.py"
+key_path = "per_file_ignores.**/api.py"
 values = ["F401", "I001", "TC006", "UP035"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/benches/**/*"
+key_path = "per_file_ignores.**/benches/**/*"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/conftest.py"
+key_path = "per_file_ignores.**/conftest.py"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/e2e/**"
+key_path = "per_file_ignores.**/e2e/**"
 values = [
   "ANN",
   "D103",
@@ -648,22 +648,22 @@ values = [
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/options.py"
+key_path = "per_file_ignores.**/options.py"
 values = ["F401", "I001", "RUF100"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/test/**/*"
+key_path = "per_file_ignores.**/test/**/*"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/test_*.py"
+key_path = "per_file_ignores.**/test_*.py"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/test_apps/**"
+key_path = "per_file_ignores.**/test_apps/**"
 values = [
   "ANN",
   "D103",
@@ -708,7 +708,7 @@ values = [
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/tests/**"
+key_path = "per_file_ignores.**/tests/**"
 values = [
   "ANN",
   "D103",
@@ -753,187 +753,252 @@ values = [
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.**/tests/**/*"
+key_path = "per_file_ignores.**/tests/**/*"
 values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores..alef-toml-merge-provenance.toml"
+key_path = "per_file_ignores..alef-toml-merge-provenance.toml"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores..github/workflows/publish.yaml"
+key_path = "per_file_ignores..github/workflows/publish.yaml"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.CHANGELOG.md"
+key_path = "per_file_ignores.CHANGELOG.md"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.alef.toml"
+key_path = "per_file_ignores.alef.toml"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.cli-proxy/**/*.py"
+key_path = "per_file_ignores.cli-proxy/**/*.py"
 values = ["ANN", "PLR0913", "PLR2004", "S", "T201"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm-catalog-gen/src/schema.rs"
+key_path = "per_file_ignores.crates/liter-llm-catalog-gen/src/schema.rs"
 values = ["function-too-long", "too-many-parameters"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm-cli/src/commands/api.rs"
+key_path = "per_file_ignores.crates/liter-llm-cli/src/commands/api.rs"
 values = ["function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm-proxy/src/config/mod.rs"
+key_path = "per_file_ignores.crates/liter-llm-proxy/src/config/mod.rs"
 values = ["function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm-proxy/src/guardrail.rs"
+key_path = "per_file_ignores.crates/liter-llm-proxy/src/guardrail.rs"
 values = ["function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm-proxy/src/lib.rs"
+key_path = "per_file_ignores.crates/liter-llm-proxy/src/lib.rs"
 values = ["function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm-proxy/src/service_pool.rs"
+key_path = "per_file_ignores.crates/liter-llm-proxy/src/service_pool.rs"
 values = ["file-too-long", "function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm-proxy/src/shutdown.rs"
+key_path = "per_file_ignores.crates/liter-llm-proxy/src/shutdown.rs"
 values = ["function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/schemas/providers.json"
+key_path = "per_file_ignores.crates/liter-llm/schemas/providers.json"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/auth/github_copilot.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/auth/github_copilot.rs"
 values = ["function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/client/llm_config.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/client/llm_config.rs"
 values = ["cyclomatic-complexity", "function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/client/managed.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/client/managed.rs"
 values = ["cyclomatic-complexity", "function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/client/mod.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/client/mod.rs"
+values = ["file-too-long", "function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/http/request.rs"
+values = ["file-too-long", "function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/http/streaming.rs"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/provider/mod.rs"
-values = ["cyclomatic-complexity", "file-too-long"]
-
-[[entries]]
-relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/provider/outbound_policy.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/provider/anthropic/feature_tests.rs"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/realtime/openai.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/provider/anthropic/request.rs"
+values = ["nesting-too-deep"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/provider/bedrock/tests.rs"
+values = ["file-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/provider/cohere.rs"
+values = ["file-too-long", "function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/provider/mod.rs"
+values = ["cyclomatic-complexity", "file-too-long", "type-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/provider/ollama.rs"
 values = ["function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/tests.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/provider/outbound_policy.rs"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/tower/cache.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/provider/rebased.rs"
+values = ["function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/provider/vertex/gemini_request.rs"
+values = ["function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/provider/vertex/gemini_stream.rs"
+values = ["function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/provider/vertex/tests.rs"
+values = ["file-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/realtime/openai.rs"
+values = ["function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/tests.rs"
+values = ["file-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.crates/liter-llm/src/tower/cache.rs"
 values = ["file-too-long", "function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/tower/cache_singleflight.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/tower/cache_singleflight.rs"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/tower/guardrail.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/tower/guardrail.rs"
 values = ["file-too-long", "function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/tower/health.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/tower/health.rs"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/tower/idempotency.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/tower/idempotency.rs"
 values = ["file-too-long", "function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/tower/metrics.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/tower/metrics.rs"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/tower/route_classify.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/tower/route_classify.rs"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/tower/router.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/tower/router.rs"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.crates/liter-llm/src/types/common.rs"
+key_path = "per_file_ignores.crates/liter-llm/src/types/common.rs"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.docs-site/src/content/docs/changelog.md"
+key_path = "per_file_ignores.crates/liter-llm/tests/ollama.rs"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.docs-site/src/content/docs/reference/**"
+key_path = "per_file_ignores.crates/liter-llm/tests/operations_integration.rs"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.docs-site/src/content/docs/usage/multimodal.mdx"
+key_path = "per_file_ignores.docs-site/src/content/docs/changelog.md"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.plugin/.ai-rulez/opencode/index.js"
+key_path = "per_file_ignores.docs-site/src/content/docs/reference/**"
+values = ["file-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.docs-site/src/content/docs/usage/multimodal.mdx"
+values = ["file-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per_file_ignores.plugin/.ai-rulez/opencode/index.js"
 values = ["require-await"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.poly.toml"
+key_path = "per_file_ignores.poly.toml"
 values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.scripts/**/*.py"
+key_path = "per_file_ignores.scripts/**/*.py"
 values = [
   "B904",
   "BLE001",
@@ -955,5 +1020,5 @@ values = [
 
 [[entries]]
 relative_path = "poly.toml"
-key_path = "per-file-ignores.templates/readme/**/*.md"
+key_path = "per_file_ignores.templates/readme/**/*.md"
 values = ["MD057"]

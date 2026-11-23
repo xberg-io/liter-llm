@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.130.4"
+alef_version = "0.132.5"
 languages = [
   "python",
   "node",
@@ -312,6 +312,8 @@ git = "https://github.com/Goldziher/adrlint.git"
 revision = "v0"
 hooks = ["adrlint-lint", "adrlint-format-check", "adrlint-lock-check"]
 [workspace.poly.typos.extend-words]
+# Truncated streaming fixture text ("Hel" + "lo"). ~keep
+Hel = "Hel"
 # deliberately misspelled stage: a negative test asserts it is rejected ~keep
 inpt = "inpt"
 # token fragment in a fallback-chain test ~keep
@@ -325,6 +327,20 @@ ein = "ein"
 ist = "ist"
 
 [workspace.poly.per-file-ignores]
+# Hand-written code over the size and complexity thresholds; splitting it is tracked separately. ~keep
+"crates/liter-llm/src/http/request.rs" = ["file-too-long", "function-too-long"]
+"crates/liter-llm/src/http/streaming.rs" = ["file-too-long"]
+"crates/liter-llm/src/provider/anthropic/feature_tests.rs" = ["file-too-long"]
+"crates/liter-llm/src/provider/anthropic/request.rs" = ["nesting-too-deep"]
+"crates/liter-llm/src/provider/bedrock/tests.rs" = ["file-too-long"]
+"crates/liter-llm/src/provider/cohere.rs" = ["file-too-long", "function-too-long"]
+"crates/liter-llm/src/provider/ollama.rs" = ["function-too-long"]
+"crates/liter-llm/src/provider/rebased.rs" = ["function-too-long"]
+"crates/liter-llm/src/provider/vertex/gemini_request.rs" = ["function-too-long"]
+"crates/liter-llm/src/provider/vertex/gemini_stream.rs" = ["function-too-long"]
+"crates/liter-llm/src/provider/vertex/tests.rs" = ["file-too-long"]
+"crates/liter-llm/tests/ollama.rs" = ["file-too-long"]
+"crates/liter-llm/tests/operations_integration.rs" = ["file-too-long"]
 # Alef-generated config files. Both grow with the size of the surface alef manages and
 # with the quality-debt baseline below; a line count on generated config is not a
 # maintainability signal. ~keep
@@ -351,8 +367,8 @@ ist = "ist"
 "crates/liter-llm/src/auth/github_copilot.rs" = ["function-too-long"]
 "crates/liter-llm/src/client/llm_config.rs" = ["cyclomatic-complexity", "function-too-long"]
 "crates/liter-llm/src/client/managed.rs" = ["cyclomatic-complexity", "function-too-long"]
-"crates/liter-llm/src/client/mod.rs" = ["file-too-long"]
-"crates/liter-llm/src/provider/mod.rs" = ["cyclomatic-complexity", "file-too-long"]
+"crates/liter-llm/src/client/mod.rs" = ["file-too-long", "function-too-long"]
+"crates/liter-llm/src/provider/mod.rs" = ["cyclomatic-complexity", "file-too-long", "type-too-long"]
 "crates/liter-llm/src/provider/outbound_policy.rs" = ["file-too-long"]
 "crates/liter-llm/src/realtime/openai.rs" = ["function-too-long"]
 "crates/liter-llm/src/tests.rs" = ["file-too-long"]
