@@ -5,7 +5,7 @@
     .minimum_zig_version = "0.17.0",
     .dependencies = .{
         .liter_llm = .{
-            .url = "https://github.com/xberg-io/liter-llm/releases/download/v2.7.4/liter-llm-zig-v2.7.4.tar.gz",
+            .url = "https://github.com/xberg-io/liter-llm/releases/download/v2.7.5/liter-llm-zig-v2.7.5.tar.gz",
         },
     },
     .paths = .{
