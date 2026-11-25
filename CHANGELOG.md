@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.6] - 2026-11-25
+
+### Added
+
+- Ship the CLI binary inside per-platform npm packages (`@xberg-io/liter-llm-cli-<os>-<cpu>-<libc>`) that the `@xberg-io/liter-llm-cli` launcher resolves first, so `npx` works in sandboxes without network access. The GitHub download remains the last-resort fallback. macOS x64 and Windows arm64 builds are best-effort.
+
+### Changed
+
+- Upgrade dependencies, including `gcp_auth` 0.13.
+
 ## [2.7.5] - 2026-11-24
 
 ### Fixed

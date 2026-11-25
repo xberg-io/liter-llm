@@ -1,6 +1,6 @@
 {
   "name": "@xberg-io/liter-llm-cli",
-  "version": "2.7.5",
+  "version": "2.7.6",
   "mcpName": "io.github.xberg-io/liter-llm",
   "description": "CLI proxy for liter-llm — runs the native liter-llm binary shipped in a per-platform package, downloading it from GitHub releases only as a fallback.",
   "license": "MIT",
@@ -31,12 +31,12 @@
     "access": "public"
   },
   "optionalDependencies": {
-    "@xberg-io/liter-llm-cli-darwin-arm64": "2.7.5",
-    "@xberg-io/liter-llm-cli-darwin-x64": "2.7.5",
-    "@xberg-io/liter-llm-cli-linux-arm64-gnu": "2.7.5",
-    "@xberg-io/liter-llm-cli-linux-x64-gnu": "2.7.5",
-    "@xberg-io/liter-llm-cli-win32-arm64": "2.7.5",
-    "@xberg-io/liter-llm-cli-win32-x64": "2.7.5"
+    "@xberg-io/liter-llm-cli-darwin-arm64": "2.7.6",
+    "@xberg-io/liter-llm-cli-darwin-x64": "2.7.6",
+    "@xberg-io/liter-llm-cli-linux-arm64-gnu": "2.7.6",
+    "@xberg-io/liter-llm-cli-linux-x64-gnu": "2.7.6",
+    "@xberg-io/liter-llm-cli-win32-arm64": "2.7.6",
+    "@xberg-io/liter-llm-cli-win32-x64": "2.7.6"
   },
   "engines": {
     "node": ">=22"
