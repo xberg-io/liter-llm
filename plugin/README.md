@@ -58,9 +58,11 @@ Pi content alongside the OpenCode adapter. No separate Pi release job is needed.
 ### Binary requirement
 
 The bundled MCP launcher (`scripts/mcp-launch.sh`) resolves a `liter-llm` binary
-automatically on first run: it reuses one already on `PATH`, then tries
-`npx`/`uvx`, then Homebrew, then a prebuilt binary from the
-tool's latest GitHub release. If every method fails, install a CLI with MCP support using the commands below.
+automatically on first run: it reuses one cached in the plugin's `bin/` or
+already on `PATH` (at or above the pinned release), then runs the exact pinned npm package
+(`npx --yes --quiet @xberg-io/liter-llm-cli@<version>`, no GitHub access needed), then downloads
+the pinned release from GitHub and verifies its checksum. Homebrew runs only when requested with
+`LITER_LLM_LAUNCHER=brew`; `LITER_LLM_LAUNCHER=auto|npx|brew|download` forces a method. If every method fails, install a CLI with MCP support using the commands below.
 
 To install the CLI yourself (also gives you the proxy server):
 

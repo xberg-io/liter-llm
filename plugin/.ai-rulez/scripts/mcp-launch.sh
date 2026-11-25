@@ -8,6 +8,7 @@ REPO="xberg-io/liter-llm"
 # ~keep binary at or above this version, and downloads exactly this release, so a plugin update
 # ~keep cannot keep running an older liter-llm that happens to be installed.
 PINNED_VERSION="2.7.6"
+NPM_PACKAGE="@xberg-io/liter-llm-cli"
 
 log() { printf 'liter-llm-launch: %s\n' "$*" >&2; }
 die() {
@@ -17,11 +18,13 @@ die() {
 
 LAUNCHER="${LITER_LLM_LAUNCHER:-auto}"
 case "$LAUNCHER" in
-auto | brew | download) ;;
-*) die "invalid LITER_LLM_LAUNCHER='$LAUNCHER' (expected auto|brew|download)" ;;
+auto | npx | brew | download) ;;
+*) die "invalid LITER_LLM_LAUNCHER='$LAUNCHER' (expected auto|npx|brew|download)" ;;
 esac
 
 want() { [ "$LAUNCHER" = "auto" ] || [ "$LAUNCHER" = "$1" ]; }
+# ~keep brew installs system-wide and needs the network, so it only runs when asked for by name.
+want_explicit() { [ "$LAUNCHER" = "$1" ]; }
 
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
 if [ -z "$PLUGIN_ROOT" ]; then
@@ -65,7 +68,16 @@ if have "$BINARY_NAME"; then
   fi
 fi
 
-if want brew && have brew; then
+# ~keep The npm package carries the binary in a per-platform optional dependency, so this tier needs no
+# ~keep GitHub access. The exact pin is required by plugin scanners. stdout is the MCP stdio stream, so
+# ~keep npm is kept quiet and its update notifier is off; anything npm does print goes to stderr.
+if want npx && have node && have npx; then
+  log "running $NPM_PACKAGE@$PINNED_VERSION via npx ..."
+  NPM_CONFIG_UPDATE_NOTIFIER=false NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false \
+    exec npx --yes --quiet "$NPM_PACKAGE@$PINNED_VERSION" "$@"
+fi
+
+if want_explicit brew && have brew; then
   log "installing via 'brew install xberg-io/tap/liter-llm' ..."
   if brew install xberg-io/tap/liter-llm >&2; then
     if have "$BINARY_NAME"; then
@@ -208,7 +220,8 @@ if want download; then
 fi
 
 die "could not locate or install liter-llm. Install it with one of:
+  npm install -g $NPM_PACKAGE@${PINNED_VERSION}
   brew install xberg-io/tap/liter-llm
   cargo install liter-llm-cli
 or download a prebuilt archive from https://github.com/${REPO}/releases/tag/v${PINNED_VERSION}
-then re-run, or set LITER_LLM_LAUNCHER to force a method (auto|brew|download)."
+then re-run, or set LITER_LLM_LAUNCHER to force a method (auto|npx|brew|download)."

@@ -5,8 +5,8 @@ name: liter-llm-using-the-mcp-server
 
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:f69c955a319e6f0b2bf405064e40213166066bb2eb2696e49e0bbef3ce8821e9
-Source-Hash: blake3:53e37d19bd745b4ef4e67c0d17576d47e004dd24071bb8aa598e8d338e81821c
+Content-Hash: blake3:ab92ebe15765009393b64fd82ddade8fef15a699d925fda1449dc8685db371d6
+Source-Hash: blake3:631b86325d3511611744ba015e167138668a13bc577c4dba4afaf82758bc1020
 Schema-Version: v1
 -->
 
@@ -29,8 +29,9 @@ The plugin auto-registers the server. Its command is the bundled launcher
 `scripts/mcp-launch.sh`, which execs `liter-llm mcp --transport stdio`. On first
 run the launcher resolves a `liter-llm` binary: it reuses one cached in the plugin's
 `bin/` or on `PATH`, provided it is at least the release this plugin ships with, then
-tries Homebrew, then downloads that exact release from GitHub and checks it against
-the release checksums. Override with `LITER_LLM_LAUNCHER=auto|brew|download`.
+runs that exact release through `npx @xberg-io/liter-llm-cli@<version>`, then downloads it
+from GitHub and checks it against the release checksums. Homebrew is used only when forced.
+Override with `LITER_LLM_LAUNCHER=auto|npx|brew|download`.
 
 To run it manually:
 

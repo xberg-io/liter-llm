@@ -2,7 +2,7 @@
 #
 # Contract tests for plugin/scripts/mcp-launch.sh.
 #
-# This launcher pins the release it ships with (PINNED_VERSION) and has no npx or uvx tier, so the
+# This launcher pins the release it ships with (PINNED_VERSION) and runs the exact pinned npm package through npx, so the
 # suite is no longer byte-identical with the sibling repositories' copies.
 #
 # The suite tests strictly through the process boundary: it runs the script and asserts the
@@ -12,6 +12,8 @@
 #
 # The script exec()s, so the launcher it chooses BECOMES the process -- a stub that prints a
 # marker is therefore direct evidence of the branch taken, not an inference from log text. ~keep
+
+bats_require_minimum_version 1.5.0
 
 setup_file() {
 	bats_load_library xberg-bats
@@ -43,7 +45,7 @@ setup_file() {
 	# machine has no brew" and the probe would find the developer's real copy. The product binary
 	# is excluded for the same reason -- a developer with it installed would otherwise take the
 	# PATH branch in every test. ~keep
-	xberg_shadow_system_path_without brew curl wget "$BINARY_NAME"
+	xberg_shadow_system_path_without brew curl wget node npx "$BINARY_NAME"
 
 	export REPO_ROOT SCRIPT BINARY_NAME PINNED_VERSION LAUNCHER_VAR
 }
@@ -107,6 +109,23 @@ make_broken_cli() {
 	chmod +x "$target"
 }
 
+# node and npx stubs: the launcher only takes the npx tier when both exist. The npx stub records
+# its argv one line per argument and the npm environment it was given, then exits without
+# touching the network. ~keep
+make_npx() {
+	xberg_stub node 'exit 0'
+	xberg_stub npx \
+		"printf 'NPX:ran\\n'" \
+		"for a in \"\$@\"; do printf 'NPX[%s]\\n' \"\$a\"; done" \
+		"printf 'NPX-ENV[%s]\\n' \"\$NPM_CONFIG_UPDATE_NOTIFIER\"" \
+		'exit 0'
+}
+
+# A curl that records that it was called, so a test can prove the download tier was not reached.
+make_tripwire_curl() {
+	xberg_stub curl "printf 'curl %s\\n' \"\$*\" >>\"\$XBERG_TRACE\"" 'exit 1'
+}
+
 cached_binary() { printf '%s/bin/%s' "$PLUGIN_ROOT" "$BINARY_NAME"; }
 
 # --- launcher selection -------------------------------------------------------------------------
@@ -117,12 +136,12 @@ cached_binary() { printf '%s/bin/%s' "$PLUGIN_ROOT" "$BINARY_NAME"; }
 
 	xberg_assert_status 1
 	xberg_assert_output_contains "invalid ${LAUNCHER_VAR}='wget-please'"
-	xberg_assert_output_contains "auto|brew|download"
+	xberg_assert_output_contains "auto|npx|brew|download"
 }
 
 @test "mcp-launch should_accept_every_documented_launcher_value" {
 	local mode
-	for mode in auto brew download; do
+	for mode in auto npx brew download; do
 		LAUNCH_MODE="$mode"
 		launch
 		# Each of these still fails -- nothing is installed -- but it must fail at the end, not
@@ -140,6 +159,7 @@ cached_binary() { printf '%s/bin/%s' "$PLUGIN_ROOT" "$BINARY_NAME"; }
 
 	xberg_assert_status 1
 	xberg_assert_output_contains "could not locate or install"
+	xberg_assert_output_contains "npm install -g @xberg-io/liter-llm-cli@${PINNED_VERSION}"
 	xberg_assert_output_contains "brew install xberg-io/tap/${BINARY_NAME}"
 	xberg_assert_output_contains "cargo install"
 }
@@ -238,7 +258,113 @@ cached_binary() { printf '%s/bin/%s' "$PLUGIN_ROOT" "$BINARY_NAME"; }
 	[[ "$output" == *"CACHED:ran"* ]]
 }
 
+# --- npx ----------------------------------------------------------------------------------------
+
+@test "mcp-launch should_run_the_exact_pinned_npm_package_through_npx_when_no_binary_exists" {
+	make_npx
+	launch mcp --transport stdio "a b"
+
+	xberg_assert_status 0
+	xberg_assert_output_contains "NPX[--yes]"
+	xberg_assert_output_contains "NPX[@xberg-io/liter-llm-cli@${PINNED_VERSION}]"
+	xberg_assert_output_contains "NPX[mcp]"
+	xberg_assert_output_contains "NPX[--transport]"
+	xberg_assert_output_contains "NPX[stdio]"
+	# One line per argument: "a b" must reach the package as a single argument.
+	xberg_assert_output_contains "NPX[a b]"
+	xberg_assert_output_contains "NPX-ENV[false]"
+}
+
+@test "mcp-launch should_keep_npx_output_off_stdout_apart_from_the_launched_process" {
+	make_npx
+	run --separate-stderr env -i \
+		PATH="$(xberg_isolated_path)" \
+		HOME="$XBERG_WORK/home" \
+		XBERG_TRACE="$XBERG_TRACE" \
+		CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" \
+		"${LAUNCHER_VAR}=auto" \
+		"$SCRIPT" mcp
+	# The launcher's own logging belongs on stderr; stdout carries only what npx printed.
+	[[ "$output" != *"liter-llm-launch"* ]]
+	[[ "$stderr" == *"liter-llm-launch: running @xberg-io/liter-llm-cli@${PINNED_VERSION} via npx"* ]]
+}
+
+@test "mcp-launch should_prefer_a_path_binary_over_npx" {
+	make_npx
+	make_cli "$XBERG_STUB_BIN/$BINARY_NAME" ONPATH
+	launch
+
+	xberg_assert_status 0
+	[[ "$output" == *"ONPATH:ran"* ]]
+	[[ "$output" != *"NPX:ran"* ]]
+}
+
+@test "mcp-launch should_prefer_the_cached_binary_over_npx" {
+	make_npx
+	make_cli "$(cached_binary)" CACHED
+	launch
+
+	xberg_assert_status 0
+	[[ "$output" == *"CACHED:ran"* ]]
+	[[ "$output" != *"NPX:ran"* ]]
+}
+
+@test "mcp-launch should_reach_npx_before_the_download_tier" {
+	make_npx
+	make_tripwire_curl
+	launch
+
+	xberg_assert_status 0
+	[[ "$output" == *"NPX:ran"* ]]
+	xberg_assert_file_absent "$XBERG_TRACE"
+}
+
+@test "mcp-launch should_skip_npx_when_node_is_missing" {
+	xberg_stub npx 'printf "NPX:ran\n"'
+	launch
+
+	xberg_assert_status 1
+	[[ "$output" != *"NPX:ran"* ]]
+}
+
+@test "mcp-launch should_still_reuse_the_cached_binary_when_the_npx_mode_is_forced" {
+	# Forcing npx limits the install fallbacks, not the reuse tiers. ~keep
+	LAUNCH_MODE="npx"
+	make_cli "$(cached_binary)" CACHED
+	make_npx
+	launch serve
+
+	xberg_assert_status 0
+	[[ "$output" == *"CACHED:ran"* ]]
+}
+
+@test "mcp-launch should_not_fall_back_to_download_when_the_npx_mode_is_forced_and_npx_is_missing" {
+	LAUNCH_MODE="npx"
+	make_tripwire_curl
+	launch
+
+	xberg_assert_status 1
+	xberg_assert_file_absent "$XBERG_TRACE"
+}
+
 # --- brew ---------------------------------------------------------------------------------------
+
+@test "mcp-launch should_not_run_brew_in_auto_mode" {
+	xberg_stub_trace brew
+	launch
+
+	xberg_assert_status 1
+	xberg_assert_trace_empty
+}
+
+@test "mcp-launch should_not_run_brew_when_the_npx_mode_is_forced" {
+	LAUNCH_MODE="npx"
+	xberg_stub_trace brew
+	launch
+
+	xberg_assert_status 1
+	xberg_assert_trace_empty
+}
 
 @test "mcp-launch should_install_through_brew_and_exec_what_it_put_on_path" {
 	LAUNCH_MODE="brew"

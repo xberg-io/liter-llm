@@ -155,7 +155,7 @@ Add the package to `opencode.json`:
 
 ## MCP server
 
-The MCP-capable integrations above install the same bundled MCP server and register it for you — there is nothing to configure by hand. The plugin points at `scripts/mcp-launch.sh`, which resolves the `liter-llm` binary at runtime (`pnpm dlx @xberg-io/liter-llm-cli`, `uvx --from liter-llm-cli`, Homebrew, or a downloaded release).
+The MCP-capable integrations above install the same bundled MCP server and register it for you — there is nothing to configure by hand. The plugin points at `scripts/mcp-launch.sh`, which resolves the `liter-llm` binary at runtime (a cached or `PATH` binary at the pinned version, then `npx @xberg-io/liter-llm-cli@<version>`, then a checksum-verified downloaded release; Homebrew only with `LITER_LLM_LAUNCHER=brew`).
 
 To register the server directly in any other MCP client (without the plugin), add it to that client's MCP config:
 
