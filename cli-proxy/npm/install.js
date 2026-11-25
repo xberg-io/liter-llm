@@ -2,6 +2,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import https from "node:https";
+import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -30,6 +31,7 @@ export function targetTriple() {
 
   if (type === "Windows_NT") {
     if (arch === "x64") return "x86_64-pc-windows-msvc";
+    if (arch === "arm64") return "aarch64-pc-windows-msvc";
     throw new Error(`unsupported Windows arch: ${arch}`);
   }
   if (type === "Linux") {
@@ -47,6 +49,52 @@ export function targetTriple() {
 
 function binaryName() {
   return os.type() === "Windows_NT" ? `${BIN_NAME}.exe` : BIN_NAME;
+}
+
+const SCOPE_PACKAGE = "@xberg-io/liter-llm-cli";
+// The release builds glibc Linux binaries only, so a musl host has no bundled package.
+const BUNDLED_PLATFORMS = {
+  "darwin-arm64": "darwin-arm64",
+  "darwin-x64": "darwin-x64",
+  "win32-x64": "win32-x64",
+  "win32-arm64": "win32-arm64",
+  "linux-x64": "linux-x64-gnu",
+  "linux-arm64": "linux-arm64-gnu",
+};
+
+export function isMusl({ platform = process.platform, report = () => process.report?.getReport?.() } = {}) {
+  if (platform !== "linux") return false;
+  try {
+    return !report()?.header?.glibcVersionRuntime;
+  } catch {
+    return false;
+  }
+}
+
+export function bundledPackageNames(platform = process.platform, arch = process.arch, musl = isMusl({ platform })) {
+  const suffix = BUNDLED_PLATFORMS[`${platform}-${arch}`];
+  return suffix && !musl ? [`${SCOPE_PACKAGE}-${suffix}`] : [];
+}
+
+// Resolves the binary shipped by the platform package listed in optionalDependencies, so the CLI
+// runs with no network access. Returns null when no such package is installed.
+export function resolveBundledBinary({
+  platform = process.platform,
+  arch = process.arch,
+  musl = isMusl({ platform }),
+  resolve = createRequire(import.meta.url).resolve,
+} = {}) {
+  for (const name of bundledPackageNames(platform, arch, musl)) {
+    let manifest;
+    try {
+      manifest = resolve(`${name}/package.json`);
+    } catch {
+      continue;
+    }
+    const binary = path.join(path.dirname(manifest), "bin", platform === "win32" ? `${BIN_NAME}.exe` : BIN_NAME);
+    if (fs.existsSync(binary)) return binary;
+  }
+  return null;
 }
 
 function httpGetBuffer(url, { headers = {} } = {}, maxRedirects = 5) {

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Keep the CLI proxy packages and the MCP Registry entry in lockstep with the release.
 
-``alef sync-versions`` rewrites ``cli-proxy/npm/package.json`` and ``cli-proxy/pypi/pyproject.toml``
-(``[workspace.sync].extra_paths``) but knows nothing about the proxy's embedded ``__version__``
-or ``server.json``, and its own validator does not read extra paths, so nothing else would fail on
-drift. This script owns those two files and verifies all five. The proxy's ``__version__``, the npm
+``alef sync-versions`` rewrites the ``version`` of ``cli-proxy/npm/package.json`` and
+``cli-proxy/pypi/pyproject.toml`` (``[workspace.sync].extra_paths``) but knows nothing about the
+proxy's embedded ``__version__``, ``server.json`` or the npm ``optionalDependencies`` pins, and its
+own validator does not read extra paths, so nothing else would fail on drift. This script owns those
+and verifies all five versions plus the pins. The proxy's ``__version__``, the npm
 manifest and server.json carry the semver release version (it names the GitHub release tag); only
 pyproject carries the PEP 440 respelling.
 
@@ -83,8 +84,27 @@ def read_identity(root: Path = ROOT) -> list[str]:
     return problems
 
 
+def read_platform_drift(expected: str, root: Path = ROOT) -> list[str]:
+    """Return the platform packages the npm proxy depends on at a version other than ``expected``."""
+    npm = json.loads((root / "cli-proxy/npm/package.json").read_text(encoding="utf-8"))
+    pins = npm.get("optionalDependencies") or {}
+    if not pins:
+        return ["  cli-proxy/npm/package.json has no optionalDependencies; the platform binaries would not install"]
+    return [
+        f"  cli-proxy/npm/package.json optionalDependencies {name} -> {found}"
+        for name, found in pins.items()
+        if found != expected or not name.startswith(f"{NPM_PACKAGE}-")
+    ]
+
+
 def sync(version: str, root: Path = ROOT) -> None:
-    """Rewrite the two files alef does not manage."""
+    """Rewrite what alef does not manage: the proxy's ``__version__``, server.json and the npm platform pins."""
+    npm_path = root / "cli-proxy/npm/package.json"
+    npm = json.loads(npm_path.read_text(encoding="utf-8"))
+    if npm.get("optionalDependencies"):
+        npm["optionalDependencies"] = dict.fromkeys(npm["optionalDependencies"], version)
+        npm_path.write_text(json.dumps(npm, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
     init_path = root / "cli-proxy/pypi/liter_llm_cli/__init__.py"
     text = init_path.read_text(encoding="utf-8")
     text, count = INIT_VERSION_RE.subn(rf"\g<1>{version}\g<3>", text, count=1)
@@ -109,7 +129,7 @@ def drift(expected: str, root: Path = ROOT) -> list[str]:
         for where, found in read_versions(root).items()
         if found != (pypi_spelling(expected) if where == PYPI_MANIFEST_KEY else expected)
     ]
-    return lines + [f"  {problem}" for problem in read_identity(root)]
+    return lines + read_platform_drift(expected, root) + [f"  {problem}" for problem in read_identity(root)]
 
 
 def parse_expect(argv: list[str]) -> str | None:

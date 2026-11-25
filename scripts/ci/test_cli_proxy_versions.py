@@ -43,6 +43,23 @@ def test_drift_in_the_npm_manifest_is_reported(tree: Path) -> None:
     assert any("package.json version -> 0.0.1" in line for line in drift(core_version(tree), tree))
 
 
+def test_a_stale_platform_package_pin_is_reported(tree: Path) -> None:
+    path = tree / "cli-proxy/npm/package.json"
+    manifest = json.loads(path.read_text())
+    name = next(iter(manifest["optionalDependencies"]))
+    manifest["optionalDependencies"][name] = "0.0.1"
+    path.write_text(json.dumps(manifest))
+    assert any(f"optionalDependencies {name} -> 0.0.1" in line for line in drift(core_version(tree), tree))
+
+
+def test_missing_platform_packages_are_reported(tree: Path) -> None:
+    path = tree / "cli-proxy/npm/package.json"
+    manifest = json.loads(path.read_text())
+    del manifest["optionalDependencies"]
+    path.write_text(json.dumps(manifest))
+    assert any("no optionalDependencies" in line for line in drift(core_version(tree), tree))
+
+
 def test_drift_in_the_pypi_manifest_is_reported(tree: Path) -> None:
     path = tree / "cli-proxy/pypi/pyproject.toml"
     path.write_text(path.read_text().replace(f'version = "{core_version(tree)}"', 'version = "0.1.0"'))
@@ -71,6 +88,8 @@ def test_sync_rewrites_the_files_alef_does_not_own(tree: Path) -> None:
     assert versions["server.json version"] == "9.9.9"
     assert versions["server.json packages[npm].version"] == "9.9.9"
     assert versions["cli-proxy/pypi/liter_llm_cli/__init__.py __version__"] == "9.9.9"
+    pins = json.loads((tree / "cli-proxy/npm/package.json").read_text())["optionalDependencies"]
+    assert set(pins.values()) == {"9.9.9"}
 
 
 def test_registry_entry_names_the_published_npm_package() -> None:
