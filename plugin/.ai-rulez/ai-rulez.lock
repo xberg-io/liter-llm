@@ -2,10 +2,10 @@
 # Refresh it with `ai-rulez lock`; `ai-rulez generate --locked` fails when it is stale.
 
 version = 1
-ai_rulez_version = '5.14.1'
+ai_rulez_version = '5.15.0'
 scope = 'all'
 outputs_pinned = true
-tree = 'sha256:c25131f940189bd7365c3743f8ae03cbef31ddee3aec4fac04aa0ba771ab8ee3'
+tree = 'sha256:a1683aa9ca10aa3a4bad4dced7bd6084c7137e0658b54a4b957a25ff2fb379b1'
 
 [[item]]
 kind = 'command'
@@ -59,4 +59,4 @@ digest = 'sha256:3875699340d28a0b4ce2ebbfc5ca496f78999bbfa94300aa68b0a68a7c52113
 kind = 'skill'
 id = 'liter-llm-using-the-mcp-server'
 path = 'skills/liter-llm-using-the-mcp-server'
-digest = 'sha256:2a8bde9f1a4203b5fe0622341ac0b72adff0b9a2f43940d7a40c6345cd085d9a'
+digest = 'sha256:44266da0cb8d5ac9fabe09e6284cb827b56003039bf603b98b8961129e998854'
