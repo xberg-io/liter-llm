@@ -1011,3 +1011,44 @@ fn next_models_page_url_is_none_on_the_last_page() {
         None
     );
 }
+
+#[test]
+fn gemini_request_keeps_system_content_parts() {
+    let mut body = json!({
+        "model": "gemini-2.5-flash",
+        "messages": [
+            {"role": "system", "content": [
+                {"type": "text", "text": "Be terse."},
+                {"type": "text", "text": ""},
+                {"type": "text", "text": "Answer in French."}
+            ]},
+            {"role": "user", "content": "hi"}
+        ]
+    });
+
+    transform_gemini_request(&mut body).expect("request should transform");
+
+    assert_eq!(
+        body["systemInstruction"]["parts"],
+        json!([{"text": "Be terse."}, {"text": "Answer in French."}])
+    );
+}
+
+#[test]
+fn gemini_request_keeps_assistant_content_parts() {
+    let mut body = json!({
+        "model": "gemini-2.5-flash",
+        "messages": [
+            {"role": "user", "content": "hi"},
+            {"role": "assistant", "content": [{"type": "text", "text": "Bonjour."}]},
+            {"role": "user", "content": "again"}
+        ]
+    });
+
+    transform_gemini_request(&mut body).expect("request should transform");
+
+    assert_eq!(
+        body["contents"][1],
+        json!({"role": "model", "parts": [{"text": "Bonjour."}]})
+    );
+}
