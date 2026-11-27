@@ -92,11 +92,7 @@ fn convert_messages(messages: &[Value]) -> (Vec<Value>, Vec<Value>) {
         let content = msg.get("content");
 
         match role {
-            "system" | "developer" => {
-                if let Some(text) = content.and_then(|c| c.as_str()) {
-                    system_parts.push(json!({"text": text}));
-                }
-            }
+            "system" | "developer" => system_parts.extend(text_parts(content)),
             "user" => {
                 let parts = convert_user_content_to_gemini(content);
                 contents.push(json!({"role": "user", "parts": parts}));
@@ -151,15 +147,29 @@ fn tool_result_name<'a>(msg: &'a Value, call_names: &HashMap<&str, &'a str>) -> 
         .unwrap_or("tool")
 }
 
+/// The non-empty text of a message's `content`, given as a string or as an array of
+/// `{"type": "text"}` parts, as Gemini text parts.
+fn text_parts(content: Option<&Value>) -> Vec<Value> {
+    let texts: Vec<&str> = match content {
+        Some(Value::String(text)) => vec![text],
+        Some(Value::Array(parts)) => parts
+            .iter()
+            .filter(|part| part.get("type").and_then(Value::as_str) == Some("text"))
+            .filter_map(|part| part.get("text").and_then(Value::as_str))
+            .collect(),
+        _ => vec![],
+    };
+    texts
+        .into_iter()
+        .filter(|text| !text.is_empty())
+        .map(|text| json!({"text": text}))
+        .collect()
+}
+
 /// An assistant turn as a Gemini `model` turn: non-empty text plus one
 /// `functionCall` part per tool call, or a single empty text part.
 fn model_message(msg: &Value, content: Option<&Value>) -> Value {
-    let mut parts: Vec<Value> = vec![];
-    if let Some(text) = content.and_then(|c| c.as_str())
-        && !text.is_empty()
-    {
-        parts.push(json!({"text": text}));
-    }
+    let mut parts = text_parts(content);
     if let Some(tool_calls) = msg.get("tool_calls").and_then(|t| t.as_array()) {
         for tc in tool_calls {
             parts.push(json!({
