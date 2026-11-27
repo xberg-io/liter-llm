@@ -118,7 +118,7 @@ class PublicSkillsTests(unittest.TestCase):
         scripts = self.root / "scripts"
         (scripts / "ci").mkdir(parents=True)
         shutil.copyfile(repository / "scripts/sync_public_skills.py", scripts / "sync_public_skills.py")
-        for script in ["sync_plugin_version.py", "ci/check_consumer_versions.py"]:
+        for script in ["sync_plugin_version.py", "ci/check_consumer_versions.py", "ci/check_cli_proxy_versions.py"]:
             (scripts / script).write_text("")
         generated = "---\nname: example\ndescription: Updated skill.\n---\nUpdated body\n"
         (self.root / "plugin/next.md").write_text(generated)
