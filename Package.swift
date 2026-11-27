@@ -34,7 +34,7 @@ let package = Package(
     .binaryTarget(
       name: "RustBridgeBinary",
       url: "https://github.com/xberg-io/liter-llm/releases/download/v2.7.7/LiterLlm-rs.artifactbundle.zip",
-      checksum: "64ff1a4a515c2c3d9016ec06c377afb49deb41fca3b679baf1abb00c1a3c287d"
+      checksum: "883073995015f5ef9b41627945061c71d4dddcc900732dca80b32198754013ad"
     ),
     // RustBridge: Swift wrapper module owning the swift-bridge generated
     // sources. Depends on RustBridgeC for C type declarations and on
