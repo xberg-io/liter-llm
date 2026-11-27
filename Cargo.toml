@@ -63,7 +63,6 @@ aws-sdk-secretsmanager = { version = "1", default-features = false, features = [
 axum = { version = "0.8", features = ["macros", "ws"] }
 base64 = "0.23"
 bytes = "1"
-chrono = { version = "0.4", default-features = false, features = ["std"] }
 
 clap = { version = "4", features = ["derive", "env"] }
 dashmap = "6"
@@ -75,6 +74,7 @@ hex = "0.4"
 http = "1"
 httpdate = "1"
 ipnet = "2.12"
+jiff = { version = "1", default-features = false, features = ["std"] }
 jsonschema = "0.63"
 jsonwebtoken = { version = "12", default-features = false, features = ["use_pem"] }
 
@@ -95,7 +95,8 @@ pin-project-lite = "0.2"
 regex = "1"
 # ~keep Async / HTTP: TLS-agnostic base only; each crate adds TLS features target-conditionally.
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "multipart", "form"] }
-rmcp = { version = "3.11", features = [
+rmcp = { version = "3.12", default-features = false, features = [
+    "base64",
     "server",
     "macros",
     "transport-io",

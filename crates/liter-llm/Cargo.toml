@@ -142,7 +142,7 @@ aws-sigv4 = { version = "1", features = ["sign-http", "http1"], optional = true 
 # ~keep outside `native-http` and `wasm-http`.
 base64 = { workspace = true }
 bytes = { workspace = true }
-cel-interpreter = { version = "0.10", optional = true }
+cel-interpreter = { version = "0.10", default-features = false, features = ["regex"], optional = true }
 dashmap = { workspace = true }
 etcd-client = { workspace = true, optional = true }
 futures-core = { workspace = true }

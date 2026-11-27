@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Drop `chrono` (RUSTSEC-2026-0543): the Vault `created_time` parser and the catalog generator use `jiff`, `rmcp` is bumped to 3.12 without its default `chrono` feature, and `cel-interpreter` keeps only `regex`, so the CEL `timestamp()` and `duration()` functions are no longer available in guardrail expressions.
+
 ## [2.7.6] - 2026-11-25
 
 ### Added

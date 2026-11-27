@@ -61,7 +61,7 @@ async fn run(cli: Cli) -> Result<(), CatalogGenError> {
     let raw_text = load_catalog_text(&cli).await?;
     let catalog = parse_and_validate(&raw_text)?;
 
-    let fetched_on = chrono::Utc::now().format("%Y-%m-%d").to_string();
+    let fetched_on = jiff::Timestamp::now().strftime("%Y-%m-%d").to_string();
     let provenance = build_provenance(&raw_text, &fetched_on);
     let document = build_catalog_document(&catalog, &provenance)?;
 

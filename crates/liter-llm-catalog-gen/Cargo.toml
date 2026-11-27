@@ -15,9 +15,9 @@ name = "liter-llm-catalog-gen"
 path = "src/main.rs"
 
 [dependencies]
-chrono = { workspace = true, features = ["clock"] }
 clap = { workspace = true }
 hex = { workspace = true }
+jiff = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }

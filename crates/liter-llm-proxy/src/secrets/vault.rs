@@ -157,12 +157,7 @@ impl HashiCorpVaultProvider {
             match vaultrs::kv2::read_metadata(self.client.as_ref(), &self.mount, path).await {
                 Ok(meta) => {
                     let version = meta.current_version.to_string();
-                    let created_at = meta
-                        .created_time
-                        .parse::<chrono::DateTime<chrono::Utc>>()
-                        .ok()
-                        .map(SystemTime::from)
-                        .unwrap_or(SystemTime::UNIX_EPOCH);
+                    let created_at = parse_created_time(&meta.created_time);
                     let tags: HashMap<String, String> = meta.custom_metadata.unwrap_or_default();
                     (version, created_at, tags)
                 }
@@ -358,6 +353,15 @@ impl HashiCorpVaultProviderBuilder {
     }
 }
 
+/// Parse a KV-v2 `created_time` (RFC 3339, nanosecond precision, `Z` suffix);
+/// an unparseable value falls back to the Unix epoch.
+fn parse_created_time(raw: &str) -> SystemTime {
+    raw.parse::<jiff::Timestamp>()
+        .ok()
+        .and_then(|ts| SystemTime::try_from(ts).ok())
+        .unwrap_or(SystemTime::UNIX_EPOCH)
+}
+
 fn build_guarded_vault_http_client(
     settings: &vaultrs::client::VaultClientSettings,
 ) -> Result<reqwest::Client, SecretError> {
@@ -408,6 +412,19 @@ fn build_guarded_vault_http_client(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn parse_created_time_reads_vault_rfc3339_with_fractional_seconds() {
+        let parsed = parse_created_time("2018-03-22T02:24:06.945319214Z");
+        let expected = SystemTime::UNIX_EPOCH + std::time::Duration::new(1_521_685_446, 945_319_214);
+        assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn parse_created_time_falls_back_to_epoch_on_garbage() {
+        assert_eq!(parse_created_time(""), SystemTime::UNIX_EPOCH);
+        assert_eq!(parse_created_time("not-a-time"), SystemTime::UNIX_EPOCH);
+    }
+
     use std::net::TcpListener;
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::time::Duration;
