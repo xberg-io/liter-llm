@@ -1,4 +1,4 @@
-baseline = "v1.22.0"
+baseline = "v1.23.0"
 task_sets = [
   "alef",
   "alef-publish",
@@ -18,7 +18,3 @@ task_sets = [
 [task_overrides]
 "alef:snippets" = "stages the Java dependencies and the Kotlin build before alef snippets check"
 "plugin:test" = "also runs scripts/verify_pi_package.py"
-
-[overrides."github:xberg-io/alef"]
-version = "0.130.4"
-reason = "must equal alef_version in alef.toml; moving it regenerates every binding"
