@@ -3,10 +3,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>LiterLlm</RootNamespace>
     <PackageId>XbergIo.LiterLlm</PackageId>
-    <Version>2.7.6</Version>
-    <AssemblyVersion>2.7.6.0</AssemblyVersion>
-    <FileVersion>2.7.6.0</FileVersion>
-    <InformationalVersion>2.7.6</InformationalVersion>
+    <Version>2.7.7</Version>
+    <AssemblyVersion>2.7.7.0</AssemblyVersion>
+    <FileVersion>2.7.7.0</FileVersion>
+    <InformationalVersion>2.7.7</InformationalVersion>
     <Description>Universal LLM API client with Rust-powered polyglot bindings.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/xberg-io/liter-llm</RepositoryUrl>

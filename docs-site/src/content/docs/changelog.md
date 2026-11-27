@@ -10,6 +10,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.7] - 2026-11-27
+
+### Changed
+
+- Drop `chrono` (RUSTSEC-2026-0543): the Vault `created_time` parser and the catalog generator use `jiff`, `rmcp` is bumped to 3.12 without its default `chrono` feature, and `cel-interpreter` keeps only `regex`, so the CEL `timestamp()` and `duration()` functions are no longer available in guardrail expressions.
+- Move to the toolchains v1.23.0 baseline and alef 0.132.7, and regenerate the bindings.
+- Upgrade dependencies within their current major versions.
+
+### Fixed
+
+- Keep system, developer and assistant content parts in Gemini and Vertex requests: messages whose content is an array of text parts were dropped or sent as an empty text part, and an empty system string no longer produces an empty `systemInstruction` (#510).
+- Publish the per-platform CLI npm packages when the root package already exists, so a platform package that missed the first run (such as `@xberg-io/liter-llm-cli-win32-arm64`) is backfilled by a rerun.
+- Pin unit-test pricing to a fixture catalog so a models.dev catalog refresh cannot change test results, and isolate the env-proxy test so it no longer fails on arm64 runners.
+
+## [2.7.6] - 2026-11-25
+
+### Added
+
+- Ship the CLI binary inside per-platform npm packages (`@xberg-io/liter-llm-cli-<os>-<cpu>-<libc>`) that the `@xberg-io/liter-llm-cli` launcher resolves first, so `npx` works in sandboxes without network access. The GitHub download remains the last-resort fallback. macOS x64 and Windows arm64 builds are best-effort.
+
+### Changed
+
+- Upgrade dependencies, including `gcp_auth` 0.13.
+
+## [2.7.5] - 2026-11-24
+
+### Fixed
+
+- Build the Linux x86_64 PHP extension on Ubuntu 24.04: the 26.04 runner image's clang 21 broke the ext-php-rs bindgen step.
+- Refresh the plugin `ai-rulez.lock` so the plugin runtime packaging check passes with ai-rulez 5.14.1.
+
+## [2.7.4] - 2026-11-22
+
+### Added
+
+- Publish the `liter-llm` CLI as npm (`@xberg-io/liter-llm-cli`) and PyPI (`liter-llm-cli`) packages with each release, and list the MCP server in the MCP Registry.
+
+### Changed
+
+- Update Cargo dependencies.
+- Pin the plugin MCP launcher to the release it ships with.
+- Regenerate the bindings with Alef 0.132.5: generated Node, WASM, Python, PHP, Java and Elixir output is lint-clean.
+
+## [2.7.3] - 2026-11-18
+
+### Fixed
+
+- Persistent cache keys are stable across process restarts; `ahash::RandomState::generate_with` mixed per-process randomness into the fixed seeds, so entries written by earlier versions are not reused (#497).
+- Registering a custom provider rejects an invalid API-key header name with `BadRequest` and leaves an existing provider of the same name unchanged (#498).
+- `ahash` is only a dependency of the `tower` feature, so the crate packages with warnings denied; this blocked the 2.7.1 and 2.7.2 crates.io releases.
+
+### Changed
+
+- Regenerate the bindings with Alef 0.130.4.
+- Updated dependencies, including `jsonwebtoken` 12, `rmcp` 3.11 and `ext-php-rs` 0.16.5; the Dart crate now requires libc 0.2.191, which restores the Apple `_dyld_*` symbols on iOS.
+
+## [2.7.1] - 2026-11-13
+
+### Fixed
+
+- Bedrock uses adaptive thinking on supported Claude models and preserves thinking signatures across tool calls (#481).
+- Anthropic omits the disabled thinking block for Claude Opus 5.5 and Fable (#482).
+- Anthropic forwards request overrides, maps reasoning effort to the model's thinking format, and reports cache usage (#491).
+
+### Changed
+
+- Updated Rust dependencies and moved the toolchain to Rust 1.100.
+
 ## [2.7.0] - 2026-11-06
 
 ### Fixed

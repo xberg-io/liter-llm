@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.7] - 2026-11-27
+
 ### Changed
 
 - Drop `chrono` (RUSTSEC-2026-0543): the Vault `created_time` parser and the catalog generator use `jiff`, `rmcp` is bumped to 3.12 without its default `chrono` feature, and `cel-interpreter` keeps only `regex`, so the CEL `timestamp()` and `duration()` functions are no longer available in guardrail expressions.
+- Move to the toolchains v1.23.0 baseline and alef 0.132.7, and regenerate the bindings.
+- Upgrade dependencies within their current major versions.
+
+### Fixed
+
+- Keep system, developer and assistant content parts in Gemini and Vertex requests: messages whose content is an array of text parts were dropped or sent as an empty text part, and an empty system string no longer produces an empty `systemInstruction` (#510).
+- Publish the per-platform CLI npm packages when the root package already exists, so a platform package that missed the first run (such as `@xberg-io/liter-llm-cli-win32-arm64`) is backfilled by a rerun.
+- Pin unit-test pricing to a fixture catalog so a models.dev catalog refresh cannot change test results, and isolate the env-proxy test so it no longer fails on arm64 runners.
 
 ## [2.7.6] - 2026-11-25
 
