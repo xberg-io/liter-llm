@@ -35,7 +35,6 @@ provenance = "github-attestations"
 version = "1.14.0"
 backend = "aqua:bats-core/bats-core"
 specifiers = ["1.14.0"]
-unsupported_platforms = ["windows-x64"]
 
 [tools.bats."platforms.linux-arm64"]
 checksum = "sha256:bb537b70b15b732f6d8827dd6578e3d8ce166636ce1f18ea9a074184fcce9177"
