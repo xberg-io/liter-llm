@@ -243,10 +243,33 @@ async fn process_exemption_keeps_the_rule() {
 #[tokio::test]
 #[serial(env, outbound_policy)]
 async fn rule_turns_off_the_env_proxy() {
+    const CHILD_MARKER: &str = "LITER_RULE_ENV_PROXY_CHILD";
+    // The proxy variable is process-global and every unserialised test builds clients that read it,
+    // so the test runs in its own process instead of mutating the shared test process.
+    if std::env::var_os(CHILD_MARKER).is_none() {
+        let output = tokio::time::timeout(
+            Duration::from_secs(30),
+            tokio::process::Command::new(std::env::current_exe().expect("test executable"))
+                .args([
+                    "client::per_client_rule_tests::rule_turns_off_the_env_proxy",
+                    "--exact",
+                    "--nocapture",
+                ])
+                .env(CHILD_MARKER, "1")
+                .kill_on_drop(true)
+                .output(),
+        )
+        .await
+        .expect("isolated env proxy test deadline")
+        .expect("launch isolated env proxy test");
+        assert!(output.status.success(), "isolated env proxy test: {output:?}");
+        assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed; 0 failed; 0 ignored"));
+        return;
+    }
     let a = Listener::start(ALLOWED_HOST, 0, "200 OK", "").await;
     let proxy = Listener::start("127.0.0.1", 0, "200 OK", "").await;
     let previous = std::env::var_os("HTTP_PROXY");
-    // SAFETY: serialised by `serial(env)`; no other test thread reads the variable meanwhile.
+    // SAFETY: this is the only test in the child process.
     unsafe { std::env::set_var("HTTP_PROXY", format!("http://127.0.0.1:{}", proxy.port)) };
     let (lookup, _) = ScriptedLookup::fixed(vec![ALLOWED_IP]);
     let ruled = client(config(rebind_url(a.port), Some(&[BLOCKED]), None), Some(lookup))

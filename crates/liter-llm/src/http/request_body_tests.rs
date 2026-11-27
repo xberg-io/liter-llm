@@ -4,6 +4,11 @@ use crate::provider::{OutboundPolicy, set_outbound_policy};
 use serial_test::serial;
 use std::io::{Read, Write};
 use std::net::TcpListener;
+/// The fixtures listen on loopback, so ambient proxy variables must not route around them.
+fn local_client() -> reqwest::Client {
+    reqwest::Client::builder().no_proxy().build().expect("local client")
+}
+
 fn read_request_headers(stream: &mut std::net::TcpStream) {
     const MAX_REQUEST_HEADER_BYTES: usize = 4096;
     let mut headers = Vec::new();
@@ -26,7 +31,7 @@ async fn should_reject_binary_response_above_configured_limit() {
     set_outbound_policy(OutboundPolicy::Off);
     let (address, server) = one_shot_server("HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nabcde".to_string());
     let result = get_binary_bounded(
-        &reqwest::Client::new(),
+        &local_client(),
         &format!("http://{address}/"),
         None,
         &[],
@@ -59,7 +64,7 @@ enum BodyOperation {
 }
 
 async fn request_body(operation: BodyOperation, url: &str, limit: Option<usize>) -> Result<Bytes> {
-    let client = reqwest::Client::new();
+    let client = local_client();
     let body = Bytes::from_static(b"{}");
     match operation {
         BodyOperation::PostBinary => {
@@ -185,7 +190,7 @@ async fn successful_non_json_response_is_a_serialization_error() {
     let (address, server) =
         one_shot_server("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 13\r\n\r\n<html></html>".into());
     let result = get_json_raw_bounded(
-        &reqwest::Client::new(),
+        &local_client(),
         &format!("http://{address}/"),
         None,
         &[],
@@ -256,7 +261,7 @@ async fn should_bound_chunked_and_close_delimited_bodies_without_content_length(
     ];
     for (response, accepted) in responses {
         let (address, server) = one_shot_server(response.into());
-        let response = reqwest::Client::new()
+        let response = local_client()
             .get(format!("http://{address}/"))
             .send()
             .await
@@ -286,7 +291,7 @@ async fn should_reject_oversized_headers_before_waiting_for_body() {
         held.recv_timeout(std::time::Duration::from_secs(2))
             .expect("release held body");
     });
-    let response = reqwest::Client::new().get(format!("http://{address}/")).send().await;
+    let response = local_client().get(format!("http://{address}/")).send().await;
     let result = match response {
         Ok(response) => {
             tokio::time::timeout(
@@ -318,7 +323,7 @@ async fn should_bound_final_stream_errors_without_limiting_successful_streams() 
     let (address, server) = one_shot_server("HTTP/1.1 400 error\r\nContent-Length: 3\r\n\r\nerr".into());
     let url = format!("http://{address}/");
     let result = crate::http::streaming::post_stream_bounded::<_, serde_json::Value>(
-        &reqwest::Client::new(),
+        &local_client(),
         crate::http::request::StreamingPost {
             url: &url,
             auth_header: None,
@@ -341,7 +346,7 @@ async fn should_bound_final_stream_errors_without_limiting_successful_streams() 
     let (address, server) = one_shot_server("HTTP/1.1 400 error\r\nContent-Length: 3\r\n\r\nerr".into());
     let url = format!("http://{address}/");
     let result = crate::http::eventstream::post_eventstream_bounded(
-        &reqwest::Client::new(),
+        &local_client(),
         crate::http::request::StreamingPost {
             url: &url,
             auth_header: None,
@@ -434,7 +439,7 @@ async fn should_discard_oversized_retry_body_before_reading_bounded_final_succes
         }
     });
     let result = get_json_raw_bounded(
-        &reqwest::Client::new(),
+        &local_client(),
         &format!("http://{address}/"),
         None,
         &[],
@@ -464,7 +469,7 @@ async fn should_keep_successful_stream_traffic_above_retained_body_limit() {
     let (address, server) = one_shot_server(response);
     let url = format!("http://{address}/");
     let result = crate::http::streaming::post_stream_bounded::<_, serde_json::Value>(
-        &reqwest::Client::new(),
+        &local_client(),
         crate::http::request::StreamingPost {
             url: &url,
             auth_header: None,
@@ -514,6 +519,7 @@ async fn should_bound_decoded_gzip_expansion_and_preserve_unconfigured_payload()
             stream.write_all(GZIP_BODY).expect("gzip body");
         });
         let response = reqwest::Client::builder()
+            .no_proxy()
             .gzip(true)
             .build()
             .expect("decompression client")
