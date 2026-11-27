@@ -24,7 +24,14 @@ use std::sync::LazyLock;
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(not(test))]
 const CATALOG_JSON: &str = include_str!("../schemas/catalog.json");
+
+/// Unit tests resolve against a small pinned catalog, not the models.dev sync:
+/// the scheduled sync adds and drops models (it dropped `openai/gpt-4`), which
+/// would otherwise break tests that only need a model with known pricing.
+#[cfg(test)]
+const CATALOG_JSON: &str = include_str!("cost/test_catalog.json");
 
 /// Bare (provider-less) model names resolve only for these providers, with
 /// alphabetically-first provider winning on a name collision. Every other

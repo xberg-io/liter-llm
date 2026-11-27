@@ -1,0 +1,378 @@
+{
+  "$provenance": {
+    "source": "test fixture",
+    "source_sha256": "",
+    "fetched": "2026-01-01",
+    "library_version": "0.0.0"
+  },
+  "$schema_version": 1,
+  "providers": {
+    "openai": {
+      "name": "OpenAI",
+      "env": ["OPENAI_API_KEY"],
+      "doc": "https://platform.openai.com/docs/models",
+      "npm": "@ai-sdk/openai",
+      "models": {
+        "gpt-4": {
+          "id": "gpt-4",
+          "name": "GPT-4",
+          "pricing": {
+            "input_cost_per_token": 3e-5,
+            "output_cost_per_token": 6e-5
+          },
+          "limit": {
+            "context": 8192,
+            "output": 8192
+          },
+          "modalities": {
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": false,
+            "function_calling": true,
+            "reasoning": false,
+            "structured_output": false,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": false,
+            "attachment": false,
+            "open_weights": false
+          },
+          "family": "gpt",
+          "knowledge": "2023-11",
+          "release_date": "2023-11-06",
+          "last_updated": "2024-04-09"
+        },
+        "gpt-4o": {
+          "id": "gpt-4o",
+          "name": "GPT-4o",
+          "pricing": {
+            "input_cost_per_token": 2.5e-6,
+            "output_cost_per_token": 1e-5,
+            "cache_read_input_token_cost": 1.25e-6
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": false,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "gpt",
+          "knowledge": "2023-09",
+          "release_date": "2024-05-13",
+          "last_updated": "2024-08-06"
+        },
+        "gpt-4o-mini": {
+          "id": "gpt-4o-mini",
+          "name": "GPT-4o mini",
+          "pricing": {
+            "input_cost_per_token": 1.5e-7,
+            "output_cost_per_token": 6e-7,
+            "cache_read_input_token_cost": 7.5e-8
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": false,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "gpt-mini",
+          "knowledge": "2023-09",
+          "release_date": "2024-07-18",
+          "last_updated": "2024-07-18"
+        },
+        "text-embedding-3-small": {
+          "id": "text-embedding-3-small",
+          "name": "text-embedding-3-small",
+          "pricing": {
+            "input_cost_per_token": 2e-8,
+            "output_cost_per_token": 0.0
+          },
+          "limit": {
+            "context": 8191
+          },
+          "modalities": {
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "mode": "embedding",
+          "capabilities": {
+            "vision": false,
+            "function_calling": false,
+            "reasoning": false,
+            "structured_output": false,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": false,
+            "attachment": false,
+            "open_weights": false
+          },
+          "family": "text-embedding",
+          "knowledge": "2024-01",
+          "release_date": "2024-01-25",
+          "last_updated": "2024-01-25"
+        }
+      }
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "env": ["ANTHROPIC_API_KEY"],
+      "doc": "https://docs.anthropic.com/en/docs/about-claude/models",
+      "npm": "@ai-sdk/anthropic",
+      "models": {
+        "claude-haiku-4-5": {
+          "id": "claude-haiku-4-5",
+          "name": "Claude Haiku 4.5 (latest)",
+          "pricing": {
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 5e-6,
+            "cache_read_input_token_cost": 1e-7,
+            "cache_creation_input_token_cost": 1.25e-6
+          },
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "claude-haiku",
+          "knowledge": "2025-02-28",
+          "release_date": "2025-10-15",
+          "last_updated": "2025-10-15"
+        },
+        "claude-opus-5": {
+          "id": "claude-opus-5",
+          "name": "Claude Opus 5",
+          "pricing": {
+            "input_cost_per_token": 5e-6,
+            "output_cost_per_token": 2.5e-5,
+            "cache_read_input_token_cost": 5e-7,
+            "cache_creation_input_token_cost": 6.25e-6
+          },
+          "limit": {
+            "context": 1000000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "claude-opus",
+          "knowledge": "2026-05",
+          "release_date": "2026-07-24",
+          "last_updated": "2026-07-24"
+        },
+        "claude-sonnet-4-5": {
+          "id": "claude-sonnet-4-5",
+          "name": "Claude Sonnet 4.5 (latest)",
+          "pricing": {
+            "input_cost_per_token": 3e-6,
+            "output_cost_per_token": 1.5e-5,
+            "cache_read_input_token_cost": 3e-7,
+            "cache_creation_input_token_cost": 3.75e-6
+          },
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "claude-sonnet",
+          "knowledge": "2025-01-31",
+          "release_date": "2025-09-29",
+          "last_updated": "2025-09-29"
+        }
+      }
+    },
+    "google": {
+      "name": "Google",
+      "env": ["GOOGLE_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY", "GEMINI_API_KEY"],
+      "doc": "https://ai.google.dev/gemini-api/docs/models",
+      "npm": "@ai-sdk/google",
+      "models": {
+        "gemini-2.5-flash-lite": {
+          "id": "gemini-2.5-flash-lite",
+          "name": "Gemini 2.5 Flash-Lite",
+          "pricing": {
+            "input_cost_per_token": 1e-7,
+            "output_cost_per_token": 4e-7,
+            "cache_read_input_token_cost": 1e-8,
+            "input_cost_per_audio_token": 3e-7
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "modalities": {
+            "input": ["text", "image", "audio", "video", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": true,
+            "audio_input": true,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "gemini-flash-lite",
+          "knowledge": "2025-01",
+          "release_date": "2025-07-22",
+          "last_updated": "2025-07-22"
+        }
+      }
+    },
+    "mistral": {
+      "name": "Mistral",
+      "env": ["MISTRAL_API_KEY"],
+      "doc": "https://docs.mistral.ai/getting-started/models/",
+      "npm": "@ai-sdk/mistral",
+      "models": {
+        "codestral-latest": {
+          "id": "codestral-latest",
+          "name": "Codestral (latest)",
+          "pricing": {
+            "input_cost_per_token": 3e-7,
+            "output_cost_per_token": 9e-7,
+            "cache_read_input_token_cost": 3e-8
+          },
+          "limit": {
+            "context": 256000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": ["text", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": false,
+            "function_calling": true,
+            "reasoning": false,
+            "structured_output": true,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": true,
+            "attachment": true,
+            "open_weights": true
+          },
+          "family": "codestral",
+          "knowledge": "2024-10",
+          "release_date": "2024-05-29",
+          "last_updated": "2025-01-04"
+        }
+      }
+    },
+    "agentrouter": {
+      "name": "AgentRouter",
+      "env": ["AGENTROUTER_API_KEY"],
+      "doc": "https://agentrouter.org/docs/opencode.html",
+      "api": "https://agentrouter.org/v1",
+      "npm": "@ai-sdk/openai-compatible",
+      "models": {
+        "claude-opus-4-8": {
+          "id": "claude-opus-4-8",
+          "name": "Claude Opus 4.8",
+          "limit": {
+            "context": 1000000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "mode": "chat",
+          "capabilities": {
+            "vision": true,
+            "function_calling": true,
+            "reasoning": true,
+            "structured_output": false,
+            "audio_input": false,
+            "audio_output": false,
+            "prompt_caching": false,
+            "attachment": true,
+            "open_weights": false
+          },
+          "family": "claude-opus",
+          "knowledge": "2026-01",
+          "release_date": "2026-05-28",
+          "last_updated": "2026-05-28"
+        }
+      }
+    }
+  }
+}

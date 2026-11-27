@@ -227,7 +227,7 @@ async fn concurrent_budget_tracking() {
         let svc = Arc::clone(&svc);
         tasks.spawn(async move {
             let mut s = svc.lock().await.clone();
-            s.call(LlmRequest::Chat(chat_req("gpt-4"))).await
+            s.call(LlmRequest::Chat(chat_req("gpt-4o"))).await
         });
     }
 
@@ -362,7 +362,7 @@ async fn concurrent_full_stack() {
 
     for i in 0..10 {
         let svc = Arc::clone(&svc);
-        let model = if i % 2 == 0 { "gpt-4" } else { "gpt-3.5-turbo" };
+        let model = if i % 2 == 0 { "gpt-4o" } else { "gpt-4o-mini" };
         tasks.spawn(async move {
             let mut s = svc.lock().await.clone();
             s.call(LlmRequest::Chat(chat_req(model))).await

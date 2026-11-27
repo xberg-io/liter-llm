@@ -438,8 +438,8 @@ async fn list_catalog_models_reads_the_embedded_catalog_without_aliases() {
 
     let all = list_catalog_models(None);
     assert!(
-        all.len() > 100,
-        "the embedded catalog holds many models, got {}",
+        all.len() > 5,
+        "the embedded test catalog holds several models, got {}",
         all.len()
     );
 
@@ -482,8 +482,8 @@ async fn list_catalog_models_copies_every_field_of_each_catalog_entry() {
 
     let all = list_catalog_models(None);
     assert!(
-        all.len() > 100,
-        "the embedded catalog holds many models, got {}",
+        all.len() > 5,
+        "the embedded test catalog holds several models, got {}",
         all.len()
     );
     for entry in &all {

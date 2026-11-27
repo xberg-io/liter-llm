@@ -430,14 +430,14 @@ async fn cache_plus_budget_cache_hit_does_record_cost_again() {
     let with_cache = CacheLayer::new(cache_config).layer(base);
     let mut svc = BudgetLayer::new(budget_config, Arc::clone(&budget_state)).layer(with_cache);
 
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await;
     assert!(resp.is_ok(), "first request should succeed");
     assert_eq!(call_count.load(Ordering::SeqCst), 1, "inner service called once");
 
     let spend_after_first = budget_state.global_spend();
     assert!(spend_after_first > 0.0, "cost should be recorded after first call");
 
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await;
     assert!(resp.is_ok(), "cached request should succeed");
     assert_eq!(
         call_count.load(Ordering::SeqCst),
@@ -479,7 +479,7 @@ async fn cache_plus_budget_inner_service_called_once() {
     let mut svc = BudgetLayer::new(budget_config, Arc::clone(&budget_state)).layer(with_cache);
 
     for i in 0..5 {
-        let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+        let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await;
         assert!(resp.is_ok(), "request {i} should succeed");
     }
 
@@ -511,12 +511,12 @@ async fn hooks_plus_cache_hooks_fire_on_cache_hits() {
     let with_cache = CacheLayer::new(cache_config).layer(base);
     let mut svc = HooksLayer::single(Arc::clone(&hook) as Arc<dyn LlmHook>).layer(with_cache);
 
-    svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
+    svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await.unwrap();
     assert_eq!(hook.on_request_count.load(Ordering::SeqCst), 1);
     assert_eq!(hook.on_response_count.load(Ordering::SeqCst), 1);
     assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
-    svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
+    svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await.unwrap();
     assert_eq!(
         hook.on_request_count.load(Ordering::SeqCst),
         2,
@@ -551,7 +551,7 @@ async fn budget_hard_enforcement_blocks_second_request() {
     let base = LlmService::new(client);
     let mut svc = BudgetLayer::new(budget_config, Arc::clone(&budget_state)).layer(base);
 
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await;
     assert!(
         resp.is_ok(),
         "first request should succeed (cost recorded post-response)"
@@ -559,7 +559,7 @@ async fn budget_hard_enforcement_blocks_second_request() {
     assert!(budget_state.global_spend() > 0.0, "cost should have been recorded");
 
     let err = svc
-        .call(LlmRequest::Chat(chat_req("gpt-4")))
+        .call(LlmRequest::Chat(chat_req("gpt-4o")))
         .await
         .expect_err("second request should be rejected by budget");
     assert!(
@@ -584,7 +584,7 @@ async fn rate_limit_triggers_cooldown_on_transient_error() {
     let mut svc = CooldownLayer::new(Duration::from_secs(60)).layer(base);
 
     let err = svc
-        .call(LlmRequest::Chat(chat_req("gpt-4")))
+        .call(LlmRequest::Chat(chat_req("gpt-4o")))
         .await
         .expect_err("should fail with RateLimited");
     assert!(
@@ -594,7 +594,7 @@ async fn rate_limit_triggers_cooldown_on_transient_error() {
     assert_eq!(inner_call_count.load(Ordering::SeqCst), 1);
 
     let err = svc
-        .call(LlmRequest::Chat(chat_req("gpt-4")))
+        .call(LlmRequest::Chat(chat_req("gpt-4o")))
         .await
         .expect_err("should fail with ServiceUnavailable during cooldown");
     assert!(
@@ -618,14 +618,14 @@ async fn cooldown_expires_and_allows_requests() {
     let mut svc = CooldownLayer::new(Duration::from_millis(0)).layer(base);
 
     let err = svc
-        .call(LlmRequest::Chat(chat_req("gpt-4")))
+        .call(LlmRequest::Chat(chat_req("gpt-4o")))
         .await
         .expect_err("should fail");
     assert!(matches!(err, LiterLlmError::RateLimited { .. }));
     assert_eq!(inner_call_count.load(Ordering::SeqCst), 1);
 
     let err = svc
-        .call(LlmRequest::Chat(chat_req("gpt-4")))
+        .call(LlmRequest::Chat(chat_req("gpt-4o")))
         .await
         .expect_err("should fail with RateLimited, not ServiceUnavailable");
     assert!(
@@ -661,12 +661,12 @@ async fn rate_limit_rpm_triggers_cooldown() {
     let with_rate_limit = ModelRateLimitLayer::new(rate_config).layer(base);
     let mut svc = CooldownLayer::new(Duration::from_secs(60)).layer(with_rate_limit);
 
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await;
     assert!(resp.is_ok(), "first request should succeed");
     assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
     let err = svc
-        .call(LlmRequest::Chat(chat_req("gpt-4")))
+        .call(LlmRequest::Chat(chat_req("gpt-4o")))
         .await
         .expect_err("should be rate limited");
     assert!(
@@ -675,7 +675,7 @@ async fn rate_limit_rpm_triggers_cooldown() {
     );
 
     let err = svc
-        .call(LlmRequest::Chat(chat_req("gpt-4")))
+        .call(LlmRequest::Chat(chat_req("gpt-4o")))
         .await
         .expect_err("should be in cooldown");
     assert!(
@@ -710,7 +710,7 @@ async fn hooks_guardrail_rejection_prevents_inner_call() {
         "inner service must NOT be called when hook rejects"
     );
 
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await;
     assert!(resp.is_ok(), "clean request should succeed");
     assert_eq!(call_count.load(Ordering::SeqCst), 1);
 }
@@ -747,7 +747,7 @@ async fn full_stack_all_middleware_composed() {
     let with_hooks = HooksLayer::single(Arc::clone(&hook) as Arc<dyn LlmHook>).layer(with_budget);
     let mut svc = TracingLayer.layer(with_hooks);
 
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await;
     assert!(resp.is_ok(), "first request should succeed");
     assert_eq!(call_count.load(Ordering::SeqCst), 1, "inner service called");
     assert_eq!(hook.on_request_count.load(Ordering::SeqCst), 1, "hook.on_request fired");
@@ -758,7 +758,7 @@ async fn full_stack_all_middleware_composed() {
     );
     assert!(budget_state.global_spend() > 0.0, "budget recorded cost");
 
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await;
     assert!(resp.is_ok(), "cached request should succeed");
     assert_eq!(
         call_count.load(Ordering::SeqCst),
@@ -803,16 +803,16 @@ async fn full_stack_different_models_are_independent() {
     let with_cache = CacheLayer::new(cache_config).layer(base);
     let mut svc = BudgetLayer::new(budget_config, Arc::clone(&budget_state)).layer(with_cache);
 
-    svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
-    svc.call(LlmRequest::Chat(chat_req("gpt-3.5-turbo"))).await.unwrap();
+    svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await.unwrap();
+    svc.call(LlmRequest::Chat(chat_req("gpt-4o-mini"))).await.unwrap();
     assert_eq!(
         call_count.load(Ordering::SeqCst),
         2,
         "different models should be separate cache entries"
     );
 
-    svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
-    svc.call(LlmRequest::Chat(chat_req("gpt-3.5-turbo"))).await.unwrap();
+    svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await.unwrap();
+    svc.call(LlmRequest::Chat(chat_req("gpt-4o-mini"))).await.unwrap();
     assert_eq!(
         call_count.load(Ordering::SeqCst),
         2,
@@ -857,7 +857,7 @@ async fn full_stack_hook_rejection_prevents_budget_and_cache() {
     assert_eq!(call_count.load(Ordering::SeqCst), 0, "inner service not called");
     assert_eq!(budget_state.global_spend(), 0.0, "no cost recorded when hook rejects");
 
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await;
     assert!(resp.is_ok(), "clean request should succeed through full stack");
     assert_eq!(call_count.load(Ordering::SeqCst), 1);
     assert!(budget_state.global_spend() > 0.0, "cost recorded for clean request");
@@ -892,7 +892,7 @@ async fn rate_limit_cooldown_budget_interaction() {
     let with_cooldown = CooldownLayer::new(Duration::from_secs(60)).layer(with_rate);
     let mut svc = BudgetLayer::new(budget_config, Arc::clone(&budget_state)).layer(with_cooldown);
 
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await;
     assert!(resp.is_ok(), "first request should succeed");
     assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
@@ -900,7 +900,7 @@ async fn rate_limit_cooldown_budget_interaction() {
     assert!(spend_after_success > 0.0, "cost recorded after successful request");
 
     let err = svc
-        .call(LlmRequest::Chat(chat_req("gpt-4")))
+        .call(LlmRequest::Chat(chat_req("gpt-4o")))
         .await
         .expect_err("should be rate limited");
     assert!(
@@ -915,7 +915,7 @@ async fn rate_limit_cooldown_budget_interaction() {
     );
 
     let err = svc
-        .call(LlmRequest::Chat(chat_req("gpt-4")))
+        .call(LlmRequest::Chat(chat_req("gpt-4o")))
         .await
         .expect_err("should be in cooldown");
     assert!(

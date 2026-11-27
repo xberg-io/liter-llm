@@ -62,12 +62,12 @@ impl MockServer {
                     .expect("bodies lock")
                     .push(serde_json::from_slice(&body).unwrap_or(serde_json::Value::Null));
 
-                // ~keep Token counts are large enough that one gpt-4 call costs far more than the test budgets.
+                // ~keep Token counts are large enough that one gpt-4o call costs far more than the test budgets.
                 let response = json!({
                     "id": "chatcmpl-test",
                     "object": "chat.completion",
                     "created": 1_700_000_000_u64,
-                    "model": "gpt-4",
+                    "model": "gpt-4o",
                     "choices": [{
                         "index": 0,
                         "message": {"role": "assistant", "content": "Hello from mock"},
@@ -114,8 +114,8 @@ async fn client_without_middleware_keys_sends_every_request() {
     let client = create_client_from_json(&json!({"api_key": "k", "base_url": mock.url, "max_retries": 0}).to_string())
         .expect("client");
 
-    client.chat(chat_request("gpt-4")).await.expect("first call");
-    client.chat(chat_request("gpt-4")).await.expect("second call");
+    client.chat(chat_request("gpt-4o")).await.expect("first call");
+    client.chat(chat_request("gpt-4o")).await.expect("second call");
 
     assert_eq!(
         mock.request_bodies().len(),
@@ -138,8 +138,8 @@ async fn cache_config_serves_second_identical_chat_without_hitting_server() {
     )
     .expect("client");
 
-    let first = client.chat(chat_request("gpt-4")).await.expect("first call");
-    let second = client.chat(chat_request("gpt-4")).await.expect("second call");
+    let first = client.chat(chat_request("gpt-4o")).await.expect("first call");
+    let second = client.chat(chat_request("gpt-4o")).await.expect("second call");
 
     assert_eq!(first.id, second.id);
     assert_eq!(
@@ -164,11 +164,11 @@ async fn hard_budget_rejects_second_call_once_limit_is_spent() {
     .expect("client");
 
     client
-        .chat(chat_request("gpt-4"))
+        .chat(chat_request("gpt-4o"))
         .await
         .expect("first call is within budget");
     let err = client
-        .chat(chat_request("gpt-4"))
+        .chat(chat_request("gpt-4o"))
         .await
         .expect_err("second call must exceed the budget");
 
