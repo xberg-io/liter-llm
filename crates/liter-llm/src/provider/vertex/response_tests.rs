@@ -3,6 +3,7 @@
 
 use serde_json::json;
 
+use super::gemini_response::THOUGHT_SIGNATURE_SEPARATOR;
 use super::tests::provider;
 use super::*;
 use crate::provider::Provider;
@@ -822,7 +823,7 @@ fn transform_response_carries_a_function_call_thought_signature_in_its_id() {
         .expect("id should be a string");
     assert!(id.starts_with("call_get_weather_"), "id was {id}");
     assert!(
-        id.ends_with("__thought__CjMKCWdlbUJhc2U2NA=="),
+        id.ends_with(&format!("{THOUGHT_SIGNATURE_SEPARATOR}{THOUGHT_SIGNATURE}")),
         "id should end with the carried thoughtSignature, was {id}"
     );
 }
@@ -837,7 +838,7 @@ fn transform_response_function_call_without_a_signature_keeps_a_plain_id() {
         .as_str()
         .expect("id should be a string");
     assert!(id.starts_with("call_get_weather_"), "id was {id}");
-    assert!(!id.contains("__thought__"), "id was {id}");
+    assert!(!id.contains(THOUGHT_SIGNATURE_SEPARATOR), "id was {id}");
 }
 
 #[test]
@@ -872,4 +873,44 @@ fn gemini_3_thought_signature_round_trips_through_the_request() {
         request["contents"][2]["parts"][0]["functionResponse"]["name"],
         "get_weather"
     );
+}
+
+#[test]
+fn thought_signature_separator_is_not_confused_by_a_function_name_that_contains_it() {
+    // ~keep A `functionCall` name may contain underscores, so the separator must
+    // use a character names exclude; otherwise an unsigned id could be decoded as
+    // carrying a fabricated signature, or a real one truncated (#513 review).
+    let name = "get__thought__weather";
+    for signature in [None, Some(THOUGHT_SIGNATURE)] {
+        let mut body = function_call_candidate("STOP");
+        let part = &mut body["candidates"][0]["content"]["parts"][0];
+        part["functionCall"]["name"] = json!(name);
+        if let Some(signature) = signature {
+            part["thoughtSignature"] = json!(signature);
+        }
+
+        provider().transform_response(&mut body).expect("transform_response");
+
+        let message = body["choices"][0]["message"].clone();
+        let id = message["tool_calls"][0]["id"].as_str().expect("id should be a string");
+        assert!(id.starts_with(&format!("call_{name}_")), "id was {id}");
+        assert_eq!(
+            id.contains(THOUGHT_SIGNATURE_SEPARATOR),
+            signature.is_some(),
+            "separator presence must match signature presence, id was {id}"
+        );
+
+        let mut request = json!({"messages": [message]});
+        provider().transform_request(&mut request).expect("transform_request");
+
+        let part = &request["contents"][0]["parts"][0];
+        assert_eq!(part["functionCall"]["name"], name);
+        match signature {
+            Some(signature) => assert_eq!(part["thoughtSignature"], json!(signature)),
+            None => assert!(
+                part.get("thoughtSignature").is_none(),
+                "an unsigned call must not emit thoughtSignature: {part}"
+            ),
+        }
+    }
 }

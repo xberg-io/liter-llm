@@ -241,8 +241,10 @@ fn collect_parts(parts: &[Value]) -> CollectedParts {
 }
 
 /// Separator between the generated tool-call id and the Gemini
-/// `thoughtSignature` carried inside it (#513).
-pub(super) const THOUGHT_SIGNATURE_SEPARATOR: &str = "__thought__";
+/// `thoughtSignature` carried inside it (#513). `|` cannot appear in a
+/// `functionCall` name, so a name containing `thought` cannot be mistaken for a
+/// signature boundary.
+pub(super) const THOUGHT_SIGNATURE_SEPARATOR: &str = "|thought|";
 
 /// OpenAI `tool_calls` for every `functionCall` part, each with a fresh
 /// process-unique id.
