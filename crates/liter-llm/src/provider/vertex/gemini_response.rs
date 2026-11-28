@@ -240,6 +240,12 @@ fn collect_parts(parts: &[Value]) -> CollectedParts {
     }
 }
 
+/// Separator between the generated tool-call id and the Gemini
+/// `thoughtSignature` carried inside it (#513). `|` cannot appear in a
+/// `functionCall` name, so a name containing `thought` cannot be mistaken for a
+/// signature boundary.
+pub(super) const THOUGHT_SIGNATURE_SEPARATOR: &str = "|thought|";
+
 /// OpenAI `tool_calls` for every `functionCall` part, each with a fresh
 /// process-unique id.
 fn tool_calls_from_parts(parts: &[Value]) -> Vec<Value> {
@@ -250,8 +256,20 @@ fn tool_calls_from_parts(parts: &[Value]) -> Vec<Value> {
                 let name = fc.get("name").and_then(|n| n.as_str()).unwrap_or("unknown");
                 let call_id = TOOL_CALL_COUNTER.fetch_add(1, Ordering::Relaxed);
                 let arguments = serde_json::to_string(fc.get("args").unwrap_or(&json!({}))).unwrap_or_default();
+                // ~keep Gemini 3 rejects a replayed function-call turn that lacks the
+                // `thoughtSignature` it returned, so the signature rides inside the tool-call
+                // id (the only field able to carry it) and `model_message` puts it back (#513).
+                let mut id = format!("call_{name}_{call_id}");
+                if let Some(signature) = p
+                    .get("thoughtSignature")
+                    .and_then(Value::as_str)
+                    .filter(|signature| !signature.is_empty())
+                {
+                    id.push_str(THOUGHT_SIGNATURE_SEPARATOR);
+                    id.push_str(signature);
+                }
                 json!({
-                    "id": format!("call_{name}_{call_id}"),
+                    "id": id,
                     "type": "function",
                     "function": {
                         "name": fc.get("name"),

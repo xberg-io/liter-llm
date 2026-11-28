@@ -320,6 +320,25 @@ fn tool_call(id: &str, name: &str) -> serde_json::Value {
     json!({"id": id, "type": "function", "function": {"name": name, "arguments": "{}"}})
 }
 
+#[test]
+fn transform_request_plain_tool_call_id_emits_no_thought_signature() {
+    let mut body = json!({
+        "messages": [
+            {"role": "user", "content": "What is the weather in Berlin?"},
+            {"role": "assistant", "content": null, "tool_calls": [tool_call("call_get_weather_0", "get_weather")]}
+        ]
+    });
+
+    provider().transform_request(&mut body).expect("transform_request");
+
+    let part = &body["contents"][1]["parts"][0];
+    assert_eq!(part["functionCall"]["name"], "get_weather");
+    assert!(
+        part.get("thoughtSignature").is_none(),
+        "a tool call id without a signature must not emit thoughtSignature: {part}"
+    );
+}
+
 fn function_response_names(body: &serde_json::Value) -> Vec<String> {
     body["contents"]
         .as_array()
