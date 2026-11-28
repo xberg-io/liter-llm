@@ -222,24 +222,22 @@ pub struct StreamOptions {
 /// Chat completion response from the API.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ChatCompletionResponse {
-    /// Unique identifier for this response.
+    /// Unique identifier for this response; empty when the server omits it, in
+    /// which case it is not unique across responses.
     ///
-    // ~keep `#[serde(default)]` on the header fields: OpenVINO Model Server
-    // 2026.4.1 returns a non-stream completion carrying only `object`,
-    // `choices` and `usage`, so a required `id`/`created`/`model` fails with
-    // `missing field` (#512). Same class as the streaming defaults below.
+    // ~keep `#[serde(default)]`: OpenVINO Model Server 2026.4.1 omits `id`
+    // from its non-stream completion (#512), as the streaming chunk path
+    // already tolerates.
     #[serde(default)]
     pub id: String,
     /// Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
     /// plain `String` so non-standard provider values do not break deserialization.
     pub object: String,
     /// Unix timestamp of response creation.
-    #[serde(default)]
     pub created: u64,
     /// Provider-reported model identifier. For Gemini, this is `modelVersion`;
     /// when omitted, the client retains the requested model, which may be an alias
     /// and does not establish the resolved model version.
-    #[serde(default)]
     pub model: String,
     /// List of completion choices.
     pub choices: Vec<Choice>,
@@ -504,16 +502,16 @@ mod tests {
     }
 
     #[test]
-    fn chat_completion_response_deserializes_without_id_created_model() {
-        // ~keep OpenVINO Model Server 2026.4.1 non-stream reply (#512): only
-        // `object`, `choices` and `usage`, so the header fields must default.
-        let payload = r#"{"object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":"Hello there"},"finish_reason":"stop"}],"usage":{"prompt_tokens":9,"completion_tokens":2,"total_tokens":11}}"#;
+    fn chat_completion_response_deserializes_without_id() {
+        // ~keep OpenVINO Model Server 2026.4.1 non-stream reply (#512) omits
+        // `id`, so the field must default rather than fail the parse.
+        let payload = r#"{"object":"chat.completion","created":1750000000,"model":"ovms-chat","choices":[{"index":0,"message":{"role":"assistant","content":"Hello there"},"finish_reason":"stop"}],"usage":{"prompt_tokens":9,"completion_tokens":2,"total_tokens":11}}"#;
         let response: ChatCompletionResponse =
-            serde_json::from_str(payload).expect("completion lacking `id`/`created`/`model` must parse");
+            serde_json::from_str(payload).expect("completion lacking `id` must parse");
 
         assert_eq!(response.id, "");
-        assert_eq!(response.created, 0);
-        assert_eq!(response.model, "");
+        assert_eq!(response.created, 1750000000);
+        assert_eq!(response.model, "ovms-chat");
         assert_eq!(response.choices.len(), 1);
         assert_eq!(response.choices[0].message.text().as_deref(), Some("Hello there"));
         assert_eq!(response.usage.as_ref().map(|usage| usage.total_tokens), Some(11));

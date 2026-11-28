@@ -108,7 +108,7 @@ pub struct EmbeddingResponse {
     pub object: String,
     /// List of embeddings.
     pub data: Vec<EmbeddingObject>,
-    /// Model used to generate embeddings.
+    /// Model used to generate embeddings; empty when the server omits it.
     ///
     // ~keep `#[serde(default)]`: OpenVINO Model Server 2026.4.1 omits `model`
     // from its embedding reply (only `object`, `data` and `usage`), so a
