@@ -1994,7 +1994,8 @@ class ChatCompletionRequest {
 
 /// Chat completion response from the API.
 class ChatCompletionResponse {
-  /// Unique identifier for this response.
+  /// Unique identifier for this response; empty when the server omits it, in
+  /// which case it is not unique across responses.
   final String id;
 
   /// Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
@@ -2880,7 +2881,7 @@ class EmbeddingResponse {
   /// List of embeddings.
   final List<EmbeddingObject> data;
 
-  /// Model used to generate embeddings.
+  /// Model used to generate embeddings; empty when the server omits it.
   final String model;
 
   /// Token usage (input tokens only; embeddings have zero output tokens).
