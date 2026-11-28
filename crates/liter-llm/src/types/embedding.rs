@@ -109,6 +109,11 @@ pub struct EmbeddingResponse {
     /// List of embeddings.
     pub data: Vec<EmbeddingObject>,
     /// Model used to generate embeddings.
+    ///
+    // ~keep `#[serde(default)]`: OpenVINO Model Server 2026.4.1 omits `model`
+    // from its embedding reply (only `object`, `data` and `usage`), so a
+    // required field fails with `missing field` (#512).
+    #[serde(default)]
     pub model: String,
     /// Token usage (input tokens only; embeddings have zero output tokens).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -301,6 +306,20 @@ mod tests {
             err.to_string().contains("invalid base64 embedding"),
             "expected invalid base64 message, got: {err}"
         );
+    }
+
+    #[test]
+    fn embedding_response_deserializes_without_model() {
+        // ~keep OpenVINO Model Server 2026.4.1 embedding reply (#512): no
+        // `model` key, so the field must default rather than fail the parse.
+        let payload = r#"{"object":"list","data":[{"object":"embedding","index":0,"embedding":[0.1,0.2]}],"usage":{"prompt_tokens":4,"total_tokens":4}}"#;
+        let response: EmbeddingResponse =
+            serde_json::from_str(payload).expect("embedding response lacking `model` must parse");
+
+        assert_eq!(response.model, "");
+        assert_eq!(response.data.len(), 1);
+        assert_eq!(response.data[0].embedding, vec![0.1_f32, 0.2]);
+        assert_eq!(response.usage.as_ref().map(|usage| usage.prompt_tokens), Some(4));
     }
 
     #[test]
