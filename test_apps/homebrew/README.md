@@ -1,6 +1,6 @@
 # homebrew test_app
 
-Exercises the configured Homebrew formulae from tap `xberg-io/homebrew-tap` at version `2.7.7`.
+Exercises the configured Homebrew formulae from tap `xberg-io/homebrew-tap` at version `2.7.8`.
 
 | Formula | Purpose |
 |---------|--------|

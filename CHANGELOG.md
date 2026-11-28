@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.8] - 2026-11-28
+
+### Fixed
+
+- Accept an OpenAI-compatible chat completion whose reply omits `id` and an embeddings reply that omits `model`, as OpenVINO Model Server 2026.4.1 sends them; an omitted chat `id` is empty and therefore not unique across responses (#512).
+- Replay Gemini 3 function-call `thoughtSignature`s: the signature rides inside the tool-call id and is restored on the replayed `functionCall` part, so the second tool turn is no longer rejected with 400 (#513).
+
 ## [2.7.7] - 2026-11-27
 
 ### Changed

@@ -66,7 +66,7 @@ etcd-client = { workspace = true, optional = true }
 futures-util = { workspace = true }
 http = { workspace = true }
 jiff = { workspace = true, optional = true }
-liter-llm = { path = "../liter-llm", version = "2.7.7", features = ["native-http", "tower"] }
+liter-llm = { path = "../liter-llm", version = "2.7.8", features = ["native-http", "tower"] }
 notify = { workspace = true }
 opendal = { workspace = true }
 
