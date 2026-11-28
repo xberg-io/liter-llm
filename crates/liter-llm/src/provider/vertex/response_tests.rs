@@ -802,3 +802,74 @@ fn stream_chunk_with_a_function_call_and_no_finish_reason_stays_open() {
 
     assert_eq!(chunk.choices[0].finish_reason, None);
 }
+
+const THOUGHT_SIGNATURE: &str = "CjMKCWdlbUJhc2U2NA==";
+
+fn signed_function_call_candidate() -> serde_json::Value {
+    let mut body = function_call_candidate("STOP");
+    body["candidates"][0]["content"]["parts"][0]["thoughtSignature"] = json!(THOUGHT_SIGNATURE);
+    body
+}
+
+#[test]
+fn transform_response_carries_a_function_call_thought_signature_in_its_id() {
+    let mut body = signed_function_call_candidate();
+
+    provider().transform_response(&mut body).expect("transform_response");
+
+    let id = body["choices"][0]["message"]["tool_calls"][0]["id"]
+        .as_str()
+        .expect("id should be a string");
+    assert!(id.starts_with("call_get_weather_"), "id was {id}");
+    assert!(
+        id.ends_with("__thought__CjMKCWdlbUJhc2U2NA=="),
+        "id should end with the carried thoughtSignature, was {id}"
+    );
+}
+
+#[test]
+fn transform_response_function_call_without_a_signature_keeps_a_plain_id() {
+    let mut body = function_call_candidate("STOP");
+
+    provider().transform_response(&mut body).expect("transform_response");
+
+    let id = body["choices"][0]["message"]["tool_calls"][0]["id"]
+        .as_str()
+        .expect("id should be a string");
+    assert!(id.starts_with("call_get_weather_"), "id was {id}");
+    assert!(!id.contains("__thought__"), "id was {id}");
+}
+
+#[test]
+fn gemini_3_thought_signature_round_trips_through_the_request() {
+    // ~keep Gemini 3 rejects a replayed function-call turn whose part lost the
+    // `thoughtSignature` returned with the call, so the signature must survive the
+    // response -> request round trip unchanged (#513).
+    let mut response = signed_function_call_candidate();
+    provider()
+        .transform_response(&mut response)
+        .expect("transform_response");
+    let message = response["choices"][0]["message"].clone();
+    let call_id = message["tool_calls"][0]["id"]
+        .as_str()
+        .expect("id should be a string")
+        .to_owned();
+
+    let mut request = json!({
+        "messages": [
+            {"role": "user", "content": "What is the weather in Paris?"},
+            message,
+            {"role": "tool", "tool_call_id": call_id, "content": "Sunny, 22C"}
+        ]
+    });
+    provider().transform_request(&mut request).expect("transform_request");
+
+    let part = &request["contents"][1]["parts"][0];
+    assert_eq!(part["thoughtSignature"], THOUGHT_SIGNATURE);
+    assert_eq!(part["functionCall"]["name"], "get_weather");
+    assert_eq!(part["functionCall"]["args"], json!({"city": "Paris"}));
+    assert_eq!(
+        request["contents"][2]["parts"][0]["functionResponse"]["name"],
+        "get_weather"
+    );
+}

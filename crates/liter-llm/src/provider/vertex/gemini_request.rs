@@ -5,8 +5,8 @@ use std::collections::HashMap;
 use serde_json::{Map, Value, json};
 
 use super::{
-    convert_user_content_to_gemini, reasoning_effort_to_thinking_budget, transform_gemini_embed_request,
-    translate_tool_choice,
+    convert_user_content_to_gemini, gemini_response::THOUGHT_SIGNATURE_SEPARATOR, reasoning_effort_to_thinking_budget,
+    transform_gemini_embed_request, translate_tool_choice,
 };
 use crate::error::Result;
 
@@ -172,18 +172,34 @@ fn model_message(msg: &Value, content: Option<&Value>) -> Value {
     let mut parts = text_parts(content);
     if let Some(tool_calls) = msg.get("tool_calls").and_then(|t| t.as_array()) {
         for tc in tool_calls {
-            parts.push(json!({
+            let mut part = json!({
                 "functionCall": {
                     "name": tc.pointer("/function/name"),
                     "args": function_call_args(tc)
                 }
-            }));
+            });
+            // ~keep Gemini 3 requires the `thoughtSignature` from the returned
+            // `functionCall` part to come back alongside the replayed part (#513); it was
+            // carried inside the tool-call id by `tool_calls_from_parts`.
+            if let Some(signature) = thought_signature(tc) {
+                part["thoughtSignature"] = json!(signature);
+            }
+            parts.push(part);
         }
     }
     if parts.is_empty() {
         parts.push(json!({"text": ""}));
     }
     json!({"role": "model", "parts": parts})
+}
+
+/// The Gemini `thoughtSignature` encoded in a tool call's `id`, if any.
+fn thought_signature(tc: &Value) -> Option<&str> {
+    tc.get("id")
+        .and_then(|id| id.as_str())
+        .and_then(|id| id.split_once(THOUGHT_SIGNATURE_SEPARATOR))
+        .map(|(_, signature)| signature)
+        .filter(|signature| !signature.is_empty())
 }
 
 /// Parse a tool call's JSON `arguments` string into `functionCall.args`,
